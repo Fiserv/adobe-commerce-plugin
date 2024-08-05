@@ -1,0 +1,13 @@
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+	<body>
+		<referenceContainer name="content">
+			<block class="Fiserv\Payments\Block\Customer\CommerceHub\StoredPaymentsList" name="fiserv_commercehub.vault.create" cacheable="false" after="-" template="Fiserv_Payments::create_spa.phtml" />
+			<referenceBlock name="vault.cards.list">
+				<block class="Fiserv\Payments\Block\Customer\CommerceHub\VaultCardRenderer" name="fiserv_commercehub.card.renderer" template="Magento_Vault::customer_account/credit_card.phtml"/>
+			</referenceBlock>
+			<referenceBlock name="fiserv_commercehub.vault.create">
+				<block class="Fiserv\Payments\Block\Customer\CommerceHub\StoredPaymentsList" name="fiserv_commercehub.vault.card.create" cacheable="false" template="Fiserv_Payments::cards_list.phtml" />
+			</referenceBlock>
+		</referenceContainer>
+	</body>
+</page>

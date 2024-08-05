@@ -1,0 +1,112 @@
+.sdc-column {
+	display: flex;
+	flex-direction: row;
+	flex-grow: 1;
+	justify-content: space-between;
+	max-width: 300px;
+}
+
+.sdc-column>* {
+	margin-left: auto;
+	margin-right: 1rem;
+}
+
+.sdc-row {
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+	margin-bottom: 1rem;
+}
+
+.sdc-field-frame {
+	height: 40px;
+	border: 1px solid #999;
+	display: flex;
+	flex-direction: row;
+	margin-bottom: 5px;
+	position: relative;
+}
+
+.sdc-field {
+	height: 30px;
+	margin-top: 2px;
+	padding: 5px;
+	width: 100%;
+}
+
+.sdc-text {
+	width: 400px;
+}
+
+.sdc-dropdown {
+	width: 215px;
+}
+
+.sdc-card-brand-icon {
+	background-image: url('../images/cc/blank-brand-icon.png');
+	background-size: contain;
+	display: block;
+	height: auto;
+	margin: 8px;
+	position: relative;
+	width: 46px;
+	background-repeat: no-repeat;
+}
+
+.sdc-card-brand-icon-visa {
+	background-image: url('../../Magento_Payment/images/cc/vi.png');
+}
+
+.sdc-card-brand-icon-discover {
+	background-image: url('../../Magento_Payment/images/cc/di.png');
+}
+
+.sdc-card-brand-icon-mastercard {
+	background-image: url('../../Magento_Payment/images/cc/mc.png');
+}
+
+.sdc-card-brand-icon-amex {
+	background-image: url('../../Magento_Payment/images/cc/ae.png');
+}
+
+.sdc-card-brand-icon-diners {
+	background-image: url('../../Magento_Payment/images/cc/dn.png');
+}
+
+.sdc-card-brand-icon-jcb {
+	background-image: url('../../Magento_Payment/images/cc/jcb.png');
+}
+
+.sdc-card-brand-icon-maestro {
+	background-image: url('../../Magento_Payment/images/cc/md.png');
+}
+
+.sdc-card-brand-icon-elo {
+	background-image: url('../../Magento_Payment/images/cc/elo.png');
+}
+
+.sdc-card-brand-icon-union {
+	background-image: url('../../Magento_Payment/images/cc/un.png');
+}
+
+.sdc-error-field {
+	border: solid #d81118;
+	border-width: 1px 1px 3px;
+}
+
+.sdc-valid-field {
+	border: 1px solid #45c445;
+}
+
+.sdc-hidden {
+	display: none;
+}
+
+.sdc-error-message {
+	color: #d81118;
+	font-size: 13px;
+}
+
+.sdc-focused-field {
+	border-width: 2px;
+}

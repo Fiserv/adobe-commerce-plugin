@@ -1,0 +1,191 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+	<default>
+		<fiserv_payments>
+			<active>1</active>
+		</fiserv_payments>
+		<payment>
+			<fiserv_commercehub>
+				<active>1</active>
+				<title>Credit/Debit Card</title>
+				<model>FiservCommerceHubFacade</model>
+				<merchant_id backend_model="Fiserv\Payments\Model\System\Config\Backend\CommerceHub\Encrypted"/>
+				<terminal_id backend_model="Fiserv\Payments\Model\System\Config\Backend\CommerceHub\Encrypted"/>
+				<api_key backend_model="Fiserv\Payments\Model\System\Config\Backend\CommerceHub\Encrypted"/>
+				<api_secret backend_model="Fiserv\Payments\Model\System\Config\Backend\CommerceHub\Encrypted"/>
+				<prod_api_service><![CDATA[https://prod.api.fiservapps.com/ch/]]></prod_api_service>
+				<cert_api_service><![CDATA[https://connect-cert.fiservapis.com/ch/]]></cert_api_service>
+				<prod_client_url><![CDATA[https://prod.api.fiservapps.com/ch/sdk/v1/commercehub-client-sdk.js]]></prod_client_url>
+				<cert_client_url><![CDATA[https://cert.api.fiservapps.com/ch/sdk/v1/commercehub-client-sdk.js]]></cert_client_url>
+				<api_environment>CERT</api_environment>
+				<payment_action>AUTH</payment_action>
+				<cc_types>AE,VI,MC,DI,JCB,DN</cc_types>
+				<tokenization>1</tokenization>
+				<standalone_spa>1</standalone_spa>
+				<order_status>pending</order_status>
+				<valuelink_title>Valuelink Gift Cards</valuelink_title>
+				<use_valuelink>1</use_valuelink>
+				<debug>1</debug>
+				<currency>USD</currency>
+				<allowspecific>1</allowspecific>
+				<specificcountry>US</specificcountry>
+				<cc_types_ch_mapper><![CDATA[{"AMEX":"AE","DISCOVER":"DI","JCB":"JCB","MASTERCARD":"MC","VISA":"VI","DINERS":"DN"}]]></cc_types_ch_mapper>
+				<is_gateway>1</is_gateway>
+				<can_use_internal>1</can_use_internal>
+				<can_use_checkout>1</can_use_checkout>
+				<can_authorize>1</can_authorize>
+				<can_capture>1</can_capture>
+				<can_capture_partial>1</can_capture_partial>
+				<can_refund>1</can_refund>
+				<can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
+				<can_void>1</can_void>
+				<can_authorize_vault>1</can_authorize_vault>
+				<can_capture_vault>1</can_capture_vault>
+				<sdc_custom_checkout_card_number_parent_element>fiserv_commercehub-card-number</sdc_custom_checkout_card_number_parent_element>
+				<sdc_custom_checkout_card_number_placeholder>Card Number</sdc_custom_checkout_card_number_placeholder>
+				<sdc_custom_checkout_card_number_placeholder_character>•</sdc_custom_checkout_card_number_placeholder_character>
+				<sdc_custom_checkout_card_number_number_formatting>1</sdc_custom_checkout_card_number_number_formatting>
+				<sdc_custom_checkout_card_number_masking>1</sdc_custom_checkout_card_number_masking>
+				<sdc_custom_checkout_card_number_masking_character>•</sdc_custom_checkout_card_number_masking_character>
+				<sdc_custom_checkout_card_number_masking_mode>ALWAYS_MASK_EXCEPT_LAST_4</sdc_custom_checkout_card_number_masking_mode>
+				<sdc_custom_checkout_card_number_masking_length>4</sdc_custom_checkout_card_number_masking_length>
+				<sdc_custom_checkout_card_number_invalid_message>Invalid Card Number</sdc_custom_checkout_card_number_invalid_message>
+				<sdc_custom_checkout_name_on_card_parent_element>fiserv_commercehub-name-on-card</sdc_custom_checkout_name_on_card_parent_element>
+				<sdc_custom_checkout_name_on_card_placeholder>Name on Card</sdc_custom_checkout_name_on_card_placeholder>
+				<sdc_custom_checkout_name_on_card_invalid_message>Invalid Name on Card</sdc_custom_checkout_name_on_card_invalid_message>	
+				<sdc_custom_checkout_security_code_parent_element>fiserv_commercehub-security-code</sdc_custom_checkout_security_code_parent_element>
+				<sdc_custom_checkout_security_code_placeholder>CVV</sdc_custom_checkout_security_code_placeholder>
+				<sdc_custom_checkout_security_code_placeholder_character>•</sdc_custom_checkout_security_code_placeholder_character>
+				<sdc_custom_checkout_security_code_masking>1</sdc_custom_checkout_security_code_masking>
+				<sdc_custom_checkout_security_code_masking_character>•</sdc_custom_checkout_security_code_masking_character>
+				<sdc_custom_checkout_security_code_masking_mode>ALWAYS_MASK_ALL</sdc_custom_checkout_security_code_masking_mode>
+				<sdc_custom_checkout_security_code_invalid_message>Invalid Security Code</sdc_custom_checkout_security_code_invalid_message>
+				<sdc_custom_checkout_expiration_month_parent_element>fiserv_commercehub-expiration-month</sdc_custom_checkout_expiration_month_parent_element>
+				<sdc_custom_checkout_expiration_month_placeholder>Expiration Month</sdc_custom_checkout_expiration_month_placeholder>
+				<sdc_custom_checkout_expiration_month_option_labels>
+					<![CDATA[[
+						"01 - January",
+						"02 - February",
+						"03 - March",
+						"04 - April",
+						"05 - May",
+						"06 - June",
+						"07 - July",
+						"08 - August",
+						"09 - September",
+						"10 - October",
+						"11 - November",
+						"12 - December"
+					]]]>
+				</sdc_custom_checkout_expiration_month_option_labels>
+				<sdc_custom_checkout_expiration_month_invalid_message>Invalid Expiration Month</sdc_custom_checkout_expiration_month_invalid_message>
+				<sdc_custom_checkout_expiration_year_parent_element>fiserv_commercehub-expiration-year</sdc_custom_checkout_expiration_year_parent_element>
+				<sdc_custom_checkout_expiration_year_placeholder>Expiration Year</sdc_custom_checkout_expiration_year_placeholder>
+				<sdc_custom_checkout_expiration_year_invalid_message>Invalid Expiration Year</sdc_custom_checkout_expiration_year_invalid_message>
+				<sdc_custom_checkout_css></sdc_custom_checkout_css>
+				<sdc_custom_checkout_font_data></sdc_custom_checkout_font_data>
+				<sdc_custom_checkout_font_family></sdc_custom_checkout_font_family>
+				<sdc_custom_checkout_font_format></sdc_custom_checkout_font_format>
+				<sdc_custom_checkout_font_integrity></sdc_custom_checkout_font_integrity>
+				<sdc_custom_admin_card_number_parent_element>fiserv_commercehub-card-number</sdc_custom_admin_card_number_parent_element>
+				<sdc_custom_admin_card_number_placeholder>Card Number</sdc_custom_admin_card_number_placeholder>
+				<sdc_custom_admin_card_number_placeholder_character>•</sdc_custom_admin_card_number_placeholder_character>
+				<sdc_custom_admin_card_number_number_formatting>1</sdc_custom_admin_card_number_number_formatting>
+				<sdc_custom_admin_card_number_masking>1</sdc_custom_admin_card_number_masking>
+				<sdc_custom_admin_card_number_masking_character>•</sdc_custom_admin_card_number_masking_character>
+				<sdc_custom_admin_card_number_masking_mode>ALWAYS_MASK_EXCEPT_LAST_4</sdc_custom_admin_card_number_masking_mode>
+				<sdc_custom_admin_card_number_masking_length>4</sdc_custom_admin_card_number_masking_length>
+				<sdc_custom_admin_card_number_invalid_message>Invalid Card Number</sdc_custom_admin_card_number_invalid_message>
+				<sdc_custom_admin_name_on_card_parent_element>fiserv_commercehub-name-on-card</sdc_custom_admin_name_on_card_parent_element>
+				<sdc_custom_admin_name_on_card_placeholder>Name on Card</sdc_custom_admin_name_on_card_placeholder>
+				<sdc_custom_admin_name_on_card_invalid_message>Invalid Name on Card</sdc_custom_admin_name_on_card_invalid_message>	
+				<sdc_custom_admin_security_code_parent_element>fiserv_commercehub-security-code</sdc_custom_admin_security_code_parent_element>
+				<sdc_custom_admin_security_code_placeholder>CVV</sdc_custom_admin_security_code_placeholder>
+				<sdc_custom_admin_security_code_placeholder_character>•</sdc_custom_admin_security_code_placeholder_character>
+				<sdc_custom_admin_security_code_masking>1</sdc_custom_admin_security_code_masking>
+				<sdc_custom_admin_security_code_masking_character>•</sdc_custom_admin_security_code_masking_character>
+				<sdc_custom_admin_security_code_masking_mode>ALWAYS_MASK_ALL</sdc_custom_admin_security_code_masking_mode>
+				<sdc_custom_admin_security_code_invalid_message>Invalid Security Code</sdc_custom_admin_security_code_invalid_message>
+				<sdc_custom_admin_expiration_month_parent_element>fiserv_commercehub-expiration-month</sdc_custom_admin_expiration_month_parent_element>
+				<sdc_custom_admin_expiration_month_placeholder>Expiration Month</sdc_custom_admin_expiration_month_placeholder>
+				<sdc_custom_admin_expiration_month_option_labels>
+					<![CDATA[[
+						"01 - January",
+						"02 - February",
+						"03 - March",
+						"04 - April",
+						"05 - May",
+						"06 - June",
+						"07 - July",
+						"08 - August",
+						"09 - September",
+						"10 - October",
+						"11 - November",
+						"12 - December"
+					]]]>
+				</sdc_custom_admin_expiration_month_option_labels>
+				<sdc_custom_admin_expiration_month_invalid_message>Invalid Expiration Month</sdc_custom_admin_expiration_month_invalid_message>
+				<sdc_custom_admin_expiration_year_parent_element>fiserv_commercehub-expiration-year</sdc_custom_admin_expiration_year_parent_element>
+				<sdc_custom_admin_expiration_year_placeholder>Expiration Year</sdc_custom_admin_expiration_year_placeholder>
+				<sdc_custom_admin_expiration_year_invalid_message>Invalid Expiration Year</sdc_custom_admin_expiration_year_invalid_message>
+				<sdc_custom_admin_css></sdc_custom_admin_css>
+				<sdc_custom_admin_font_data></sdc_custom_admin_font_data>
+				<sdc_custom_admin_font_family></sdc_custom_admin_font_family>
+				<sdc_custom_admin_font_format></sdc_custom_admin_font_format>
+				<sdc_custom_admin_font_integrity></sdc_custom_admin_font_integrity>
+				<sdc_custom_token_card_number_parent_element>fiserv_commercehub-card-number</sdc_custom_token_card_number_parent_element>
+				<sdc_custom_token_card_number_placeholder>Card Number</sdc_custom_token_card_number_placeholder>
+				<sdc_custom_token_card_number_placeholder_character>•</sdc_custom_token_card_number_placeholder_character>
+				<sdc_custom_token_card_number_number_formatting>1</sdc_custom_token_card_number_number_formatting>
+				<sdc_custom_token_card_number_masking>1</sdc_custom_token_card_number_masking>
+				<sdc_custom_token_card_number_masking_character>•</sdc_custom_token_card_number_masking_character>
+				<sdc_custom_token_card_number_masking_mode>ALWAYS_MASK_EXCEPT_LAST_4</sdc_custom_token_card_number_masking_mode>
+				<sdc_custom_token_card_number_masking_length>4</sdc_custom_token_card_number_masking_length>
+				<sdc_custom_token_card_number_invalid_message>Invalid Card Number</sdc_custom_token_card_number_invalid_message>
+				<sdc_custom_token_name_on_card_parent_element>fiserv_commercehub-name-on-card</sdc_custom_token_name_on_card_parent_element>
+				<sdc_custom_token_name_on_card_placeholder>Name on Card</sdc_custom_token_name_on_card_placeholder>
+				<sdc_custom_token_name_on_card_invalid_message>Invalid Name on Card</sdc_custom_token_name_on_card_invalid_message>	
+				<sdc_custom_token_security_code_parent_element>fiserv_commercehub-security-code</sdc_custom_token_security_code_parent_element>
+				<sdc_custom_token_security_code_placeholder>CVV</sdc_custom_token_security_code_placeholder>
+				<sdc_custom_token_security_code_placeholder_character>•</sdc_custom_token_security_code_placeholder_character>
+				<sdc_custom_token_security_code_masking>1</sdc_custom_token_security_code_masking>
+				<sdc_custom_token_security_code_masking_character>•</sdc_custom_token_security_code_masking_character>
+				<sdc_custom_token_security_code_masking_mode>ALWAYS_MASK_ALL</sdc_custom_token_security_code_masking_mode>
+				<sdc_custom_token_security_code_invalid_message>Invalid Security Code</sdc_custom_token_security_code_invalid_message>
+				<sdc_custom_token_expiration_month_parent_element>fiserv_commercehub-expiration-month</sdc_custom_token_expiration_month_parent_element>
+				<sdc_custom_token_expiration_month_placeholder>Expiration Month</sdc_custom_token_expiration_month_placeholder>
+				<sdc_custom_token_expiration_month_option_labels>
+					<![CDATA[[
+						"01 - January",
+						"02 - February",
+						"03 - March",
+						"04 - April",
+						"05 - May",
+						"06 - June",
+						"07 - July",
+						"08 - August",
+						"09 - September",
+						"10 - October",
+						"11 - November",
+						"12 - December"
+					]]]>
+				</sdc_custom_token_expiration_month_option_labels>
+				<sdc_custom_token_expiration_month_invalid_message>Invalid Expiration Month</sdc_custom_token_expiration_month_invalid_message>
+				<sdc_custom_token_expiration_year_parent_element>fiserv_commercehub-expiration-year</sdc_custom_token_expiration_year_parent_element>
+				<sdc_custom_token_expiration_year_placeholder>Expiration Year</sdc_custom_token_expiration_year_placeholder>
+				<sdc_custom_token_expiration_year_invalid_message>Invalid Expiration Year</sdc_custom_token_expiration_year_invalid_message>
+				<sdc_custom_token_css></sdc_custom_token_css>
+				<sdc_custom_token_font_data></sdc_custom_token_font_data>
+				<sdc_custom_token_font_family></sdc_custom_token_font_family>
+				<sdc_custom_token_font_format></sdc_custom_token_font_format>
+				<sdc_custom_token_font_integrity></sdc_custom_token_font_integrity>
+				<group>fiserv_group</group>
+			</fiserv_commercehub>	
+			<fiserv_commercehub_vault>
+				<model>FiservCommerceHubVaultFacade</model>
+				<title>Stored Accounts (Fiserv)</title>
+				<active>1</active>
+			</fiserv_commercehub_vault>
+		</payment>
+	</default>
+</config>

@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<csp_whitelist xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Csp:etc/csp_whitelist.xsd">
+    <policies>
+        <policy id="script-src">
+            <values>
+		<value id="ch-sdcv2-lib" type="host">https://commercehub-secure-data-capture.fiservapps.com</value>
+                <value id="ch-prod-lib-base" type="host">https://prod.api.fiservapps.com</value>
+                <value id="ch-cert-lib-base" type="host">https://cert.api.fiservapps.com</value>
+                <value id="ch-prod-base" type="host">https://prod.api.fiservapps.com</value>
+                <value id="ch-cert-base" type="host">https://cert.api.fiservapps.com</value>
+            </values>
+        </policy>
+        <policy id="frame-src">
+            <values>
+		<value id="ch-sdcv2-lib" type="host">https://commercehub-secure-data-capture.fiservapps.com</value>
+                <value id="ch-prod-lib-base" type="host">https://prod.api.fiservapps.com</value>
+                <value id="ch-cert-lib-base" type="host">https://cert.api.fiservapps.com</value>
+                <value id="ch-prod-base" type="host">https://prod.api.fiservapps.com</value>
+                <value id="ch-cert-base" type="host">https://cert.api.fiservapps.com</value>
+            </values>
+        </policy>
+    </policies>
+</csp_whitelist>

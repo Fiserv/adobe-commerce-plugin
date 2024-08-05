@@ -1,0 +1,80 @@
+<?php
+/** @var \Fiserv\Payments\Block\Customer\CommerceHub\StoredPaymentsList $block */
+?>
+
+<?php 
+	$tokenConfig = $block->getConfig();
+?>
+
+
+<?php if ($block->canCreateStandaloneSpa()) : ?>
+	<link rel="stylesheet" type="text/css" href="<?php echo $block->getViewFileUrl('Fiserv_Payments/css/ch-form-token.css')?>">
+	<div id="tokenization-builder-container" style="display:none "data-bind="scope: 'standalone-spa'">
+		<div id="tokenization-builder-title">
+			<h3>Add a Stored Payment Account</h3>
+		</div>
+		<div id="tokenization-builder-button-container">
+			<button data-bind="click: createIframe" id="tokenization-builder-add">
+				Add
+			</button>
+		</div>
+
+        <div id="sdc-container">
+			<div class="sdc-row">
+				<div id="sdc-card-number-frame" class="sdc-field-frame sdc-text">
+					<div id="sdc-card-brand-icon" class="sdc-card-brand-icon"></div>
+					<div id="fiserv_commercehub-card-number" class="sdc-field"></div>
+				</div>
+				<span id="sdc-card-number-invalid-message" class="sdc-error-message sdc-hidden"></span>
+			</div>
+			<div class="sdc-row">
+				<div id="sdc-card-name-frame" class="sdc-field-frame sdc-text">
+					<div id="fiserv_commercehub-name-on-card" class="sdc-field"></div>
+				</div>
+				<span id="sdc-card-name-invalid-message" class="sdc-error-message sdc-hidden"></span>
+			</div>
+			<div class="sdc-row">
+				<div id="sdc-security-code-frame" class="sdc-field-frame sdc-text">
+					<div id="fiserv_commercehub-security-code" class="sdc-field"></div>
+				</div>
+				<span id="sdc-security-code-invalid-message" class="sdc-error-message sdc-hidden"></span>
+			</div>
+			<div class="sdc-column">
+				<div class="sdc-row">
+					<div id="sdc-exp-month-frame" class="sdc-field-frame sdc-dropdown">
+						<div id="fiserv_commercehub-expiration-month" class="sdc-field"></div>
+					</div>
+					<span id="sdc-exp-month-invalid-message" class="sdc-error-message sdc-hidden"></span>
+				</div>
+				<div class="sdc-row">
+					<div id="sdc-exp-year-frame" class="sdc-field-frame sdc-dropdown">
+						<div id="fiserv_commercehub-expiration-year" class="sdc-field"></div>
+					</div>
+					<span id="sdc-exp-year-invalid-message" class="sdc-error-message sdc-hidden"></span>
+				</div>
+			</div>
+		</div>
+
+		<div id="tokenization-iframe-buttons" style="display:none">
+			<button data-bind="click: destroyIframe" id="tokenization-builder-cancel" disabled="true">Cancel</button>
+			<button data-bind="click: submitIframe" id="tokenization-builder-create" disabled="true">Create</button>
+		</div>
+	</div>
+<?php endif ?>
+
+<script type="text/x-magento-init">
+{
+	"*": {
+		"Magento_Ui/js/core/app": {
+			"components": {
+				"standalone-spa": {
+					"component": "Fiserv_Payments/js/view/customer/stored-payments",
+					"tokenConfig": <?= /* @escapeNotVerified */ $tokenConfig ?>
+				}
+			}
+		}
+	}
+}
+</script>
+
+
