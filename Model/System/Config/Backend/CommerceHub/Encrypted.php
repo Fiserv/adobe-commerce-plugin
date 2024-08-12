@@ -50,16 +50,18 @@ class Encrypted extends \Magento\Config\Model\Config\Backend\Encrypted
 	}
 
 	private function validateApiKey($value) {
-		if (strlen($value) != 32) {
+		// 2048 is max key length for the moment. Update in the future if necessary.
+		if (strlen($value) > 2048) {
 			$this->_dataSaveAllowed = false;
-			throw new \Magento\Framework\Exception\LocalizedException(__("Error. CommerceHub API Key must be 32 digits. Your settings have not been saved."));
+			throw new \Magento\Framework\Exception\LocalizedException(__("Error. CommerceHub API Key too long. Your settings have not been saved."));
 		}
 	}
 
 	private function validateApiSecret($value) {
-		if (strlen($value) != 43) {
+		// 2048 is max secret length for the moment. Update in the future if necessary.
+		if (strlen($value) > 2048) {
 			$this->_dataSaveAllowed = false;
-			throw new \Magento\Framework\Exception\LocalizedException(__("Error. CommerceHub API Secret must be 43 digits. Your settings have not been saved."));
+			throw new \Magento\Framework\Exception\LocalizedException(__("Error. CommerceHub API Secret too long. Your settings have not been saved."));
 		}
 	}
 

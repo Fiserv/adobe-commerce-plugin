@@ -489,6 +489,7 @@ define(
 					{
 						frame.removeClass('sdc-error-field');
 						frame.addClass('sdc-valid-field');
+						mess.addClass('sdc-hidden');
 					} else if (data["shouldShowError"] === true)
 					{
 						mess.text(this.getSdcInvalidFieldMessageText(data["field"]));

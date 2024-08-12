@@ -80,7 +80,7 @@
 					</field>
 					<field id="specificcountry" translate="label" type="multiselect" sortOrder="15" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Accept Payments From Select Countries</label>
-						<source_model>Magento\Directory\Model\Config\Source\Country</source_model>
+						<source_model>Fiserv\Payments\Model\Source\CommerceHub\FiservCountry</source_model>
 						<validate>validate-no-empty</validate>
 						<config_path>payment/fiserv_commercehub/specificcountry</config_path>	
 					</field>

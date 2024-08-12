@@ -2,7 +2,7 @@
 	"name": "fiserv/payments",
 	"description": "Fiserv payment plugin for Magento 2 enables PCI-compliant payment processing through Fiserv's CommerceHub API.",
 	"type": "magento2-module",
-	"version": "0.0.2",
+	"version": "0.0.3",
 	"license": [
 		"OSL-3.0"
 	],
