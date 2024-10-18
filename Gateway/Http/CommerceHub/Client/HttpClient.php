@@ -13,7 +13,7 @@ use Magento\Payment\Gateway\Http\ClientException;
 use Magento\Payment\Gateway\Http\ClientInterface;
 use Magento\Payment\Gateway\Http\TransferInterface;
 use Magento\Payment\Model\Method\Logger as PaymentLogger;
-use Psr\Log\LoggerInterface;
+use Fiserv\Payments\Logger\MultiLevelLogger;
 
 /**
  * A client that send transaction requests to the Fiserv-CommerceHub API
@@ -34,19 +34,19 @@ class HttpClient implements ClientInterface
 	private $httpAdapter;
 
 	/**
-	 * @var LoggerInterface
+	 * @var MultiLevelLogger
 	 */
 	private $logger;
 
 	/**
 	 * @param PaymentLogger $paymentLogger
-	 * @param LoggerInterface $logger
+	 * @param MultiLevelLogger $logger
 	 * @param ChHttpAdapter $httpAdapter
 	 */
 	public function __construct(
 		PaymentLogger $paymentLogger,
 		ChHttpAdapter $httpAdapter,
-		LoggerInterface $logger
+		MultiLevelLogger $logger
 	) {
 		$this->paymentLogger = $paymentLogger;
 		$this->httpAdapter = $httpAdapter;
@@ -71,18 +71,25 @@ class HttpClient implements ClientInterface
 			'request' => $requestBody,
 		];
 
+		$this->logger->logInfo(1, "Sending request to Commerce Hub");
+		$this->logger->logInfo(3, "TXN REQUEST INFO");
+		$this->logger->logInfo(3, "Payload:\n" . print_r($payload, true));
+		
 		try {
 			$chResponse = $this->httpAdapter->sendRequest($payload, $endpoint);
-			$this->logger->info(json_encode($payload));
-			$this->logger->info(json_encode($chResponse->getResponse()));
+			$this->logger->logInfo(1, "Response received from Commerce Hub");
+			$this->logger->logInfo(3, "TXN RESPONSE INFO");
+			$this->logger->logInfo(3, "Response Headers:\n" . print_r($chResponse->getHeaders(), true));
+			$this->logger->logInfo(3, "Response Body:\n" . json_encode(json_decode($chResponse->getBody()), JSON_PRETTY_PRINT));
+			
 			$log['response'] = $chResponse->getResponse();
 			return [
 				self::STATUS_CODE_KEY => $chResponse->getStatusCode(),
 				self::RESPONSE_KEY => json_decode($chResponse->getBody(), true)
 			];
 		} catch (\Exception $e) {
-
-			$this->logger->critical($e);
+			$this->logger->logCritical(1, "An error has occurred while sending the payload to Commerce Hub");
+			$this->logger->logCritical(2, $e);
 			throw new ClientException(
 				__('An error occurred in the payment gateway.')
 			);

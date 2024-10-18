@@ -9,6 +9,7 @@ use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use Fiserv\Payments\Lib\CommerceHub\Model\TransactionDetails;
 use Magento\Payment\Gateway\Request\BuilderInterface;
 use Magento\Vault\Model\Ui\VaultConfigProvider;
+use Fiserv\Payments\Logger\MultiLevelLogger;
 
 /**
  * Payment Data Builder
@@ -21,17 +22,26 @@ abstract class TransactionDetailsDataBuilder implements BuilderInterface
 	const AUTHORIZE = false;
 
 	/**
+	 * @var MultiLevelLogger
+	 */
+	private $logger;
+	
+	/**
 	 * @var SubjectReader
 	 */
 	protected $subjectReader;
 
 	/**
+	 * @param MultiLevelLogger $logger
 	 * @param SubjectReader $subjectReader
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */
-	public function __construct(SubjectReader $subjectReader)
-	{
+	public function __construct(
+		SubjectReader $subjectReader,
+		MultiLevelLogger $logger
+	) {
 		$this->subjectReader = $subjectReader;
+		$this->logger = $logger;
 	}
 
 	/**
@@ -60,6 +70,7 @@ abstract class TransactionDetailsDataBuilder implements BuilderInterface
 		$txnDetails->setMerchantOrderId($orderDO->getOrderIncrementId());
 		$txnDetails->setAccountVerification(false);
 
+		$this->logger->logInfo(3, "Transaction Details Data Builder:\n" . $txnDetails->__toString());
 		return [ self::TXN_DETAILS_KEY => $txnDetails ];
 	}
 

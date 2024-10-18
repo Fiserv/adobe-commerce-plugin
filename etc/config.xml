@@ -23,9 +23,8 @@
 				<tokenization>1</tokenization>
 				<standalone_spa>1</standalone_spa>
 				<order_status>pending</order_status>
-				<valuelink_title>Valuelink Gift Cards</valuelink_title>
-				<use_valuelink>1</use_valuelink>
 				<debug>1</debug>
+				<logging_level>2</logging_level>
 				<currency>USD</currency>
 				<allowspecific>1</allowspecific>
 				<specificcountry>US</specificcountry>
@@ -41,6 +40,7 @@
 				<can_void>1</can_void>
 				<can_authorize_vault>1</can_authorize_vault>
 				<can_capture_vault>1</can_capture_vault>
+
 				<sdc_custom_checkout_card_number_parent_element>fiserv_commercehub-card-number</sdc_custom_checkout_card_number_parent_element>
 				<sdc_custom_checkout_card_number_placeholder>Card Number</sdc_custom_checkout_card_number_placeholder>
 				<sdc_custom_checkout_card_number_placeholder_character>•</sdc_custom_checkout_card_number_placeholder_character>
@@ -87,6 +87,7 @@
 				<sdc_custom_checkout_font_family></sdc_custom_checkout_font_family>
 				<sdc_custom_checkout_font_format></sdc_custom_checkout_font_format>
 				<sdc_custom_checkout_font_integrity></sdc_custom_checkout_font_integrity>
+
 				<sdc_custom_admin_card_number_parent_element>fiserv_commercehub-card-number</sdc_custom_admin_card_number_parent_element>
 				<sdc_custom_admin_card_number_placeholder>Card Number</sdc_custom_admin_card_number_placeholder>
 				<sdc_custom_admin_card_number_placeholder_character>•</sdc_custom_admin_card_number_placeholder_character>
@@ -133,6 +134,7 @@
 				<sdc_custom_admin_font_family></sdc_custom_admin_font_family>
 				<sdc_custom_admin_font_format></sdc_custom_admin_font_format>
 				<sdc_custom_admin_font_integrity></sdc_custom_admin_font_integrity>
+
 				<sdc_custom_token_card_number_parent_element>fiserv_commercehub-card-number</sdc_custom_token_card_number_parent_element>
 				<sdc_custom_token_card_number_placeholder>Card Number</sdc_custom_token_card_number_placeholder>
 				<sdc_custom_token_card_number_placeholder_character>•</sdc_custom_token_card_number_placeholder_character>
@@ -181,6 +183,56 @@
 				<sdc_custom_token_font_integrity></sdc_custom_token_font_integrity>
 				<group>fiserv_group</group>
 			</fiserv_commercehub>	
+			<fiserv_valuelink>
+				<active>1</active>
+				<payment_action>AUTH</payment_action>
+				<valuelink_title>Valuelink Gift Cards</valuelink_title>
+				<card_amount_limit>1</card_amount_limit>
+	
+				<sdc_custom_checkout_valuelink_card_number_parent_element>fiserv_valuelink-card-number</sdc_custom_checkout_valuelink_card_number_parent_element>
+				<sdc_custom_checkout_valuelink_card_number_placeholder>Gift Card Number</sdc_custom_checkout_valuelink_card_number_placeholder>
+				<sdc_custom_checkout_valuelink_card_number_placeholder_character>•</sdc_custom_checkout_valuelink_card_number_placeholder_character>
+				<sdc_custom_checkout_valuelink_card_number_number_formatting>1</sdc_custom_checkout_valuelink_card_number_number_formatting>
+				<sdc_custom_checkout_valuelink_card_number_masking>1</sdc_custom_checkout_valuelink_card_number_masking>
+				<sdc_custom_checkout_valuelink_card_number_masking_character>•</sdc_custom_checkout_valuelink_card_number_masking_character>
+				<sdc_custom_checkout_valuelink_card_number_masking_mode>ALWAYS_MASK_EXCEPT_LAST_4</sdc_custom_checkout_valuelink_card_number_masking_mode>
+				<sdc_custom_checkout_valuelink_card_number_masking_length>4</sdc_custom_checkout_valuelink_card_number_masking_length>
+				<sdc_custom_checkout_valuelink_card_number_invalid_message>Invalid Valuelink Card Number</sdc_custom_checkout_valuelink_card_number_invalid_message>
+				<sdc_custom_checkout_valuelink_security_code_parent_element>fiserv_valuelink-security-code</sdc_custom_checkout_valuelink_security_code_parent_element>
+				<sdc_custom_checkout_valuelink_security_code_placeholder>CVV</sdc_custom_checkout_valuelink_security_code_placeholder>
+				<sdc_custom_checkout_valuelink_security_code_placeholder_character>•</sdc_custom_checkout_valuelink_security_code_placeholder_character>
+				<sdc_custom_checkout_valuelink_security_code_masking>1</sdc_custom_checkout_valuelink_security_code_masking>
+				<sdc_custom_checkout_valuelink_security_code_masking_character>•</sdc_custom_checkout_valuelink_security_code_masking_character>
+				<sdc_custom_checkout_valuelink_security_code_masking_mode>ALWAYS_MASK_ALL</sdc_custom_checkout_valuelink_security_code_masking_mode>
+				<sdc_custom_checkout_valuelink_security_code_invalid_message>Invalid Security Code</sdc_custom_checkout_valuelink_security_code_invalid_message>
+				<sdc_custom_checkout_valuelink_css></sdc_custom_checkout_valuelink_css>
+				<sdc_custom_checkout_valuelink_font_data></sdc_custom_checkout_valuelink_font_data>
+				<sdc_custom_checkout_valuelink_font_family></sdc_custom_checkout_valuelink_font_family>
+				<sdc_custom_checkout_valuelink_font_format></sdc_custom_checkout_valuelink_font_format>
+				<sdc_custom_checkout_valuelink_font_integrity></sdc_custom_checkout_valuelink_font_integrity>
+
+				<sdc_custom_admin_valuelink_card_number_parent_element>fiserv_valuelink-card-number</sdc_custom_admin_valuelink_card_number_parent_element>
+				<sdc_custom_admin_valuelink_card_number_placeholder>Gift Card Number</sdc_custom_admin_valuelink_card_number_placeholder>
+				<sdc_custom_admin_valuelink_card_number_placeholder_character>•</sdc_custom_admin_valuelink_card_number_placeholder_character>
+				<sdc_custom_admin_valuelink_card_number_number_formatting>1</sdc_custom_admin_valuelink_card_number_number_formatting>
+				<sdc_custom_admin_valuelink_card_number_masking>1</sdc_custom_admin_valuelink_card_number_masking>
+				<sdc_custom_admin_valuelink_card_number_masking_character>•</sdc_custom_admin_valuelink_card_number_masking_character>
+				<sdc_custom_admin_valuelink_card_number_masking_mode>ALWAYS_MASK_EXCEPT_LAST_4</sdc_custom_admin_valuelink_card_number_masking_mode>
+				<sdc_custom_admin_valuelink_card_number_masking_length>4</sdc_custom_admin_valuelink_card_number_masking_length>
+				<sdc_custom_admin_valuelink_card_number_invalid_message>Invalid Valuelink Card Number</sdc_custom_admin_valuelink_card_number_invalid_message>
+				<sdc_custom_admin_valuelink_security_code_parent_element>fiserv_valuelink-security-code</sdc_custom_admin_valuelink_security_code_parent_element>
+				<sdc_custom_admin_valuelink_security_code_placeholder>CVV</sdc_custom_admin_valuelink_security_code_placeholder>
+				<sdc_custom_admin_valuelink_security_code_placeholder_character>•</sdc_custom_admin_valuelink_security_code_placeholder_character>
+				<sdc_custom_admin_valuelink_security_code_masking>1</sdc_custom_admin_valuelink_security_code_masking>
+				<sdc_custom_admin_valuelink_security_code_masking_character>•</sdc_custom_admin_valuelink_security_code_masking_character>
+				<sdc_custom_admin_valuelink_security_code_masking_mode>ALWAYS_MASK_ALL</sdc_custom_admin_valuelink_security_code_masking_mode>
+				<sdc_custom_admin_valuelink_security_code_invalid_message>Invalid Security Code</sdc_custom_admin_valuelink_security_code_invalid_message>
+				<sdc_custom_admin_valuelink_css></sdc_custom_admin_valuelink_css>
+				<sdc_custom_admin_valuelink_font_data></sdc_custom_admin_valuelink_font_data>
+				<sdc_custom_admin_valuelink_font_family></sdc_custom_admin_valuelink_font_family>
+				<sdc_custom_admin_valuelink_font_format></sdc_custom_admin_valuelink_font_format>
+				<sdc_custom_admin_valuelink_font_integrity></sdc_custom_admin_valuelink_font_integrity>
+			</fiserv_valuelink>
 			<fiserv_commercehub_vault>
 				<model>FiservCommerceHubVaultFacade</model>
 				<title>Stored Accounts (Fiserv)</title>

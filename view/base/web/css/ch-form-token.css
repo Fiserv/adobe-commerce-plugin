@@ -53,6 +53,46 @@
 	background-repeat: no-repeat;
 }
 
+.sdc-unmasking-icon {
+	background-image: url('../images/maskeye.png');
+	background-size: contain;
+	background-color: transparent;
+	display: block;
+	height: auto;
+	border: none;
+	margin: 4px;
+	position: relative;
+	background-repeat: no-repeat;
+}
+
+.sdc-unmasking-icon:hover, .sdc-unmasking-icon:active, .sdc-unmasking-icon:focus {
+	background-image: url('../images/maskeye.png');
+	background-size: contain;
+	background-color: transparent;
+	border: none;
+	color: transparent;
+}
+
+.sdc-masking-icon {
+	background-image: url('../images/remaskeye.png');
+	background-size: contain;
+	background-color: transparent;
+	display: block;
+	height: auto;
+	border: none;
+	margin: 4px;
+	position: relative;
+	background-repeat: no-repeat;
+}
+
+.sdc-masking-icon:hover, .sdc-masking-icon:active, .sdc-masking-icon:focus {
+	background-image: url('../images/remaskeye.png');
+	background-size: contain;
+	background-color: transparent;
+	border: none;
+	color: transparent;
+}
+
 .sdc-card-brand-icon-visa {
 	background-image: url('../../Magento_Payment/images/cc/vi.png');
 }

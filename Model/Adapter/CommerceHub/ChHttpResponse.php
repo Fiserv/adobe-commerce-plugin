@@ -49,6 +49,11 @@ class ChHttpResponse
 		return $this->headerLength;
 	}
 
+	public function getHeaders()
+	{
+		return substr($this->getResponse(), 0, $this->getHeaderLength());
+	}
+
 	public function getBody() 
 	{
 		return substr($this->getResponse(), $this->getHeaderLength());

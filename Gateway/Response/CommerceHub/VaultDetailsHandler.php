@@ -19,7 +19,7 @@ use Magento\Vault\Api\Data\PaymentTokenFactoryInterface;
 use Magento\Vault\Api\Data\PaymentTokenInterface;
 use Fiserv\Payments\Model\System\Utils\PaymentTokenUtil;
 use Fiserv\Payments\Gateway\Config\CommerceHub\Config;
-use Psr\Log\LoggerInterface;
+use Fiserv\Payments\Logger\MultiLevelLogger;
 
 /**
  * Vault Details Handler
@@ -55,7 +55,7 @@ class VaultDetailsHandler implements HandlerInterface
 	private $serializer;
 	
 	/**
-	** @var LoggerInterface
+	** @var MultiLevelLogger
 	**/
 	private $logger;
 
@@ -66,6 +66,7 @@ class VaultDetailsHandler implements HandlerInterface
 	 * @param OrderPaymentExtensionInterfaceFactory $paymentExtensionFactory
 	 * @param SubjectReader $subjectReader
 	 * @param Json|null $serializer
+	 * @param MultiLevelLogger $logger
 	 * @throws \RuntimeException
 	 */
 	public function __construct(
@@ -75,7 +76,7 @@ class VaultDetailsHandler implements HandlerInterface
 		OrderPaymentExtensionInterfaceFactory $paymentExtensionFactory,
 		SubjectReader $subjectReader,
 		Json $serializer = null,
-		LoggerInterface $logger
+		MultiLevelLogger $logger
 	) {
 		$this->config = $config;
 		$this->vaultPaymentTokenUtils = $vaultPaymentTokenUtils;

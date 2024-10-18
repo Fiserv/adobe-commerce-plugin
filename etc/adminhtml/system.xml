@@ -50,6 +50,11 @@
 						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 						<config_path>payment/fiserv_commercehub/debug</config_path>
 					</field>
+					<field id="logging_level" translate="label" type="select" sortOrder="13" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Logging Level</label>
+						<source_model>Fiserv\Payments\Model\Source\CommerceHub\LoggingLevel</source_model>
+						<config_path>payment/fiserv_commercehub/logging_level</config_path>
+					</field>
 				</group>
 				<group id="payment_settings" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="5">
 					<label>Payment Acceptance Settings</label>
@@ -66,19 +71,19 @@
 						<source_model>Fiserv\Payments\Model\Source\CommerceHub\CcType</source_model>
 						<config_path>payment/fiserv_commercehub/cctypes</config_path>
 					</field> -->
-					<field id="currency" translate="label" type="select" sortOrder="13" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="currency" translate="label" type="select" sortOrder="14" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Accepted Currency</label>
 						<source_model>Magento\Config\Model\Config\Source\Locale\Currency</source_model>
 						<config_path>payment/fiserv_commercehub/currency</config_path>
 						<frontend_model>Fiserv\Payments\Model\Source\CommerceHub\Disable</frontend_model>
 						<comment>This version supports USD only. Additional currencies will be added in the future.</comment>
 					</field> 
-					<field id="allowspecific" translate="label" type="allowspecific" sortOrder="14" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="allowspecific" translate="label" type="allowspecific" sortOrder="15" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Accept Payments From All Countries</label>
 						<source_model>Magento\Payment\Model\Config\Source\Allspecificcountries</source_model>
 						<config_path>payment/fiserv_commercehub/allowspecific</config_path>
 					</field>
-					<field id="specificcountry" translate="label" type="multiselect" sortOrder="15" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="specificcountry" translate="label" type="multiselect" sortOrder="16" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Accept Payments From Select Countries</label>
 						<source_model>Fiserv\Payments\Model\Source\CommerceHub\FiservCountry</source_model>
 						<validate>validate-no-empty</validate>
@@ -111,18 +116,30 @@
 					<label>Valuelink Gift Cards</label>
 					<attribute type="expanded">0</attribute>
 					<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
-					<field id="title" translate="label" type="text" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
-						<label>Payment Method Title</label>
-						<config_path>payment/fiserv_commercehub/valuelink_title</config_path>
-					</field>
-					<field id="valuelink" translate="label" type="select" sortOrder="12" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="valuelink" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Enable Valuelink Gift Cards</label>
 						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-						<config_path>payment/fiserv_commercehub/use_valuelink</config_path>
+						<config_path>payment/fiserv_valuelink/active</config_path>
 						<comment>Valuelink is a gift card solution native to Fiserv. Choose Yes to enable Valuelink as a payment method or leave No to disable Valuelink.</comment>
 					</field>
+					<field id="title" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Payment Method Title</label>
+						<config_path>payment/fiserv_valuelink/valuelink_title</config_path>
+					</field>
+					<field id="payment_action" translate="label" type="select" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Charge Type</label>
+						<source_model>Fiserv\Payments\Model\Source\CommerceHub\TransactionType</source_model>
+						<config_path>payment/fiserv_valuelink/payment_action</config_path>
+					</field>
+					<field id="card_amount_limit" translate="label" type="select" sortOrder="4" showInDefault="1" showinWebsite="1" showInStore="0">
+						<label>Max Number of Gift Cards Allowed per Order</label>
+						<source_model>Fiserv\Payments\Model\Source\CommerceHub\ValuelinkCardAmount</source_model>
+						<frontend_model>Fiserv\Payments\Model\Source\CommerceHub\Disable</frontend_model>
+						<comment>Number of gift cards currently restricted to 1 per order</comment>
+						<config_path>payment/fiserv_valuelink/card_amount_limit</config_path>
+					</field>
 				</group>
-				<group id="sdc_custom" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="16">
+				<group id="sdc_custom" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="17">
 					<label>Payment Form Customization</label>
 					<comment><![CDATA[<a href="https://developer.fiserv.com/product/CommerceHub/docs/?path=docs/Online-Mobile-Digital/Secure-Data-Capture/iFrame-JS/iFrame-Customization.md&branch=main">Payment Form Customization Documentation.</a>]]></comment>
 					<attribute type="expanded">0</attribute>
@@ -227,7 +244,7 @@
 								<config_path>payment/fiserv_commercehub/sdc_custom_checkout_security_code_masking_character</config_path>
 							</field>
 							<field id="customer_security_code_masking_mode" translate="label" type="select" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="0">
-								<label>Mask Length</label>
+								<label>Mask Mode</label>
 								<depends>
 									<field id="customer_security_code_masking">1</field>
 								</depends>
@@ -307,8 +324,141 @@
 							</field>
 						</group>
 					</group>
+
+					<group id="customer_valuelink_form_custom" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="2">
+						<label>Customer Checkout Valuelink Form</label>
+						<comment>Customer checkout valuelink form</comment>
+						<attribute type="expanded">0</attribute>
+						<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+						<group id="customer_valuelink_card_number" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="1">
+							<label>Card Number Field</label>
+							<attribute type="expanded">0</attribute>
+							<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+							<field id="customer_valuelink_card_number_placeholder" translate="label" type="text" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Placeholder</label>
+								<config_path>payment/fiserv_valuelink/sdc_custom_checkout_valuelink_card_number_placeholder</config_path>
+							</field>
+							<field id="customer_valuelink_card_number_placeholder_character" translate="label" type="select" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Placeholder Character</label>
+								<source_model>Fiserv\Payments\Model\Source\CommerceHub\MaskingCharacter</source_model>
+								<config_path>payment/fiserv_valuelink/sdc_custom_checkout_valuelink_card_number_placeholder_character</config_path>
+							</field>
+							<field id="customer_valuelink_card_number_formatting" translate="label" type="select" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Format Card Number</label>
+								<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+								<config_path>payment/fiserv_valuelink/sdc_custom_checkout_valuelink_card_number_number_formatting</config_path>
+							</field>
+							<field id="customer_valuelink_card_number_masking" translate="label" type="select" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Mask Card Number</label>
+								<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+								<config_path>payment/fiserv_valuelink/sdc_custom_checkout_valuelink_card_number_masking</config_path>
+							</field>
+							<field id="customer_valuelink_card_number_masking_character" translate="label" type="select" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Masking Character</label>
+								<depends>
+									<field id="customer_valuelink_card_number_masking">1</field>
+								</depends>
+								<source_model>Fiserv\Payments\Model\Source\CommerceHub\MaskingCharacter</source_model>
+								<config_path>payment/fiserv_valuelink/sdc_custom_checkout_valuelink_card_number_masking_character</config_path>
+							</field>
+							<field id="customer_valuelink_card_number_masking_mode" translate="label" type="select" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Mask Mode</label>
+								<depends>
+									<field id="customer_valuelink_card_number_masking">1</field>
+								</depends>
+								<source_model>Fiserv\Payments\Model\Source\CommerceHub\MaskingMode</source_model>
+								<config_path>payment/fiserv_valuelink/sdc_custom_checkout_valuelink_card_number_masking_mode</config_path>
+							</field>
+							<field id="customer_valuelink_card_number_masking_length" translate="label" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="0">
+								<validate>integer</validate>
+								<label>Mask Length</label>
+								<depends>
+									<field id="customer_valuelink_card_number_masking">1</field>
+								</depends>
+								<config_path>payment/fiserv_valuelink/sdc_custom_checkout_valuelink_card_number_masking_length</config_path>
+							</field>
+							<field id="customer_valuelink_card_number_invalid" translate="label" type="text" sortOrder="8" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Invalid Field Message</label>
+								<config_path>payment/fiserv_valuelink/sdc_custom_checkout_valuelink_card_number_invalid_message</config_path>
+							</field>
+						</group>
+
+						<group id="customer_valuelink_security_code" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="3">
+							<label>Security Code Field</label>
+							<attribute type="expanded">0</attribute>
+							<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+							<field id="customer_valuelink_security_code_placeholder" translate="label" type="text" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Placeholder</label>
+								<config_path>payment/fiserv_valuelink/sdc_custom_checkout_valuelink_security_code_placeholder</config_path>
+							</field>
+							<field id="customer_valuelink_security_code_placeholder_character" translate="label" type="select" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Placeholder Character</label>
+								<source_model>Fiserv\Payments\Model\Source\CommerceHub\MaskingCharacter</source_model>
+								<config_path>payment/fiserv_valuelink/sdc_custom_checkout_valuelink_security_code_placeholder_character</config_path>
+							</field>
+							<field id="customer_valuelink_security_code_masking" translate="label" type="select" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Mask Security Code</label>
+								<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+								<config_path>payment/fiserv_valuelink/sdc_custom_checkout_valuelink_security_code_masking</config_path>
+							</field>
+							<field id="customer_valuelink_security_code_masking_character" translate="label" type="select" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Masking Character</label>
+								<depends>
+									<field id="customer_valuelink_security_code_masking">1</field>
+								</depends>
+								<source_model>Fiserv\Payments\Model\Source\CommerceHub\MaskingCharacter</source_model>
+								<config_path>payment/fiserv_valuelink/sdc_custom_checkout_valuelink_security_code_masking_character</config_path>
+							</field>
+							<field id="customer_valuelink_security_code_masking_mode" translate="label" type="select" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Mask Mode</label>
+								<depends>
+									<field id="customer_valuelink_security_code_masking">1</field>
+								</depends>
+								<source_model>Fiserv\Payments\Model\Source\CommerceHub\MaskingModeCvv</source_model>
+								<config_path>payment/fiserv_valuelink/sdc_custom_checkout_valuelink_security_code_masking_mode</config_path>
+							</field>
+							<field id="customer_valuelink_security_code_invalid" translate="label" type="text" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Invalid Field Message</label>
+								<config_path>payment/fiserv_valuelink/sdc_custom_checkout_valuelink_security_code_invalid_message</config_path>
+							</field>
+						</group>
+
+						<group id="customer_valuelink_css" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="6">
+							<label>Form CSS</label>
+							<attribute type="expanded">0</attribute>
+							<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+							<field id="customer_valuelink_css" translate="label" type="textarea" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Checkout Valuelink Form CSS</label>
+								<backend_model>Fiserv\Payments\Model\System\Config\Backend\CommerceHub\CssJson</backend_model>
+								<config_path>payment/fiserv_valuelink/sdc_custom_checkout_valuelink_css</config_path>
+							</field>
+						</group>
+
+						<group id="customer_valuelink_font" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="7">
+							<label>Custom Font</label>
+							<comment>All fields are required to apply a custom font to the payment form.</comment>
+							<attribute type="expanded">0</attribute>
+							<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+							<field id="customer_valuelink_font_data" translate="label" type="textarea" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Font Data</label>
+								<config_path>payment/fiserv_valuelink/sdc_custom_checkout_valuelink_font_data</config_path>
+							</field>
+							<field id="customer_valuelink_font_family" translate="label" type="textarea" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Font Family</label>
+								<config_path>payment/fiserv_valuelink/sdc_custom_checkout_valuelink_font_family</config_path>
+							</field>
+							<field id="customer_valuelink_font_format" translate="label" type="textarea" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Font Format</label>
+								<config_path>payment/fiserv_valuelink/sdc_custom_checkout_valuelink_font_format</config_path>
+							</field>
+							<field id="customer_valuelink_font_integrity" translate="label" type="textarea" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Integrity</label>
+								<config_path>payment/fiserv_valuelink/sdc_custom_checkout_valuelink_font_integrity</config_path>
+							</field>
+						</group>
+					</group>
 					
-					<group id="admin_form_custom" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="2">
+					<group id="admin_form_custom" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="3">
 						<label>Admin Order Payment Form</label>
 						<comment>Admin Panel order creation checkout payment form</comment>
 						<attribute type="expanded">0</attribute>
@@ -407,7 +557,7 @@
 								<config_path>payment/fiserv_commercehub/sdc_custom_admin_security_code_masking_character</config_path>
 							</field>
 							<field id="admin_security_code_masking_mode" translate="label" type="select" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="0">
-								<label>Mask Length</label>
+								<label>Mask Mode</label>
 								<depends>
 									<field id="admin_security_code_masking">1</field>
 								</depends>
@@ -488,7 +638,140 @@
 						</group>
 					</group>
 
-					<group id="token_form_custom" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="3">
+					<group id="admin_valuelink_form_custom" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="4">
+						<label>Admin Order Valuelink Form</label>
+						<comment>Admin Panel order creation checkout valuelink form</comment>
+						<attribute type="expanded">0</attribute>
+						<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+						<group id="admin_valuelink_card_number" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="1">
+							<label>Card Number Field</label>
+							<attribute type="expanded">0</attribute>
+							<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+							<field id="admin_valuelink_card_number_placeholder" translate="label" type="text" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Placeholder</label>
+								<config_path>payment/fiserv_valuelink/sdc_custom_admin_valuelink_card_number_placeholder</config_path>
+							</field>
+							<field id="admin_valuelink_card_number_placeholder_character" translate="label" type="select" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Placeholder Character</label>
+								<source_model>Fiserv\Payments\Model\Source\CommerceHub\MaskingCharacter</source_model>
+								<config_path>payment/fiserv_valuelink/sdc_custom_admin_valuelink_card_number_placeholder_character</config_path>
+							</field>
+							<field id="admin_valuelink_card_number_formatting" translate="label" type="select" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Format Card Number</label>
+								<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+								<config_path>payment/fiserv_valuelink/sdc_custom_admin_valuelink_card_number_number_formatting</config_path>
+							</field>
+							<field id="admin_valuelink_card_number_masking" translate="label" type="select" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Mask Card Number</label>
+								<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+								<config_path>payment/fiserv_valuelink/sdc_custom_admin_valuelink_card_number_masking</config_path>
+							</field>
+							<field id="admin_valuelink_card_number_masking_character" translate="label" type="select" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Masking Character</label>
+								<depends>
+									<field id="admin_valuelink_card_number_masking">1</field>
+								</depends>
+								<source_model>Fiserv\Payments\Model\Source\CommerceHub\MaskingCharacter</source_model>
+								<config_path>payment/fiserv_valuelink/sdc_custom_admin_valuelink_card_number_masking_character</config_path>
+							</field>
+							<field id="admin_valuelink_card_number_masking_mode" translate="label" type="select" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Mask Mode</label>
+								<depends>
+									<field id="admin_valuelink_card_number_masking">1</field>
+								</depends>
+								<source_model>Fiserv\Payments\Model\Source\CommerceHub\MaskingMode</source_model>
+								<config_path>payment/fiserv_valuelink/sdc_custom_admin_valuelink_card_number_masking_mode</config_path>
+							</field>
+							<field id="admin_valuelink_card_number_masking_length" translate="label" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="0">
+								<validate>integer</validate>
+								<label>Mask Length</label>
+								<depends>
+									<field id="admin_valuelink_card_number_masking">1</field>
+								</depends>
+								<config_path>payment/fiserv_valuelink/sdc_custom_admin_valuelink_card_number_masking_length</config_path>
+							</field>
+							<field id="admin_valuelink_card_number_invalid" translate="label" type="text" sortOrder="8" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Invalid Field Message</label>
+								<config_path>payment/fiserv_valuelink/sdc_custom_admin_valuelink_card_number_invalid_message</config_path>
+							</field>
+						</group>
+
+						<group id="admin_valuelink_security_code" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="3">
+							<label>Security Code Field</label>
+							<attribute type="expanded">0</attribute>
+							<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+							<field id="admin_valuelink_security_code_placeholder" translate="label" type="text" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Placeholder</label>
+								<config_path>payment/fiserv_valuelink/sdc_custom_admin_valuelink_security_code_placeholder</config_path>
+							</field>
+							<field id="admin_valuelink_security_code_placeholder_character" translate="label" type="select" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Placeholder Character</label>
+								<source_model>Fiserv\Payments\Model\Source\CommerceHub\MaskingCharacter</source_model>
+								<config_path>payment/fiserv_valuelink/sdc_custom_admin_valuelink_security_code_placeholder_character</config_path>
+							</field>
+							<field id="admin_valuelink_security_code_masking" translate="label" type="select" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Mask Security Code</label>
+								<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+								<config_path>payment/fiserv_valuelink/sdc_custom_admin_valuelink_security_code_masking</config_path>
+							</field>
+							<field id="admin_valuelink_security_code_masking_character" translate="label" type="select" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Masking Character</label>
+								<depends>
+									<field id="admin_valuelink_security_code_masking">1</field>
+								</depends>
+								<source_model>Fiserv\Payments\Model\Source\CommerceHub\MaskingCharacter</source_model>
+								<config_path>payment/fiserv_valuelink/sdc_custom_admin_valuelink_security_code_masking_character</config_path>
+							</field>
+							<field id="admin_valuelink_security_code_masking_mode" translate="label" type="select" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Mask Mode</label>
+								<depends>
+									<field id="admin_valuelink_security_code_masking">1</field>
+								</depends>
+								<source_model>Fiserv\Payments\Model\Source\CommerceHub\MaskingModeCvv</source_model>
+								<config_path>payment/fiserv_valuelink/sdc_custom_admin_valuelink_security_code_masking_mode</config_path>
+							</field>
+							<field id="admin_valuelink_security_code_invalid" translate="label" type="text" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Invalid Field Message</label>
+								<config_path>payment/fiserv_valuelink/sdc_custom_admin_valuelink_security_code_invalid_message</config_path>
+							</field>
+						</group>
+
+						<group id="admin_valuelink_css" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="6">
+							<label>Form CSS</label>
+							<attribute type="expanded">0</attribute>
+							<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+							<field id="admin_valuelink_css" translate="label" type="textarea" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Admin Valuelink Form CSS</label>
+								<backend_model>Fiserv\Payments\Model\System\Config\Backend\CommerceHub\CssJson</backend_model>
+								<config_path>payment/fiserv_valuelink/sdc_custom_admin_valuelink_css</config_path>
+							</field>
+						</group>
+
+						<group id="admin_valuelink_font" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="7">
+							<label>Custom Font</label>
+							<comment>All fields are required to apply a custom font to the payment form.</comment>
+							<attribute type="expanded">0</attribute>
+							<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+							<field id="admin_valuelink_font_data" translate="label" type="textarea" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Font Data</label>
+								<config_path>payment/fiserv_valuelink/sdc_custom_admin_valuelink_font_data</config_path>
+							</field>
+							<field id="admin_valuelink_font_family" translate="label" type="textarea" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Font Family</label>
+								<config_path>payment/fiserv_valuelink/sdc_custom_admin_valuelink_font_family</config_path>
+							</field>
+							<field id="admin_valuelink_font_format" translate="label" type="textarea" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Font Format</label>
+								<config_path>payment/fiserv_valuelink/sdc_custom_admin_valuelink_font_format</config_path>
+							</field>
+							<field id="admin_valuelink_font_integrity" translate="label" type="textarea" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Integrity</label>
+								<config_path>payment/fiserv_valuelink/sdc_custom_admin_valuelink_font_integrity</config_path>
+							</field>
+						</group>
+					</group>
+
+					<group id="token_form_custom" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="5">
 						<label>Tokenization Form</label>
 						<comment>Stored payment account creation form</comment>
 						<attribute type="expanded">0</attribute>
@@ -587,7 +870,7 @@
 									<config_path>payment/fiserv_commercehub/sdc_custom_token_security_code_masking_character</config_path>
 								</field>
 								<field id="token_security_code_masking_mode" translate="label" type="select" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="0">
-									<label>Mask Length</label>
+									<label>Mask Mode</label>
 									<depends>
 										<field id="token_security_code_masking">1</field>
 									</depends>

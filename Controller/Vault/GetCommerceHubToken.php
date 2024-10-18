@@ -13,8 +13,8 @@ use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
 use \Magento\Customer\Model\Session;
 use Magento\Framework\Webapi\Exception;
-use Psr\Log\LoggerInterface;
 use Fiserv\Payments\Model\System\Utils\PaymentTokenUtil;
+use Fiserv\Payments\Logger\MultiLevelLogger;
 
 /**
  * Class GetCommerceHubToken
@@ -22,7 +22,7 @@ use Fiserv\Payments\Model\System\Utils\PaymentTokenUtil;
 class GetCommerceHubToken extends Action implements HttpGetActionInterface
 {
 	/**
-	 * @var LoggerInterface
+	 * @var MultiLevelLogger
 	 */
 	private $logger;
 
@@ -38,13 +38,13 @@ class GetCommerceHubToken extends Action implements HttpGetActionInterface
 
 	/**
 	 * @param Context $context
-	 * @param LoggerInterface $logger
+	 * @param MultiLevelLogger $logger
 	 * @param Session $session
 	 * @param GetPaymentTokenCommand $command
 	 */
 	public function __construct(
 		Context $context,
-		LoggerInterface $logger,
+		MultiLevelLogger $logger,
 		Session $session,
 		GetPaymentTokenCommand $command
 	) {
@@ -73,7 +73,8 @@ class GetCommerceHubToken extends Action implements HttpGetActionInterface
 				->get();
 			$response->setData(['paymentToken' => PaymentTokenUtil::getTokenDataFromPersistenceFormat($result['paymentToken'])]);
 		} catch (\Exception $e) {
-			$this->logger->critical($e);
+			$this->logger->logCritical(1, "An error occurred in the retrieval of payment token data");
+			$this->logger->logCritical(2, $e);
 			return $this->processBadRequest($response);
 		}
 

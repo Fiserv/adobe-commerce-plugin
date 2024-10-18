@@ -6,24 +6,35 @@
 	$tokenConfig = $block->getConfig();
 ?>
 
-
 <?php if ($block->canCreateStandaloneSpa()) : ?>
 	<link rel="stylesheet" type="text/css" href="<?php echo $block->getViewFileUrl('Fiserv_Payments/css/ch-form-token.css')?>">
 	<div id="tokenization-builder-container" style="display:none "data-bind="scope: 'standalone-spa'">
 		<div id="tokenization-builder-title">
 			<h3>Add a Stored Payment Account</h3>
 		</div>
+	<div id="message-container" data-bind="scope:'message'">
+	<!-- ko template: getTemplate() --><!-- /ko -->
+	</div>
 		<div id="tokenization-builder-button-container">
 			<button data-bind="click: createIframe" id="tokenization-builder-add">
 				Add
 			</button>
 		</div>
-
         <div id="sdc-container">
 			<div class="sdc-row">
 				<div id="sdc-card-number-frame" class="sdc-field-frame sdc-text">
 					<div id="sdc-card-brand-icon" class="sdc-card-brand-icon"></div>
 					<div id="fiserv_commercehub-card-number" class="sdc-field"></div>
+					<button 
+						id="sdc-unmask-number" 
+						class="sdc-unmasking-icon"
+						data-bind="click: unmaskCardNumber">
+					</button>
+					<button
+						id="sdc-mask-number"
+						class="sdc-masking-icon sdc-hidden"
+						data-bind="click: maskCardNumber">
+					</button>
 				</div>
 				<span id="sdc-card-number-invalid-message" class="sdc-error-message sdc-hidden"></span>
 			</div>
@@ -36,6 +47,16 @@
 			<div class="sdc-row">
 				<div id="sdc-security-code-frame" class="sdc-field-frame sdc-text">
 					<div id="fiserv_commercehub-security-code" class="sdc-field"></div>
+					<button
+						id="sdc-unmask-security"
+						class="sdc-unmasking-icon"
+						data-bind="click: unmaskSecurityCode">
+					</button>
+					<button
+						id="sdc-mask-security"
+						class="sdc-masking-icon sdc-hidden"
+						data-bind="click: maskSecurityCode">
+					</button>
 				</div>
 				<span id="sdc-security-code-invalid-message" class="sdc-error-message sdc-hidden"></span>
 			</div>
@@ -70,11 +91,12 @@
 				"standalone-spa": {
 					"component": "Fiserv_Payments/js/view/customer/stored-payments",
 					"tokenConfig": <?= /* @escapeNotVerified */ $tokenConfig ?>
+				},
+				"message": {
+					"component": "Magento_Ui/js/view/messages"
 				}
 			}
 		}
 	}
 }
 </script>
-
-

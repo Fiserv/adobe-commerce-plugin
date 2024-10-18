@@ -1,0 +1,19 @@
+<?php
+
+/** @var \Magento\Framework\View\Helper\SecureHtmlRenderer $secureRenderer */
+?>
+<?php $scriptString = <<<script
+require(['prototype'], function(){
+
+//<![CDATA[
+    removeValuelinkCard = function(sessionId) {
+        var data = {};
+        data['valuelink_remove'] = sessionId;
+        order.loadArea(['totals', 'billing_method', 'items'], true, data);
+    }
+//]]>
+
+});
+script;
+?>
+<?= /* @noEscape */ $secureRenderer->renderTag('script', [], $scriptString, false); ?>

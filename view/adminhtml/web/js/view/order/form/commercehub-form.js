@@ -82,6 +82,8 @@ define([
 				if (typeof(window.shouldInstantiateIframe) !== 'undefined' &&
 					window.shouldInstantiateIframe === true)
 				{
+					this.disableEventListeners();
+					this.enableEventListeners();
 					this.destroyIframe();
 					this.createIframe();
 					window.shouldInstantiateIframe = false;
@@ -119,6 +121,7 @@ define([
 			getSubmitButton: function() {
 				return $('button#tokenization-builder-create');
 			},
+
 	
 			createIframe: function() {
 				var self = this;
@@ -154,7 +157,8 @@ define([
 			},
 
 			iframeRunFailure: function() {
-				this.showError("Card capture failure. Please try again."); 
+				this.endAsyncFlow();
+				this.showError("Card capture failure. Please try again.");
 				chIframe.resetIframe();
 			},
 
@@ -184,7 +188,6 @@ define([
 
 			placeOrder: function(sessionId) {
 				this.setPaymentSessionInput(sessionId);
-				this.endAsyncFlow();
 				$('#' + this.selector).trigger('realOrder');
 			},
 
@@ -201,7 +204,6 @@ define([
 			*/
 			startOrderFlow: function () {
 				if (this.iframeValid) {
-					this.beginAsyncFlow();
 					chIframe.submitCardForm(
 						this.paymentConfig['storeUrl'], 
 						(sessionId) => { this.placeOrder(sessionId); },
@@ -272,6 +274,10 @@ define([
 			 */
 			enableEventListeners: function () {
 				this.$selector.on('submitOrder.' + this.code, this.startOrderFlow.bind(this));
+				$('#sdc-unmask-number').on('click', () => {this.unmaskCardNumber();});
+				$('#sdc-mask-number').on('click', () => {this.maskCardNumber();});
+				$('#sdc-unmask-security').on('click', () => {this.unmaskSecurity();});
+				$('#sdc-mask-security').on('click', () => {this.maskSecurity();});
 			},
 
 			/**
@@ -280,6 +286,10 @@ define([
 			disableEventListeners: function () {
 				this.$selector.off('submitOrder');
 				this.$selector.off('submit');
+				$('#sdc-unmask-number').off('click');
+				$('sdc-mask-number').off('click');
+				$('#sdc-unmask-security').off('click');
+				$('sdc-mask-security').off('click');
 			},
 
 			getCardBrandIcon: function() {
@@ -430,6 +440,55 @@ define([
 						frame.removeClass('sdc-focused-field');
 					}
 				}
+			},
+
+			
+			getNumberUnmaskButton: function() {
+				return $('#sdc-unmask-number');
+			},
+
+			getSecurityUnmaskButton: function() {
+				return $('#sdc-unmask-security');
+			},
+
+			getNumberMaskButton: function() {
+				return $('#sdc-mask-number');
+			},
+	
+			getSecurityMaskButton: function() {
+				return $('#sdc-mask-security');
+			},
+
+			unmaskCardNumber: function() {
+				chIframe.unmask('cardNumber');
+				let unmaskButton = this.getNumberUnmaskButton();
+				let maskButton = this.getNumberMaskButton();
+				unmaskButton.addClass('sdc-hidden');
+				maskButton.removeClass('sdc-hidden');
+			},
+
+			maskCardNumber: function() {
+				chIframe.mask('cardNumber');
+				let unmaskButton = this.getNumberUnmaskButton();
+				let maskButton = this.getNumberMaskButton();
+				unmaskButton.removeClass('sdc-hidden');
+				maskButton.addClass('sdc-hidden');
+			},
+
+			unmaskSecurity: function() {
+				chIframe.unmask('securityCode');
+				let unmaskButton = this.getSecurityUnmaskButton();
+				let maskButton = this.getSecurityMaskButton();
+				unmaskButton.addClass('sdc-hidden');
+				maskButton.removeClass('sdc-hidden');
+			},
+
+			maskSecurity: function() {
+				chIframe.mask('securityCode');
+				let unmaskButton = this.getSecurityUnmaskButton();
+				let maskButton = this.getSecurityMaskButton();
+				unmaskButton.removeClass('sdc-hidden');
+				maskButton.addClass('sdc-hidden');
 			}
 		});
 	}

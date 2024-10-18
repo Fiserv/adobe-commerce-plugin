@@ -8,6 +8,8 @@ namespace Fiserv\Payments\Gateway\Request\CommerceHub;
 use \Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use \Fiserv\Payments\Lib\CommerceHub\Model\ReferenceTransactionDetails;
 use \Magento\Payment\Gateway\Request\BuilderInterface;
+use Fiserv\Payments\Logger\MultiLevelLogger;
+
 
 /**
  * Cancel Reference Transaction Data Builder
@@ -17,17 +19,26 @@ class CancelRefTxnDataBuilder implements BuilderInterface
 	const REF_TXN_KEY = "referenceTransaction";
 
 	/**
+	 * @var MultiLevelLogger
+	 */
+	private $logger;
+	
+	/**
 	 * @var SubjectReader
 	 */
 	private $subjectReader;
 
 	/**
+	 * @param MultiLevelLogger $logger
 	 * @param SubjectReader $subjectReader
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */
-	public function __construct(SubjectReader $subjectReader)
-	{
+	public function __construct(
+		SubjectReader $subjectReader,
+		MultiLevelLogger $logger
+	) {
 		$this->subjectReader = $subjectReader;
+		$this->logger = $logger;
 	}
 
 	/**
@@ -50,6 +61,7 @@ class CancelRefTxnDataBuilder implements BuilderInterface
 		$refTxn = new ReferenceTransactionDetails();
 		$refTxn->setReferenceTransactionId($authTxnId);
 
+		$this->logger->logInfo(3, "Cancel Referece Transaction Data Builder:\n" . $refTxn->__toString());
 		return [ self::REF_TXN_KEY => $refTxn ];
 	}
 }

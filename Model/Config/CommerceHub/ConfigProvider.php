@@ -20,6 +20,7 @@ class ConfigProvider implements ConfigProviderInterface
 {
 	const CODE = 'fiserv_commercehub';
 	const VAULT_CODE = 'fiserv_commercehub_vault';
+	const VALUELINK_CODE = 'fiserv_valuelink';
 	const IS_ACTIVE_KEY = 'isActive';
 	const MERCHANT_ID_KEY = 'merchantId';
 	const API_KEY_KEY = 'apiKey';
@@ -28,7 +29,7 @@ class ConfigProvider implements ConfigProviderInterface
 	const PAYMENT_ACTION_KEY = 'paymentAction';
 	const AVAILABLE_CC_KEY = 'availableCardTypes';
 	const USE_CCV_KEY = 'useCcv';
-	const USE_VALUELINK_KEY = 'useValuelink';
+	const LOGGING_LEVEL_KEY = 'loggingLevel';
 	const CURRENCY_KEY = 'currency';
 	const PROD_CLIENT_KEY = 'prodClientUrl';
 	const CERT_CLIENT_KEY = 'certClientUrl';
@@ -84,7 +85,7 @@ class ConfigProvider implements ConfigProviderInterface
 			self::PAYMENT_ACTION_KEY => $this->config->getPaymentAction($storeId),
 			self::AVAILABLE_CC_KEY => $this->config->getAvailableCardTypes($storeId),
 			self::USE_CCV_KEY => $this->config->isCcvEnabled($storeId),
-			self::USE_VALUELINK_KEY => $this->config->enableValuelink($storeId),
+			self::LOGGING_LEVEL_KEY => $this->config->getLoggingLevel($storeId),
 			self::CURRENCY_KEY => $this->config->getCurrency($storeId),
 			self::PROD_CLIENT_KEY => $this->config->getProdClientUrl(),
 			self::CERT_CLIENT_KEY => $this->config->getCertClientUrl(),
@@ -93,11 +94,12 @@ class ConfigProvider implements ConfigProviderInterface
 			self::TERMINAL_ID_KEY => $this->config->getTerminalId($storeId),
 			self::INVALID_FIELDS_KEY => $this->getInvalidFieldMessages(CONFIG::KEY_SDC_CHECKOUT, $storeId)
 		];
-        return [
-            'payment' => [
-                self::CODE => $config
-            ]
-        ];
+
+		return [
+			'payment' => [
+				self::CODE => $config
+			]
+		];
 	}
 	
 	public function buildFormConfig($formId, $storeId)
@@ -109,7 +111,58 @@ class ConfigProvider implements ConfigProviderInterface
 
 		return $fieldsConfig;
 	}
-	
+
+	public function buildValuelinkFormConfig($formId, $storeId)
+	{
+		$fieldsConfig = array();
+		$fieldsConfig["fields"] = $this->buildValuelinkFormFieldsConfig($formId, $storeId);
+		$fieldsConfig["css"] = json_decode($this->config->cssFormConfig($formId, $storeId, true) ?? "{}");
+		$fieldsConfig["font"] = $this->config->fontFormConfig($formId, $storeId, true) ?? array();
+
+		return $fieldsConfig;
+	}	
+
+	private function buildValuelinkFormFieldsConfig($formId, $storeId)
+	{
+		$cardNumberConfig = $this->config->cardNumberFormConfig($formId, $storeId, true);
+		$securityCodeConfig = $this->config->securityCodeFormConfig($formId, $storeId, true);
+		
+		$fieldsConfig = array();
+		
+		$fieldsConfig["cardNumber"] = array(
+			"parentElementId" => $cardNumberConfig[$this->config::KEY_SDC_PARENT_ELEMENT],
+			"placeholder" => $cardNumberConfig[$this->config::KEY_SDC_PLACEHOLDER],
+			"dynamicPlaceholderCharacter" => $cardNumberConfig[$this->config::KEY_SDC_PLACEHOLDER_CHAR],			
+			"enableFormatting" => $cardNumberConfig[$this->config::KEY_SDC_NUMBER_FORMAT] == 1 ? true : false,
+			"masking" => array(
+				"character" => $cardNumberConfig[$this->config::KEY_SDC_MASK_CHAR],
+				"mode" => $cardNumberConfig[$this->config::KEY_SDC_MASK_MODE],
+				"shrunkLength" => intval($cardNumberConfig[$this->config::KEY_SDC_MASK_LENGTH])
+			)
+		);
+
+		if ($cardNumberConfig[$this->config::KEY_SDC_MASK] == 0)
+		{
+			$fieldsConfig["cardNumber"]["masking"]["mode"] = MaskingMode::NO_MASK;
+		}
+		
+		$fieldsConfig["securityCode"] = array(
+			"parentElementId" => $securityCodeConfig[$this->config::KEY_SDC_PARENT_ELEMENT],
+			"placeholder" => $securityCodeConfig[$this->config::KEY_SDC_PLACEHOLDER],
+			"dynamicPlaceholderCharacter" => $securityCodeConfig[$this->config::KEY_SDC_PLACEHOLDER_CHAR],			
+			"masking" => array(
+				"character" => $securityCodeConfig[$this->config::KEY_SDC_MASK_CHAR],
+				"mode" => $securityCodeConfig[$this->config::KEY_SDC_MASK_MODE],
+			)
+		);	
+
+		if ($securityCodeConfig[$this->config::KEY_SDC_MASK] == 0)
+		{
+			$fieldsConfig["securityCode"]["masking"]["mode"] = MaskingModeCvv::NO_MASK;
+		}	
+
+		return $fieldsConfig;
+	}
 
 	private function buildFormFieldsConfig($formId, $storeId)
 	{
@@ -129,7 +182,7 @@ class ConfigProvider implements ConfigProviderInterface
 			"masking" => array(
 				"character" => $cardNumberConfig[$this->config::KEY_SDC_MASK_CHAR],
 				"mode" => $cardNumberConfig[$this->config::KEY_SDC_MASK_MODE],
-				"shrunkLength" => $cardNumberConfig[$this->config::KEY_SDC_MASK_LENGTH]
+				"shrunkLength" => intval($cardNumberConfig[$this->config::KEY_SDC_MASK_LENGTH])
 			)
 		);
 

@@ -21,7 +21,7 @@ use Fiserv\Payments\Model\Config\CommerceHub\ConfigProvider;
 use Magento\Vault\Api\PaymentTokenManagementInterface;
 use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Framework\Webapi\Exception;
-use Psr\Log\LoggerInterface;
+use Fiserv\Payments\Logger\MultiLevelLogger;
 
 /**
  * Class TokenizeSession
@@ -32,6 +32,8 @@ class TokenizeSession extends Action implements CsrfAwareActionInterface, HttpPo
 	const WEBSITE_ID_KEY = "website_id";
 	const CUSTOMER_ID_KEY = "customer_id";
 	const CARD_ALREADY_ADDED_IN_VAULT = 'Payment card already exists in vault';
+	const PIN_ONLY = "pin_only";
+	const PIN_ONLY_CARD_MESSAGE = "PIN-only debit cards are only allowed for card present purchases";
 	
 	protected $vaultPaymentTokenUtils;
 	
@@ -53,7 +55,7 @@ class TokenizeSession extends Action implements CsrfAwareActionInterface, HttpPo
 	protected $paymentTokenRepository;
 
 	/**
-	 * @var LoggerInterface
+	 * @var MultiLevelLogger
 	 */
 	private $logger;
 
@@ -69,7 +71,7 @@ class TokenizeSession extends Action implements CsrfAwareActionInterface, HttpPo
 
 	/**
 	* @param Context $context
-	* @param LoggerInterface $logger
+	* @param MultiLevelLogger $logger
 	* @param TokenizationRequest $chAdapter
 	*/
 	public function __construct(
@@ -77,7 +79,7 @@ class TokenizeSession extends Action implements CsrfAwareActionInterface, HttpPo
 		TokenizationRequest $chAdapter,
 		VaultDetailsHandler $vaultHandler,
 		PaymentTokenRepositoryInterface $paymentTokenRepository,
-		LoggerInterface $logger,
+		MultiLevelLogger $logger,
 		PaymentTokenManagementInterface $paymentTokenManager,
 		EncryptorInterface $encryptor,
 		\Magento\Framework\Message\ManagerInterface $messageManager,
@@ -112,6 +114,12 @@ class TokenizeSession extends Action implements CsrfAwareActionInterface, HttpPo
 
 		$tokenResponse = $this->chAdapter->tokenizeSession($sessionId);
 
+		if( self::PIN_ONLY === strtolower($tokenResponse["cardDetails"][0]["detailedCardProduct"]) ) {
+			$this->logger->logInfo(1, "PIN-only card, not for online shopping");
+			$this->messageManager->addNotice(__(self::PIN_ONLY_CARD_MESSAGE));
+			throw new \InvalidArgumentException(self::PIN_ONLY_CARD_MESSAGE);
+		}
+
 		if($this->vaultPaymentTokenUtils->doesTokenExist(
 			$tokenResponse["paymentTokens"][0]["tokenData"], 
 			ConfigProvider::CODE, 
@@ -120,6 +128,7 @@ class TokenizeSession extends Action implements CsrfAwareActionInterface, HttpPo
 			$tokenResponse["source"]["card"]["expirationYear"]
 		))
 		{
+			$this->logger->logInfo(1, "Card not tokenized. Already stored");
 			$this->messageManager->addNotice(__(self::CARD_ALREADY_ADDED_IN_VAULT));
 			throw new \InvalidArgumentException(self::CARD_ALREADY_ADDED_IN_VAULT);
 		}
@@ -157,10 +166,11 @@ class TokenizeSession extends Action implements CsrfAwareActionInterface, HttpPo
 		$response->setData($paymentToken->getTokenDetails());
 
 	} catch (\InvalidArgumentException $e) {
-		$this->logger->critical($e);
-		return $this->processCardTokenizationError($response);
+		$this->logger->logWarning(2, $e);
+		return $this->processCardTokenizationError($response, $e->getMessage());
 	} catch (\Exception $e) {
-		$this->logger->critical($e);
+		$this->logger->logCritical(1, "Unknown error occurred in tokenization process");
+		$this->logger->logCritical(2, $e);
 		return $this->processBadRequest($response);
 	}
 		return $response;
@@ -199,10 +209,10 @@ class TokenizeSession extends Action implements CsrfAwareActionInterface, HttpPo
 		return $response;
 	}
 	
-	private function processCardTokenizationError(ResultInterface $response)
+	private function processCardTokenizationError(ResultInterface $response, string $message)
 	{
 		$response->setHttpResponseCode(Exception::HTTP_BAD_REQUEST);
-		$response->setData(['message' => __(self::CARD_ALREADY_ADDED_IN_VAULT)]);
+		$response->setData(['message' => __($message)]);
 
 		return $response;
 	}

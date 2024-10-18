@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Sales:etc/sales.xsd">
+    <section name="quote">
+        <group name="totals">
+			<!-- sort_order must be after the customer_balance totals collector -->
+			<item name="fiserv_valuelink" instance="Fiserv\Payments\Model\Valuelink\Total\Quote\ValuelinkCard" sort_order="800">
+                <renderer name="frontend" instance="Fiserv\Payments\Block\Checkout\Valuelink\Cart\Total"/>
+			</item> 
+        </group>
+    </section>
+	<section name="order_invoice">
+		<group name="totals">
+			<item name="fiserv_valuelink" instance="Fiserv\Payments\Model\Valuelink\Total\Invoice\ValuelinkCard" sort_order="700"/>
+		</group>
+	</section>
+	<section name="order_creditmemo">
+		<group name="totals">
+			<item name="fiserv_valuelink" instance="Fiserv\Payments\Model\Valuelink\Total\CreditMemo\ValuelinkCard" sort_order="700"/>
+		</group>
+	</section>
+</config>

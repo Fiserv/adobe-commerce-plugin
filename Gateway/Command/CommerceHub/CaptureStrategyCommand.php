@@ -18,6 +18,7 @@ use Magento\Sales\Api\Data\TransactionInterface;
 use Magento\Sales\Api\TransactionRepositoryInterface;
 use Magento\Payment\Gateway\Data\PaymentDataObjectInterface;
 
+
 /**
  * Directs payment toward Sale or Settle based on context
  *
@@ -99,12 +100,10 @@ class CaptureStrategyCommand implements CommandInterface
 
         // If auth transaction does not exist then execute authorize&capture command
         $captureExists = $this->captureTransactionExists($payment);
-
-	$test = $payment->getAuthorizationTransaction();
-	if (!$payment->getAuthorizationTransaction() && !$captureExists) {
-		return self::SALE_COMMAND;
+		if (!$payment->getAuthorizationTransaction() && !$captureExists) {
+			return self::SALE_COMMAND;
         }
-	
+
         return self::CAPTURE_COMMAND;
     }
 

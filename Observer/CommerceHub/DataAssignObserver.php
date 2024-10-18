@@ -8,7 +8,6 @@ namespace Fiserv\Payments\Observer\CommerceHub;
 use Magento\Framework\Event\Observer;
 use Magento\Payment\Observer\AbstractDataAssignObserver;
 use Magento\Quote\Api\Data\PaymentInterface;
-use Psr\Log\LoggerInterface;
 
 /**
  * Class DataAssignObserver
@@ -22,12 +21,6 @@ class DataAssignObserver extends AbstractDataAssignObserver
 	const EXP_MONTH_KEY = 'expiration_month';
 	const EXP_YEAR_KEY = 'expiration_year';
 
-
-	private $logger;
-
-	public function __construct(LoggerInterface $logger) {
-		$this->logger = $logger;
-	}
 	
 	/**
 	 * @var array

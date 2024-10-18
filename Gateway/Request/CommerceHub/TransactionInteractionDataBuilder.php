@@ -9,6 +9,7 @@ use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use Fiserv\Payments\Lib\CommerceHub\Model\TransactionInteraction;
 use Magento\Payment\Gateway\Request\BuilderInterface;
 use Magento\Vault\Model\Ui\VaultConfigProvider;
+use Fiserv\Payments\Logger\MultiLevelLogger;
 
 /**
  * Payment Data Builder
@@ -20,6 +21,10 @@ class TransactionInteractionDataBuilder implements BuilderInterface
 	const ECI_INDICATOR = "CHANNEL_ENCRYPTED";
 	const POS_CONDITION_CODE = "CARD_NOT_PRESENT_ECOM";
 
+	/**
+	 * @var MultiLevelLogger
+	 */
+	private $logger;
 
 	/**
 	 * @var SubjectReader
@@ -27,12 +32,16 @@ class TransactionInteractionDataBuilder implements BuilderInterface
 	private $subjectReader;
 
 	/**
+	 * @param MultiLevelLogger $logger
 	 * @param SubjectReader $subjectReader
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */
-	public function __construct(SubjectReader $subjectReader)
-	{
+	public function __construct(
+		SubjectReader $subjectReader,
+		MultiLevelLogger $logger
+	) {
 		$this->subjectReader = $subjectReader;
+		$this->logger = $logger;
 	}
 
 	/**
@@ -49,6 +58,7 @@ class TransactionInteractionDataBuilder implements BuilderInterface
 		$txnInteraction->setEciIndicator(self::ECI_INDICATOR);
 		$txnInteraction->setPosConditionCode(self::POS_CONDITION_CODE);
 
+		$this->logger->logInfo(3, "Transaction Interaction Builder:\n" . $txnInteraction->__toString());
 		return [ self::TXN_INTERACTION_KEY => $txnInteraction ];
 	}
 }

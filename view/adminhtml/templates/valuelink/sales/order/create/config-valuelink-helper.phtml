@@ -1,0 +1,8 @@
+<?php
+     /** @var Fiserv\Payments\Block\CommerceHub\AdminHtml\Order\Create\Billing\Method\Form $block */
+?>
+
+<?php echo $this->getChildHtml('defaultgiftcard'); ?>
+<?php if ($block->useValuelink() === true): ?>
+    <?php echo $this->getChildHtml('valuelinkgiftcard'); ?>
+<?php endif; ?>

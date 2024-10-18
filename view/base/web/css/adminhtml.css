@@ -3,8 +3,7 @@
 	padding-left: 20rem;
 }
 #fiserv-card-logos {
-	background: url("../images/cardlogos.png") no-repeat scroll 0 50% / 30rem auto;
-	height: 35px;
+	background: url("../images/cardlogos.png") no-repeat scroll 0 50% / 75rem auto;
+	height: 75px;
 	margin: 0.5rem 0 0;
-	width: 350px;
 }

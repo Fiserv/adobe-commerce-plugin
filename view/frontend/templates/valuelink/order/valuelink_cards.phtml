@@ -1,0 +1,20 @@
+<?php
+
+/**
+ * @var \Fiserv\Payments\Block\Valuelink\Sales\Order\ValuelinkCards $block
+ */
+	$order  = $block->getOrder();
+	$cards  = $block->getValuelinkCards();
+?>
+<?php if ($cards) : ?>
+	<?php foreach ($cards as $card) : ?>
+		<tr class="valuelink_cards totals">
+			<td <?= /* @noEscape */ $block->getLabelProperties() ?>>
+				<?= $block->escapeHtml(__('Gift Card')) ?>
+			</td>
+			<td <?= /* @noEscape */ $block->getValueProperties() ?>>
+				<span class="discount">-<?= /* @noEscape */ $order->formatPrice($card->getAmount()) ?></span>
+			</td>
+		</tr>
+	<?php endforeach; ?>
+<?php endif?>

@@ -8,6 +8,7 @@ use Fiserv\Payments\Lib\CommerceHub\Model\TokenizationRequest as TokenRequest;
 use Fiserv\Payments\Lib\CommerceHub\Model\PaymentSession;
 use Fiserv\Payments\Lib\CommerceHub\Model\MerchantDetails;
 use Fiserv\Payments\Gateway\Request\CommerceHub\SessionSourceDataBuilder;
+use Fiserv\Payments\Logger\MultiLevelLogger;
 
 class TokenizationRequest
 {
@@ -16,6 +17,11 @@ class TokenizationRequest
 	const PAYMENT_TOKENS_KEY = 'paymentTokens';
 	const RESPONSE_DESC_KEY = 'tokenResponseDescription';
 	const SUCCESS_RESPONSE = 'SUCCESS';
+
+	/**
+	 * @var MultiLevelLogger
+	 */
+	private $logger;
 	
 	/**
 	 * @var Config
@@ -35,9 +41,11 @@ class TokenizationRequest
 	public function __construct(
 		Config $config,
 		ChHttpAdapter $httpAdapter,
+		MultiLevelLogger $logger
 	) {
 		$this->chConfig = $config;
 		$this->httpAdapter = $httpAdapter;
+		$this->logger = $logger;
 	}
 
 	/**
@@ -48,6 +56,7 @@ class TokenizationRequest
 	 */
 	public function tokenizeSession($sessionId)
 	{
+		$this->logger->logInfo(1, "Initiating Tokenization Request");
 		$data = $this->getTokenizationPayload($sessionId);
 		$response = $this->httpAdapter->sendRequest($data, self::TOKENIZATION_ENDPOINT);
 
@@ -61,8 +70,11 @@ class TokenizationRequest
 		$bodyArray = json_decode($body, true);
 
 		if ($statusCode === 200 && $this->isTokenizeSuccessful($bodyArray)) {
+			$this->logger->logInfo(1, "Tokenization request success");
 			return $bodyArray;
 		}
+		$this->logger->logError(1, "Tokenization reqeest failure");
+		$this->logger->logError(2, 'CommerceHub credentials request HTTP error code: ' . $statusCode);
 		throw new \Exception('CommerceHub credentials request HTTP error code: ' . $statusCode, 1);
 	}
 

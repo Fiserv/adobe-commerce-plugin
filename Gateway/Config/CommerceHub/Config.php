@@ -31,7 +31,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	const KEY_PROD_CLIENT_URL = 'prod_client_url';
 	const KEY_CERT_CLIENT_URL = 'cert_client_url';
 	const KEY_STANDALONE_SPA = 'standalone_spa';
-	const KEY_VALUELINK = 'use_valuelink';
+	const KEY_LOGGING_LEVEL = 'logging_level';
 
 	// Iframe Customization Fields
 	const KEY_SDC_CUSTOM = 'sdc_custom';
@@ -39,6 +39,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	const KEY_SDC_CHECKOUT = 'checkout';
 	const KEY_SDC_ADMIN = 'admin';
 	const KEY_SDC_TOKEN = 'token';
+	const KEY_SDC_VALUELINK = 'valuelink';
 	
 	const KEY_SDC_CARD_NUMBER = 'card_number';
 	const KEY_SDC_NAME = 'name_on_card';
@@ -271,30 +272,29 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	}
 
 	/**
-	 * Is ValueLink enabled
+	 * Returns Logging Level.
 	 *
 	 * @param int|null $storeId
-	 * @return boolean
+	 * @return string
 	 */
-	public function enableValuelink($storeId = null)
+	public function getLoggingLevel($storeId = null)
 	{
-		return (bool) $this->getValue(self::KEY_VALUELINK, $storeId);
+		return $this->getValue(self::KEY_LOGGING_LEVEL, $storeId);
 	}
-
 
 	//////////////////////////
 	// SDC v2 Customization //
 	//////////////////////////
 	
 	// Checkout
-	public function cardNumberFormConfig($formId, $storeId = null)
+	public function cardNumberFormConfig($formId, $storeId = null, $isValuelink = false)
 	{
 		if (!$this->validateFormId($formId))
 		{
 			throw new Exception("Unknown Form Config Id: " . $formId);
 		}
 		
-		$config_path_base = $this->buildConfigPath($formId) . self::KEY_SDC_CARD_NUMBER . '_';
+		$config_path_base = $this->buildConfigPath($formId, $isValuelink) . self::KEY_SDC_CARD_NUMBER . '_';
 		
 		$formConfig = array();
 		$formConfig[self::KEY_SDC_PARENT_ELEMENT] = $this->getValue($config_path_base . self::KEY_SDC_PARENT_ELEMENT, $storeId);
@@ -325,9 +325,9 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 		
 		return $formConfig;
 	}
-	public function securityCodeFormConfig($formId, $storeId = null)
+	public function securityCodeFormConfig($formId, $storeId = null, $isValuelink = false)
 	{
-		$config_path_base = $this->buildConfigPath($formId) . self::KEY_SDC_CVV . '_';
+		$config_path_base = $this->buildConfigPath($formId, $isValuelink) . self::KEY_SDC_CVV . '_';
 		
 		$formConfig = array();
 		$formConfig[self::KEY_SDC_PARENT_ELEMENT] = $this->getValue($config_path_base . self::KEY_SDC_PARENT_ELEMENT, $storeId);
@@ -373,25 +373,25 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 		
 		return $formConfig;
 	}
-	public function cssFormConfig($formId, $storeId = null)
+	public function cssFormConfig($formId, $storeId = null, $isValuelink = false)
 	{
 		if (!$this->validateFormId($formId))
 		{
 			throw new Exception("Unknown Form Config Id: " . $formId);
 		}
 
-		$config_path = $this->buildConfigPath($formId) . self::KEY_SDC_CSS;
+		$config_path = $this->buildConfigPath($formId, $isValuelink) . self::KEY_SDC_CSS;
 
 		return $this->getValue($config_path, $storeId);
 	}	
-	public function fontFormConfig($formId, $storeId = null)
+	public function fontFormConfig($formId, $storeId = null, $isValuelink = false)
 	{
 		if (!$this->validateFormId($formId))
 		{
 			throw new Exception("Unknown Form Config Id: " . $formId);
 		}
 		
-		$config_path_base = $this->buildConfigPath($formId) . self::KEY_SDC_FONT . '_';
+		$config_path_base = $this->buildConfigPath($formId, $isValuelink) . self::KEY_SDC_FONT . '_';
 		
 		$formConfig = array();
 		$formConfig[self::KEY_FONT_DATA] = $this->getValue($config_path_base . self::KEY_FONT_DATA, $storeId);
@@ -410,8 +410,10 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 			$formId == self::KEY_SDC_TOKEN;
 	}
 	
-	private function buildConfigPath($formId)
+	private function buildConfigPath($formId, $isValuelink = false)
 	{
-		return self::KEY_SDC_CUSTOM . '_' . $formId . '_';
+		$configPath = self::KEY_SDC_CUSTOM . '_' . $formId . '_';
+		$configPath = $isValuelink ? $configPath . self::KEY_SDC_VALUELINK . '_' : $configPath;
+		return $configPath;
 	}
 }

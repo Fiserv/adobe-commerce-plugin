@@ -1,0 +1,80 @@
+<?php
+	/**
+	 * @var Fiserv\Payments\Block\CommerceHub\AdminHtml\Order\Create\Billing\Method\Form $block
+	 */ 
+?>
+<?php if ($block->useValuelink() === true): ?>
+	<link rel="stylesheet" type="text/css" href="<?php echo $block->getViewFileUrl('Fiserv_Payments/css/ch-form-admin.css')?>">
+	<div id="gift-card-form-fiserv_valuelink" class="admin__field field-add-gift-card">
+		<label class="admin__field-label">
+			<span><?= $block->getValuelinkTitle() ?></span>
+		</label>
+		<div id="valuelink-sdc-container">
+			<div class="sdc-row">
+				<div id="valuelink-sdc-card-number-frame" class="sdc-field-frame sdc-text">
+					<div id="fiserv_valuelink-card-number" class="sdc-field"></div>
+				</div>
+				<span id="valuelink-sdc-card-number-invalid-message" class="sdc-error-message sdc-hidden"></span>
+			</div>
+			<div class="sdc-row">
+				<div id="valuelink-sdc-security-code-frame" class="sdc-field-frame sdc-text">
+					<div id="fiserv_valuelink-security-code" class="sdc-field"></div>
+				</div>
+				<span id="valuelink-sdc-security-code-invalid-message" class="sdc-error-message sdc-hidden"></span>
+			</div>
+		</div>
+
+		<div id="fiserv_valuelink-card-info-panel" style="display: none;">
+			<div id="fiserv_valuelink-card-balance-info-panel">
+				<span>Current Balance:</span>
+				<span id="fiserv_valuelink-card-balance-info"></span>
+			</div>
+			<input id="fiserv_valuelink-sessionId" type="hidden">
+			<input id="fiserv_valuelink-balance" type="hidden">
+		</div>
+
+		<div class="actions-toolbar" id="valuelink-action-toolbar">
+			<div class="secondary">
+				<button id="fiserv_valuelink-get-gift-card-balance" class="action action-check sdc-valuelink-check-balance" type="button" disabled>
+					<span>See Balance</span>
+				</button>
+			</div>
+			<div class="primary">
+				<button id="fiserv_valuelink-apply-gift-card" class="action action-add primary sdc-valuelink-apply" type="button"  disabled>
+					<span>Apply</span>
+				</button>
+			</div>
+		</div>    
+
+		<?php $valuelinkCards = $block->getValuelinkCards(); ?>
+		<?php if (count($valuelinkCards) > 0): ?>
+			<div id="valuelink-added-cards-container">
+				<?php foreach ($block->getValuelinkCards() as $card): ?>
+					<p class="added-valuelink-card" id="valuelink-card-<?= /* @noEscape */ $card["sessionId"]; ?>">
+						<?php if ($card["amountToCharge"] !== 0): ?>
+							<span><?= $block->escapeHtml("Valuelink card: $" . round($card["amountToCharge"],2)) ?></span>
+						<?php else: ?>
+							<span><?= $block->escapeHtml("Valuelink card (Unused): $" . round($card["amountToCharge"],2)) ?></span>
+						<?php endif; ?>
+						<input type="hidden" class="valuelink-session-id" value="<?= /* @noEscape */ $card["sessionId"]; ?>">
+						<a href="#"
+							title="<?= $block->escapeHtml(__('Remove')) ?>"
+							class="action-remove">
+							<span><?= $block->escapeHtml(__('Remove')) ?></span>
+						</a>
+					</p>
+					<?= /* @noEscape */
+					$secureRenderer->renderEventListenerAsTag(
+						'onclick',
+						"removeValuelinkCard('" . $block->escapeJs($card["sessionId"]) . "'); return false;",
+						'#valuelink-card-' . $card["sessionId"] . ' > a.action-remove'
+					);
+					?>
+				<?php endforeach; ?>
+			</div>
+		<?php endif; ?>
+	</div>
+
+	<input type="hidden" data-mage-init='{ "Fiserv_Payments/js/view/order/form/valuelink": <?= /* @escapeNotVerified */ $block->getConfig() ?> }'/>
+
+<?php endif; ?>

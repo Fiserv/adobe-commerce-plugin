@@ -11,6 +11,7 @@ use Fiserv\Payments\Lib\CommerceHub\Model\PaymentToken;
 use Fiserv\Payments\Lib\CommerceHub\Model\Card;
 use Magento\Payment\Gateway\Request\BuilderInterface;
 use Magento\Payment\Helper\Formatter;
+use Fiserv\Payments\Logger\MultiLevelLogger;
 
 /**
  * Token Payment Data Builder
@@ -23,17 +24,26 @@ class TokenSourceDataBuilder implements BuilderInterface
 	const PAYMENT_TOKEN_SOURCE_TYPE = "PaymentToken";
 
 	/**
+	 * @var MultiLevelLogger
+	 */
+	private $logger;
+	
+	/**
 	 * @var SubjectReader
 	 */
 	private $subjectReader;
 
 	/**
+	 * @param MultiLevelLogger $logger
 	 * @param SubjectReader $subjectReader
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */
-	public function __construct(SubjectReader $subjectReader)
-	{
+	public function __construct(
+		SubjectReader $subjectReader,
+		MultiLevelLogger $logger
+	) {
 		$this->subjectReader = $subjectReader;
+		$this->logger = $logger;
 	}
 
 	/**
@@ -62,6 +72,7 @@ class TokenSourceDataBuilder implements BuilderInterface
 
 		$source->setCard($card);	
 
+		$this->logger->logInfo(3, "Token Source Data Builder:\n" . $source->__toString());
 		return [ self::TOKEN_SOURCE_KEY => $source ];
 	}
 }

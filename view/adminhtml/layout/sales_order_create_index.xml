@@ -19,6 +19,12 @@
 				<argument name="template" xsi:type="string">Magento_Vault::form/vault.phtml</argument>
 			</action>
 		</referenceBlock>
+		<referenceBlock name="items_grid">
+			<block class="Fiserv\Payments\Block\CommerceHub\AdminHtml\Order\Create\Billing\Method\Form" template="Fiserv_Payments::valuelink/sales/order/create/valuelink.phtml" name="valuelink_form" after="-"/>
+		</referenceBlock>
+		<referenceContainer name="js">
+			<block class="Magento\Backend\Block\Template" template="Fiserv_Payments::valuelink/sales/order/create/js.phtml" name="valuelink_js"/>
+		</referenceContainer>
 		<referenceContainer name="content">
 			<block name="fiserv_commercehub.admin.order.create"
 				as="fiserv_commercehub.admin.order.create"

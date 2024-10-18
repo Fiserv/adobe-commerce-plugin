@@ -5,15 +5,28 @@
  */
 namespace Fiserv\Payments\Gateway\Subject\CommerceHub;
 
+use Magento\Checkout\Model\Session;
 use Magento\Payment\Gateway\Helper;
 use Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient;
 use Fiserv\Payments\Gateway\Subject\SubjectReader as FiservSubjectReader;
+use Fiserv\Payments\Logger\MultiLevelLogger;
 
 /**
  * Class SubjectReader
  */
 class SubjectReader extends FiservSubjectReader
 {
+	/**
+	 * @var MultiLevelLogger
+	 */
+	private $logger; 
+	
+	public function __construct(Session $checkoutSession, MultiLevelLogger $logger)
+	{
+		parent::__construct($checkoutSession);
+		$this->logger = $logger;
+	}
+	
 	/**
 	 * Reads response from the subject.
 	 * Used in Handlers

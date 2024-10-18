@@ -1,0 +1,16 @@
+<?php
+/**
+ * @var \Fiserv\Payments\Block\Adminhtml\Sales\Invoice\Totals $block
+ */
+
+$valuelinkInvoiceTotal = $block->getValuelinkTotalForNewInvoice();
+?>
+
+<?php if ((float) $valuelinkInvoiceTotal) : ?>
+	<tr>
+		<td class="label"><?= $block->escapeHtml(__('Gift Cards')) ?></td>
+		<td>
+			<?= /* @noEscape */ $block->getOrder()->formatPrice(-$valuelinkInvoiceTotal) ?>
+		</td>
+	</tr>
+<?php endif; ?>

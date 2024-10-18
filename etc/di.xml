@@ -345,6 +345,12 @@
 		</arguments>
 	</type>
 
+	<type name="Fiserv\Payments\Gateway\Config\Valuelink\Config">
+		<arguments>
+			<argument name="methodCode" xsi:type="const">Fiserv\Payments\Model\Config\ConfigProvider::FISERV_VALUELINK_KEY</argument>
+		</arguments>
+	</type>
+
 	<!-- Payment JS Session Data -->
 	<virtualType name="Fiserv\Payments\Model\Session\Storage" type="Magento\Framework\Session\Storage">
 		<arguments>
@@ -356,4 +362,21 @@
 			<argument name="storage" xsi:type="object">Fiserv\Payments\Model\Session\Storage</argument>
 		</arguments>
 	</type>
+
+	<!-- Valuelink Plugins -->
+    <type name="Magento\Quote\Model\Quote\TotalsCollector">
+		<plugin name="quoteValuelinkAmountUpdater" type="Fiserv\Payments\Model\Plugin\Valuelink\TotalsCollector" />
+	</type>
+	<type name="Magento\Quote\Model\Cart\TotalsConverter">
+		<plugin name="valuelinkAmountTotal" type="Fiserv\Payments\Model\Plugin\Valuelink\TotalsConverter" />
+	</type>
+	<type name="Magento\Sales\Model\Order\Invoice">
+		<plugin name="valuelinkInvoiceRegister" type="Fiserv\Payments\Model\Plugin\Valuelink\InvoiceRegister" />
+	</type>
+	<type name = "Magento\Sales\Model\Order\Payment">
+		<plugin name = "valueLinkPaymentPlace" type="Fiserv\Payments\Model\Plugin\Valuelink\PaymentPlace" />
+	 </type>
+	 
+	 <preference for="Fiserv\Payments\Api\Valuelink\ValuelinkTransactionRepositoryInterface" type="Fiserv\Payments\Model\ValuelinkTransactionRepository"/>
+
 </config>

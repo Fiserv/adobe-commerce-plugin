@@ -5,6 +5,7 @@ use Fiserv\Payments\Gateway\Config\CommerceHub\Config;
 use Fiserv\Payments\Model\Source\CommerceHub\ApiEnvironment;
 use Fiserv\Payments\Model\Adapter\CommerceHub\ChHttpAdapter;
 use Magento\Store\Model\StoreManagerInterface;
+use Fiserv\Payments\Logger\MultiLevelLogger;
 
 class CredentialsRequest
 {
@@ -24,6 +25,11 @@ class CredentialsRequest
 	const KEY_PUBLIC_KEY = 'publicKey';
 
 
+	/**
+	 * @var MultiLevelLogger
+	 */
+	private $logger;
+	
 	/**
 	 * @var Config
 	 */
@@ -47,11 +53,13 @@ class CredentialsRequest
 	public function __construct(
 		Config $config,
 		ChHttpAdapter $httpAdapter,
-		StoreManagerInterface $storeManager
+		StoreManagerInterface $storeManager,
+		MultiLevelLogger $logger
 	) {
 		$this->chConfig = $config;
 		$this->httpAdapter = $httpAdapter;
 		$this->storeManager = $storeManager;
+		$this->logger = $logger;
 	}
 
 	/**
@@ -62,6 +70,7 @@ class CredentialsRequest
 	 */
 	public function requestCredentials()
 	{
+		$this->logger->logInfo(1, "Initiating Credentials Request");
 		$data = $this->getCredentialsPayload($this->getMerchantId());
 		$chResponse = $this->httpAdapter->sendRequest($data, self::CREDENTIALS_ENDPOINT);
 		return $this->parseChCredentialsResponse($chResponse);
@@ -90,7 +99,10 @@ class CredentialsRequest
 			$data[self::KEY_SESSION_ID] = $bodyArray[self::KEY_SESSION_ID];
 			$data[self::KEY_PUBLIC_KEY] = $bodyArray[self::KEY_PUBLIC_KEY];
 			$data[self::KEY_KEY_ID] = $bodyArray[self::KEY_KEY_ID];
+			$this->logger->logInfo(1, "Credentials request success");
 		} else {
+			$this->logger->logError(1, "Credentials request failure");
+			$this->logger->logError(2, 'CommerceHub credentials request HTTP error code: ' . $statusCode);
 			throw new \Exception('CommerceHub credentials request HTTP error code: ' . $statusCode, 1);
 		};
 

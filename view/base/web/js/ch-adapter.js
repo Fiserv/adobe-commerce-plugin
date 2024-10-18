@@ -116,7 +116,7 @@ define([
 		) {
 			let formConfig = this.buildFormConfig();
 						
-			window.fiserv.commercehub.createPaymentForm(formConfig)
+			window.fiserv.components.paymentFields(formConfig)
 				.then((next) => { 
 					this.sdcv2Form = next; 
 					this.iframeReadyCallback(); 
@@ -152,6 +152,18 @@ define([
 					runErrorCb(data);
 				});
 			};
+		},
+
+		unmask: function (
+			field
+		) {
+			this.sdcv2Form.mask(field, false);
+		},
+
+		mask: function (
+			field
+		) {
+			this.sdcv2Form.mask(field, true);
 		},
 
 		buildFormSubmitPayload: function(data) 

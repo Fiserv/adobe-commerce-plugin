@@ -10,6 +10,7 @@ use Fiserv\Payments\Observer\CommerceHub\DataAssignObserver;
 use Fiserv\Payments\Lib\CommerceHub\Model\PaymentSession;
 use Magento\Payment\Gateway\Request\BuilderInterface;
 use Magento\Payment\Helper\Formatter;
+use Fiserv\Payments\Logger\MultiLevelLogger;
 
 /**
  * Payment Data Builder
@@ -22,17 +23,26 @@ class SessionSourceDataBuilder implements BuilderInterface
 	const PAYMENT_SESSION_SOURCE_TYPE = "PaymentSession";
 
 	/**
+	 * @var MultiLevelLogger
+	 */
+	private $logger;
+	
+	/**
 	 * @var SubjectReader
 	 */
 	private $subjectReader;
 
 	/**
+	 * @param MultiLevelLogger $logger
 	 * @param SubjectReader $subjectReader
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */
-	public function __construct(SubjectReader $subjectReader)
-	{
+	public function __construct(
+		SubjectReader $subjectReader,
+		MultiLevelLogger $logger
+	) {
 		$this->subjectReader = $subjectReader;
+		$this->logger = $logger;
 	}
 
 	/**
@@ -50,6 +60,7 @@ class SessionSourceDataBuilder implements BuilderInterface
 		$source->setSourceType(self::PAYMENT_SESSION_SOURCE_TYPE);
 		$source->setSessionId($sessionId);
 
+		$this->logger->logInfo(3, "Session Source Data Builder:\n" . $source->__toString());
 		return [ self::SESSION_SOURCE_KEY => $source ];
 	}
 }

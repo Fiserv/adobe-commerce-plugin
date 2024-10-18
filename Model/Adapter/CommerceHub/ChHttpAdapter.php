@@ -6,12 +6,18 @@ use Fiserv\Payments\Model\Source\CommerceHub\ApiEnvironment;
 use Fiserv\Payments\Model\Adapter\CommerceHub\ChHttpResponse;
 use Magento\Framework\HTTP\Adapter\CurlFactory;
 use Fiserv\Payments\Lib\Version;
+use Fiserv\Payments\Logger\MultiLevelLogger;
 
 class ChHttpAdapter
 {
 	const CONTENT_TYPE = 'application/json';
 	const USER_AGENT_PREFIX = 'Fiserv-CommerceHub Adobe Commerce Plugin - v';
 
+	/**
+	 * @var MultiLevelLogger
+	 */
+	private $logger;
+	
 	/**
 	 * @var Config
 	 */
@@ -36,13 +42,16 @@ class ChHttpAdapter
 	 * Constructor
 	 *
 	 * @param Config $config
+	 * @param MultiLevelLogger $logger
 	 */
 	public function __construct(
 		Config $config,
-		CurlFactory $curlFactory
+		CurlFactory $curlFactory,
+		MultiLevelLogger $logger
 	) {
 		$this->chConfig = $config;
 		$this->curlFactory = $curlFactory;
+		$this->logger = $logger;
 	}
 
 	/**
@@ -71,8 +80,12 @@ class ChHttpAdapter
 				CURLOPT_SSL_VERIFYHOST => 0,
 			]
 		);
-	        $curl->write('POST', $url, '1.1', $this->getHeaders($payload), $payload);
-	        $curlResponse = $curl->read();
+		$curl->write('POST', $url, '1.1', $this->getHeaders($payload), $payload);
+		$curlResponse = $curl->read();
+		
+		if($curl->getErrno()) {
+			$this->logger->logError(2, "Curl error: ErrNo - " . $curl->getErrno() . "      Message - " . $curl->getError());
+		}
 
 		$statusCode = $curl->getInfo(CURLINFO_HTTP_CODE);
 		$headerLength = $curl->getInfo(CURLINFO_HEADER_SIZE);

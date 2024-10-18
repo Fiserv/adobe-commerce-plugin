@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+	<table name="valuelink_transaction" resource="default" engine="innodb" comment="Transcation Processed through Valuelink">
+		<column xsi:type="int" name="entity_id" length="10" padding="10" nullable="false" identity="true">
+			<identity/>
+			<primary/>
+		</column>
+		<constraint xsi:type="primary" referenceId="PRIMARY">
+			<column name="entity_id"/>
+		</constraint>
+
+		<column name="parent_transaction_id" xsi:type="int" length="10" padding="10" nullable="true"/>
+		<foreignKey referenceTable="valuelink_transaction" referenceColumn="entity_id" onDelete="CASCADE">
+			<column name="parent_transaction_id" />
+		</foreignKey>		
+
+		<column name="order_id" xsi:type="int" length="10" padding="10" nullable="true"/>
+		<foreignKey referenceTable="sales_order" referenceColumn="entity_id" onDelete="CASCADE">
+			<column name="order_id" />
+		</foreignKey>
+
+		<column name="invoice_id" xsi:type="int" length="10" padding="10" nullable="true"/>
+		<foreignKey referenceTable="sales_invoice" referenceColumn="entity_id" onDelete="CASCADE">
+			<column name="invoice_id" />
+		</foreignKey>
+
+		<column name="creditmemo_id" xsi:type="int" length="10" padding="10" nullable="true"/>
+		<foreignKey referenceTable="sales_creditmemo" referenceColumn="entity_id" onDelete="CASCADE">
+			<column name="creditmemo_id" />
+		</foreignKey>
+
+		<column xsi:type="varchar" name="order_increment_id" nullable="false" length="50"/>
+		<column xsi:type="varchar" name="transaction_id" nullable="true" length="255" comment="Commerce Hub Transaction Id"/>
+		<column xsi:type="varchar" name="transaction_type" nullable="true" length="255" comment="Commerce Hub Transaction Type"/>
+		<column xsi:type="varchar" name="transaction_state" nullable="true" length="255" comment="Commerce Hub Transaction State"/>
+		<column xsi:type="text" name="ch_request" nullable="true" comment="Full Commerce Hub Request"/>
+		<column xsi:type="text" name="ch_response" nullable="true" comment="Full Commerce Hub Response"/>
+		<column xsi:type="decimal" name="amount" scale="4" precision="20" unsigned="false" nullable="true" comment="Valuelink Transaction Amount"/>        
+		<column xsi:type="varchar" name="currency" nullable="true" length="255" comment="Valuelink Transaction Currency"/>
+		<column xsi:type="date" name="date_created" nullable="false" comment="Date Created"/>
+	</table>
+
+	<table name="quote" resource="checkout" comment="Sales Flat Quote">
+		<column xsi:type="text" name="valuelink_cards" nullable="true" comment="Valuelink Cards"/>
+		<column xsi:type="decimal" name="valuelink_cards_amount" scale="4" precision="20" unsigned="false" nullable="true" comment="Valuelink Amount"/>
+		<column xsi:type="decimal" name="base_valuelink_cards_amount" scale="4" precision="20" unsigned="false" nullable="true" comment="Base Valuelink Cards Amount"/>
+	</table>
+
+	<table name="quote_address" resource="checkout" comment="Sales Flat Quote Address">
+		<column xsi:type="decimal" name="valuelink_cards_amount" scale="4" precision="20" unsigned="false" nullable="true" comment="Valuelink Cards Amount"/>
+		<column xsi:type="decimal" name="base_valuelink_cards_amount" scale="4" precision="20" unsigned="false" nullable="true" comment="Base Valuelink Cards Amount"/>
+		<column xsi:type="text" name="valuelink_cards" nullable="true" comment="Valuelink Cards"/>
+	</table>
+</schema>

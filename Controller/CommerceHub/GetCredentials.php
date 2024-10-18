@@ -12,7 +12,7 @@ use Magento\Framework\App\Action\Context;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Webapi\Exception;
-use Psr\Log\LoggerInterface;
+use Fiserv\Payments\Logger\MultiLevelLogger;
 
 /**
  * Class GetChCredentials
@@ -28,19 +28,19 @@ class GetCredentials extends Action implements HttpGetActionInterface
     private $chAdapter;
 
     /**
-     * @var LoggerInterface
+     * @var MultiLevelLogger
      */
     private $logger;
 
     /**
     * @param Context $context
-    * @param LoggerInterface $logger
+    * @param MultiLevelLogger $logger
     * @param CredentialsRequest $chAdapter
     */
     public function __construct(
         Context $context,
         CredentialsRequest $chAdapter,
-        LoggerInterface $logger
+        MultiLevelLogger $logger
     ) {
         parent::__construct($context);
         $this->chAdapter = $chAdapter;
@@ -57,7 +57,8 @@ class GetCredentials extends Action implements HttpGetActionInterface
 	try {
 	    $response->setData(['ch_credentials' => $this->chAdapter->requestCredentials()]);
         } catch (\Exception $e) {
-            $this->logger->critical($e);
+		$this->logger->logCritical(1, "An error occured in the retrieval of credentials");
+            $this->logger->logCritical(2, $e);
             return $this->processBadRequest($response);
         }
 

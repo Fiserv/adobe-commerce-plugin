@@ -20,6 +20,18 @@
 			<div id="sdc-card-number-frame" class="sdc-field-frame sdc-text">
 				<div id="sdc-card-brand-icon" class="sdc-card-brand-icon"></div>
 				<div data-bind="attr: {'id': getCode() + '-card-number'}" class="sdc-field"></div>
+				<!-- ko if: (checkNumberMask())-->
+					<button 
+						id="sdc-unmask-number" 
+						class="sdc-unmasking-icon"
+						data-bind="click: unmaskCardNumber">
+					</button>
+				<!-- /ko -->
+				<button
+					id="sdc-mask-number"
+					class="sdc-masking-icon sdc-hidden"
+					data-bind="click: maskCardNumber">
+				</button>
 			</div>
 			<span id="sdc-card-number-invalid-message" class="sdc-error-message sdc-hidden"></span>
 		</div>
@@ -32,6 +44,18 @@
 		<div class="sdc-row">
 			<div id="sdc-security-code-frame" class="sdc-field-frame sdc-text">
 				<div data-bind="attr: {'id': getCode() + '-security-code'}" class="sdc-field"></div>
+				<!-- ko if: (checkSecurityMask())-->
+					<button
+						id="sdc-unmask-security"
+						class="sdc-unmasking-icon"
+						data-bind="click: unmaskSecurityCode">
+					</button>
+				<!-- /ko -->
+				<button
+					id="sdc-mask-security"
+					class="sdc-masking-icon sdc-hidden"
+					data-bind="click: maskSecurityCode">
+				</button>
 			</div>
 			<span id="sdc-security-code-invalid-message" class="sdc-error-message sdc-hidden"></span>
 		</div>

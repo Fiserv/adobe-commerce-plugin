@@ -85,7 +85,6 @@ define(
 			},
 			
 			loadIframe: function () {
-					
 				chAdapter.destroyIframe();
 				this.cardBrandChangeHandler(null);
 
@@ -356,6 +355,78 @@ define(
 						() => { this.iframeRunFailure(); }
 					);
 				}
+			},
+
+			
+			getNumberUnmaskButton: function() {
+				return $('button#sdc-unmask-number');
+			},
+
+			getNumberMaskButton: function() {
+				return $('button#sdc-mask-number');
+			},
+
+			getSecurityUnmaskButton: function() {
+				return $('button#sdc-unmask-security');
+			},
+
+			getSecurityMaskButton: function() {
+				return $('button#sdc-mask-security');
+			},
+
+			/**
+			 * Checks masking mode
+			 *
+			 * @returns {Boolean}
+			 */
+			checkNumberMask: function() {
+				let maskingMode = window.checkoutConfig.payment[this.getCode()].formConfig["fields"]["cardNumber"]["masking"]["mode"];
+				if (maskingMode == "NO_MASKING") {
+					return false;
+				} else {
+					return true;
+				}
+			},
+
+			checkSecurityMask: function() {
+				let maskingMode = window.checkoutConfig.payment[this.getCode()].formConfig["fields"]["securityCode"]["masking"]["mode"];
+				if (maskingMode == "NO_MASKING") {
+					return false;
+				} else {
+					return true;
+				}
+			},
+
+			unmaskCardNumber: function() {
+				chAdapter.unmask('cardNumber');
+				let unmaskButton = this.getNumberUnmaskButton();
+				let maskButton = this.getNumberMaskButton();
+				unmaskButton.addClass('sdc-hidden');
+				maskButton.removeClass('sdc-hidden');
+			},
+
+			maskCardNumber: function() {
+				chAdapter.mask('cardNumber');
+				let unmaskButton = this.getNumberUnmaskButton();
+				let maskButton = this.getNumberMaskButton();
+				unmaskButton.removeClass('sdc-hidden');
+				maskButton.addClass('sdc-hidden');
+			},
+
+			unmaskSecurityCode: function() {
+				chAdapter.unmask('securityCode');
+				let unmaskButton = this.getSecurityUnmaskButton();
+				let maskButton = this.getSecurityMaskButton();
+				unmaskButton.addClass('sdc-hidden');
+				maskButton.removeClass('sdc-hidden');
+			},
+
+			maskSecurityCode: function() {
+				chAdapter.mask('securityCode');
+				let unmaskButton = this.getSecurityUnmaskButton();
+				let maskButton = this.getSecurityMaskButton();
+				unmaskButton.removeClass('sdc-hidden');
+				maskButton.addClass('sdc-hidden');
 			},
 
 			iframeValidHandler: function(valid) {

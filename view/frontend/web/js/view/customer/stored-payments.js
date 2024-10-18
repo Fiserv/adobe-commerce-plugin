@@ -160,6 +160,54 @@ define([
 				);
 			},
 
+			getNumberUnmaskButton: function() {
+				return $('button#sdc-unmask-number');
+			},
+
+			getNumberMaskButton: function() {
+				return $('button#sdc-mask-number');
+			},
+
+			getSecurityUnmaskButton: function() {
+				return $('button#sdc-unmask-security');
+			},
+
+			getSecurityMaskButton: function() {
+				return $('button#sdc-mask-security');
+			},
+
+			unmaskCardNumber: function() {
+				chIframe.unmask('cardNumber');
+				let unmaskButton = this.getNumberUnmaskButton();
+				let maskButton = this.getNumberMaskButton();
+				unmaskButton.addClass('sdc-hidden');
+				maskButton.removeClass('sdc-hidden');
+			},
+
+			maskCardNumber: function() {
+				chIframe.mask('cardNumber');
+				let unmaskButton = this.getNumberUnmaskButton();
+				let maskButton = this.getNumberMaskButton();
+				unmaskButton.removeClass('sdc-hidden');
+				maskButton.addClass('sdc-hidden');
+			},
+
+			unmaskSecurityCode: function() {
+				chIframe.unmask('securityCode');
+				let unmaskButton = this.getSecurityUnmaskButton();
+				let maskButton = this.getSecurityMaskButton();
+				unmaskButton.addClass('sdc-hidden');
+				maskButton.removeClass('sdc-hidden');
+			},
+
+			maskSecurityCode: function() {
+				chIframe.mask('securityCode');
+				let unmaskButton = this.getSecurityUnmaskButton();
+				let maskButton = this.getSecurityMaskButton();
+				unmaskButton.removeClass('sdc-hidden');
+				maskButton.addClass('sdc-hidden');
+			},
+
 			iframeLoadSuccess: function (data) {
 				this.hideAddButton();
 				this.getFormContainer().show();
@@ -248,8 +296,9 @@ define([
 			},
 
 			validateTokenizeResponse: function(response) {
-				let maskedCC = response["maskedCC"];
-				let expirationDate = response["expirationDate"];
+				let responseObject = JSON.parse(response);
+				let maskedCC = responseObject["maskedCC"];
+				let expirationDate = responseObject["expirationDate"];
 
 				return (typeof(maskedCC) !== "undefined" && typeof(expirationDate) !== "undefined");
 			},

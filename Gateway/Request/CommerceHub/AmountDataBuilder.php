@@ -9,6 +9,8 @@ use Magento\Payment\Gateway\Request\BuilderInterface;
 use Fiserv\Payments\Lib\CommerceHub\Model\Amount;
 use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use Magento\Payment\Helper\Formatter;
+use Fiserv\Payments\Logger\MultiLevelLogger;
+
 /**
  * Class AmountDataBuilder
  */
@@ -19,6 +21,11 @@ class AmountDataBuilder implements BuilderInterface
 	const AMOUNT_KEY = "amount";
 
 	/**
+	 * @var MultiLevelLogger
+	 */
+	private $logger;
+	
+	/**
 	 * @var SubjectReader
 	 */
 	private $subjectReader;
@@ -27,10 +34,14 @@ class AmountDataBuilder implements BuilderInterface
 	 * Constructor
 	 *
 	 * @param SubjectReader $subjectReader
+	 * @param MultiLevelLogger $logger
 	 */
-	public function __construct(SubjectReader $subjectReader)
-	{
+	public function __construct(
+		SubjectReader $subjectReader,
+		MultiLevelLogger $logger
+	) {
 		$this->subjectReader = $subjectReader;
+		$this->logger = $logger;
 	}
 
 	/**
@@ -47,7 +58,7 @@ class AmountDataBuilder implements BuilderInterface
 		$amt->setTotal(round($rawTotal, 2, PHP_ROUND_HALF_UP));
 		$amt->setCurrency($orderDO->getCurrencyCode());
 
+		$this->logger->logInfo(3, "Amount Data Builder:\n" . $amt->__toString());
 		return [ self::AMOUNT_KEY => $amt ];
-
 	}
 }

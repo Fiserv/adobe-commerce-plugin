@@ -1,0 +1,18 @@
+<!-- ko if: isAvailable() -->
+    <!-- ko foreach: getAppliedValuelinkCards() -->
+    <tr class="totals valuelink">
+        <th class="mark" scope="row" colspan="1">
+            <a href="#" class="action delete" data-bind="attr: {title: $t('Remove')}, click: function(data, event) { $parent.removeValuelinkCard(sessionId, event); }">
+                <span data-bind="text: $t('Remove')"></span>
+            </a>
+            <!-- ko text: $parent.title --><!-- /ko -->
+        </th>
+        <td class="amount" data-bind="attr: {'data-th':  $parent.title}">
+            <span class="discount">
+                <span class="price" data-bind="text: '-' + $parent.getAmount(amountToCharge)">
+                </span>
+            </span>
+        </td>
+    </tr>
+    <!-- /ko -->
+<!-- /ko -->

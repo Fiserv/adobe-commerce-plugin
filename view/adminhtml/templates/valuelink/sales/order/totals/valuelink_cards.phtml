@@ -1,0 +1,24 @@
+<?php
+
+namespace Fiserv\Payments\view\adminhtml\templates\valuelink\sales\order\totals;
+
+use Fiserv\Payments\Model\ValuelinkTransaction;
+
+/**
+ * @var \Fiserv\Payments\Block\Valuelink\Adminhtml\Sales\Order\Totals $block
+ */
+	$valuelinkCards = $block->getValuelinkCards();
+	$order = $block->getOrder();
+?>
+<?php if ($valuelinkCards) : ?>
+	<?php foreach ($valuelinkCards as $card) : ?>
+		<tr class="valuelink_cards totals">
+ 			<td class="label">
+				<?= $block->escapeHtml(__('Gift Card')) ?>
+			</td>
+			<td>
+ 				<span class="discount">-<?= /* @noEscape */ $order->formatPrice($card->getAmount()) ?></span>
+			</td>
+		</tr>
+	<?php endforeach; ?>
+<?php endif?>

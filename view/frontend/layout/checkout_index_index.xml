@@ -18,7 +18,7 @@
 												<item name="payment" xsi:type="array">
 													<item name="children" xsi:type="array">
 														<item name="renders" xsi:type="array">
-															<!-- merge payment method renders here -->
+														<!-- merge payment method renders here -->
 															<item name="children" xsi:type="array">
 																<item name="fiserv_payments" xsi:type="array">
 																	<item name="component" xsi:type="string">Fiserv_Payments/js/view/payment/fiserv_payments</item>
@@ -31,6 +31,39 @@
 																		</item>
 																	</item>
 																</item>
+															</item>
+														</item>
+														<item name="afterMethods" xsi:type="array">
+															<item name="children" xsi:type="array">
+																<item name="valuelink" xsi:type="array">
+																	<item name="component" xsi:type="string">Fiserv_Payments/js/view/payment/valuelink</item>
+																	<item name="children" xsi:type="array">
+																		<item name="errors" xsi:type="array">
+																			<item name="sortOrder" xsi:type="string">0</item>
+																			<item name="component" xsi:type="string">Fiserv_Payments/js/view/payment/valuelink_messages</item>
+																			<item name="displayArea" xsi:type="string">messages</item>
+																		</item>
+																	</item>
+																</item>
+															</item>
+														</item>
+													</item>
+												</item>
+											</item>
+										</item>
+									</item>
+								</item>
+								<item name="sidebar" xsi:type="array">
+									<item name="children" xsi:type="array">
+										<item name="summary" xsi:type="array">
+											<item name="children" xsi:type="array">
+												<item name="totals" xsi:type="array">
+													<item name="children" xsi:type="array">
+														<item name="giftCardAccount" xsi:type="array">
+															<item name="component" xsi:type="string">Fiserv_Payments/js/view/valuelink/summary/valuelink-gift-card</item>
+															<item name="sortOrder" xsi:type="string">31</item>
+															<item name="config" xsi:type="array">
+																<item name="title" translate="true" xsi:type="string">Gift Card</item>
 															</item>
 														</item>
 													</item>

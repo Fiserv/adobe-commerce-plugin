@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Api/etc/extension_attributes.xsd">
+		<extension_attributes for="Magento\Quote\Api\Data\TotalSegmentInterface">
+				<attribute code="valuelink_cards" type="string" />
+		</extension_attributes>
+		<extension_attributes for="Magento\Sales\Api\Data\OrderInterface">
+				<attribute code="valuelink_cards" type="Fiserv\Payments\Api\Data\ValuelinkCardInterface[]" />
+				<attribute code="base_valuelink_cards_amount" type="float" />
+				<attribute code="valuelink_cards_amount" type="float" />
+				<attribute code="base_valuelink_cards_invoiced" type="float" />
+				<attribute code="valuelink_cards_invoiced" type="float" />
+				<attribute code="base_valuelink_cards_refunded" type="float" />
+				<attribute code="valuelink_cards_refunded" type="float" />
+		</extension_attributes>
+		<extension_attributes for="Magento\Sales\Api\Data\InvoiceInterface">
+				<attribute code="base_gift_cards_amount" type="float" />
+				<attribute code="gift_cards_amount" type="float" />
+		</extension_attributes>
+		<extension_attributes for="Magento\Sales\Api\Data\CreditmemoInterface">
+				<attribute code="base_gift_cards_amount" type="float" />
+				<attribute code="gift_cards_amount" type="float" />
+		</extension_attributes>
+</config>

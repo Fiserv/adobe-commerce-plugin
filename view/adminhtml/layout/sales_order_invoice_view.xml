@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+	<body>
+		<referenceBlock name="invoice_totals">
+			<block class="Fiserv\Payments\Block\Valuelink\Adminhtml\Sales\Invoice\Totals" name="fiserv_valuelink" template="Fiserv_Payments::valuelink/sales/invoice/totals/valuelink_view.phtml">
+				<action method="setBeforeCondition">
+					<argument name="param" xsi:type="string">customerbalance</argument>
+				</action>
+			</block>
+		</referenceBlock>
+	</body>
+</page>

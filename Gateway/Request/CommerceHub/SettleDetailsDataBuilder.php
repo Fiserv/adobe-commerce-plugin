@@ -10,6 +10,8 @@ use Fiserv\Payments\Gateway\Request\CommerceHub\TransactionDetailsDataBuilder;
 use Fiserv\Payments\Lib\CommerceHub\Model\TransactionDetails;
 use Fiserv\Payments\Lib\CommerceHub\Model\SplitShipment;
 use Magento\Sales\Api\OrderRepositoryInterface;
+use Fiserv\Payments\Logger\MultiLevelLogger;
+
 
 /**
  * Settle Details Data Builder
@@ -23,15 +25,17 @@ class SettleDetailsDataBuilder extends TransactionDetailsDataBuilder
 	private $orderRepo;
 
 	/**
+	 * @param MultiLevelLogger $logger
 	 * @param SubjectReader $subjectReader
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */
 	public function __construct(
 		SubjectReader $subjectReader,
+		MultiLevelLogger $logger,
 		OrderRepositoryInterface $orderRepo
 	)
 	{
-		parent::__construct($subjectReader);
+		parent::__construct($subjectReader, $logger);
 		$this->orderRepo = $orderRepo;
 	}
 
