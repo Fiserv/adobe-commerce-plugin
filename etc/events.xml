@@ -46,8 +46,6 @@
 
 	<event name="checkout_submit_all_after">
 		<observer name="fiserv_valuelink_sale_invoice" instance="Fiserv\Payments\Observer\Valuelink\ValuelinkOnlySaleCreateInvoice" />
-	</event>
-	<event name="checkout_submit_all_after">
 		<observer name="fiserv_valuelink_order_enrich" instance="Fiserv\Payments\Observer\Valuelink\EnrichValuelinkTransactionsWithOrderId" />
 	</event>
 	<!--

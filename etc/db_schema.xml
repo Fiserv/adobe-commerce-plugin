@@ -1,33 +1,22 @@
 <?xml version="1.0"?>
 <schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
 	<table name="valuelink_transaction" resource="default" engine="innodb" comment="Transcation Processed through Valuelink">
-		<column xsi:type="int" name="entity_id" length="10" padding="10" nullable="false" identity="true">
-			<identity/>
-			<primary/>
-		</column>
+		<column xsi:type="int" name="entity_id" unsigned="true" nullable="false" identity="true" />
 		<constraint xsi:type="primary" referenceId="PRIMARY">
-			<column name="entity_id"/>
+			<column name="entity_id" />
 		</constraint>
 
-		<column name="parent_transaction_id" xsi:type="int" length="10" padding="10" nullable="true"/>
-		<foreignKey referenceTable="valuelink_transaction" referenceColumn="entity_id" onDelete="CASCADE">
-			<column name="parent_transaction_id" />
-		</foreignKey>		
+		<column name="parent_transaction_id" xsi:type="int" unsigned="true" nullable="true" identity="false" />
+		<constraint xsi:type="foreign" referenceId="FK_VALUELINK_TRANSACTION_PARENT_TRANSACTION" table="valuelink_transaction" column="parent_transaction_id" referenceTable="valuelink_transaction" referenceColumn="entity_id" onDelete="CASCADE" />
 
-		<column name="order_id" xsi:type="int" length="10" padding="10" nullable="true"/>
-		<foreignKey referenceTable="sales_order" referenceColumn="entity_id" onDelete="CASCADE">
-			<column name="order_id" />
-		</foreignKey>
+		<column name="order_id" xsi:type="int" unsigned="true" nullable="true" identity="false" />
+		<constraint xsi:type="foreign" referenceId="FK_VALUELINK_TRANSACTION_ORDER_ID" table="valuelink_transaction" column="order_id" referenceTable="sales_order" referenceColumn="entity_id" onDelete="CASCADE" />
 
-		<column name="invoice_id" xsi:type="int" length="10" padding="10" nullable="true"/>
-		<foreignKey referenceTable="sales_invoice" referenceColumn="entity_id" onDelete="CASCADE">
-			<column name="invoice_id" />
-		</foreignKey>
+		<column name="invoice_id" xsi:type="int" unsigned="true" nullable="true" identity="false" />
+		<constraint xsi:type="foreign" referenceId="FK_VALUELINK_TRANSACTION_INVOICE_ID" table="valuelink_transaction" column="invoice_id" referenceTable="sales_invoice" referenceColumn="entity_id" onDelete="CASCADE" />
 
-		<column name="creditmemo_id" xsi:type="int" length="10" padding="10" nullable="true"/>
-		<foreignKey referenceTable="sales_creditmemo" referenceColumn="entity_id" onDelete="CASCADE">
-			<column name="creditmemo_id" />
-		</foreignKey>
+		<column name="creditmemo_id" xsi:type="int" unsigned="true" nullable="true" identity="false" />
+		<constraint xsi:type="foreign" referenceId="FK_VALUELINK_TRANSACTION_CREDITMEMO_ID" table="valuelink_transaction" column="creditmemo_id" referenceTable="sales_creditmemo" referenceColumn="entity_id" onDelete="CASCADE" />
 
 		<column xsi:type="varchar" name="order_increment_id" nullable="false" length="50"/>
 		<column xsi:type="varchar" name="transaction_id" nullable="true" length="255" comment="Commerce Hub Transaction Id"/>
