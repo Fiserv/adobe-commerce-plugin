@@ -48,6 +48,7 @@ class CancelComposite extends ChCompositeBase
 
 		$req = new CancelRequest();
 		$req->setReferenceTransactionDetails($result[ReferenceTransactionDataBuilder::REF_TXN_KEY]);
+		$req->setTransactionDetails($result[TransactionDetailsDataBuilder::TXN_DETAILS_KEY]);
 		$req->setMerchantDetails($result[MerchantDetailsDataBuilder::MERCHANT_DETAILS_KEY]);
 
 		return [ 

@@ -28,6 +28,11 @@ class ValuelinkTransaction extends AbstractModel implements ValuelinkTransaction
 	public const DECLINED_STATE = "DECLINED";
 	public const VOIDED_STATE = "VOIDED";
 
+	public const AUTHORIZE_TYPE = "AUTHORIZE";
+	public const CAPTURE_TYPE = "CAPTURE";
+	public const SALE_TYPE = "SALE";
+	public const CANCEL_TYPE = "CANCEL";
+
 	protected function _construct()
 	{
 		$this->_init(\Fiserv\Payments\Model\ResourceModel\ValuelinkTransaction::class);
@@ -110,7 +115,7 @@ class ValuelinkTransaction extends AbstractModel implements ValuelinkTransaction
 	
 	public function setTransactionType($transactionType)
 	{
-		return $this->setData(self::KEY_TRANSACTION_ID, $transactionType);
+		return $this->setData(self::KEY_TRANSACTION_TYPE, $transactionType);
 	}
 
 	public function getTransactionState()

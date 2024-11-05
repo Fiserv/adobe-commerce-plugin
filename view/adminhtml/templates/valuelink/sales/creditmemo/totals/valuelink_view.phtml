@@ -1,0 +1,15 @@
+<?php
+/**
+ * @var \Fiserv\Payments\Block\Valuelink\Adminhtml\Sales\CreditMemo\Totals $block
+ */
+
+$valuelinkCreditMemoTotal = $block->getValuelinkTotalForCreditMemo();
+?>
+<?php if ((float) $valuelinkCreditMemoTotal) : ?>
+	<tr>
+		<td class="label"><?= $block->escapeHtml(__('Gift Cards')) ?></td>
+		<td>
+			<?= /* @noEscape */ $block->getOrder()->formatPrice(-$valuelinkCreditMemoTotal) ?>
+		</td>
+	</tr>
+<?php endif; ?>

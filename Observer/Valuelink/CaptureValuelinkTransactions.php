@@ -46,7 +46,8 @@ class CaptureValuelinkTransactions implements ObserverInterface
 
 		// Capture command will capture uncaptured Valuelink authorizations
 		// Orders being captured can contain uncaptured AND captured Valuelink authorizations.
-		$balancedAuths = $this->orderHelper->getBalancedAuths($order);
+		$txns = $this->orderHelper->filterCanceledValuelinkTransactions($this->orderHelper->getValuelinkTransactionsByOrderIncrementId($order->getIncrementId()));
+		$balancedAuths = $this->orderHelper->getBalancedAuths($order, $txns);
 
 		if (count($balancedAuths))
 		{

@@ -3,25 +3,25 @@
 namespace Fiserv\Payments\Observer\Valuelink;
 
 use Fiserv\Payments\Model\ValuelinkTransaction;
+use Fiserv\Payments\Model\Valuelink\Helper\Order\ValuelinkOrderHelper;
 use Fiserv\Payments\Model\ResourceModel\ValuelinkTransaction as ValuelinkResource;
 use Magento\Framework\Event\ObserverInterface;
-use Psr\Log\LoggerInterface;
 
 class EnrichValuelinkTransactionsWithInvoiceId implements ObserverInterface
 {
 	private $valuelinkResource;
 
-	private $logger;
+	private $orderHelper;
 
     /**
      * @param LoggerInterface $logger
      */
     public function __construct(
 		ValuelinkResource $valuelinkResource,	
-		LoggerInterface $logger
+		ValuelinkOrderHelper $orderHelper
 	) {
 		$this->valuelinkResource = $valuelinkResource;
-        $this->logger = $logger;
+        $this->orderHelper = $orderHelper;
     }
 
     public function execute(\Magento\Framework\Event\Observer $observer)
@@ -30,7 +30,10 @@ class EnrichValuelinkTransactionsWithInvoiceId implements ObserverInterface
 		$order = $invoice->getOrder();
 		$incrementId = $order->getIncrementId();
 
-		$valuelinkTxns = $this->valuelinkResource->getByOrderIncrementId($incrementId);
+		// Need to filter out canceled transactions as they may be a part of previously failed reorder
+		// Thanks Adobe...
+		$valuelinkTxns = $this->orderHelper->getValuelinkTransactionsByOrderIncrementId($incrementId);
+		$valuelinkTxns = $this->orderHelper->filterCanceledValuelinkTransactions($valuelinkTxns);
 
 		if (!empty($valuelinkTxns))
 		{	
@@ -39,8 +42,7 @@ class EnrichValuelinkTransactionsWithInvoiceId implements ObserverInterface
 			foreach ($valuelinkTxns as $txn)
 			{
 				if (
-					$txn[ValuelinkTransaction::KEY_PARENT_TRANSACTION_ID] !== null &&
-					$txn[ValuelinkTransaction::KEY_TRANSACTION_STATE] === ValuelinkTransaction::CAPTURED_STATE &&
+					$txn[ValuelinkTransaction::KEY_TRANSACTION_TYPE] === ValuelinkTransaction::CAPTURE_TYPE &&
 					$txn[ValuelinkTransaction::KEY_INVOICE_ID] === null)
 				{
 					array_push($txnIds, $txn[ValuelinkTransaction::KEY_ENTITY_ID]);

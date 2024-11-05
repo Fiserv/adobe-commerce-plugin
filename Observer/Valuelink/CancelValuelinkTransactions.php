@@ -39,7 +39,7 @@ class CancelValuelinkTransactions implements ObserverInterface
 		// Cancel command should only cancel Valuelink authorizations
 		// Orders being cancelled should ONLY contain uncaptured Valuelink authorizations.
 		$rawTxns = $this->valuelinkResource->getByOrderId($order->getId());
-		$rawAuths = $this->getUncapturedAuths($rawTxns);
+		$rawAuths = $this->getAuthsToCancel($rawTxns);
 		
 		foreach ($rawAuths as $auth)
 		{
@@ -49,21 +49,26 @@ class CancelValuelinkTransactions implements ObserverInterface
         return $this;
 	}
 
-	public function getUncapturedAuths($txns)
+	public function getAuthsToCancel($txns)
 	{
 		$auths = array();
+		$cancels = array();
 		foreach($txns as $txn)
 		{
-			if ($txn["transaction_state"] !== ValuelinkTransaction::AUTHORIZED_STATE)
+			if ($txn["transaction_type"] === ValuelinkTransaction::AUTHORIZE_TYPE)
 			{
-				throw new LocalizedException(__("Cannot cancel order because Valuelink transaction with id: " . $txn["transaction_id"] . " is not in the AUTHORIZED state."));
+				array_push($auths, $txn);
 			}
-			
-			if ($txn["parent_transaction_id"] !== null)
+			else if ($txn["transaction_type"] === ValuelinkTransaction::CANCEL_TYPE)
 			{
-				throw new LocalizedException(__("Cannot cancel order because Valuelink transaction with id: " . $txn["transaction_id"] . " is a secondary transaction."));
+				array_push($cancels, $txn);
 			}
-			array_push($auths, $txn);
+		}
+		
+		// filter out auths that have already been canceled
+		foreach($cancels as $cancel)
+		{
+			$auths = array_filter($auths, function($txn) use($cancel){ return $txn[ValuelinkTransaction::KEY_ENTITY_ID] != $cancel[ValuelinkTransaction::KEY_PARENT_TRANSACTION_ID]; });
 		}
 
 		return $auths;

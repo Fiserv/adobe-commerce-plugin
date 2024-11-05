@@ -74,7 +74,7 @@ class ValuelinkCaptureRequest
 		return $this->parseCaptureResponse($chResponse);
 	}
 
-	private function parseCaptureResponse($chResponse) 
+	private function parseCaptureResponse($chResponse)
 	{
 		$statusCode = $chResponse->getStatusCode();
 		$response = $chResponse->getResponse();
@@ -108,7 +108,7 @@ class ValuelinkCaptureRequest
 	public function getValuelinkCapturePayload($txnId, $total, $previousCaptures, $finalCapture, $currency) : ChargesRequest
 	{
 		$payload = new ChargesRequest();
-		
+
 		$payload->setAmount($this->getAmount($total, $currency));
 		$payload->setReferenceTransactionDetails($this->getReferenceTransactionDetails($txnId));
 		$payload->setTransactionDetails($this->getTransactionDetails($previousCaptures, $finalCapture));
@@ -141,7 +141,8 @@ class ValuelinkCaptureRequest
 		$details = new TransactionDetails();
 
 		$details->setCaptureFlag(true);
-
+		$details->setMerchantTransactionId(uniqid());
+		$details->setMerchantOrderId(uniqid());
 		$splitShipment = new SplitShipment();
 		$splitShipment->setFinalShipment($finalCapture);
 		$splitShipment->setTotalCount($previousCaptures + 1);
@@ -156,7 +157,7 @@ class ValuelinkCaptureRequest
 
 		$merchantDetails->setMerchantId($this->chConfig->getMerchantId());
 		$merchantDetails->setTerminalId($this->chConfig->getTerminalId());
-		
+
 		return $merchantDetails;
 	}
 }

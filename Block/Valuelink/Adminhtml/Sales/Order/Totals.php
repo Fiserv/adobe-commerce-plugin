@@ -2,21 +2,21 @@
 
 namespace Fiserv\Payments\Block\Valuelink\Adminhtml\Sales\Order;
 
-use Fiserv\Payments\Model\ResourceModel\ValuelinkTransaction as ValuelinkResource;
+use Fiserv\Payments\Model\Valuelink\Helper\Order\ValuelinkOrderHelper;
 use Fiserv\Payments\Model\ValuelinkTransaction;
 
 class Totals extends \Magento\Sales\Block\Adminhtml\Order\Totals\Item
 {
-	private $valuelinkResource;
+	private $orderHelper;
 
 	public function __construct(
 		\Magento\Framework\View\Element\Template\Context $context,
-		ValuelinkResource $valuelinkResource,
+		ValuelinkOrderHelper $orderHelper,
 		\Magento\Framework\Registry $registry,
 		\Magento\Sales\Helper\Admin $adminHelper,
 		array $data = []
 	) {
-		$this->valuelinkResource = $valuelinkResource;
+		$this->orderHelper = $orderHelper;
 		parent::__construct($context, $registry, $adminHelper, $data);
 		$this->_isScopePrivate = true;
 	}
@@ -28,22 +28,15 @@ class Totals extends \Magento\Sales\Block\Adminhtml\Order\Totals\Item
 
 	public function getValuelinkCards()
 	{
-		$orderIncrementId = $this->getOrder()->getIncrementId();
-
 		$cards = array();
-		$rawCards = $this->valuelinkResource->getByOrderIncrementId($orderIncrementId);
-		
+		$rawCards = $this->orderHelper->getPrimaryValuelinkTransactionsByOrder($this->getOrder());
+
 		foreach ($rawCards as $card)
 		{
-			$primaryTransactionStates = ["AUTHORIZED", "CAPTURED"];
-			if (in_array($card[ValuelinkTransaction::KEY_TRANSACTION_STATE], $primaryTransactionStates) && $card[ValuelinkTransaction::KEY_PARENT_TRANSACTION_ID] == null)
-			{
-				$_c = new \Magento\Framework\DataObject();
-
-				$_c->setAmount($card[ValuelinkTransaction::KEY_AMOUNT]);
+			$_c = new \Magento\Framework\DataObject();
+			$_c->setAmount($card[ValuelinkTransaction::KEY_AMOUNT]);
 				
-				array_push($cards, $_c);
-			}
+			array_push($cards, $_c);
 		}
 
 		return $cards;

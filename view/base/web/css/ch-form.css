@@ -150,3 +150,19 @@
 .sdc-focused-field {
 	border-width: 2px;
 }
+
+@media screen and (max-width: 470px) {
+	.sdc-column {
+		max-width: none;
+	}
+
+	.sdc-column > * {
+		margin: 0;
+		width: 49%;
+	}
+
+	.sdc-text,
+	.sdc-dropdown   {
+		width: auto;
+	}
+}

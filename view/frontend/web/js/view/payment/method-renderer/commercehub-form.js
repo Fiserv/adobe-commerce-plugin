@@ -283,6 +283,7 @@ define(
 				chAdapter.destroyIframe();
 				this.loadIframe();
 				this.cardBrandChangeHandler(null);
+				this.resetFieldValidation();
 			},
 
 			/**
@@ -548,6 +549,21 @@ define(
 
 				return "";
 	
+			},
+
+			getSdcFields: function() {
+				return $('.sdc-field-frame');
+			},
+
+			resetFieldValidation : function() {
+
+				let fields = this.getSdcFields();
+
+				fields.each (
+					function(index) {
+						$(this).removeClass('sdc-valid-field');
+					}
+				);
 			},
 
 			fieldValidityHandler: function(data) {

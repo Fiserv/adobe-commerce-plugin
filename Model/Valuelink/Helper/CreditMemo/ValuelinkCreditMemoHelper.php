@@ -49,7 +49,7 @@ class ValuelinkCreditMemoHelper
 	public function getCreditMemoAdjustment($creditMemo)
 	{
 		$invoice = $creditMemo->getInvoice();
-		$vlCapturedAmt = $this->invoiceHelper->getCapturedValuelinkAmountByInvoice($invoice);
+		$vlCapturedAmt = $this->invoiceHelper->getValuelinkBalanceAppliedToInvoice($invoice);
 
 		// if no Valuelink captures on the invoice, no modification necessary 
 		if ($vlCapturedAmt < 0.01)
@@ -107,6 +107,18 @@ class ValuelinkCreditMemoHelper
 		}
 
 		return $invoiceCms;
+	}
+
+	public function getValuelinkAmountAppliedToCreditMemo($creditMemo)
+	{
+		return -($creditMemo->getGrandTotal() - 
+			$creditMemo->getSubtotal() -
+			$creditMemo->getShippingAmount() -
+			$creditMemo->getShippingTaxAmount() -
+			$creditMemo->getTaxAmount() +
+			$creditMemo->getDiscountAmount() + 
+			$creditMemo->getCustomerBalanceAmount() + 
+			$creditMemo->getGiftCardsAmount());
 	}
 
 }

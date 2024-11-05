@@ -151,6 +151,7 @@ class ValuelinkChargesRequest
 		
 		$details->setCaptureFlag($this->valuelinkConfig->getPaymentAction() == MethodInterface::ACTION_AUTHORIZE_CAPTURE);
 		$details->setMerchantTransactionId(uniqid());
+		$details->setMerchantOrderId(uniqid());
 		$details->setCreateToken(false);
 
 		return $details;

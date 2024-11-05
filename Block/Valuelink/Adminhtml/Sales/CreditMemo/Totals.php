@@ -2,7 +2,7 @@
 
 namespace Fiserv\Payments\Block\Valuelink\Adminhtml\Sales\CreditMemo;
 
-use Fiserv\Payments\Model\ResourceModel\ValuelinkTransaction as ValuelinkResource;
+use Fiserv\Payments\Model\Valuelink\Helper\Order\ValuelinkOrderHelper;
 use Fiserv\Payments\Model\Valuelink\Helper\CreditMemo\ValuelinkCreditMemoHelper;
 
 class Totals extends \Fiserv\Payments\Block\Valuelink\Adminhtml\Sales\Order\Totals 
@@ -11,14 +11,14 @@ class Totals extends \Fiserv\Payments\Block\Valuelink\Adminhtml\Sales\Order\Tota
 
 	public function __construct(
 		\Magento\Framework\View\Element\Template\Context $context,
-		ValuelinkResource $valuelinkResource,
+		ValuelinkOrderHelper $orderHelper,
 		ValuelinkCreditMemoHelper $creditMemoHelper,
 		\Magento\Framework\Registry $registry,
 		\Magento\Sales\Helper\Admin $adminHelper,
 		array $data = []
 	) {
 		$this->creditMemoHelper = $creditMemoHelper;
-		parent::__construct($context, $valuelinkResource, $registry, $adminHelper, $data);
+		parent::__construct($context, $orderHelper, $registry, $adminHelper, $data);
 		$this->_isScopePrivate = true;
 	}
 
@@ -30,5 +30,10 @@ class Totals extends \Fiserv\Payments\Block\Valuelink\Adminhtml\Sales\Order\Tota
 	public function getValuelinkTotalForNewCreditMemo()
 	{
 		return $this->getCreditmemo()->getValuelinkAdjustment();
+	}
+
+	public function getValuelinkTotalForCreditMemo()
+	{
+		return $this->creditMemoHelper->getValuelinkAmountAppliedToCreditMemo($this->getCreditMemo());
 	}
 }

@@ -308,8 +308,9 @@ define([
 			},
 
 			tokenizeFailure: function(message) {
+				this.endAsyncFlow();
 				this.showError(message);
-				location.reload();
+				chIframe.resetIframe();
 			},
 			
 			getCardBrandIcon: function() {

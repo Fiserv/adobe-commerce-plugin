@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Sales:etc/pdf_file.xsd">
+	<totals>
+		<total name="fiserv_valuelink">
+			<title translate="true">Valuelink Gift Cards</title>
+			<model>Fiserv\Payments\Model\Valuelink\Total\Pdf\ValuelinkOrderTotal</model>
+			<amount_prefix>-</amount_prefix>
+			<font_size>7</font_size>
+			<sort_order>560</sort_order>
+		</total>
+	</totals>
+</config>

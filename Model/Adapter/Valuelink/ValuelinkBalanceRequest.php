@@ -11,6 +11,7 @@ use Fiserv\Payments\Logger\MultiLevelLogger;
 use Fiserv\Payments\Lib\CommerceHub\Model\GiftCardRequest;
 use Fiserv\Payments\Lib\CommerceHub\Model\PaymentSession;
 use Fiserv\Payments\Lib\CommerceHub\Model\MerchantDetails;
+use Fiserv\Payments\Lib\CommerceHub\Model\TransactionDetails;
 
 class ValuelinkBalanceRequest
 {
@@ -122,11 +123,22 @@ class ValuelinkBalanceRequest
 		$merchantDetails->setTerminalId($terminalId);
 
 		$payload->setMerchantDetails($merchantDetails);
+		$payload->setTransactionDetails($this->getTransactionDetails());
 		$payload->setSource($source);
 
 		return $payload;
 	}
+	
+	private function getTransactionDetails() : TransactionDetails
+	{
+		$details = new TransactionDetails();
 
+		$details->setMerchantTransactionId(uniqid());
+		$details->setMerchantOrderId(uniqid());
+
+		return $details;
+	}
+	
 	private function getTerminalId() {
 		return  $this->chConfig->getTerminalId();
     	}

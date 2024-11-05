@@ -68,6 +68,7 @@ abstract class TransactionDetailsDataBuilder implements BuilderInterface
 		
 		$txnDetails->setCaptureFlag($captureFlag);
 		$txnDetails->setMerchantOrderId($orderDO->getOrderIncrementId());
+		$txnDetails->setMerchantTransactionId(uniqid());
 		$txnDetails->setAccountVerification(false);
 
 		$this->logger->logInfo(3, "Transaction Details Data Builder:\n" . $txnDetails->__toString());

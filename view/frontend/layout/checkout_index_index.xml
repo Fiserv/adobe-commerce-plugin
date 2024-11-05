@@ -59,7 +59,7 @@
 											<item name="children" xsi:type="array">
 												<item name="totals" xsi:type="array">
 													<item name="children" xsi:type="array">
-														<item name="giftCardAccount" xsi:type="array">
+														<item name="fiserv_valuelink" xsi:type="array">
 															<item name="component" xsi:type="string">Fiserv_Payments/js/view/valuelink/summary/valuelink-gift-card</item>
 															<item name="sortOrder" xsi:type="string">31</item>
 															<item name="config" xsi:type="array">

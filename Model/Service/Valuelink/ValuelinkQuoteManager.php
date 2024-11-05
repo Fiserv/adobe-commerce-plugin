@@ -16,7 +16,7 @@ class ValuelinkQuoteManager
 	 * @var Json
 	 */
 	private $serializer;
-			
+
 	/**
 	 * @var \Magento\Quote\Api\CartRepositoryInterface
 	 */
@@ -30,7 +30,7 @@ class ValuelinkQuoteManager
 	private $valuelinkDataHelper;
 
 	public function __construct(
-		Json $serializer,	
+		Json $serializer,
 		\Magento\Quote\Api\CartRepositoryInterface $quoteRepository,
 		DataHelper $valuelinkDataHelper,
 		ValuelinkConfig $valuelinkConfig
@@ -45,7 +45,7 @@ class ValuelinkQuoteManager
 	{
 		/** @var  \Magento\Quote\Model\Quote $quote */
 		if (!$quote->getItemsCount()) {
-			throw new CouldNotSaveException(__('The "%1" Cart doesn\'t contain products.', $cartId));
+			throw new CouldNotSaveException(__('The "%1" Cart doesn\'t contain products.', $quote->getId()));
 		}
 
 		// Can't add Valuelink cards to Quotes with 0 dollar total
@@ -66,7 +66,7 @@ class ValuelinkQuoteManager
 				__('Only up to ' . $cardAmountLimit . ' gift card' . ($cardAmountLimit === 1 ? '' : 's') .' can be applied to a single purchase.')
 			);
 		}
-		
+
 		foreach ($valuelinkRecords as $record)
 		{
 			if ($record[ValuelinkQuoteRecord::SESSION_ID_KEY] == $valuelinkQuoteRecord->getSessionId())
@@ -80,27 +80,36 @@ class ValuelinkQuoteManager
 		// Set amount to charge equal to remaining balance on quote
 		// if it is less than the balance on the Valuelink card
 		$balance = $valuelinkQuoteRecord->getBalance();
-		$amountToCharge = $balance > $grandTotal ? $grandTotal : $balance; 
+		$amountToCharge = $balance > $grandTotal ? $grandTotal : $balance;
 		$valuelinkQuoteRecord->setAmountToCharge($amountToCharge);
-		
+
 		array_push($valuelinkRecords, $valuelinkQuoteRecord->getAsArray());
 		$this->valuelinkDataHelper->addValuelinkRecordsToQuote($quote, $valuelinkRecords);
 
 		$quote->collectTotals();
 		$this->quoteRepository->save($quote);
 
-		
 	}
-	
+
 	public function RemoveAllValuelinkCardsFromQuote($cartId)
 	{
-		$quote = $this->quoteRepository->getActive($cartId);
+		$quote = $this->getActiveOrNonActiveQuote($cartId);
 		$this->valuelinkDataHelper->addValuelinkRecordsToQuote($quote, []);
-	
+		
 		$quote->collectTotals();
 		$this->quoteRepository->save($quote);
 	}
-	
+
+	private function getActiveOrNonActiveQuote($cartId)
+	{
+		try {
+			return $this->quoteRepository->getActive($cartId);
+		} catch (\Magento\Framework\Exception\NoSuchEntityException $e) {
+			// Active quote not found, try to get the non-active quote
+			return $this->quoteRepository->get($cartId);
+		}
+	}
+
 	public function RemoveValuelinkCardsFromQuote(array $valuelinkQuoteRecords, $quote)
 	{
 		$valuelinkRecords = $this->valuelinkDataHelper->getValuelinkRecordsFromQuote($quote);
@@ -117,7 +126,7 @@ class ValuelinkQuoteManager
 					$valid = false;
 				}
 			}
-		
+
 			if ($valid)
 			{
 				array_push($validCards, $valuelinkRecords[$i]);
@@ -134,7 +143,7 @@ class ValuelinkQuoteManager
 			$_tempTotal =+ $valuelinkTotal + $validCard[ValuelinkQuoteRecord::BALANCE_KEY];
 			$validCard[ValuelinkQuoteRecord::CHARGE_AMOUNT_KEY] = $_tempTotal > $grandTotal ? $_tempTotal - $grandTotal : $validCard[ValuelinkQuoteRecord::BALANCE_KEY];
 			$valuelinkTotal += $validCard[ValuelinkQuoteRecord::CHARGE_AMOUNT_KEY];
-		} 
+		}
 
 		$this->valuelinkDataHelper->addValuelinkRecordsToQuote($quote, $validCards);
 

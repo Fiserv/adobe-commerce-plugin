@@ -5,6 +5,7 @@ namespace Fiserv\Payments\Model\Service\Valuelink;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Serialize\Serializer\Json;
+use Magento\Payment\Model\MethodInterface;
 use Fiserv\Payments\Model\Valuelink\ValuelinkQuoteRecord;
 use Fiserv\Payments\Helper\Valuelink\DataHelper;
 use Fiserv\Payments\Model\Adapter\Valuelink\ValuelinkChargesRequest;
@@ -85,7 +86,18 @@ class ValuelinkTransactionManager
 			$valuelinkTransaction->setAmount($valuelinkRecord->getAmountToCharge());
 			$valuelinkTransaction->setCurrency('USD');
 			$valuelinkTransaction->setDateCreated(new \DateTime('now', new \DateTimeZone($this->_localeDate->getConfigTimezone())));
-			$valuelinkTransaction->setTransactionType($this->valuelinkConfig->getPaymentAction());
+
+			$paymentAction = $this->valuelinkConfig->getPaymentAction();
+			$transactionType = "UNKNOWN";
+			if ($paymentAction == MethodInterface::ACTION_AUTHORIZE)
+			{
+				$transactionType = ValuelinkTransaction::AUTHORIZE_TYPE;
+			}
+			else if ($paymentAction == MethodInterface::ACTION_AUTHORIZE_CAPTURE)
+			{
+				$transactionType = ValuelinkTransaction::SALE_TYPE;
+			}
+			$valuelinkTransaction->setTransactionType($transactionType);
 
 			$payload = $this->valuelinkChargesAdapter->getValuelinkChargesPayload($valuelinkRecord->getSessionId(), $valuelinkRecord->getAmountToCharge(), 'USD');
 			//$payload = $this->valuelinkChargesAdapter->getValuelinkChargesPayload($valuelinkRecord->getSessionId(), 1.00, 'USD');
@@ -101,8 +113,8 @@ class ValuelinkTransactionManager
 
 			$valuelinkTransaction->setChResponse(json_encode($chResponse));
 			$valuelinkTransaction->setTransactionId($this->extractTransactionId($chResponse));
-			$valuelinkTransaction->setTransactionState($this->extractTransactionState($chResponse));	
-
+			$valuelinkTransaction->setTransactionState($this->extractTransactionState($chResponse));		
+			
 			$successStates = [ValuelinkTransaction::AUTHORIZED_STATE, ValuelinkTransaction::CAPTURED_STATE];
 			if (!in_array($valuelinkTransaction->getTransactionState(), $successStates))
 			{
@@ -144,6 +156,7 @@ class ValuelinkTransactionManager
 			$cancelTxn->setAmount($primaryTxn["amount"]);
 			$cancelTxn->setCurrency($primaryTxn["currency"]);
 			$cancelTxn->setDateCreated(new \DateTime('now', new \DateTimeZone($this->_localeDate->getConfigTimezone())));
+			$cancelTxn->setTransactionType(ValuelinkTransaction::CANCEL_TYPE);
 
 			$merchantTxnId = $this->getMerchantTransactionId($primaryTxn);
 			$payload = $this->valuelinkCancelAdapter->getValuelinkCancelPayload($primaryTxn["transaction_id"], $merchantTxnId);
@@ -200,6 +213,7 @@ class ValuelinkTransactionManager
 			$captureTxn->setAmount($amtToCapture);
 			$captureTxn->setCurrency($authToCapture["currency"]);
 			$captureTxn->setDateCreated(new \DateTime('now', new \DateTimeZone($this->_localeDate->getConfigTimezone())));
+			$captureTxn->setTransactionType(ValuelinkTransaction::CAPTURE_TYPE);
 
 			$payload = $this->valuelinkCaptureAdapter->getValuelinkCapturePayload($authToCapture["transaction_id"], $amtToCapture, $previousCaptures, $finalCapture, $captureTxn->getCurrency());
 

@@ -22,10 +22,11 @@ class InvoiceRegister
 	{
 		$order = $subject->getOrder();
 		$remainingAuth = $this->orderHelper->getRemainingAuthAmount($order);
+		$uninvoicedSaleAmt = $this->orderHelper->getUninvoicedSaleAmount($order);
 
 		// if Grand Total is zero and there is remaining auth, then set Capture Case to offline
 		// so we don't trigger the payment gateway capture command.
-		if ($remainingAuth > 0.01 && $subject->getGrandTotal() < 0.01)
+		if (($remainingAuth > 0 || $uninvoicedSaleAmt > 0) && $subject->getGrandTotal() < 0.01)
 		{	
 			$subject->setRequestedCaptureCase(\Magento\Sales\Model\Order\Invoice::CAPTURE_OFFLINE);
 		}	

@@ -264,6 +264,7 @@
 			<argument name="builders" xsi:type="array">
 				<item name="amount" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder</item>
 				<item name="refund_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\RefundRefTxnDataBuilder</item>
+				<item name="refund_txn_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\SaleDetailsDataBuilder</item>
 				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
 			</argument>
 		</arguments>
@@ -273,6 +274,7 @@
 		<arguments>
 			<argument name="builders" xsi:type="array">
 				<item name="cancel_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CancelRefTxnDataBuilder</item>
+				<item name="cancel_txn_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AuthDetailsDataBuilder</item>
 				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
 			</argument>
 		</arguments>

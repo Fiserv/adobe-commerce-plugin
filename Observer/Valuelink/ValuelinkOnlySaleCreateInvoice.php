@@ -2,6 +2,7 @@
 
 namespace Fiserv\Payments\Observer\Valuelink;
 
+use Fiserv\Payments\Model\Valuelink\Helper\Order\ValuelinkOrderHelper;
 use Fiserv\Payments\Model\ResourceModel\ValuelinkTransaction as ValuelinkResource;
 use Fiserv\Payments\Gateway\Config\Valuelink\Config as ValuelinkConfig;
 use Magento\Framework\Event\ObserverInterface;
@@ -14,6 +15,8 @@ use Fiserv\Payments\Logger\MultiLevelLogger;
 class ValuelinkOnlySaleCreateInvoice implements ObserverInterface
 {
 	private $valuelinkResource;
+
+	private $orderHelper;
 
 	private $invoiceSender;
 
@@ -28,12 +31,14 @@ class ValuelinkOnlySaleCreateInvoice implements ObserverInterface
      */
     public function __construct(
 		ValuelinkResource $valuelinkResource,
+		ValuelinkOrderHelper $orderHelper,
 		InvoiceSender $invoiceSender,
 		InvoiceService $invoiceService,
 		ValuelinkConfig $config,
 		MultiLevelLogger $logger
 	) {
 		$this->valuelinkResource = $valuelinkResource;
+		$this->orderHelper = $orderHelper;
 		$this->invoiceSender = $invoiceSender;
 		$this->invoiceService = $invoiceService;
 		$this->config = $config;
@@ -44,7 +49,8 @@ class ValuelinkOnlySaleCreateInvoice implements ObserverInterface
 	{
 		$order = $observer->getEvent()->getOrder();
 		$incrementId = $order->getIncrementId();
-		$valuelinkTxns = $this->valuelinkResource->getByOrderIncrementId($incrementId);
+		$valuelinkTxns = $this->orderHelper->getValuelinkTransactionsByOrderIncrementId($incrementId);
+		$valuelinkTxns = $this->orderHelper->filterCanceledValuelinkTransactions($valuelinkTxns);
 
 		if ($order->canInvoice() &&
 			!empty($valuelinkTxns) &&

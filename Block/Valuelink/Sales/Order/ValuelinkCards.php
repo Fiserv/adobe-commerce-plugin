@@ -2,19 +2,19 @@
 
 namespace Fiserv\Payments\Block\Valuelink\Sales\Order;
 
-use Fiserv\Payments\Model\ResourceModel\ValuelinkTransaction as ValuelinkResource;
 use Fiserv\Payments\Model\ValuelinkTransaction;
+use Fiserv\Payments\Model\Valuelink\Helper\Order\ValuelinkOrderHelper;
 
 class ValuelinkCards extends \Magento\Framework\View\Element\Template
 {
-	private $valuelinkResource;
-	
+	private $orderHelper;
+
 	public function __construct(
 		\Magento\Framework\View\Element\Template\Context $context,
-		ValuelinkResource $valuelinkResource,
+		ValuelinkOrderHelper $orderHelper,
 		array $data = []
 	) {
-		$this->valuelinkResource = $valuelinkResource;
+		$this->orderHelper = $orderHelper;
 		parent::__construct($context, $data);
 		$this->_isScopePrivate = true;
 	}
@@ -26,22 +26,16 @@ class ValuelinkCards extends \Magento\Framework\View\Element\Template
 
 	public function getValuelinkCards()
 	{
-		$orderId = $this->getOrder()->getId();
-
+		$order = $this->getOrder();
 		$cards = array();
-		$rawCards = $this->valuelinkResource->getByOrderId($orderId);
 		
-		foreach ($rawCards as $card)
+		$primaryTxns = $this->orderHelper->getPrimaryValuelinkTransactionsByOrder($order);	
+		foreach ($primaryTxns as $card)
 		{
-			$primaryTransactionStates = ["AUTHORIZED", "CAPTURED"];
-			if (in_array($card[ValuelinkTransaction::KEY_TRANSACTION_STATE], $primaryTransactionStates))
-			{
-				$_c = new \Magento\Framework\DataObject();
+			$_c = new \Magento\Framework\DataObject();
+			$_c->setAmount($card[ValuelinkTransaction::KEY_AMOUNT]);
 
-				$_c->setAmount($card[ValuelinkTransaction::KEY_AMOUNT]);
-				
-				array_push($cards, $_c);
-			}
+			array_push($cards, $_c);
 		}
 
 		return $cards;
@@ -54,16 +48,18 @@ class ValuelinkCards extends \Magento\Framework\View\Element\Template
 		* */
 	public function initTotals()
 	{
-			$total = new \Magento\Framework\DataObject(
-					[
-							'code' => $this->getNameInLayout(),
-							'block_name' => $this->getNameInLayout(),
-							'area' => $this->getArea(),
-					]
-			);
-			$this->getParentBlock()->addTotalBefore($total, ['customerbalance', 'grand_total']);
-			return $this;
+		$total = new \Magento\Framework\DataObject(
+			[
+				'code' => $this->getNameInLayout(),
+				'block_name' => $this->getNameInLayout(),
+				'area' => $this->getArea(),
+			]
+		);
+		$this->getParentBlock()->addTotalBefore($total, ['customerbalance', 'grand_total']);
+		
+		return $this;
 	}
+
 	/**
 	 * @return mixed
 	 */

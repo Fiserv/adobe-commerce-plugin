@@ -23,7 +23,9 @@ class ValuelinkInvoiceHelper
 			return false;
 		}
 
-		return round($order->getGrandTotal(), 2) == round($invoice->getGrandTotal(), 2);
+		// invoice total can be greater than order total if we have an unreconciled
+		// valuelink sale processed before the invoice;
+		return round($order->getGrandTotal(), 2) <= round($invoice->getGrandTotal(), 2);
 	}
 
 	private function getTotalInvoiceItems($invoice)
@@ -130,6 +132,28 @@ class ValuelinkInvoiceHelper
 		return $this->valuelinkResource->getByInvoiceId($invoice->getId());
 	}
 
+	public function getPrimaryValuelinkTransactionsByInvoice(?\Magento\Sales\Model\Order\Invoice $invoice)
+	{
+		if ($invoice == null)
+		{
+			return array();
+		}
+
+		$rawTxns = $this->getValuelinkTransactionsByInvoice($invoice);
+		$primaryTxns = array();
+
+		$primaryTransactionTypes = [ValuelinkTransaction::AUTHORIZE_TYPE, ValuelinkTransaction::SALE_TYPE];
+		foreach($rawTxns as $txn)
+		{
+			if (in_array($txn[ValuelinkTransaction::KEY_TRANSACTION_TYPE], $primaryTransactionTypes))
+			{
+				array_push($primaryTxns, $txn);
+			}
+		}
+
+		return $primaryTxns;
+	}
+
 	public function getCapturedValuelinkTransactionsByInvoice(?\Magento\Sales\Model\Order\Invoice $invoice)
 	{
 		if ($invoice == null)
@@ -169,4 +193,34 @@ class ValuelinkInvoiceHelper
 		return $amount;
 	}
 
+	// this isn't an ideal calculation as there may be custom
+	// modifications to the total that aren't accounted for here
+	// VALIDATE THAT SALE TRANSACTIONS EXIST ON THE ORDER FIRST
+	public function getValuelinkSaleBalanceAppliedToInvoice(\Magento\Sales\Model\Order\Invoice $invoice)
+	{
+		$subTotal = $invoice->getSubtotal() ?? 0;
+		$tax = $invoice->getTaxAmount() ?? 0;
+		$shipping = $invoice->getShippingAmount() ?? 0;
+		$shippingTax = $invoice->getShippingTaxAmount() ?? 0;
+		$rawTotal = $subTotal + $tax + $shipping + $shippingTax;
+
+		$discount = $invoice->getDiscountAmount() ?? 0;
+		$storeCredit = $invoice->getCustomerBalanceAmount() ?? 0;
+		$mageGift = $invoice->getGiftCardsAmount() ?? 0;
+		$deductions = $discount + $storeCredit;
+
+		return $rawTotal - $deductions - $invoice->getGrandTotal();
+	}
+
+	// could have applied gift card funds from a vl sale txn associated with order
+	// preference captures directly associated with invoice
+	public function getValuelinkBalanceAppliedToInvoice(?\Magento\Sales\Model\Order\Invoice $invoice)
+	{
+		if (is_null($invoice))
+		{
+			return 0;
+		}
+		$invoiceAmt = $this->getCapturedValuelinkAmountByInvoice($invoice);
+		return $invoiceAmt > 0 ? $invoiceAmt : $this->getValuelinkSaleBalanceAppliedToInvoice($invoice);
+	}
 }

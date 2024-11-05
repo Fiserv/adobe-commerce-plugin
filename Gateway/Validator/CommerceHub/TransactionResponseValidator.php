@@ -17,6 +17,7 @@ use Fiserv\Payments\Logger\MultiLevelLogger;
  */
 abstract class TransactionResponseValidator extends AbstractValidator
 {	
+	const HTTP_OK = 200;
 	const HTTP_CREATED = 201;
 	const HTTP_UNAUTHORIZED = 400;
 	const HTTP_NOTFOUND = 404;
@@ -29,7 +30,8 @@ abstract class TransactionResponseValidator extends AbstractValidator
 	const STATE_VOIDED = "VOIDED";
 
 	protected $successStatuses = [
-		self::HTTP_CREATED
+		self::HTTP_CREATED,
+		self::HTTP_OK
 	];
 
 	protected $failureStatuses = [

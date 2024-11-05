@@ -133,7 +133,8 @@ class ValuelinkCancelRequest
 	private function getTransactionDetails() : TransactionDetails
 	{
 		$details = new TransactionDetails();
-		
+                $details->setMerchantTransactionId(uniqid());
+		$details->setMerchantOrderId(uniqid());	
 		$details->setOperationType(self::KEY_OPERATION_TYPE);
 
 		return $details;
