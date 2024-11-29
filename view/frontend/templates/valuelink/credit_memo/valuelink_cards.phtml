@@ -3,7 +3,7 @@
  * @var \Fiserv\Payments\Block\Valuelink\Sales\CreditMemo\ValuelinkCards $block
  */
 
-$valuelinkCreditMemoTotal = $block->getValuelinkTotalForCreditMemo();
+$valuelinkCreditMemoTotal = round($block->getValuelinkTotalForCreditMemo(), 4);
 ?>
 <?php if ((float) $valuelinkCreditMemoTotal) : ?>
 	<tr class="valuelink_cards totals">
@@ -11,7 +11,7 @@ $valuelinkCreditMemoTotal = $block->getValuelinkTotalForCreditMemo();
 			<?= $block->escapeHtml(__('Gift Cards')) ?>
 		</td>
 		<td <?= /* @noEscape */ $block->getValueProperties() ?>>
-			<span class="discount"><?= /* @noEscape */ $block->getOrder()->formatPrice(-$valuelinkCreditMemoTotal) ?></span>
+			<span class="discount" style="white-space: nowrap;"><?= /* @noEscape */ $block->getOrder()->formatPrice(-$valuelinkCreditMemoTotal) ?></span>
 		</td>
 	</tr>
 <?php endif; ?>

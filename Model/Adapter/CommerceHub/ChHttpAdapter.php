@@ -77,9 +77,9 @@ class ChHttpAdapter
 		return $this->execHttpRequest($payload, $url, $endpoint);
 	}
 
-	private function execHttpRequest($payload, $url, $endpoint) {
-		$headerLength = 0;
-		$curl = $this->generateBaseCurl(22, $headerLength);
+	private function execHttpRequest($payload, $url, $endpoint)
+	{
+		$curl = $this->generateBaseCurl(22);
 		$curl->write('POST', $url, '1.1', $this->getHeaders($payload), $payload);
 		$curlResponse = $curl->read();
 
@@ -92,9 +92,8 @@ class ChHttpAdapter
 				$curl->close();
 				// Step 1: Idempotency attempt
 				$this->logger->logCritical(1, "Initiating idempotency attempt for Client-Request-Id " . $this->nonce);
-				$headerLength = 0;
 				$this->timestamp = $this->getTimestamp();
-				$curl = $this->generateBaseCurl(2, $headerLength);
+				$curl = $this->generateBaseCurl(2);
 				$curl->write('POST', $url, '1.1', $this->getHeaders($payload), $payload);
 				$curlResponse = $curl->read();
 				if($curl->getErrno()) {
@@ -105,9 +104,8 @@ class ChHttpAdapter
 				$this->logger->logInfo(1, "Idempotency attempt success. Returning from recovery process...");
 			}
 		}
-
 		$statusCode = $curl->getInfo(CURLINFO_HTTP_CODE);
-
+		$headerLength = $curl->getInfo(CURLINFO_HEADER_SIZE);
 		$curl->close();
 		return new ChHttpResponse($statusCode, $curlResponse, $headerLength);
 	}
@@ -132,20 +130,18 @@ class ChHttpAdapter
 		);
 		
 		$inquiryUrl = $this->getServiceUrl() . '/' . self::INQUIRY_ENDPOINT;
-		$inquiryHeaderLength = 0;
-		$inquiryCurl = $this->generateBaseCurl(2, $inquiryHeaderLength);
-		$inquiryCurl->write('POST', $inquiryUrl, '1.1', $this->getHeaders($payload), $payload);
-		$inquiryResponseFull = $inquiryCurl->read();
+		$inquiryCurl = $this->generateNakedBaseCurl($inquiryUrl, $payload, 2);
+		$inquiryResponseFull = curl_exec($inquiryCurl);
+		$inquiryHeaderLength = curl_getinfo($inquiryCurl, CURLINFO_HEADER_SIZE);
 		$inquiryResponseArray = json_decode(substr($inquiryResponseFull, $inquiryHeaderLength), true);
 
 		// Response returned from Commerce Hub. No errors. Transaction exists
-		if(!$inquiryCurl->getErrno() && $inquiryResponseArray !== array())
+		if(!curl_error($inquiryCurl) && $inquiryResponseArray !== array())
 		{
-			$inquiryStatusCode = $inquiryCurl->getInfo(CURLINFO_HTTP_CODE);
-
+			$inquiryStatusCode = curl_getinfo($inquiryCurl, CURLINFO_HTTP_CODE);
 			// Look for correct transaction within $inquiryResponse and return just the body
 			$orderID = $data["transactionDetails"]["merchantOrderId"];
-			$inquiryBody;
+			$inquiryBody = null;
 			foreach($inquiryResponseArray as $response) {
 				if($response["transactionDetails"]["merchantOrderId"] === $orderID) {
 					$inquiryBody = $response;
@@ -153,9 +149,10 @@ class ChHttpAdapter
 			}
 
 			$this->logger->logInfo(1, "Transaction inquiry success. Returning from recovery process...");
-			$inquiryCurl->close();
-			return new ChHttpResponse($inquiryStatusCode, json_encode($inquiryBody), 0);
+			curl_close($inquiryCurl);
+			return new ChHttpResponse($inquiryStatusCode, substr($inquiryResponseFull, 0, $inquiryHeaderLength) . json_encode($inquiryBody), $inquiryHeaderLength);
 		}
+		curl_close($inquiryCurl);
 		$this->logger->logCritical(1, "Transaction inquiry failure. Continuing recovery process...");
 
 		// Step 3: Critical Recovery (Deal with transaction specific response flows if issue with inquiry occurred)
@@ -170,11 +167,21 @@ class ChHttpAdapter
 			$cancelCurl = $this->generateBaseCurl(2);
 			$cancelCurl->write('POST', $cancelUrl, '1.1', $this->getHeaders($payload), $payload);
 			$cancelResponse = $cancelCurl->read();
+			$cancelStatusCode = $cancelCurl->getInfo(CURLINFO_HTTP_CODE);
+			$cancelHeaderLength = $cancelCurl->getInfo(CURLINFO_HEADER_SIZE);
+			$cancelHttpResponse = new ChHttpResponse($cancelStatusCode, $cancelResponse, $cancelHeaderLength);
 
 			if($cancelCurl->getErrno()) {
 				$this->logger->logEmergency(1, "Initial transaction cancel failure. Failed to recover from transaction timeout. referenceMerchantTransactionId: " . $transactionID);
 			} else {
-				$this->logger->logCritical(1, "Cancel transaction successful. Recovery process finished.");
+				$cancelResponseBody = json_decode($cancelHttpResponse->getBody(), true);
+				$cancelTransactionId = $cancelResponseBody['gatewayResponse']['transactionProcessingDetails']['transactionId'];
+				$this->logger->logInfo(1, "Cancel response received for timeout reversal");
+				$this->logger->logInfo(3, "CANCEL TXN RESPONSE INFO");
+				$this->logger->logInfo(3, "Cancel Response Headers:\n" . print_r($cancelHttpResponse->getHeaders(), true));
+				$this->logger->logInfo(3, "Cancel Response Body:\n" . json_encode($cancelResponseBody, JSON_PRETTY_PRINT));
+				$this->logger->logInfo(1, "Transaction ID: " . $cancelTransactionId);
+				$this->logger->logInfo(1, "Recovery process finished");
 			}
 			$cancelCurl->close();
 		} else {
@@ -190,29 +197,44 @@ class ChHttpAdapter
 	/**
 	 * Fills in base information of a curl object
 	 *
-	 * @param &int $headerLength
 	 * @param int $timeout
 	 */
-	private function generateBaseCurl($timeout, &$headerLength = null)
+	private function generateBaseCurl($timeout)
 	{
 		$curl = $this->curlFactory->create();
 		$curl->setConfig(
 			[
 				CURLOPT_TIMEOUT => $timeout,
 				CURLOPT_USERAGENT => $this->getUserAgent(),
-				CURLOPT_SSL_VERIFYHOST => 0,
-				CURLOPT_HEADERFUNCTION =>
-				function($curl, $header) use (&$headerLength)
-				{
-					$len = strlen($header);
-					$headerCheck = explode(':', $header, 2);
-					// transfer-encoding gets purged for some reason, don't add to length
-					if($headerLength === null || $headerCheck[0] === 'transfer-encoding')
-						return $len;
-					$headerLength += $len;
-					return $len;
-				}
+				CURLOPT_SSL_VERIFYHOST => 0
 			]
+		);
+		return $curl;
+	}
+
+	/**
+	 * Uses default php curl instead of curl factory to avoid Magento specific curl issues
+	 *
+	 * @param string $url
+	 * @param string $payload
+	 * @param int $timeout
+	 */
+	private function generateNakedBaseCurl($url, $payload, $timeout)
+	{
+		$curl = curl_init();
+		curl_setopt_array($curl,
+						  [
+							  CURLOPT_URL => $url,
+							  CURLOPT_RETURNTRANSFER => true,
+							  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+							  CURLOPT_HTTPHEADER => $this->getHeaders($payload),
+							  CURLOPT_HEADER => true,
+							  CURLOPT_POSTFIELDS => $payload,
+							  CURLOPT_POST => true,
+							  CURLOPT_TIMEOUT => $timeout,
+							  CURLOPT_USERAGENT => $this->getUserAgent(),
+							  CURLOPT_SSL_VERIFYHOST => 0
+						  ]
 		);
 		return $curl;
 	}
@@ -237,6 +259,51 @@ class ChHttpAdapter
 			'Timestamp: ' . $this->timestamp,
 			'Auth-Token-Type: HMAC' 
 		];
+	}
+
+	// This function isn't used, but we're gonna keep it here just in case it ever needs to be used...
+	private function manualHeaderLengthCalculation($httpResponse)
+	{
+		$firstBracket = false;
+		$bracketCount = 0;
+		$inQuotes = false;
+		for($i = strlen($httpResponse) - 1; $i > 0; $i--)
+		{
+			if($httpResponse[$i] === '"')
+			{
+				/**
+				 * We need to check here if the " char is prepended by a \ or not (in case some bozo tries to break the form with special characters)
+				 * Since multiple \ characters can be present in the message in a row, the easiest way to tell if the escape character is related to
+				 * the " or not is to check if there is an even or odd amount of them in a row
+				 */
+				$slashCounter = 0;
+				for($j = $i - 1; $j > 0 && $httpResponse[$j] === '\\'; $j--)
+				{
+					$slashCounter++;
+				}
+				if($slashCounter % 2 === 0)
+				{
+					$inQuotes = !$inQuotes;
+				}
+			}
+			if(!$inQuotes)
+			{
+				if($httpResponse[$i] === ']' || $httpResponse[$i] === '}')
+				{
+					$bracketCount++;
+					$firstBracket = true;
+				}
+				else if($httpResponse[$i] === '[' || $httpResponse[$i] === '{')
+				{
+					$bracketCount--;
+				}
+			}
+			if($firstBracket && $bracketCount === 0)
+			{
+				return $i;
+			}
+		}
+		return 0;
 	}
 
 	/** 

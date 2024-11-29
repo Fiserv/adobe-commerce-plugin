@@ -13,7 +13,7 @@
 				<terminal_id backend_model="Fiserv\Payments\Model\System\Config\Backend\CommerceHub\Encrypted"/>
 				<api_key backend_model="Fiserv\Payments\Model\System\Config\Backend\CommerceHub\Encrypted"/>
 				<api_secret backend_model="Fiserv\Payments\Model\System\Config\Backend\CommerceHub\Encrypted"/>
-				<prod_api_service><![CDATA[https://prod.api.fiservapps.com/ch/]]></prod_api_service>
+				<prod_api_service><![CDATA[https://connect.fiservapis.com/ch/]]></prod_api_service>
 				<cert_api_service><![CDATA[https://connect-cert.fiservapis.com/ch/]]></cert_api_service>
 				<prod_client_url><![CDATA[https://prod.api.fiservapps.com/ch/sdk/v1/commercehub-client-sdk.js]]></prod_client_url>
 				<cert_client_url><![CDATA[https://cert.api.fiservapps.com/ch/sdk/v1/commercehub-client-sdk.js]]></cert_client_url>

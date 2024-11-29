@@ -177,4 +177,25 @@ class ValuelinkTransaction extends AbstractModel implements ValuelinkTransaction
 	{
 		return $this->setData(self::KEY_DATE_CREATED, $date);
 	}
+
+	public function convertToTxnArray()
+	{
+		$arr = array();
+
+		$arr[self::KEY_ENTITY_ID] = $this->getEntityId();
+		$arr[self::KEY_ORDER_ID] = $this->getOrderId();
+		$arr[self::KEY_PARENT_TRANSACTION_ID] = $this->getParentTransactionId();
+		$arr[self::KEY_INVOICE_ID] = $this->getInvoiceId();
+		$arr[self::KEY_CREDITMEMO_ID] = $this->getCreditMemoId();
+		$arr[self::KEY_ORDER_INCREMENT_ID] = $this->getOrderIncrementId();
+		$arr[self::KEY_TRANSACTION_ID] = $this->getTransactionId();
+		$arr[self::KEY_TRANSACTION_TYPE] = $this->getTransactionType();
+		$arr[self::KEY_CH_REQUEST] = $this->getChRequest();
+		$arr[self::KEY_CH_RESPONSE] = $this->getChResponse();
+		$arr[self::KEY_AMOUNT] = $this->getAmount();
+		$arr[self::KEY_CURRENCY] = $this->getCurrency();
+		$arr[self::KEY_DATE_CREATED] = $this->getDateCreated();
+
+		return $arr;
+	}
 }

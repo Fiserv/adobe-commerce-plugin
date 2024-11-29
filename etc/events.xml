@@ -19,9 +19,6 @@
 	<event name="sales_order_payment_void">
         <observer name="fiserv_valuelink" instance="Fiserv\Payments\Observer\Valuelink\CancelValuelinkTransactions" />
 	</event>
-    <event name="sales_order_invoice_register">
-        <observer name="fiserv_valuelink" instance="Fiserv\Payments\Observer\Valuelink\CaptureValuelinkTransactions" />
-    </event>
  	<event name="sales_order_invoice_save_after">
         <observer name="fiserv_valuelink" instance="Fiserv\Payments\Observer\Valuelink\EnrichValuelinkTransactionsWithInvoiceId" />
     </event>

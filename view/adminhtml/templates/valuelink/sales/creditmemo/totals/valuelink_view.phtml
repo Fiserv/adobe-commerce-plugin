@@ -9,7 +9,7 @@ $valuelinkCreditMemoTotal = $block->getValuelinkTotalForCreditMemo();
 	<tr>
 		<td class="label"><?= $block->escapeHtml(__('Gift Cards')) ?></td>
 		<td>
-			<?= /* @noEscape */ $block->getOrder()->formatPrice(-$valuelinkCreditMemoTotal) ?>
+			<span class="discount" style="white-space: nowrap;"><?= /* @noEscape */ $block->getOrder()->formatPrice(-$valuelinkCreditMemoTotal) ?></span>
 		</td>
 	</tr>
 <?php endif; ?>

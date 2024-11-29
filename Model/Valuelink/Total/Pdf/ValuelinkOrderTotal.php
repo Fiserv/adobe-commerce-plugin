@@ -7,6 +7,7 @@ use Magento\Tax\Helper\Data as TaxHelper;
 use Magento\Tax\Model\Calculation;
 use Magento\Tax\Model\ResourceModel\Sales\Order\Tax\CollectionFactory;
 use Fiserv\Payments\Gateway\Config\Valuelink\Config;
+use Fiserv\Payments\Model\Valuelink\Helper\Order\ValuelinkOrderHelper;
 use Fiserv\Payments\Model\Valuelink\Helper\Invoice\ValuelinkInvoiceHelper;
 use Fiserv\Payments\Model\Valuelink\Helper\CreditMemo\ValuelinkCreditMemoHelper;
 
@@ -18,6 +19,8 @@ class ValuelinkOrderTotal extends DefaultTotal
 
 	private $valuelinkInvoiceHelper;
 
+	private $valuelinkOrderHelper;
+
 	private $creditMemoHelper;
 
 	public function __construct(
@@ -25,12 +28,14 @@ class ValuelinkOrderTotal extends DefaultTotal
 		Calculation $taxCalculation,
 		CollectionFactory $ordersFactory,
 		Config $config,
+		ValuelinkOrderHelper $valuelinkOrderHelper,
 		ValuelinkInvoiceHelper $valuelinkInvoiceHelper,
 		ValuelinkCreditMemoHelper $creditMemoHelper,
 		array $data = []
 	) {
 		parent::__construct($taxHelper, $taxCalculation, $ordersFactory, $data);
 		$this->config = $config;
+		$this->valuelinkOrderHelper = $valuelinkOrderHelper;
 		$this->valuelinkInvoiceHelper = $valuelinkInvoiceHelper;
 		$this->creditMemoHelper = $creditMemoHelper;
 	}
@@ -41,13 +46,15 @@ class ValuelinkOrderTotal extends DefaultTotal
 		$total = 0;
 		if ($source instanceof \Magento\Sales\Model\Order\Invoice)
 		{
-			$total = $this->valuelinkInvoiceHelper->getCapturedValuelinkAmountByInvoice($source);
+			$total = $this->valuelinkInvoiceHelper->getCapturedValuelinkAmountByInvoice($source)
+				   + ($this->valuelinkOrderHelper->sumOfValuelinkSales($this->getOrder()) >= 0.0001 ?
+					  $this->valuelinkInvoiceHelper->getValuelinkSaleBalanceAppliedToInvoice($source) : 0);
 		}
 		elseif ($source instanceof \Magento\Sales\Model\Order\Creditmemo)
 		{
 			$total = $this->creditMemoHelper->getValuelinkAmountAppliedToCreditMemo($source);
 		}
-		return $total !== 0;
+		return round($total, 4) !== 0.0000;
 	}
 	
 	public function getTotalsForDisplay()
@@ -56,7 +63,9 @@ class ValuelinkOrderTotal extends DefaultTotal
 		$source = $this->getSource();
 		if ($source instanceof \Magento\Sales\Model\Order\Invoice)
 		{
-			$total = $this->valuelinkInvoiceHelper->getCapturedValuelinkAmountByInvoice($source);
+			$total = $this->valuelinkInvoiceHelper->getCapturedValuelinkAmountByInvoice($source)
+				   + ($this->valuelinkOrderHelper->sumOfValuelinkSales($this->getOrder()) >= 0.0001 ?
+					  $this->valuelinkInvoiceHelper->getValuelinkSaleBalanceAppliedToInvoice($source) : 0);  
 		}
 		elseif ($source instanceof \Magento\Sales\Model\Order\Creditmemo)
 		{

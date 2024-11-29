@@ -107,7 +107,7 @@ class ValuelinkChargesRequest
 		if ($statusCode !== 201) {
 			$this->logger->logError(1, "Transaction failure. Gift card response returned with unsuccessful status");
 			$this->logger->logError(2, "Status Code: " . $statusCode);
-			throw new \Exception('CommerceHub Valuelink Charges Request request HTTP error code: ' . $statusCode, 1);
+			throw new \Exception('CommerceHub Valuelink Charges Request HTTP error code: ' . $statusCode, 1);
 		};
 
 		return $bodyArray;

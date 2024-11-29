@@ -171,7 +171,6 @@ class Form extends Cc
 
 		return $this->json->serialize($config);
 	}
-
 	public function getValuelinkCards()
 	{
 		$result = [];
@@ -180,22 +179,25 @@ class Form extends Cc
 		$rawCards = $address->getValuelinkCards();
 		$leftoverRawCards = $quote->getValuelinkCards();
 
-		if (!is_null($rawCards) && !is_null($leftoverRawCards))
+		if (!is_null($leftoverRawCards))
 		{
 			$cards = json_decode($rawCards, true);
 			$leftoverCards = json_decode($leftoverRawCards, true);
 			if (is_array($cards) && is_array($leftoverCards))
 			{
-				foreach ($cards as $card) {
+				foreach ($leftoverCards as $card) 
+				{
+					$chargeAmount = 0;
+					foreach ($cards as $_c)
+					{
+						if ($card[ValuelinkQuoteRecord::SESSION_ID_KEY] === $_c[ValuelinkQuoteRecord::SESSION_ID_KEY])
+						{
+							$chargeAmount = $_c[ValuelinkQuoteRecord::CHARGE_AMOUNT_KEY];
+						}
+					}
 					array_push($result, array( 
 						ValuelinkQuoteRecord::SESSION_ID_KEY => $card[ValuelinkQuoteRecord::SESSION_ID_KEY],
-						ValuelinkQuoteRecord::CHARGE_AMOUNT_KEY => $card[ValuelinkQuoteRecord::CHARGE_AMOUNT_KEY] 
-					));
-				}
-				for($i = sizeof($cards); $i < sizeof($leftoverCards); $i++) {
-					array_push($result, array(
-						ValuelinkQuoteRecord::SESSION_ID_KEY => $leftoverCards[$i][ValuelinkQuoteRecord::SESSION_ID_KEY],
-						ValuelinkQuoteRecord::CHARGE_AMOUNT_KEY => 0
+						ValuelinkQuoteRecord::CHARGE_AMOUNT_KEY => $chargeAmount
 					));
 				}
 			}

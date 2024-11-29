@@ -10,7 +10,7 @@ $valuelinkInvoiceTotal = $block->getValuelinkTotalCapturedOnInvoice();
 	<tr>
 		<td class="label"><?= $block->escapeHtml(__('Gift Cards')) ?></td>
 		<td>
-			<?= /* @noEscape */ $block->getOrder()->formatPrice(-$valuelinkInvoiceTotal) ?>
+			<span class="discount" style="white-space: nowrap;"><?= /* @noEscape */ $block->getOrder()->formatPrice(-$valuelinkInvoiceTotal) ?></span>
 		</td>
 	</tr>
 <?php endif; ?>

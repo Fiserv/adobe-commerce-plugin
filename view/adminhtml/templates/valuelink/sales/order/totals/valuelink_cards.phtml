@@ -17,7 +17,7 @@ use Fiserv\Payments\Model\ValuelinkTransaction;
 				<?= $block->escapeHtml(__('Gift Card')) ?>
 			</td>
 			<td>
- 				<span class="discount">-<?= /* @noEscape */ $order->formatPrice($card->getAmount()) ?></span>
+ 				<span class="discount" style="white-space: nowrap;"><?= /* @noEscape */ $order->formatPrice(-$card->getAmount()) ?></span>
 			</td>
 		</tr>
 	<?php endforeach; ?>

@@ -141,7 +141,7 @@
 				</group>
 				<group id="sdc_custom" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="17">
 					<label>Payment Form Customization</label>
-					<comment><![CDATA[<a href="https://developer.fiserv.com/product/CommerceHub/docs/?path=docs/Online-Mobile-Digital/Secure-Data-Capture/iFrame-JS/iFrame-Customization.md&branch=main">Payment Form Customization Documentation.</a>]]></comment>
+					<comment><![CDATA[<a href="https://developer.fiserv.com/product/CommerceHub/docs/?path=docs/Online-Mobile-Digital/Checkout/Hosted-Fields/Hosted-Fields-Customization.md&branch=main">Payment Form Customization Documentation.</a>]]></comment>
 					<attribute type="expanded">0</attribute>
 					<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
 
