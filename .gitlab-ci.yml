@@ -1,0 +1,7 @@
+# Default SCM CI Template for All commerceHub Applications
+include:
+  - project: 'na/gbs/carat-digital-ecommerce/commercehub/SRE/gitlab-ci'
+    ref: COM-18980
+    file: '/template-php.yml'
+variables:
+  ARTIFACT_TYPE : "React"
