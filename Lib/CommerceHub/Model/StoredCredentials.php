@@ -874,9 +874,9 @@ class StoredCredentials implements ModelInterface, ArrayAccess, \JsonSerializabl
     }
 
     /**
-     * Sets account_password_reset
+     * Sets account_p455w0rd_reset
      *
-     * @param string|null $account_password_reset Indicator of the last time the account password was reset.  Valid Values:  * NEVER * NOW * LESS_THAN_30_DAYS * 30_60_DAYS * 60_90_DAYS * OVER_90_DAYS
+     * @param string|null $account_p455w0rd_reset Indicator of the last time the account p455w0rd was reset.  Valid Values:  * NEVER * NOW * LESS_THAN_30_DAYS * 30_60_DAYS * 60_90_DAYS * OVER_90_DAYS
      *
      * @return self
      */

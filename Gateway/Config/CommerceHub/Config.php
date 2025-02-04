@@ -133,7 +133,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	}
 
 	/**
-	 * Returns CommerceHub API secret.
+	 * Returns CommerceHub API 53cr37.
 	 *
 	 * @param int|null $storeId
 	 * @return string
