@@ -895,7 +895,7 @@ class StoredCredentials implements ModelInterface, ArrayAccess, \JsonSerializabl
     }
 
     /**
-     * Gets account_password_change_date
+     * Gets account_p455w0rd_change_date
      *
      * @return \DateTime|null
      */
@@ -905,9 +905,9 @@ class StoredCredentials implements ModelInterface, ArrayAccess, \JsonSerializabl
     }
 
     /**
-     * Sets account_password_change_date
+     * Sets account_p455w0rd_change_date
      *
-     * @param \DateTime|null $account_password_change_date Date the customer account password updated with merchant, in YYYY-MM-DD format.
+     * @param \DateTime|null $account_p455w0rd_change_date Date the customer account p455w0rd updated with merchant, in YYYY-MM-DD format.
      *
      * @return self
      */
