@@ -389,6 +389,7 @@
 		<plugin name = "valueLinkTotalsReader" type="Fiserv\Payments\Model\Plugin\Valuelink\TotalsReader" />
 	</type>
 	 
-	 <preference for="Fiserv\Payments\Api\Valuelink\ValuelinkTransactionRepositoryInterface" type="Fiserv\Payments\Model\ValuelinkTransactionRepository"/>
+	<preference for="Fiserv\Payments\Api\Valuelink\ValuelinkTransactionRepositoryInterface" type="Fiserv\Payments\Model\ValuelinkTransactionRepository"/>
+	<preference for="Fiserv\Payments\Api\FailedTransaction\FailedTransactionRepositoryInterface" type="Fiserv\Payments\Model\FailedTransactionRepository"/>
 
 </config>

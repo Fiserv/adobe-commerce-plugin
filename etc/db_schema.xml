@@ -40,4 +40,32 @@
 		<column xsi:type="decimal" name="base_valuelink_cards_amount" scale="4" precision="20" unsigned="false" nullable="true" comment="Base Valuelink Cards Amount"/>
 		<column xsi:type="text" name="valuelink_cards" nullable="true" comment="Valuelink Cards"/>
 	</table>
+
+	<!-- Simplified Table for Logging Failed Transactions -->
+	<table name="failed_transactions" resource="default" engine="innodb" comment="Failed Transactions">
+		<column xsi:type="int" name="entity_id" unsigned="true" nullable="false" identity="true" comment="Entity ID"/>
+		<constraint xsi:type="primary" referenceId="PRIMARY">
+			<column name="entity_id"/>
+		</constraint>
+		<column xsi:type="varchar" name="order_increment_id" nullable="true" length="255" comment="Commerce Hub Transaction Id"/>
+		<column xsi:type="timestamp" name="date_time" nullable="false" default="CURRENT_TIMESTAMP" comment="Date and Time"/>
+		<column xsi:type="varchar" name="transaction_state" nullable="true" length="50" comment="Transaction State"/>
+		<column xsi:type="varchar" name="approval_status" nullable="true" length="50" comment="Approval Status"/>
+		<column xsi:type="decimal" name="total_amount" scale="2" precision="10" nullable="false" comment="Total Amount"/>
+		<column xsi:type="varchar" name="processor" nullable="true" length="255" comment="Processor"/>
+		<column xsi:type="varchar" name="host" nullable="true" length="255" comment="Host"/>
+		<column xsi:type="varchar" name="merchant_id" nullable="true" length="255" comment="Merchant ID"/>
+		<column xsi:type="varchar" name="expiration_month" nullable="true" length="2" comment="Expiration Month"/>
+		<column xsi:type="varchar" name="expiration_year" nullable="true" length="4" comment="Expiration Year"/>
+		<column xsi:type="varchar" name="last4" nullable="true" length="4" comment="Last 4 Digits"/>
+		<column xsi:type="varchar" name="scheme" nullable="true" length="255" comment="Scheme"/>
+		<column xsi:type="varchar" name="bin" nullable="true" length="255" comment="bin"/>
+		<column xsi:type="varchar" name="network_response_code" nullable="true" length="32" comment="Network Response Code"/>
+		<column xsi:type="varchar" name="transaction_id" nullable="true" length="255" comment="Transaction ID"/>
+		<column xsi:type="varchar" name="currency" nullable="true" length="10" comment="Currency"/>
+		<column xsi:type="varchar" name="bank_association_details" nullable="true" length="255" comment="Bank Association Details"/>
+		<column xsi:type="varchar" name="remote_ip" nullable="true" length="45" comment="Remote IP Address"/>
+		<column xsi:type="varchar" name="country" nullable="true" length="50" comment="Country"/>
+		<column xsi:type="varchar" name="api_trace_id" nullable="true" length="255" comment="API Trace ID"/>
+	</table>
 </schema>

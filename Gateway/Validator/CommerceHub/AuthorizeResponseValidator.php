@@ -1,18 +1,20 @@
 <?php
-/**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
- */
 namespace Fiserv\Payments\Gateway\Validator\CommerceHub;
 
-use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use Fiserv\Payments\Gateway\Validator\CommerceHub\TransactionResponseValidator;
 use Magento\Payment\Gateway\Validator\ResultInterface;
 use Magento\Payment\Gateway\Validator\ResultInterfaceFactory;
 use Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient;
 use Fiserv\Payments\Model\Adapter\CommerceHub\ChHttpAdapter;
 use Fiserv\Payments\Logger\MultiLevelLogger;
+use Fiserv\Payments\Api\FailedTransaction\FailedTransactionRepositoryInterface;
+use Fiserv\Payments\Model\FailedTransactionFactory;
+use Fiserv\Payments\Model\ResourceModel\FailedTransaction;
+use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 
+/**
+ * Validates the status of an attempted Auth transaction
+ */
 class AuthorizeResponseValidator extends TransactionResponseValidator
 {
 	const PIN_ONLY = "PIN_ONLY";
@@ -23,13 +25,32 @@ class AuthorizeResponseValidator extends TransactionResponseValidator
 
 	private $httpAdapter;
 
+	/**
+	 * @param ResultInterfaceFactory $resultFactory
+	 * @param SubjectReader $subjectReader
+	 * @param ChHttpAdapter $httpAdapter
+	 * @param MultiLevelLogger $logger
+	 * @param FailedTransactionRepositoryInterface $failedTransactionRepository
+	 * @param FailedTransactionFactory $failedTransactionFactory
+	 * @param FailedTransaction $failedTransactionResource
+	 */
 	public function __construct(
 		ResultInterfaceFactory $resultFactory,
 		SubjectReader $subjectReader,
 		ChHttpAdapter $httpAdapter,
-		MultiLevelLogger $logger
+		MultiLevelLogger $logger,
+		FailedTransactionRepositoryInterface $failedTransactionRepository,
+		FailedTransactionFactory $failedTransactionFactory,
+		FailedTransaction $failedTransactionResource
 	) {
-		parent::__construct($resultFactory, $subjectReader, $logger);
+		parent::__construct(
+			$resultFactory,
+			$subjectReader,
+			$logger,
+			$failedTransactionRepository,
+			$failedTransactionFactory,
+			$failedTransactionResource
+		);
 		$this->httpAdapter = $httpAdapter;
 		array_push($this->successStates, self::STATE_AUTHORIZED);
 	}
@@ -48,7 +69,9 @@ class AuthorizeResponseValidator extends TransactionResponseValidator
 			'sourceType' => [HttpClient::RESPONSE_KEY, 'source'],
 			'merchantOrderId' => [HttpClient::RESPONSE_KEY, 'transactionDetails'],
 			'transactionState' => [HttpClient::RESPONSE_KEY, 'gatewayResponse'],
+			'approvalStatus' => [HttpClient::RESPONSE_KEY, 'paymentReceipt', 'processorResponseDetails'],
 			'detailedCardProduct' => [HttpClient::RESPONSE_KEY, 'detailedCardProduct'],
+			'approvedAmount' => [HttpClient::RESPONSE_KEY, 'paymentReceipt', 'approvedAmount'],
 			self::MERCHANT_DETAILS_KEY => [HttpClient::RESPONSE_KEY, 'transactionDetails', 'merchantDetails'],
 			HttpClient::STATUS_CODE_KEY => []
 		];
@@ -65,16 +88,18 @@ class AuthorizeResponseValidator extends TransactionResponseValidator
 			$this->logger->logError(2, "Transaction failure. Commerce Hub response returned with unsuccessful status", "Order ID: " . ($orderIncrementId ?? "Not found"));
 			$this->logger->logError(2, "Status Code: " . $statusCode, "Order ID: " . ($orderIncrementId ?? "Not found"));
 
+			$this->routeToFailedTransactions($chRawResponse, $paths);
+
 			return $this->createResult(false, $errorMessages, $errorCodes);
 		}
 
-		// Extracting data from the response
+		// Extracting data from Response
 		$pinOnlyState = $this->subjectReader->getValueSafely($chRawResponse, 'detailedCardProduct', $paths['detailedCardProduct']);
 		$transactionId = $this->subjectReader->getValueSafely($chRawResponse, 'transactionId', $paths['transactionId']);
 		$merchantDetails = $this->subjectReader->getValueSafely($chRawResponse, self::MERCHANT_DETAILS_KEY, $paths[self::MERCHANT_DETAILS_KEY]);
 		$orderIncrementId = $this->subjectReader->getValueSafely($chRawResponse, 'merchantOrderId', $paths['merchantOrderId']);
 
-		// Check for PIN only condition
+		// Check for PIN only Condition
 		if ($pinOnlyState === self::PIN_ONLY) {
 			array_push($errorMessages, "Invalid transaction processed for online payment: " . $pinOnlyState);
 			array_push($errorCodes, $pinOnlyState);
@@ -96,6 +121,9 @@ class AuthorizeResponseValidator extends TransactionResponseValidator
 			if (isset($cancelResponseDecoded["gatewayResponse"]["transactionProcessingDetails"]["transactionId"])) {
 				$this->logger->logError(2, "Cancel Transaction ID: " . $cancelResponseDecoded["gatewayResponse"]["transactionProcessingDetails"]["transactionId"], "Order ID: $orderIncrementId");
 			}
+
+			$this->routeToFailedTransactions($chRawResponse, $paths);
+
 			return $this->createResult(false, $errorMessages, $errorCodes);
 		}
 
@@ -105,13 +133,5 @@ class AuthorizeResponseValidator extends TransactionResponseValidator
 			return $parentResult;
 		}
 		return $this->createResult(true);
-	}
-
-	private function isStatusSuccessful($statusCode)
-	{
-		return (
-			in_array($statusCode, $this->successStatuses) &&
-			!in_array($statusCode, $this->failureStatuses)
-		);
 	}
 }

@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="urn:magento:framework:Config/etc/menu.xsd">
+    <menu>
+		<add id="Fiserv_Payments::failed_transactions"
+			title="Failed Transactions"
+			module="Fiserv_Payments"
+			sortOrder="100"
+			parent="Magento_Sales::sales"
+			action="fiserv/declines/transaction"
+			resource="Fiserv_Payments::transaction"/>
+	</menu>
+</config>
