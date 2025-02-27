@@ -177,9 +177,9 @@ class ChHttpAdapter
 				$cancelResponseBody = json_decode($cancelHttpResponse->getBody(), true);
 				$cancelTransactionId = $cancelResponseBody['gatewayResponse']['transactionProcessingDetails']['transactionId'];
 				$this->logger->logInfo(1, "Cancel response received for timeout reversal");
-				$this->logger->logInfo(3, "CANCEL TXN RESPONSE INFO");
-				$this->logger->logInfo(3, "Cancel Response Headers:\n" . print_r($cancelHttpResponse->getHeaders(), true));
-				$this->logger->logInfo(3, "Cancel Response Body:\n" . json_encode($cancelResponseBody, JSON_PRETTY_PRINT));
+				$this->logger->logDebug(3, "CANCEL TXN RESPONSE INFO");
+				$this->logger->logDebug(3, "Cancel Response Headers:\n" . print_r($cancelHttpResponse->getHeaders(), true));
+				$this->logger->logDebug(3, "Cancel Response Body:\n" . json_encode($cancelResponseBody, JSON_PRETTY_PRINT));
 				$this->logger->logInfo(1, "Transaction ID: " . $cancelTransactionId);
 				$this->logger->logInfo(1, "Recovery process finished");
 			}
@@ -319,6 +319,8 @@ class ChHttpAdapter
 			return $this->chConfig->getProdApiService();
 		} else if ($env == ApiEnvironment::ENVIRONMENT_CERT) {
 			return $this->chConfig->getCertApiService();
+		} else if ($env == ApiEnvironment::ENVIRONMENT_QA) {
+			return $this->chConfig->getQaApiService();
 		}
 	}
 

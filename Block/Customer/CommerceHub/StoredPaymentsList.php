@@ -70,7 +70,7 @@ class StoredPaymentsList extends Template
 	 */
 	public function canCreateStandaloneSpa($storeId = null)
 	{
-		return $this->config->isActive($storeId) && $this->config->canStandaloneSpa($storeId);
+		return $this->config->isActive($storeId) && $this->config->getCanTokenize($storeId) && $this->config->canStandaloneSpa($storeId);
 	}
 
 	/**

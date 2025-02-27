@@ -9,7 +9,7 @@ require(['prototype'], function(){
     removeValuelinkCard = function(sessionId) {
         var data = {};
         data['valuelink_remove'] = sessionId;
-        order.loadArea(['totals', 'billing_method', 'items'], true, data);
+        order.loadArea(['totals', 'billing_method', 'items'], true, data, () => { window.showValuelinkSuccessMsg("Gift card removed successfully"); });
     }
 //]]>
 

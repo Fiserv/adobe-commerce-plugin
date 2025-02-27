@@ -70,8 +70,6 @@
 			<argument name="configInterface" xsi:type="object">Fiserv\Payments\Gateway\Config\CommerceHub\Config</argument>
 		</arguments>
 	</virtualType>
-
-
 	<virtualType name="FiservCommerceHubCountryValidator" type="Magento\Payment\Gateway\Validator\CountryValidator">
 		<arguments>
 			<argument name="config" xsi:type="object">Fiserv\Payments\Gateway\Config\CommerceHub\Config</argument>
@@ -365,6 +363,11 @@
 		</arguments>
 	</type>
 
+	<!-- Payment option enable/disable -->
+	<type name="Magento\Payment\Model\Method\Adapter">
+		<plugin name="fiservCommerceHubAvailability" type="Fiserv\Payments\Model\Plugin\CommerceHub\PaymentMethodAvailable" />
+	</type>
+
 	<!-- Valuelink Plugins -->
     <type name="Magento\Quote\Model\Quote\TotalsCollector">
 		<plugin name="quoteValuelinkAmountUpdater" type="Fiserv\Payments\Model\Plugin\Valuelink\TotalsCollector" />
@@ -377,7 +380,10 @@
 	</type>
 	<type name = "Magento\Sales\Model\Order\Payment">
 		<plugin name = "valueLinkPaymentPlace" type="Fiserv\Payments\Model\Plugin\Valuelink\PaymentPlace" />
-	 </type>
+	</type>
+	<type name = "Magento\Quote\Model\Quote\TotalsReader">
+		<plugin name = "valueLinkTotalsReader" type="Fiserv\Payments\Model\Plugin\Valuelink\TotalsReader" />
+	</type>
 	 
 	 <preference for="Fiserv\Payments\Api\Valuelink\ValuelinkTransactionRepositoryInterface" type="Fiserv\Payments\Model\ValuelinkTransactionRepository"/>
 

@@ -102,9 +102,5 @@ class Form extends Cc
 	{
 		return true;
 	}
-	public function getTets()
-	{
-		return "hello there from xxx";
-	}
 }
 

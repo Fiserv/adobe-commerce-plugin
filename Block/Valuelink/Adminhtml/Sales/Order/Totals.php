@@ -41,4 +41,9 @@ class Totals extends \Magento\Sales\Block\Adminhtml\Order\Totals\Item
 
 		return $cards;
 	}
+
+	protected function orderHasValuelinkTransactions()
+	{
+		return count($this->orderHelper->getValuelinkTransactions($this->getOrder())) > 0;
+	}
 }

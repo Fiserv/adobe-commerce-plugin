@@ -43,9 +43,15 @@ class SettleComposite extends ChCompositeBase
 	 */
 	public function build(array $buildSubject)
 	{
-		$this->logger->logInfo(1, "Initiating Capture Transaction");
 		
 		$result = parent::build($buildSubject);
+
+		$orderIncrementId = $result[TransactionDetailsDataBuilder::TXN_DETAILS_KEY]['merchant_order_id'] ?? null;
+		if ($orderIncrementId !== null) {
+			$this->logger->logInfo(1, "Initiating Capture Transaction", "Order ID:" . $orderIncrementId);
+		} else {
+			$this->logger->logInfo(1, "Initiating Capture Transaction");
+		}
 
 		$req = new ChargesRequest();
 		$req->setAmount($result[AmountDataBuilder::AMOUNT_KEY]);

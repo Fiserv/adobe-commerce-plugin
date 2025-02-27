@@ -53,7 +53,7 @@ class ValuelinkQuoteManager
 		if ($grandTotal < 0.01)
 		{
 			throw new LocalizedException(
-				__('Quote is already satisfied by existing valuelink cards and/or discounts.')
+				__('Quote is already satisfied by existing gift cards and/or discounts.')
 			);
 		}
 
@@ -72,7 +72,7 @@ class ValuelinkQuoteManager
 			if ($record[ValuelinkQuoteRecord::SESSION_ID_KEY] == $valuelinkQuoteRecord->getSessionId())
 			{
 				throw new LocalizedException(
-					__('This Valuelink card account is already in the quote.')
+					__('This gift card account is already in the quote.')
 				);
 			}
 		}

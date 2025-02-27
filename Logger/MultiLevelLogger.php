@@ -5,8 +5,12 @@
  */
 namespace Fiserv\Payments\Logger;
 
+use DateTimeZone;
 use Fiserv\Payments\Gateway\Config\CommerceHub\Config;
 use Fiserv\Payments\Logger\MultiLevelLoggerHandler;
+use Magento\Directory\Helper\Data;
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Fiserv\Payments\Logger\CustomDateTimeFormatter;
 
 /**
  * Class MultiLevelLogger
@@ -22,14 +26,17 @@ class MultiLevelLogger extends \Monolog\Logger
 	 * @var Config
 	 */
 	private $chConfig;
-	
-	public function __construct(MultiLevelLoggerHandler $handler, Config $config)
+
+	public function __construct(MultiLevelLoggerHandler $handler, Config $config, ScopeConfigInterface $scopeConfig, CustomDateTimeFormatter $formatter)
 	{
 		$this->handler = $handler;
-		parent::__construct("CommerceHubLogger", [$handler]);
 		$this->chConfig = $config;
+		$timezone = $scopeConfig->getValue(Data::XML_PATH_DEFAULT_TIMEZONE, \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+		$handler->setFormatter($formatter);
+		parent::__construct("CommerceHubLogger", [$handler], [], new DateTimeZone($timezone));
+
 	}
-	
+
 	/**
 	 * Array of strings that provide logging level identifiers
 	 *
@@ -43,72 +50,82 @@ class MultiLevelLogger extends \Monolog\Logger
 		2 => "[L2] ",
 		3 => "[L3] "
 	);
-	
+
 	/**
 	 * Logging functions
 	 */
 	// Don't know if docs are wanted for these functions or not :/
-	public function logEmergency(int $depth, string|\Stringable $message, array $context = [])
+	public function logEmergency(int $depth, string|\Stringable $message, string $identifier = '')
 	{
 		if($depth > $this->chConfig->getLoggingLevel())
 			return;
 		$this->handler->setLoggerType(self::EMERGENCY);
-		$this->emergency(self::DEPTH_IDENTIFIER[$depth] . $message, $context);
+		$this->emergency($this->getLogLine($depth, $identifier, $message));
 	}
-	
-	public function logAlert(int $depth, string|\Stringable $message, array $context = [])
+
+	public function logAlert(int $depth, string|\Stringable $message, string $identifier = '')
 	{
 		if($depth > $this->chConfig->getLoggingLevel())
 			return;
 		$this->handler->setLoggerType(self::ALERT);
-		$this->logAlert(self::DEPTH_IDENTIFIER[$depth] . $message, $context);
+		$this->alert($this->getLogLine($depth, $identifier, $message));
 	}
 
-	public function logCritical(int $depth, string|\Stringable $message, array $context = [])
+	public function logCritical(int $depth, string|\Stringable $message, string $identifier = '')
 	{
 		if($depth > $this->chConfig->getLoggingLevel())
 			return;
 		$this->handler->setLoggerType(self::CRITICAL);
-		$this->critical(self::DEPTH_IDENTIFIER[$depth] . $message, $context);
+		$this->critical($this->getLogLine($depth, $identifier, $message));
 	}
 
-	public function logError(int $depth, string|\Stringable $message, array $context = [])
+	public function logError(int $depth, string|\Stringable $message, string $identifier = '')
 	{
 		if($depth > $this->chConfig->getLoggingLevel())
 			return;
 		$this->handler->setLoggerType(self::ERROR);
-		$this->error(self::DEPTH_IDENTIFIER[$depth] . $message, $context);
+		$this->error($this->getLogLine($depth, $identifier, $message));
 	}
 
-	public function logWarning(int $depth, string|\Stringable $message, array $context = [])
+	public function logWarning(int $depth, string|\Stringable $message, string $identifier = '')
 	{
 		if($depth > $this->chConfig->getLoggingLevel())
 			return;
 		$this->handler->setLoggerType(self::WARNING);
-		$this->warning(self::DEPTH_IDENTIFIER[$depth] . $message, $context);
+		$this->warning($this->getLogLine($depth, $identifier, $message));
 	}
 
-	public function logNotice(int $depth, string|\Stringable $message, array $context = [])
+	public function logNotice(int $depth, string|\Stringable $message, string $identifier = '')
 	{
 		if($depth > $this->chConfig->getLoggingLevel())
 			return;
 		$this->handler->setLoggerType(self::NOTICE);
-		$this->notice(self::DEPTH_IDENTIFIER[$depth] . $message, $context);
+		$this->notice($this->getLogLine($depth, $identifier, $message));
 	}
 
-	public function logInfo(int $depth, string|\Stringable $message, array $context = [])
+	public function logInfo(int $depth, string|\Stringable $message, string $identifier = '')
 	{
 		if($depth > $this->chConfig->getLoggingLevel())
 			return;
 		$this->handler->setLoggerType(self::INFO);
-		$this->info(self::DEPTH_IDENTIFIER[$depth] . $message, $context);
+		$this->info($this->getLogLine($depth, $identifier, $message));
 	}
 
-	public function logDebug(int $depth, string|\Stringable $message, array $context = [])
+	public function logDebug(int $depth, string|\Stringable $message, string $identifier = '')
 	{
 		if($depth > $this->chConfig->getLoggingLevel())
 			return;
 		$this->handler->setLoggerType(self::DEBUG);
-		$this->debug(self::DEPTH_IDENTIFIER[$depth] . $message, $context);
+		$this->debug($this->getLogLine($depth, $identifier, $message));
+	}
+
+	private function getLogLine($depth, $identifier, $message)
+	{
+		return self::DEPTH_IDENTIFIER[$depth] . $this->getIdentifierStub($identifier) . $message;
+	}
+
+	private function getIdentifierStub(string $identifier)
+	{
+		return !empty($identifier) ? "[" . $identifier . "] " : '';
 	}
 }

@@ -11,12 +11,8 @@ use Magento\Payment\Gateway\Validator\ResultInterface;
 use Magento\Payment\Gateway\Validator\ResultInterfaceFactory;
 use Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient;
 use Fiserv\Payments\Model\Adapter\CommerceHub\ChHttpAdapter;
-use Fiserv\Payments\Model\Adapter\CommerceHub\ChHttpResponse;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 
-/**
- * Validates the status of an attempted Auth transaction
- */
 class AuthorizeResponseValidator extends TransactionResponseValidator
 {
 	const PIN_ONLY = "PIN_ONLY";
@@ -25,17 +21,14 @@ class AuthorizeResponseValidator extends TransactionResponseValidator
 	const REF_TXN_KEY = "referenceTransactionDetails";
 	const REF_MERCHANT_TRANSACTION_KEY = "referenceTransactionId";
 
-	/**
-	 * @var ChHttpAdapter
-	 */
 	private $httpAdapter;
 
-	/**
-	 * @param ResultInterfaceFactory $resultFactory
-	 * @param SubjectReader $subjectReader
-	 */
-	public function __construct(ResultInterfaceFactory $resultFactory, SubjectReader $subjectReader, ChHttpAdapter $httpAdapter, MultiLevelLogger $logger)
-	{
+	public function __construct(
+		ResultInterfaceFactory $resultFactory,
+		SubjectReader $subjectReader,
+		ChHttpAdapter $httpAdapter,
+		MultiLevelLogger $logger
+	) {
 		parent::__construct($resultFactory, $subjectReader, $logger);
 		$this->httpAdapter = $httpAdapter;
 		array_push($this->successStates, self::STATE_AUTHORIZED);
@@ -48,32 +41,77 @@ class AuthorizeResponseValidator extends TransactionResponseValidator
 		$errorMessages = [];
 		$errorCodes = [];
 
-		$pinOnlyState = $chRawResponse[HttpClient::RESPONSE_KEY]["cardDetails"]["detailedCardProduct"];
-		if($pinOnlyState === self::PIN_ONLY)
-		{
-			array_push($errorMessages, "Invalid transaction processed for online payment: " . $pinOnlyState);
-			array_push($errorCodes, $pinOnlyState);
+		// Define the paths for values to be extracted
+		$paths = [
+			'transactionId' => [HttpClient::RESPONSE_KEY, 'gatewayResponse', 'transactionProcessingDetails'],
+			'responseMessage' => [HttpClient::RESPONSE_KEY, 'paymentReceipt', 'processorResponseDetails'],
+			'sourceType' => [HttpClient::RESPONSE_KEY, 'source'],
+			'merchantOrderId' => [HttpClient::RESPONSE_KEY, 'transactionDetails'],
+			'transactionState' => [HttpClient::RESPONSE_KEY, 'gatewayResponse'],
+			'detailedCardProduct' => [HttpClient::RESPONSE_KEY, 'detailedCardProduct'],
+			self::MERCHANT_DETAILS_KEY => [HttpClient::RESPONSE_KEY, 'transactionDetails', 'merchantDetails'],
+			HttpClient::STATUS_CODE_KEY => []
+		];
 
-			$this->logger->logError(1, "Invalid transaction processed for online payment. Canceling...");
-			$this->logger->logError(2, "Invalid transaction ID: " . $chRawResponse[HttpClient::RESPONSE_KEY]["gatewayResponse"]["transactionProcessingDetails"]["transactionId"]);
-			$this->logger->logError(2, "Invalid reason: " . $pinOnlyState);
+		// Extract order ID from the validation subject
+		$order = $this->subjectReader->readPayment($validationSubject)->getOrder();
+		$orderIncrementId = $order->getOrderIncrementId();
 
-			$payload = [
-				self::MERCHANT_DETAILS_KEY => $chRawResponse[HttpClient::RESPONSE_KEY][self::MERCHANT_DETAILS_KEY],
-				self::REF_TXN_KEY => [
-					self::REF_MERCHANT_TRANSACTION_KEY => $chRawResponse[HttpClient::RESPONSE_KEY]["gatewayResponse"]["transactionProcessingDetails"]["transactionId"]
-				]
-			];
-			$cancelResponse = $this->httpAdapter->sendRequest($payload, self::CANCELS_ENDPOINT);
-			$cancelResponse = json_decode($cancelResponse->getBody(), true);
-			if(isset($cancelResponse["gatewayResponse"]) && isset($cancelResponse["gatewayResponse"]["transactionProcessingDetails"]) && isset($cancelResponse["gatewayResponse"]["transactionProcessingDetails"]["transactionId"]))
-			{
-				$this->logger->logError(2, "Cancel Transaction ID: " . $cancelResponse["gatewayResponse"]["transactionProcessingDetails"]["transactionId"]);
-			}
+		// Verify Status Code
+		$statusCode = $this->subjectReader->getValueSafely($chRawResponse, HttpClient::STATUS_CODE_KEY, $paths[HttpClient::STATUS_CODE_KEY]);
+		if (!$this->isStatusSuccessful($statusCode)) {
+			array_push($errorMessages, "Something went wrong while processing CommerceHub transaction.");
+			array_push($errorCodes, $statusCode);
+			$this->logger->logError(2, "Transaction failure. Commerce Hub response returned with unsuccessful status", "Order ID: " . ($orderIncrementId ?? "Not found"));
+			$this->logger->logError(2, "Status Code: " . $statusCode, "Order ID: " . ($orderIncrementId ?? "Not found"));
 
 			return $this->createResult(false, $errorMessages, $errorCodes);
 		}
 
-		return parent::validate($validationSubject);
+		// Extracting data from the response
+		$pinOnlyState = $this->subjectReader->getValueSafely($chRawResponse, 'detailedCardProduct', $paths['detailedCardProduct']);
+		$transactionId = $this->subjectReader->getValueSafely($chRawResponse, 'transactionId', $paths['transactionId']);
+		$merchantDetails = $this->subjectReader->getValueSafely($chRawResponse, self::MERCHANT_DETAILS_KEY, $paths[self::MERCHANT_DETAILS_KEY]);
+		$orderIncrementId = $this->subjectReader->getValueSafely($chRawResponse, 'merchantOrderId', $paths['merchantOrderId']);
+
+		// Check for PIN only condition
+		if ($pinOnlyState === self::PIN_ONLY) {
+			array_push($errorMessages, "Invalid transaction processed for online payment: " . $pinOnlyState);
+			array_push($errorCodes, $pinOnlyState);
+
+			$this->logger->logError(2, "Invalid transaction processed for online payment. Canceling...", "Order ID: $orderIncrementId");
+			$this->logger->logError(2, "Invalid transaction ID: " . $transactionId, "Order ID: $orderIncrementId");
+			$this->logger->logError(2, "Invalid reason: " . $pinOnlyState, "Order ID: $orderIncrementId");
+
+			$payload = [
+				self::MERCHANT_DETAILS_KEY => $merchantDetails,
+				self::REF_TXN_KEY => [
+					self::REF_MERCHANT_TRANSACTION_KEY => $transactionId
+				]
+			];
+
+			// Send Cancel Request
+			$cancelResponse = $this->httpAdapter->sendRequest($payload, self::CANCELS_ENDPOINT);
+			$cancelResponseDecoded = json_decode($cancelResponse->getBody(), true);
+			if (isset($cancelResponseDecoded["gatewayResponse"]["transactionProcessingDetails"]["transactionId"])) {
+				$this->logger->logError(2, "Cancel Transaction ID: " . $cancelResponseDecoded["gatewayResponse"]["transactionProcessingDetails"]["transactionId"], "Order ID: $orderIncrementId");
+			}
+			return $this->createResult(false, $errorMessages, $errorCodes);
+		}
+
+		// Call parent for additional validation if needed
+		$parentResult = parent::validate($validationSubject);
+		if (!$parentResult->isValid()) {
+			return $parentResult;
+		}
+		return $this->createResult(true);
+	}
+
+	private function isStatusSuccessful($statusCode)
+	{
+		return (
+			in_array($statusCode, $this->successStatuses) &&
+			!in_array($statusCode, $this->failureStatuses)
+		);
 	}
 }

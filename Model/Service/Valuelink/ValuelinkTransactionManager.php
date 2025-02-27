@@ -50,6 +50,11 @@ class ValuelinkTransactionManager
 
 	private $_localeDate;
 
+	/**
+	 * @var string
+	 */
+	private $merchantOrderId;
+
 	public function __construct(
 		Json $serializer,	
 		\Magento\Quote\Api\CartRepositoryInterface $quoteRepository,
@@ -82,7 +87,6 @@ class ValuelinkTransactionManager
 		{
 			$valuelinkTransaction = $this->valuelinkTransactionFactory->create();
 			$valuelinkTransaction->setOrderIncrementId($order->getIncrementId());
-
 			$valuelinkTransaction->setAmount($valuelinkRecord->getAmountToCharge());
 			$valuelinkTransaction->setCurrency('USD');
 			$valuelinkTransaction->setDateCreated(new \DateTime('now', new \DateTimeZone($this->_localeDate->getConfigTimezone())));
@@ -99,14 +103,23 @@ class ValuelinkTransactionManager
 			}
 			$valuelinkTransaction->setTransactionType($transactionType);
 
-			$payload = $this->valuelinkChargesAdapter->getValuelinkChargesPayload($valuelinkRecord->getSessionId(), $valuelinkRecord->getAmountToCharge(), 'USD');
-			//$payload = $this->valuelinkChargesAdapter->getValuelinkChargesPayload($valuelinkRecord->getSessionId(), 1.00, 'USD');
+			// Generate or retrieve the merchantTransactionId and merchantOrderId
+			$merchantOrderId = $order->getIncrementId(); // Use order increment ID or generate a unique order ID
+
+			// Updated call to include MerchantOrderId and MerchantTransactionId
+			$payload = $this->valuelinkChargesAdapter->getValuelinkChargesPayload(
+				$valuelinkRecord->getSessionId(),
+				$valuelinkRecord->getAmountToCharge(),
+				'USD',
+				$merchantOrderId
+			);
+
 			$valuelinkTransaction->setChRequest(json_encode($payload));
 
 			if($payload->getTransactionDetails()->getCaptureFlag()) {
-				$this->logger->logInfo(1, "Initiating Gift Card Sale Transaction");
+				$this->logger->logInfo(1, "Initiating Gift Card Sale Transaction", "Order ID: {$merchantOrderId}");
 			} else {
-				$this->logger->logInfo(1, "Initiating Gift Card Auth Transaction");
+				$this->logger->logInfo(1, "Initiating Gift Card Auth Transaction", "Order ID: {$merchantOrderId}");
 			}
 
 			$chResponse = $this->valuelinkChargesAdapter->chargeValuelinkCard($payload);	
@@ -118,36 +131,38 @@ class ValuelinkTransactionManager
 			$successStates = [ValuelinkTransaction::AUTHORIZED_STATE, ValuelinkTransaction::CAPTURED_STATE];
 			if (!in_array($valuelinkTransaction->getTransactionState(), $successStates))
 			{
-				$this->logger->logError(1, "Transaction failure. Gift card response returned with unsuccessful transaction state");
-				$this->logger->logError(1, "Transaction ID: " . $valuelinkTransaction->getTransactionId());
-				$this->logger->logError(2, "Transaction state: " . $valuelinkTransaction->getTransactionState());
-				$this->logger->logError(2, "Response message: " . $this->extractResponseMessage($chResponse));
-				throw new \Exception(__("Valuelink response state not recognized as successful: " . $valuelinkTransaction->getTransactionState()));
+				$this->logger->logError(1, "Transaction failure. Gift card response returned with unsuccessful transaction state", "Order ID: {$merchantOrderId}");
+				$this->logger->logError(1, "Transaction ID: " . $valuelinkTransaction->getTransactionId(), "Order ID: {$merchantOrderId}");
+				$this->logger->logError(2, "Transaction state: " . $valuelinkTransaction->getTransactionState(), "Order ID: {$merchantOrderId}");
+				$this->logger->logError(2, "Response message: " . $this->extractResponseMessage($chResponse), "Order ID: {$merchantOrderId}");
+				throw new \Exception(__("Gift Card response state not recognized as successful: " . $valuelinkTransaction->getTransactionState()));
 			}
 			
 			$verb = $valuelinkTransaction->getTransactionState() === ValuelinkTransaction::CAPTURED_STATE ? "captured" : "authorized";
 
-			$order->addStatusHistoryComment("Valuelink gift card " . $verb . " amount of: $" . number_format(round($valuelinkTransaction->getAmount(),2), 2, '.', '') . ". Transaction ID: \"" . $valuelinkTransaction->getTransactionId() . "\"")
+			$order->addStatusHistoryComment("Gift Card " . $verb . " amount of: $" . number_format(round($valuelinkTransaction->getAmount(),2), 2, '.', '') . ". Transaction ID: \"" . $valuelinkTransaction->getTransactionId() . "\"")
 				->setIsCustomerNotified(false);
 
-			$this->logger->logInfo(1, "Transaction success");
-			$this->logger->logInfo(1, "Transaction ID: " . $valuelinkTransaction->getTransactionId());
+			$this->logger->logInfo(1, "Transaction success", "Order ID: {$merchantOrderId}");
+			$this->logger->logInfo(1, "Transaction ID: " . $valuelinkTransaction->getTransactionId(), "Order ID: {$merchantOrderId}");
 			$this->valuelinkTransactionRepository->save($valuelinkTransaction);
 			return $valuelinkTransaction;
 	
 		} catch(\Exception $e)
 		{
-			$this->logger->logError(1, "An error occurred while redeeming Valuelink card");
-			$this->logger->logError(2, $e);
+			$this->logger->logError(1, "An error occurred while redeeming Gift Card", "Order ID: {$merchantOrderId}");
+			$this->logger->logError(2, $e, "Order ID: {$merchantOrderId}");
 			throw $e;
 		}
 	}
+
 
 	public function cancelValuelinkTransaction($order, array $primaryTxn)
 	{
 		try
 		{
-			$this->logger->logInfo(1, "Initiating Gift Card Cancel Transaction");
+			$merchantOrderId = $order->getIncrementId();
+			$this->logger->logInfo(1, "Initiating Gift Card Cancel Transaction", "Order ID: {$merchantOrderId}");
 			
 			$cancelTxn = $this->valuelinkTransactionFactory->create();
 			$cancelTxn->setParentTransactionId($primaryTxn["entity_id"]);
@@ -159,7 +174,12 @@ class ValuelinkTransactionManager
 			$cancelTxn->setTransactionType(ValuelinkTransaction::CANCEL_TYPE);
 
 			$merchantTxnId = $this->getMerchantTransactionId($primaryTxn);
-			$payload = $this->valuelinkCancelAdapter->getValuelinkCancelPayload($primaryTxn["transaction_id"], $merchantTxnId);
+			$merchantOrderId = $order->getIncrementId();
+
+			$payload = $this->valuelinkCancelAdapter->getValuelinkCancelPayload(
+				$primaryTxn["transaction_id"],
+				$merchantTxnId,
+				$merchantOrderId);
 
 			$cancelTxn->setChRequest(json_encode($payload));
 
@@ -172,25 +192,25 @@ class ValuelinkTransactionManager
 			$successStates = [ValuelinkTransaction::VOIDED_STATE];
 			if (!in_array($cancelTxn->getTransactionState(), $successStates))
 			{
-				$this->logger->logError(1, "Transaction failure. Gift card response returned with unsuccessful transaction state");
-				$this->logger->logError(1, "Transaction ID: " . $cancelTxn->getTransactionId());
-				$this->logger->logError(2, "Transaction state: " . $cancelTxn->getTransactionState());
-				$this->logger->logError(2, "Response message: " . $this->extractResponseMessage($response));
-				throw new \Exception(__("Valuelink response state not recognized as successful: " . $cancelTxn->getTransactionState()));
+				$this->logger->logError(1, "Transaction failure. Gift card response returned with unsuccessful transaction state", "Order ID: {$merchantOrderId}");
+				$this->logger->logError(1, "Transaction ID: " . $cancelTxn->getTransactionId(), "Order ID: {$merchantOrderId}");
+				$this->logger->logError(2, "Transaction state: " . $cancelTxn->getTransactionState(), "Order ID: {$merchantOrderId}");
+				$this->logger->logError(2, "Response message: " . $this->extractResponseMessage($response), "Order ID: {$merchantOrderId}");
+				throw new \Exception(__("Gift Card response state not recognized as successful: " . $cancelTxn->getTransactionState()));
 			}
 	
-			$order->addStatusHistoryComment("Valuelink gift card voided amount of: $" . number_format(round($cancelTxn->getAmount(),2), 2, '.', '') . ". Transaction ID: \"" . $cancelTxn->getTransactionId() . "\"")
+			$order->addStatusHistoryComment("Gift Card voided amount of: $" . number_format(round($cancelTxn->getAmount(),2), 2, '.', '') . ". Transaction ID: \"" . $cancelTxn->getTransactionId() . "\"")
 				->setIsCustomerNotified(false);
 
-			$this->logger->logInfo(1, "Transaction success");
-			$this->logger->logInfo(1, "Transaction ID: " . $cancelTxn->getTransactionId());
+			$this->logger->logInfo(1, "Transaction success", "Order ID: {$order->getIncrementId()}");
+			$this->logger->logInfo(1, "Transaction ID: " . $cancelTxn->getTransactionId(), "Order ID: {$merchantOrderId}");
 			$this->valuelinkTransactionRepository->save($cancelTxn);
 			return $cancelTxn;
 		
 		} catch(\Exception $e)
 		{
-			$this->logger->logError(1, "An error occurred while Voiding Valuelink transaction");
-			$this->logger->logError(2, $e);
+			$this->logger->logError(1, "An error occurred while Voiding Gift Card transaction", "Order ID: {$merchantOrderId}");
+			$this->logger->logError(2, $e, "Order ID: {$merchantOrderId}");
 			throw $e;
 		}
 	}
@@ -199,10 +219,10 @@ class ValuelinkTransactionManager
 	{
 		try
 		{
-			$this->logger->logInfo(1, "Initiating Gift Card Capture Transaction");
-			
 			$order = $invoice->getOrder();
-
+			$merchantOrderId = $order->getIncrementId();
+			$this->logger->logInfo(1, "Initiating Gift Card Capture Transaction", "Order ID: {$merchantOrderId}");
+			
 			// String is sometimes passed instead of float:
 			$amtToCapture = round(floatval($amtToCapture),2);
 
@@ -215,7 +235,13 @@ class ValuelinkTransactionManager
 			$captureTxn->setDateCreated(new \DateTime('now', new \DateTimeZone($this->_localeDate->getConfigTimezone())));
 			$captureTxn->setTransactionType(ValuelinkTransaction::CAPTURE_TYPE);
 
-			$payload = $this->valuelinkCaptureAdapter->getValuelinkCapturePayload($authToCapture["transaction_id"], $amtToCapture, $previousCaptures, $finalCapture, $captureTxn->getCurrency());
+			$payload = $this->valuelinkCaptureAdapter->getValuelinkCapturePayload(
+				$authToCapture["transaction_id"],
+				$amtToCapture,
+				$previousCaptures,
+				$finalCapture,
+				$captureTxn->getCurrency(),
+				$merchantOrderId);
 
 			$captureTxn->setChRequest(json_encode($payload));
 
@@ -228,14 +254,14 @@ class ValuelinkTransactionManager
 			$successStates = [ValuelinkTransaction::CAPTURED_STATE];
 			if (!in_array($captureTxn->getTransactionState(), $successStates))
 			{
-				$this->logger->logError(1, "Transaction failure. Gift card response returned with unsuccessful transaction state");
-				$this->logger->logError(1, "Transaction ID: " . $captureTxn->getTransactionId());
-				$this->logger->logError(2, "Transaction state: " . $captureTxn->getTransactionState());
-				$this->logger->logError(2, "Response message: " . $this->extractResponseMessage($response));
-				throw new \Exception(__("Valuelink response state not recognized as successful: " . $captureTxn->getTransactionState()));
+				$this->logger->logError(1, "Transaction failure. Gift card response returned with unsuccessful transaction state", "Order ID: {$merchantOrderId}");
+				$this->logger->logError(1, "Transaction ID: " . $captureTxn->getTransactionId(), "Order ID: {$merchantOrderId}");
+				$this->logger->logError(2, "Transaction state: " . $captureTxn->getTransactionState(), "Order ID: {$merchantOrderId}");
+				$this->logger->logError(2, "Response message: " . $this->extractResponseMessage($response), "Order ID: {$merchantOrderId}");
+				throw new \Exception(__("Gift Card response state not recognized as successful: " . $captureTxn->getTransactionState()));
 			}
 	
-			$order->addStatusHistoryComment("Valuelink gift card captured amount of: $" . number_format(round($captureTxn->getAmount(),2), 2, '.', '') . ". Transaction ID: \"" . $captureTxn->getTransactionId() . "\"")
+			$order->addStatusHistoryComment("Gift Card captured amount of: $" . number_format(round($captureTxn->getAmount(),2), 2, '.', '') . ". Transaction ID: \"" . $captureTxn->getTransactionId() . "\"")
 				->setIsCustomerNotified(false);
 
 			$this->logger->logInfo(1, "Transaction success");
@@ -245,8 +271,8 @@ class ValuelinkTransactionManager
 		
 		} catch(\Exception $e)
 		{
-			$this->logger->logError(1, "An error occurred while capturing Valuelink transaction" );
-			$this->logger->logError(2, $e);
+			$this->logger->logError(1, "An error occurred while capturing Gift Card  transaction", "Order ID: {$merchantOrderId}");
+			$this->logger->logError(2, $e, "Order ID: {$merchantOrderId}");
 			throw $e;
 		}
 	}

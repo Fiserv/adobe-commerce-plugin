@@ -7,6 +7,7 @@ use Fiserv\Payments\Model\Adapter\CommerceHub\ChHttpAdapter;
 use Magento\Store\Model\StoreManagerInterface;
 use Fiserv\Payments\Gateway\Request\CommerceHub\SessionSourceDataBuilder;
 use Fiserv\Payments\Logger\MultiLevelLogger;
+use Fiserv\Payments\Helper\MerchantPartnerHelper;
 
 use Fiserv\Payments\Lib\CommerceHub\Model\GiftCardRequest;
 use Fiserv\Payments\Lib\CommerceHub\Model\PaymentSession;
@@ -71,8 +72,8 @@ class ValuelinkBalanceRequest
 		$data = $this->getBalanceInquiryPayload($this->getMerchantId(), $this->getTerminalId(), $sessionId);
 
 		$this->logger->logInfo(1, "Sending balance inquiry...");
-		$this->logger->logInfo(3, "BALANCE INQUIRY REQUEST INFO");
-		$this->logger->logInfo(3, "Payload:\n" . print_r($data, true));
+		$this->logger->logDebug(3, "BALANCE INQUIRY REQUEST INFO");
+		$this->logger->logDebug(3, "Payload:\n" . print_r($data, true));
 		$chResponse = $this->httpAdapter->sendRequest($data, self::BALANCE_INQUIRY_ENDPOINT);
 
 		
@@ -84,11 +85,15 @@ class ValuelinkBalanceRequest
 		$response = $chResponse->getResponse();
 		$headerLength = $chResponse->getHeaderLength();
 		$body = $chResponse->getBody();
+		$bodyArray = json_decode($body, true);
+		$transactionId = $this->extractTransactionId($bodyArray);
 
 		$this->logger->logInfo(1, "Response received for balance inquiry");
-		$this->logger->logInfo(3, "BALANCE INQUIRY RESPONSE INFO");
-		$this->logger->logInfo(3, "Response Headers:\n" . print_r($chResponse->getHeaders(), true));
-		$this->logger->logInfo(3, "Response Body:\n" . json_encode(json_decode($body), JSON_PRETTY_PRINT));
+		$this->logger->logDebug(3, "BALANCE INQUIRY RESPONSE INFO");
+		$this->logger->logDebug(3, "Response Headers:\n" . print_r($chResponse->getHeaders(), true));
+		$this->logger->logDebug(3, "Response Body:\n" . json_encode(json_decode($body), JSON_PRETTY_PRINT));
+		$this->logger->logInfo(1, "Balance Inquiry Success.");
+		$this->logger->logInfo(1, "Transaction ID: " . $transactionId);
 
 		$header = [];
 
@@ -106,7 +111,7 @@ class ValuelinkBalanceRequest
 			$data[self::KEY_CURRENCY] = $bodyArray[self::KEY_PAYMENT_RECEIPT][self::KEY_BALANCES][0][self::KEY_CURRENCY];
 			$data[self::KEY_RESPONSE_MESSAGE] = $bodyArray[self::KEY_PAYMENT_RECEIPT][self::KEY_PROCESSOR_RESPONSE_DETAILS][self::KEY_RESPONSE_MESSAGE];
 		} else {
-			throw new \Exception('CommerceHub Valuelink  BalanceInquiry request HTTP error code: ' . $statusCode, 1);
+			throw new \Exception('CommerceHub Gift Card BalanceInquiry request HTTP error code: ' . $statusCode, 1);
 		};
 
 		return $data;
@@ -123,6 +128,7 @@ class ValuelinkBalanceRequest
 		$merchantDetails->setTerminalId($terminalId);
 
 		$payload->setMerchantDetails($merchantDetails);
+		$merchantDetails->setMerchantPartner(MerchantPartnerHelper::createMerchantPartner($this->chConfig));
 		$payload->setTransactionDetails($this->getTransactionDetails());
 		$payload->setSource($source);
 
@@ -145,5 +151,18 @@ class ValuelinkBalanceRequest
 
 	private function getMerchantId() {
 		return $this->chConfig->getMerchantId();
+	}
+
+	private function extractTransactionId($chResponse)
+	{
+		if (
+			isset($chResponse["gatewayResponse"]) &&
+			isset($chResponse["gatewayResponse"]["transactionProcessingDetails"]) &&
+			isset($chResponse["gatewayResponse"]["transactionProcessingDetails"]["transactionId"])
+		)
+		{
+			return $chResponse["gatewayResponse"]["transactionProcessingDetails"]["transactionId"];
+		}
+		return null;
 	}
 }

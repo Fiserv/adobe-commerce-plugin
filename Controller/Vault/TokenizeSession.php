@@ -19,9 +19,9 @@ use Fiserv\Payments\Gateway\Response\CommerceHub\VaultDetailsHandler;
 use Magento\Vault\Api\PaymentTokenRepositoryInterface;
 use Fiserv\Payments\Model\Config\CommerceHub\ConfigProvider;
 use Magento\Vault\Api\PaymentTokenManagementInterface;
-use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Framework\Webapi\Exception;
 use Fiserv\Payments\Logger\MultiLevelLogger;
+use Magento\Framework\Encryption\EncryptorInterface;
 
 /**
  * Class TokenizeSession
@@ -64,11 +64,8 @@ class TokenizeSession extends Action implements CsrfAwareActionInterface, HttpPo
 	*/
 	private $paymentTokenManager;
 
-	/**
-	 * @var EncryptorInterface
-	 */
 	private $encryptor;
-
+	
 	/**
 	* @param Context $context
 	* @param MultiLevelLogger $logger
@@ -81,9 +78,9 @@ class TokenizeSession extends Action implements CsrfAwareActionInterface, HttpPo
 		PaymentTokenRepositoryInterface $paymentTokenRepository,
 		MultiLevelLogger $logger,
 		PaymentTokenManagementInterface $paymentTokenManager,
-		EncryptorInterface $encryptor,
 		\Magento\Framework\Message\ManagerInterface $messageManager,
 		VaultPaymentTokenUtils $vaultPaymentTokenUtils,
+		EncryptorInterface $encryptor
 	) {
 		parent::__construct($context);
 		$this->vaultPaymentTokenUtils = $vaultPaymentTokenUtils;
@@ -114,52 +111,44 @@ class TokenizeSession extends Action implements CsrfAwareActionInterface, HttpPo
 
 		$tokenResponse = $this->chAdapter->tokenizeSession($sessionId);
 
-		if( self::PIN_ONLY === strtolower($tokenResponse["cardDetails"][0]["detailedCardProduct"]) ) {
+		// need to check if cardDetails exists because this is returned only when
+		// card metadata entitlement is active in Marketplace
+		if(isset($tokenResponse["cardDetails"]) && isset($tokenResponse["cardDetails"][0]) && self::PIN_ONLY === strtolower($tokenResponse["cardDetails"][0]["detailedCardProduct"]) ) {
 			$this->logger->logInfo(1, "PIN-only card, not for online shopping");
 			$this->messageManager->addNotice(__(self::PIN_ONLY_CARD_MESSAGE));
 			throw new \InvalidArgumentException(self::PIN_ONLY_CARD_MESSAGE);
 		}
 
-		if($this->vaultPaymentTokenUtils->doesTokenExist(
+		$existingToken = $this->vaultPaymentTokenUtils->doesTokenExist(
 			$tokenResponse["paymentTokens"][0]["tokenData"], 
 			ConfigProvider::CODE, 
 			$customerId, 
 			$tokenResponse["source"]["card"]["expirationMonth"],
 			$tokenResponse["source"]["card"]["expirationYear"]
-		))
+		); 
+
+		if($existingToken !== false && isset($existingToken["is_visible"]) && $existingToken["is_visible"])
 		{
 			$this->logger->logInfo(1, "Card not tokenized. Already stored");
 			$this->messageManager->addNotice(__(self::CARD_ALREADY_ADDED_IN_VAULT));
 			throw new \InvalidArgumentException(self::CARD_ALREADY_ADDED_IN_VAULT);
 		}
 
-		$paymentToken = $this->vaultHandler->getVaultCardToken($tokenResponse);
+		$paymentToken = $this->vaultHandler->getVaultCardToken($tokenResponse, true);
 		$paymentToken->setCustomerId($customerId);
-		$paymentToken->setPaymentMethodCode(ConfigProvider::CODE);
-		$paymentToken->setIsActive(true);
-		$paymentToken->setIsVisible(true);
 		$paymentToken->setWebsiteId($websiteId);
-		$paymentToken->setPublicHash($this->generatePublicHash($paymentToken));
 		
-		$tokenDuplicate = $this->paymentTokenManager->getByPublicHash(
-					$paymentToken->getPublicHash(),
-					$paymentToken->getCustomerId()
-			);
-
+		if ($existingToken !== false)
+		{
+			$tokenDuplicate = $this->paymentTokenRepository->getById($existingToken["entity_id"]);
 			if (!empty($tokenDuplicate)) {
-					if ($paymentToken->getIsVisible() || $tokenDuplicate->getIsVisible()) {
-						$paymentToken->setEntityId($tokenDuplicate->getEntityId());
-						$paymentToken->setIsVisible(true);
-					} elseif ($paymentToken->getIsVisible() === $tokenDuplicate->getIsVisible()) {
-						$paymentToken->setEntityId($tokenDuplicate->getEntityId());
-					} else {
-						$paymentToken->setPublicHash(
-								$this->encryptor->getHash(
-									$paymentToken->getPublicHash() . $paymentToken->getGatewayToken()
-								)
-						);
-				}
+				$tokenDuplicate->setIsActive(false);
+				$paymentToken->setPublicHash($tokenDuplicate->getPublicHash());
+				$tokenDuplicate->setPublicHash($this->encryptor->getHash($tokenDuplicate->getPublicHash() . $tokenDuplicate->getGatewayToken()));
+				$this->paymentTokenRepository->save($tokenDuplicate);
+			}
 		}
+
 		$this->paymentTokenRepository->save($paymentToken);
 
 		$response->setHttpResponseCode(201);
@@ -174,26 +163,6 @@ class TokenizeSession extends Action implements CsrfAwareActionInterface, HttpPo
 		return $this->processBadRequest($response);
 	}
 		return $response;
-	}
-
-	 /**
-	 * Generate vault payment public hash
-	 *
-	 * @param PaymentTokenInterface $paymentToken
-	 * @return string
-	 */
-	protected function generatePublicHash(\Magento\Vault\Model\PaymentToken $paymentToken)
-	{
-		$hashKey = $paymentToken->getGatewayToken();
-		if ($paymentToken->getCustomerId()) {
-			$hashKey = $paymentToken->getCustomerId();
-		}
-
-		$hashKey .= $paymentToken->getPaymentMethodCode()
-			. $paymentToken->getType()
-			. $paymentToken->getTokenDetails();
-
-		return $this->encryptor->getHash($hashKey);
 	}
 
 	/**

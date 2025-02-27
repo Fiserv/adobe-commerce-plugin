@@ -34,6 +34,6 @@ class Totals extends \Fiserv\Payments\Block\Valuelink\Adminhtml\Sales\Order\Tota
 
 	public function getValuelinkTotalForCreditMemo()
 	{
-		return $this->creditMemoHelper->getValuelinkAmountAppliedToCreditMemo($this->getCreditMemo());
+		return $this->orderHasValuelinkTransactions() ? $this->creditMemoHelper->getValuelinkAmountAppliedToCreditMemo($this->getCreditMemo()) : 0;
 	}
 }

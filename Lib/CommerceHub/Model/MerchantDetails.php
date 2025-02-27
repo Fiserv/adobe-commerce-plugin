@@ -61,6 +61,7 @@ class MerchantDetails implements ModelInterface, ArrayAccess, \JsonSerializable
         'token_type' => 'string',
         'store_id' => 'string',
         'terminal_id' => 'string',
+        'merchant_partner' => '\Fiserv\Payments\Lib\CommerceHub\Model\MerchantPartner',
         'merchant_id' => 'string',
         'site_type_indicator' => 'string',
         'dba_name' => 'string',
@@ -79,6 +80,7 @@ class MerchantDetails implements ModelInterface, ArrayAccess, \JsonSerializable
         'token_type' => null,
         'store_id' => null,
         'terminal_id' => null,
+        'merchant_partner' => null,
         'merchant_id' => null,
         'site_type_indicator' => null,
         'dba_name' => null,
@@ -95,6 +97,7 @@ class MerchantDetails implements ModelInterface, ArrayAccess, \JsonSerializable
         'token_type' => false,
         'store_id' => false,
         'terminal_id' => false,
+        'merchant_partner' => false,
         'merchant_id' => false,
         'site_type_indicator' => false,
         'dba_name' => false,
@@ -191,6 +194,7 @@ class MerchantDetails implements ModelInterface, ArrayAccess, \JsonSerializable
         'token_type' => 'tokenType',
         'store_id' => 'storeId',
         'terminal_id' => 'terminalId',
+        'merchant_partner' => 'merchantPartner',
         'merchant_id' => 'merchantId',
         'site_type_indicator' => 'siteTypeIndicator',
         'dba_name' => 'dbaName',
@@ -207,6 +211,7 @@ class MerchantDetails implements ModelInterface, ArrayAccess, \JsonSerializable
         'token_type' => 'setTokenType',
         'store_id' => 'setStoreId',
         'terminal_id' => 'setTerminalId',
+        'merchant_partner' => 'setMerchantPartner',
         'merchant_id' => 'setMerchantId',
         'site_type_indicator' => 'setSiteTypeIndicator',
         'dba_name' => 'setDbaName',
@@ -223,6 +228,7 @@ class MerchantDetails implements ModelInterface, ArrayAccess, \JsonSerializable
         'token_type' => 'getTokenType',
         'store_id' => 'getStoreId',
         'terminal_id' => 'getTerminalId',
+        'merchant_partner' => 'getMerchantPartner',
         'merchant_id' => 'getMerchantId',
         'site_type_indicator' => 'getSiteTypeIndicator',
         'dba_name' => 'getDbaName',
@@ -290,6 +296,7 @@ class MerchantDetails implements ModelInterface, ArrayAccess, \JsonSerializable
         $this->setIfExists('token_type', $data ?? [], null);
         $this->setIfExists('store_id', $data ?? [], null);
         $this->setIfExists('terminal_id', $data ?? [], null);
+        $this->setIfExists('merchant_partner', $data ?? [], null);
         $this->setIfExists('merchant_id', $data ?? [], null);
         $this->setIfExists('site_type_indicator', $data ?? [], null);
         $this->setIfExists('dba_name', $data ?? [], null);
@@ -460,6 +467,33 @@ class MerchantDetails implements ModelInterface, ArrayAccess, \JsonSerializable
         }
 
         $this->container['terminal_id'] = $terminal_id;
+
+        return $this;
+    }
+
+    /**
+     * Gets merchant_partner
+     *
+     * @return \Fiserv\Payments\Lib\CommerceHub\Model\MerchantPartner|null
+     */
+    public function getMerchantPartner()
+    {
+        return $this->container['merchant_partner'];
+    }
+
+    /**
+     * Sets merchant_partner
+     *
+     * @param \Fiserv\Payments\Lib\CommerceHub\Model\MerchantPartner|null $merchant_partner merchant_partner
+     *
+     * @return self
+     */
+    public function setMerchantPartner($merchant_partner)
+    {
+        if (is_null($merchant_partner)) {
+            throw new \InvalidArgumentException('non-nullable merchant_partner cannot be null');
+        }
+        $this->container['merchant_partner'] = $merchant_partner;
 
         return $this;
     }

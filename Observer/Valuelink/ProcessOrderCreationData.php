@@ -62,7 +62,7 @@ class ProcessOrderCreationData implements ObserverInterface
 				$this->logger->logInfo(1, "Gift card has been applied to cart");
 				
 			} catch (\Magento\Framework\Exception\LocalizedException $e) {
-                $this->messageManager->addError($e->getMessage());
+				$this->messageManager->addError($e->getMessage());
             } catch (\Exception $e) {
 				$this->logger->logError(1, "Gift card failed to be applied");
 				$this->logger->logCritical(2, $e);

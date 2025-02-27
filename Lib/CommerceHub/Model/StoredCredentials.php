@@ -874,9 +874,9 @@ class StoredCredentials implements ModelInterface, ArrayAccess, \JsonSerializabl
     }
 
     /**
-     * Sets account_p455w0rd_reset
+     * Sets account_password_reset
      *
-     * @param string|null $account_p455w0rd_reset Indicator of the last time the account p455w0rd was reset.  Valid Values:  * NEVER * NOW * LESS_THAN_30_DAYS * 30_60_DAYS * 60_90_DAYS * OVER_90_DAYS
+     * @param string|null $account_password_reset Indicator of the last time the account password was reset.  Valid Values:  * NEVER * NOW * LESS_THAN_30_DAYS * 30_60_DAYS * 60_90_DAYS * OVER_90_DAYS
      *
      * @return self
      */
@@ -895,7 +895,7 @@ class StoredCredentials implements ModelInterface, ArrayAccess, \JsonSerializabl
     }
 
     /**
-     * Gets account_p455w0rd_change_date
+     * Gets account_password_change_date
      *
      * @return \DateTime|null
      */
@@ -905,9 +905,9 @@ class StoredCredentials implements ModelInterface, ArrayAccess, \JsonSerializabl
     }
 
     /**
-     * Sets account_p455w0rd_change_date
+     * Sets account_password_change_date
      *
-     * @param \DateTime|null $account_p455w0rd_change_date Date the customer account p455w0rd updated with merchant, in YYYY-MM-DD format.
+     * @param \DateTime|null $account_password_change_date Date the customer account password updated with merchant, in YYYY-MM-DD format.
      *
      * @return self
      */

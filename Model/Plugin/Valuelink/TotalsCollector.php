@@ -7,7 +7,6 @@ use Fiserv\Payments\Model\Valuelink\ValuelinkQuoteRecord;
 use Magento\Quote\Model\Quote;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
 
-
 /**
  * Plugin to include Valuelink gift cards in totals collection
  */
@@ -29,10 +28,10 @@ class TotalsCollector
      * @param PriceCurrencyInterface $priceCurrency
      */
     public function __construct(
-        DataHelper $valuelinkDataHelper,
-		PriceCurrencyInterface $priceCurrency
+	DataHelper $valuelinkDataHelper,
+	PriceCurrencyInterface $priceCurrency
     ) {
-        $this->valuelinkDataHelper = $valuelinkDataHelper;
+		$this->valuelinkDataHelper = $valuelinkDataHelper;
 		$this->priceCurrency = $priceCurrency;
     }
 
@@ -77,7 +76,7 @@ class TotalsCollector
     private function resetGiftCardAmount(Quote $quote) : void
     {
         $quote->setValuelinkCardsAmount(0);
-        $quote->setBaseValuelinkCardsAmount(0);
+	$quote->setBaseValuelinkCardsAmount(0);
 
         $baseAmount = 0;
         $amount = 0;
@@ -96,6 +95,7 @@ class TotalsCollector
 		}
 
         $quote->setValuelinkCardsAmount($baseAmount);
-        $quote->setBaseValuelinkCardsAmount($amount);
-    }
+	$quote->setBaseValuelinkCardsAmount($amount);
+
+	}
 }

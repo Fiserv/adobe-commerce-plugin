@@ -7,6 +7,8 @@ namespace Fiserv\Payments\Gateway\Request\CommerceHub;
 
 use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use Fiserv\Payments\Lib\CommerceHub\Model\TransactionDetails;
+use Fiserv\Payments\Gateway\Config\CommerceHub\Config; 
+use Fiserv\Payments\Model\Source\CommerceHub\TokenizationStrategy;
 use Magento\Payment\Gateway\Request\BuilderInterface;
 use Magento\Vault\Model\Ui\VaultConfigProvider;
 use Fiserv\Payments\Logger\MultiLevelLogger;
@@ -31,6 +33,8 @@ abstract class TransactionDetailsDataBuilder implements BuilderInterface
 	 */
 	protected $subjectReader;
 
+	private $chConfig;
+
 	/**
 	 * @param MultiLevelLogger $logger
 	 * @param SubjectReader $subjectReader
@@ -38,9 +42,11 @@ abstract class TransactionDetailsDataBuilder implements BuilderInterface
 	 */
 	public function __construct(
 		SubjectReader $subjectReader,
+		Config $chConfig,
 		MultiLevelLogger $logger
 	) {
 		$this->subjectReader = $subjectReader;
+		$this->chConfig = $chConfig;
 		$this->logger = $logger;
 	}
 
@@ -52,12 +58,14 @@ abstract class TransactionDetailsDataBuilder implements BuilderInterface
 		$paymentDO = $this->subjectReader->readPayment($buildSubject);
 		$payment = $paymentDO->getPayment();
 		$orderDO = $paymentDO->getOrder();
+		$orderIncrementId = $orderDO->getOrderIncrementId();
 
 		$txnDetails = new TransactionDetails();
 
 		$data = $payment->getAdditionalInformation();
-		
-		$createToken = !empty($data[VaultConfigProvider::IS_ACTIVE_CODE]);
+
+		$tokenStrat = $this->chConfig->getTokenStrategy();
+		$createToken = !empty($data[VaultConfigProvider::IS_ACTIVE_CODE]) || $tokenStrat === TokenizationStrategy::ALWAYS;
 		$txnDetails->setCreateToken($createToken);
 		if ($createToken == true) 
 		{ 
@@ -71,7 +79,8 @@ abstract class TransactionDetailsDataBuilder implements BuilderInterface
 		$txnDetails->setMerchantTransactionId(uniqid());
 		$txnDetails->setAccountVerification(false);
 
-		$this->logger->logInfo(3, "Transaction Details Data Builder:\n" . $txnDetails->__toString());
+		$this->logger->logDebug(3, "Transaction Details Data Builder:\n" . $txnDetails->__toString(), "Order ID: $orderIncrementId");
+
 		return [ self::TXN_DETAILS_KEY => $txnDetails ];
 	}
 

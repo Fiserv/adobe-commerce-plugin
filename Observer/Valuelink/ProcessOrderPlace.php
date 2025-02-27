@@ -103,7 +103,7 @@ class ProcessOrderPlace implements ObserverInterface
 				$order->setState(\Magento\Sales\Model\Order::STATE_CANCELED);
 				$this->quoteManager->RemoveValuelinkCardsFromQuote($expiredCards, $observer->getEvent()->getQuote());	
 				throw new LocalizedException(
-					__("Quote contained stale Valuelink gift cards which had to be removed. Recapture stale gift cards and try again.")
+					__("Quote contained stale gift cards which had to be removed. Recapture stale gift cards and try again.")
 				);
 			}
 
@@ -120,7 +120,7 @@ class ProcessOrderPlace implements ObserverInterface
 			}
 			catch(\Exception $e)
 			{
-				$this->logger->logError(1, "Valuelink charge failed. Reverting...");
+				$this->logger->logError(1, "Gift Card charge failed. Reverting...");
 				$this->logger->logError(2, $e);
 				foreach ($chargedCards as $card)
 				{

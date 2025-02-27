@@ -54,6 +54,7 @@ class TokenSourceDataBuilder implements BuilderInterface
 		$paymentDO = $this->subjectReader->readPayment($buildSubject);
 		$payment = $paymentDO->getPayment();
 		$orderDO = $paymentDO->getOrder();
+		$orderIncrementId = $orderDO->getOrderIncrementId();
 		
 		$tokenData = $payment->getAdditionalInformation(DataAssignObserver::PAYMENT_TOKEN_KEY);
 		$tokenSource = $payment->getAdditionalInformation(DataAssignObserver::TOKEN_SOURCE_KEY);
@@ -72,7 +73,8 @@ class TokenSourceDataBuilder implements BuilderInterface
 
 		$source->setCard($card);	
 
-		$this->logger->logInfo(3, "Token Source Data Builder:\n" . $source->__toString());
+		$this->logger->logDebug(3, "Token Source Data Builder:\n" . $source->__toString(), "Order ID: $orderIncrementId");
+
 		return [ self::TOKEN_SOURCE_KEY => $source ];
 	}
 }

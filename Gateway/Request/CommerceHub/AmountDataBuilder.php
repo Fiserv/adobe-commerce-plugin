@@ -50,7 +50,7 @@ class AmountDataBuilder implements BuilderInterface
 	public function build(array $buildSubject)
 	{
 		$paymentDO = $this->subjectReader->readPayment($buildSubject);
-		$orderDO = $paymentDO->getOrder();
+		$orderDO = $paymentDO->getOrder(); //Retrieve the order data object from the payment data object
 
 		$rawTotal = $this->subjectReader->readAmount($buildSubject);
 		
@@ -58,7 +58,10 @@ class AmountDataBuilder implements BuilderInterface
 		$amt->setTotal(round($rawTotal, 2, PHP_ROUND_HALF_UP));
 		$amt->setCurrency($orderDO->getCurrencyCode());
 
-		$this->logger->logInfo(3, "Amount Data Builder:\n" . $amt->__toString());
+		//Extract order Increment ID to use as ID
+		$orderIncrementId = $orderDO->getOrderIncrementId();
+		$this->logger->logDebug(3, "Amount Data Builder:\n" . $amt->__toString(), "Order ID: $orderIncrementId");
+		
 		return [ self::AMOUNT_KEY => $amt ];
 	}
 }

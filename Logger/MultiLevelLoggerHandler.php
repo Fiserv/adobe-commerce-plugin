@@ -10,7 +10,7 @@ class MultiLevelLoggerHandler extends \Magento\Framework\Logger\Handler\Base
 	 *
 	 * @var int
 	 */
-	protected $loggerType = Logger::INFO;
+	protected $loggerType = Logger::DEBUG;
 
 	/**
 	 * Log File Name

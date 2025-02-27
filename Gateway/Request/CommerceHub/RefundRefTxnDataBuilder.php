@@ -48,6 +48,7 @@ class RefundRefTxnDataBuilder implements BuilderInterface
 		$paymentDO = $this->subjectReader->readPayment($buildSubject);
 		$payment = $paymentDO->getPayment();
 		$orderDO = $paymentDO->getOrder();
+		$orderIncrementId = $orderDO->getOrderIncrementId();
 
 		$captureToRefund = $payment->getParentTransactionId() ?: $payment->getLastTransId();
 		// $captureToRefund = $payment->getAuthorizationTransaction()->getAdditionalInformation('bluepay_capture_transaction_id');
@@ -58,7 +59,7 @@ class RefundRefTxnDataBuilder implements BuilderInterface
 		// $chargeTransaction = $payment->getAuthorizationTransaction();
 		if (empty($captureToRefund)) 
 		{
-			$this->logger->logError(2, "Refund reference transaction data builder was unable to find auth transaction to refund");
+			$this->logger->logError(2, "Refund reference transaction data builder was unable to find auth transaction to refund", "Order ID: $orderIncrementId");
 			throw new Exception("Unable to locate charge transaction to refund.");
 		}
 		//$chargeTxnId = $chargeTransaction->getTxnId(); //NOTE: NOT "getTransactionId()", which seems to return primary key
@@ -66,7 +67,8 @@ class RefundRefTxnDataBuilder implements BuilderInterface
 		$refTxn = new ReferenceTransactionDetails();
 		$refTxn->setReferenceTransactionId($captureToRefund);
 
-		$this->logger->logInfo(3, "Refund Reference Transaction Data Builder:\n" . $refTxn->__toString());
+		$this->logger->logDebug(3, "Refund Reference Transaction Data Builder:\n" . $refTxn->__toString(), "Order ID: $orderIncrementId");
+
 		return [ self::REF_TXN_KEY => $refTxn ];
 	}
 }

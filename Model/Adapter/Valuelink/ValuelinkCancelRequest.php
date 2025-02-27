@@ -3,13 +3,10 @@ namespace Fiserv\Payments\Model\Adapter\Valuelink;
 
 use Fiserv\Payments\Gateway\Config\CommerceHub\Config;
 use Fiserv\Payments\Gateway\Config\Valuelink\Config as ValuelinkConfig;
-use Fiserv\Payments\Model\Source\CommerceHub\ApiEnvironment;
 use Fiserv\Payments\Model\Adapter\CommerceHub\ChHttpAdapter;
 use Magento\Store\Model\StoreManagerInterface;
-use Fiserv\Payments\Gateway\Request\CommerceHub\SessionSourceDataBuilder;
-use Magento\Payment\Model\MethodInterface;
-use Magento\Framework\Exception\LocalizedException;
 use Fiserv\Payments\Logger\MultiLevelLogger;
+use Fiserv\Payments\Helper\MerchantPartnerHelper;
 
 use Fiserv\Payments\Lib\CommerceHub\Model\CancelRequest;
 use Fiserv\Payments\Lib\CommerceHub\Model\ReferenceTransactionDetails;
@@ -19,7 +16,7 @@ use Fiserv\Payments\Lib\CommerceHub\Model\MerchantDetails;
 
 class ValuelinkCancelRequest
 {
-	// Cancel endpoint on dev portal is incorrect	
+	// Cancel endpoint on dev portal is incorrect
 	//const CANCEL_ENDPOINT = 'payments-vas/v1/accounts/gift-cards';
 	const CANCEL_ENDPOINT = 'payments/v1/cancels';
 	const KEY_OPERATION_TYPE = "CANCEL";
@@ -62,31 +59,32 @@ class ValuelinkCancelRequest
 	}
 
 	/**
-	* Retrieve assoc array of
-	* CommerceHub CredentialsRequest info
-	* 
-	* @return array
-	*/
+	 * Retrieve assoc array of
+	 * CommerceHub CredentialsRequest info
+	 *
+	 * @return array
+	 */
 	public function cancelValuelinkRequest(CancelRequest $payload)
 	{
-		$this->logger->logInfo(1, "Sending gift card request...");
-		$this->logger->logInfo(3, "TXN REQUEST INFO");
-		$this->logger->logInfo(3, "Payload:\n" . print_r($payload, true));
+		$merchantOrderId = $payload->getTransactionDetails()->getMerchantOrderId();
+		$this->logger->logInfo(1, "Sending gift card request...", "Order ID: {$merchantOrderId}");
+		$this->logger->logDebug(3, "TXN REQUEST INFO", "Order ID: {$merchantOrderId}");
+		$this->logger->logDebug(3, "Payload:\n" . print_r($payload, true), "Order ID: {$merchantOrderId}");
 		$chResponse = $this->httpAdapter->sendRequest($payload, self::CANCEL_ENDPOINT);
-		return $this->parseCancelResponse($chResponse);
+		return $this->parseCancelResponse($chResponse, $merchantOrderId);
 	}
 
-	private function parseCancelResponse($chResponse) {
+	private function parseCancelResponse($chResponse, $merchantOrderId) {
 		$statusCode = $chResponse->getStatusCode();
 		$response = $chResponse->getResponse();
 		$headerLength = $chResponse->getHeaderLength();
 		$body = $chResponse->getBody();
 
-		$this->logger->logInfo(1, "Response received for gift card request");
-		$this->logger->logInfo(3, "TXN INQUIRY RESPONSE INFO");
-		$this->logger->logInfo(3, "Response Headers:\n" . print_r($chResponse->getHeaders(), true));
-		$this->logger->logInfo(3, "Response Body:\n" . json_encode(json_decode($body), JSON_PRETTY_PRINT));
-		
+		$this->logger->logInfo(1, "Response received for gift card request", "Order ID: {$merchantOrderId}");
+		$this->logger->logDebug(3, "TXN INQUIRY RESPONSE INFO", "Order ID: {$merchantOrderId}");
+		$this->logger->logDebug(3, "Response Headers:\n" . print_r($chResponse->getHeaders(), true), "Order ID: {$merchantOrderId}");
+		$this->logger->logError(2, "Response Body:\n" . json_encode(json_decode($body), JSON_PRETTY_PRINT), "Order ID: {$merchantOrderId}");
+
 		$header = [];
 
 		foreach(explode("\r\n", trim(substr($response, 0, $headerLength))) as $row) {
@@ -98,43 +96,44 @@ class ValuelinkCancelRequest
 		$bodyArray = json_decode($body, true);
 
 		if ($statusCode !== 201) {
-			$this->logger->logError(1, "Transaction failure. Gift card response returned with unsuccessful status");
-			$this->logger->logError(2, "Status Code: " . $statusCode);
-			throw new \Exception('CommerceHub Valuelink Cancel Request HTTP error code: ' . $statusCode, 1);
+			$this->logger->logError(1, "Transaction failure. Gift card response returned with unsuccessful status", "Order ID: {$merchantOrderId}");
+			$this->logger->logError(2, "Status Code: " . $statusCode, "Order ID: {$merchantOrderId}");
+
+			throw new \Exception('CommerceHub Gift Card Cancel Request HTTP error code: ' . $statusCode, 1);
 		};
 
 		return $bodyArray;
 	}
 
-	public function getValuelinkCancelPayload($txnId, $merchantTxnId) : CancelRequest
+	public function getValuelinkCancelPayload($txnId, $merchantTxnId, $merchantOrderId) : CancelRequest
 	{
 		$payload = new CancelRequest();
-		
+
 		$payload->setReferenceTransactionDetails($this->getReferenceTransactionDetails($txnId, $merchantTxnId));
-		$payload->setTransactionDetails($this->getTransactionDetails());
+		$payload->setTransactionDetails($this->getTransactionDetails($merchantOrderId));
 		$payload->setTransactionInteraction($this->getTransactionInteraction());
 		$payload->setMerchantDetails($this->getMerchantDetails());
-		
+
 		return $payload;
 	}
 
 	private function getReferenceTransactionDetails($txnId, $merchantTxnId) : ReferenceTransactionDetails
 	{
-		$refTxn = new  ReferenceTransactionDetails();
+		$refTxn = new ReferenceTransactionDetails();
 
 		$refTxn->setReferenceTransactionId($txnId);
-		
+
 		// Commerce Hub guidance is to provide only one identifier
 		//$refTxn->setReferenceMerchantTransactionId($merchantTxnId);
 
 		return $refTxn;
 	}
-	
-	private function getTransactionDetails() : TransactionDetails
+
+	private function getTransactionDetails($merchantOrderId) : TransactionDetails
 	{
 		$details = new TransactionDetails();
-                $details->setMerchantTransactionId(uniqid());
-		$details->setMerchantOrderId(uniqid());	
+		$details->setMerchantTransactionId(uniqid());
+		$details->setMerchantOrderId($merchantOrderId);
 		$details->setOperationType(self::KEY_OPERATION_TYPE);
 
 		return $details;
@@ -144,7 +143,7 @@ class ValuelinkCancelRequest
 	{
 		$interaction = new TransactionInteraction();
 
-		$date = new \DateTime();	
+		$date = new \DateTime();
 		$interaction->setTerminalTimestamp($date->format('c'));
 
 		return $interaction;
@@ -156,7 +155,8 @@ class ValuelinkCancelRequest
 
 		$merchantDetails->setMerchantId($this->chConfig->getMerchantId());
 		$merchantDetails->setTerminalId($this->chConfig->getTerminalId());
-		
+		$merchantDetails->setMerchantPartner(MerchantPartnerHelper::createMerchantPartner($this->chConfig));
+
 		return $merchantDetails;
 	}
 }

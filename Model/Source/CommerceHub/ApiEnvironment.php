@@ -31,6 +31,7 @@ use Magento\Framework\Option\ArrayInterface;
 
 class ApiEnvironment implements ArrayInterface
 {
+	const ENVIRONMENT_QA = 'QA';
 	const ENVIRONMENT_CERT = 'CERT';
 	const ENVIRONMENT_PROD = 'PROD';
 
@@ -44,11 +45,11 @@ class ApiEnvironment implements ArrayInterface
 		return [
 			[
 				'value' => self::ENVIRONMENT_CERT,
-				'label' => __('CERT')
+				'label' => __(self::ENVIRONMENT_CERT)
 			],
 			[
 				'value' => self::ENVIRONMENT_PROD,
-				'label' => __('PROD')
+				'label' => __(self::ENVIRONMENT_PROD)
 			],
 		];
 	}

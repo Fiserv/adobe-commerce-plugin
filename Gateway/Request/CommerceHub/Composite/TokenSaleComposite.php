@@ -19,7 +19,7 @@ use Fiserv\Payments\Logger\MultiLevelLogger;
  * Class TokenSaleComposite
  */
 class TokenSaleComposite extends ChCompositeBase
-{	
+{
 	const ENDPOINT = "payments/v1/charges";
 
 	/**
@@ -43,10 +43,15 @@ class TokenSaleComposite extends ChCompositeBase
 	 */
 	public function build(array $buildSubject)
 	{
-		$this->logger->logInfo(1, "Initiating Token Sale Transaction");
-		
+
 		$result = parent::build($buildSubject);
-		
+		$orderIncrementId = $result[TransactionDetailsDataBuilder::TXN_DETAILS_KEY]['merchant_order_id'] ?? null;
+		if ($orderIncrementId !== null) {
+			$this->logger->logInfo(1, "Initiating Token Sale Transaction", "Order ID:" . $orderIncrementId);
+		} else {
+			$this->logger->logInfo(1, "Initiating Token Sale Transaction");
+		}
+
 		$req = new ChargesRequest();
 		$req->setAmount($result[AmountDataBuilder::AMOUNT_KEY]);
 		$req->setSource($result[TokenSourceDataBuilder::TOKEN_SOURCE_KEY]);
@@ -54,7 +59,7 @@ class TokenSaleComposite extends ChCompositeBase
 		$req->setTransactionInteraction($result[TransactionInteractionDataBuilder::TXN_INTERACTION_KEY]);
 		$req->setMerchantDetails($result[MerchantDetailsDataBuilder::MERCHANT_DETAILS_KEY]);
 
-		return [ 
+		return [
 			self::REQUEST_KEY => $req,
 			self::ENDPOINT_KEY => self::ENDPOINT
 		];

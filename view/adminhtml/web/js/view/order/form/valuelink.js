@@ -24,8 +24,11 @@ define([
 					onActiveChange: 'active'
 				}
 			},
-
+			balanceInquiryGeneralErrorMessage: 'Invalid gift card. Please try again or use another form of payment.',
 			valuelinkBalanceUrl: "fiserv/valuelink/getvaluelinkbalance",
+			addedMessage: "Gift card added successfully",
+			emptyMessage: "Gift card has no balance",
+			addErrorMessage: "An error occurred. Gift card was not added.",
 
 			/**
 			* @returns {exports.initialize}
@@ -38,7 +41,7 @@ define([
 				this.paymentConfig.formConfig = this.paymentConfig.valuelinkConfig;
 
 				// Intercept order.loadArea in order to add items block to reload list if necessary
-				if(window.loadAreaReference === undefined) {
+				if(window.loadAreaReference === undefined && order.loadArea) {
 					window.loadAreaReference = order.loadArea;
 				}
 				order.loadArea = this.loadArea;
@@ -60,7 +63,9 @@ define([
 						(data) => { this.fieldValidityHandler(data); },
 						(data) => { this.fieldFocusHandler(data); }
 					);
-
+					window.showValuelinkSuccessMsg = (message) => { this.showSuccessMessage(message); };
+					window.showValuelinkErrorMsg = (message) => { this.showErrorMessage(message); };
+					
 					this.createGiftCardForm();
 				}
 
@@ -214,7 +219,7 @@ define([
 
 				if (parseFloat(balance) === 0)
 				{
-					this.showError("Gift card has no balance.");
+					this.showErrorMessage(this.emptyMessage);
 					return;
 				}
 				
@@ -226,7 +231,14 @@ define([
 				let data = {};
 				data["valuelink_add"] = sessionId;
 				data["valuelink_balance"] = balance;
-				order.loadArea(['totals', 'billing_method', 'items'], true, data);
+				order.loadArea(['totals', 'billing_method', 'items'], true, data, () => {
+					if( $('#valuelink-card-'.concat(sessionId)).length > 0 ) {
+						this.showSuccessMessage(this.addedMessage);
+					} else {
+						this.showErrorMessage(this.addErrorMessage);
+					}
+				});
+				
 			},
 
 			loadArea: function (area, indicator, params, callback)
@@ -270,7 +282,7 @@ define([
 					sessionId,
 					this.paymentConfig["storeUrl"],
 					(data) => { this.balanceInquirySuccess(data); },
-					(err) => { this.balanceInquiryFailure(err); });
+					(err) => { this.balanceInquiryFailure(err.responseJSON.message); });
 			},
 
 			checkBalanceAndSetCardCb: function(sessionId)
@@ -281,7 +293,7 @@ define([
 					sessionId,
 					this.paymentConfig["storeUrl"],
 					(data) => { this.balanceInquirySuccess(data); this.setValuelinkCard(); },
-					(err) => { this.balanceInquiryFailure(err); });
+					(err) => { this.balanceInquiryFailure(err.responseJSON.message); });
 			},
 
 			balanceInquirySuccess: function(data)
@@ -329,7 +341,10 @@ define([
 			{
 				sdcv2.resetIframe(window.valuelinkFormKey);
 				this.endIframeFlow();
-				this.showError(err);
+				if(typeof err === 'string')
+					this.showErrorMessage(err);
+				else
+					this.showErrorMessage("Invalid Gift Card or CVV");
 			},
 
 			validateBalanceInquiry: function(response)
@@ -344,10 +359,10 @@ define([
 
 				let message = typeof(response.valuelink_balance) !== "undefined" &&
 						typeof(response.valuelink_balance.responseMessage) !== "undefined" ?
-						response.valuelink_balance.responseMessage : "Error retreiving gift card balance.";
+						response.valuelink_balance.responseMessage : this.balanceInquiryGeneralErrorMessage;
 
 				// Remove this line one day with a propper message mapper...
-				message = message === "Invalid SKU/EAN/SCV" ? "Invalid security code provided" : "Error retreiving gift card balance.";
+				message = message === "Invalid SKU/EAN/SCV" ? "Invalid security code provided" : this.balanceInquiryGeneralErrorMessage;
 
 				return { "isValid": valid, "message": message };
 			},
@@ -489,6 +504,53 @@ define([
 						frame.removeClass('sdc-focused-field');
 					}
 				}
+			},
+
+
+			showSuccessMessage: function(message) {
+				this.clearErrorMessage();
+				this.getValuelinkSuccessMessage().text(message);
+				this.getValuelinkSuccessMessageContainer().show();
+
+				setTimeout(() => {
+					this.clearSuccessMessage();
+				}, 5000);
+			},
+
+			showErrorMessage: function(message) {
+				this.clearSuccessMessage();
+				this.getValuelinkErrorMessage().text(message);
+				this.getValuelinkErrorMessageContainer().show();
+				
+				setTimeout(() => {
+					this.clearErrorMessage();
+				}, 5000);
+			},
+
+			clearSuccessMessage: function() {
+				this.getValuelinkSuccessMessage().text("");
+				this.getValuelinkSuccessMessageContainer().hide();
+			},
+
+			clearErrorMessage: function() {
+				this.getValuelinkErrorMessage().text("");
+				this.getValuelinkErrorMessageContainer().hide();
+			},
+				
+			getValuelinkSuccessMessageContainer: function() {
+				return $('#valuelink-success-message-container');
+			},
+			
+			getValuelinkSuccessMessage: function() {
+				return $('#valuelink-success-message');
+			},
+
+			getValuelinkErrorMessageContainer: function() {
+				return $('#valuelink-error-message-container');
+			},
+
+			getValuelinkErrorMessage: function() {
+				return $('#valuelink-error-message');
 			}
 		});
 	}

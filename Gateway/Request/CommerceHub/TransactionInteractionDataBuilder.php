@@ -52,13 +52,15 @@ class TransactionInteractionDataBuilder implements BuilderInterface
 		$paymentDO = $this->subjectReader->readPayment($buildSubject);
 		$payment = $paymentDO->getPayment();
 		$orderDO = $paymentDO->getOrder();
+		$orderIncrementId = $orderDO->getOrderIncrementId();
 
 		$txnInteraction = new TransactionInteraction();
 		$txnInteraction->setOrigin(self::ORIGIN);
 		$txnInteraction->setEciIndicator(self::ECI_INDICATOR);
 		$txnInteraction->setPosConditionCode(self::POS_CONDITION_CODE);
 
-		$this->logger->logInfo(3, "Transaction Interaction Builder:\n" . $txnInteraction->__toString());
+		$this->logger->logDebug(3, "Transaction Interaction Builder:\n" . $txnInteraction->__toString(), "Order ID: $orderIncrementId");
+
 		return [ self::TXN_INTERACTION_KEY => $txnInteraction ];
 	}
 }

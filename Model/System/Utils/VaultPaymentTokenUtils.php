@@ -40,10 +40,10 @@ class VaultPaymentTokenUtils extends AbstractDb
 
 		$match = false;
 		for ($i = 0; $i < count($matchingTokenData); $i++) {
-			$match = json_decode($matchingTokenData[$i]["details"], true)["expirationDate"] ===  ($expMonth . "/" . $expYear);
-			if ($match)
+			$exists = json_decode($matchingTokenData[$i]["details"], true)["expirationDate"] ===  ($expMonth . "/" . $expYear);
+			if ($exists)
 			{
-				return $match;
+				return $matchingTokenData[$i];
 			}
 		}
 

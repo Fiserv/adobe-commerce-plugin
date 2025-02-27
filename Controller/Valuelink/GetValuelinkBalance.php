@@ -63,7 +63,7 @@ class GetValuelinkBalance extends Action implements HttpGetActionInterface
 
 			$response->setData(['valuelink_balance' => $this->chAdapter->requestBalance($sessionId)]);
         } catch (\Exception $e) {
-			$this->logger->logError(1, "An error occurred while retrieving the Valuelink balance");
+			$this->logger->logError(1, "An error occurred while retrieving the gift card balance");
 			$this->logger->logCritical(2, $e);
 			return $this->processBadRequest($response);
         }

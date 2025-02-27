@@ -10,6 +10,7 @@ use Fiserv\Payments\Gateway\Request\CommerceHub\SessionSourceDataBuilder;
 use Magento\Payment\Model\MethodInterface;
 use Magento\Framework\Exception\LocalizedException;
 use Fiserv\Payments\Logger\MultiLevelLogger;
+use Fiserv\Payments\Helper\MerchantPartnerHelper;
 
 use Fiserv\Payments\Lib\CommerceHub\Model\ChargesRequest;
 use Fiserv\Payments\Lib\CommerceHub\Model\Amount;
@@ -50,7 +51,6 @@ class ValuelinkChargesRequest
 	 */
 	private $logger;
 	
-
 	/**
 	 * Constructor
 	 *
@@ -76,23 +76,25 @@ class ValuelinkChargesRequest
 	*/
 	public function chargeValuelinkCard(ChargesRequest $payload)
 	{
-		$this->logger->logInfo(1, "Sending gift card request...");
-		$this->logger->logInfo(3, "TXN REQUEST INFO");
-		$this->logger->logInfo(3, "Payload:\n" . print_r($payload, true));
+		$merchantOrderId = $payload->getTransactionDetails()->getMerchantOrderId();
+		$this->logger->logInfo(1, "Sending gift card request...", "Order ID: {$merchantOrderId}");
+		$this->logger->logDebug(3, "TXN REQUEST INFO", "Order ID: {$merchantOrderId}");
+		$this->logger->logDebug(3, "Payload:\n" . print_r($payload, true), "Order ID: {$merchantOrderId}");
+
 		$chResponse = $this->httpAdapter->sendRequest($payload, self::CHARGES_ENDPOINT);
-		return $this->parseChargesResponse($chResponse);
+		return $this->parseChargesResponse($chResponse, $merchantOrderId);
 	}
 
-	private function parseChargesResponse($chResponse) {
+	private function parseChargesResponse($chResponse, $merchantOrderId) {
 		$statusCode = $chResponse->getStatusCode();
 		$response = $chResponse->getResponse();
 		$headerLength = $chResponse->getHeaderLength();
 		$body = $chResponse->getBody();
 
-		$this->logger->logInfo(1, "Response received for gift card request");
-		$this->logger->logInfo(3, "TXN INQUIRY RESPONSE INFO");
-		$this->logger->logInfo(3, "Response Headers:\n" . print_r($chResponse->getHeaders(), true));
-		$this->logger->logInfo(3, "Response Body:\n" . json_encode(json_decode($body), JSON_PRETTY_PRINT));
+		$this->logger->logInfo(1, "Response received for gift card request", "Order ID: {$merchantOrderId}");
+		$this->logger->logDebug(3, "TXN INQUIRY RESPONSE INFO", "Order ID: {$merchantOrderId}");
+		$this->logger->logDebug(3, "Response Headers:\n" . print_r($chResponse->getHeaders(), true), "Order ID: {$merchantOrderId}");
+		$this->logger->logError(2, "Response Body:\n" . json_encode(json_decode($body), JSON_PRETTY_PRINT), "Order ID: {$merchantOrderId}");
 
 		$header = [];
 
@@ -105,21 +107,21 @@ class ValuelinkChargesRequest
 		$bodyArray = json_decode($body, true);
 
 		if ($statusCode !== 201) {
-			$this->logger->logError(1, "Transaction failure. Gift card response returned with unsuccessful status");
-			$this->logger->logError(2, "Status Code: " . $statusCode);
-			throw new \Exception('CommerceHub Valuelink Charges Request HTTP error code: ' . $statusCode, 1);
+			$this->logger->logError(1, "Transaction failure. Gift card response returned with unsuccessful status", "Order ID: {$merchantOrderId}");
+			$this->logger->logError(2, "Status Code: " . $statusCode, "Order ID: {$merchantOrderId}");
+			
+			throw new \Exception('CommerceHub Gift Card Charges Request  HTTP error code: ' . $statusCode, 1);
 		};
 
 		return $bodyArray;
 	}
 
-	public function getValuelinkChargesPayload($sessionId, $total, $currency) : ChargesRequest
+	public function getValuelinkChargesPayload($sessionId, $total, $currency, $merchantOrderId) : ChargesRequest
 	{
 		$payload = new ChargesRequest();
-		
 		$payload->setAmount($this->getAmount($total, $currency));
 		$payload->setSource($this->getSource($sessionId));
-		$payload->setTransactionDetails($this->getTransactionDetails());
+		$payload->setTransactionDetails($this->getTransactionDetails($merchantOrderId));
 		$payload->setTransactionInteraction($this->getTransactionInteraction());
 		$payload->setMerchantDetails($this->getMerchantDetails());
 		
@@ -145,13 +147,13 @@ class ValuelinkChargesRequest
 		return $source;
 	}
 
-	private function getTransactionDetails() : TransactionDetails
+	private function getTransactionDetails($merchantOrderId) : TransactionDetails
 	{
 		$details = new TransactionDetails();
 		
 		$details->setCaptureFlag($this->valuelinkConfig->getPaymentAction() == MethodInterface::ACTION_AUTHORIZE_CAPTURE);
 		$details->setMerchantTransactionId(uniqid());
-		$details->setMerchantOrderId(uniqid());
+		$details->setMerchantOrderId($merchantOrderId);
 		$details->setCreateToken(false);
 
 		return $details;
@@ -174,7 +176,8 @@ class ValuelinkChargesRequest
 
 		$merchantDetails->setMerchantId($this->chConfig->getMerchantId());
 		$merchantDetails->setTerminalId($this->chConfig->getTerminalId());
-		
+		$merchantDetails->setMerchantPartner(MerchantPartnerHelper::createMerchantPartner($this->chConfig));
+
 		return $merchantDetails;
 	}
 }

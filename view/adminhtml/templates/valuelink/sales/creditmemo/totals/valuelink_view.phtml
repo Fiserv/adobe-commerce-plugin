@@ -5,7 +5,7 @@
 
 $valuelinkCreditMemoTotal = $block->getValuelinkTotalForCreditMemo();
 ?>
-<?php if ((float) $valuelinkCreditMemoTotal) : ?>
+<?php if ((float) $valuelinkCreditMemoTotal > 0.00) : ?>
 	<tr>
 		<td class="label"><?= $block->escapeHtml(__('Gift Cards')) ?></td>
 		<td>

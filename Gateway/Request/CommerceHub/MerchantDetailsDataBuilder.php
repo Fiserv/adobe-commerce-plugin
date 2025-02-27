@@ -5,12 +5,12 @@
  */
 namespace Fiserv\Payments\Gateway\Request\CommerceHub;
 
+use Fiserv\Payments\Helper\MerchantPartnerHelper;
 use Fiserv\Payments\Gateway\Config\CommerceHub\Config;
 use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use Fiserv\Payments\Lib\CommerceHub\Model\MerchantDetails;
 use Magento\Payment\Gateway\Request\BuilderInterface;
 use Fiserv\Payments\Logger\MultiLevelLogger;
-
 
 /**
  * Adds Merchant Account ID to the request.
@@ -66,7 +66,11 @@ class MerchantDetailsDataBuilder implements BuilderInterface
 		$merchantDetails->setMerchantId($merchantId);
 		$merchantDetails->setTerminalId($terminalId);
 
-		$this->logger->logInfo(3, "Merchant Details Data Builder:\n" . $merchantDetails->__toString());
+		$merchantDetails->setMerchantPartner(MerchantPartnerHelper::createMerchantPartner($this->config));
+
+		$orderIncrementId = $orderDO->getOrderIncrementId();
+		$this->logger->logDebug(3, "Merchant Details Data Builder:\n" . $merchantDetails->__toString(), "Order ID: $orderIncrementId");
+		
 		return [ self::MERCHANT_DETAILS_KEY => $merchantDetails ];
 	}
 }

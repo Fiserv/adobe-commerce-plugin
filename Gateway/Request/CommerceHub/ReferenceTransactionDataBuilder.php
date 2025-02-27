@@ -48,12 +48,13 @@ class ReferenceTransactionDataBuilder implements BuilderInterface
 		$paymentDO = $this->subjectReader->readPayment($buildSubject);
 		$payment = $paymentDO->getPayment();
 		$orderDO = $paymentDO->getOrder();
+		$orderIncrementId = $orderDO->getOrderIncrementId();
 
 
 		$authTransaction = $payment->getAuthorizationTransaction();
 		if ($authTransaction == null) 
 		{
-			$this->logger->logError(2, "Reference transaction data builder was unable to find auth transaction");
+			$this->logger->logError(2, "Reference transaction data builder was unable to find auth transaction" , "Order ID: $orderIncrementId");
 			throw new Exception("Unable to locate auth transaction for capture.");
 		}
 		$authTxnId = $authTransaction->getTxnId(); //NOTE: NOT "getTransactionId()", which seems to return primary key
@@ -61,7 +62,8 @@ class ReferenceTransactionDataBuilder implements BuilderInterface
 		$refTxn = new ReferenceTransactionDetails();
 		$refTxn->setReferenceTransactionId($authTxnId);
 
-		$this->logger->logInfo(3, "Reference Transaction Data Builder:\n" . $refTxn->__toString());
+		$this->logger->logDebug(3, "Reference Transaction Data Builder:\n" . $refTxn->__toString(), "Order ID: $orderIncrementId");
+
 		return [ self::REF_TXN_KEY => $refTxn ];
 	}
 }

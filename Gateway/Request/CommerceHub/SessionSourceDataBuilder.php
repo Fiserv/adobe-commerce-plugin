@@ -53,6 +53,7 @@ class SessionSourceDataBuilder implements BuilderInterface
 		$paymentDO = $this->subjectReader->readPayment($buildSubject);
 		$payment = $paymentDO->getPayment();
 		$orderDO = $paymentDO->getOrder();
+		$orderIncrementId = $orderDO->getOrderIncrementId();
 		
 		$sessionId = $payment->getAdditionalInformation(DataAssignObserver::SESSION_ID_KEY);
 		
@@ -60,7 +61,8 @@ class SessionSourceDataBuilder implements BuilderInterface
 		$source->setSourceType(self::PAYMENT_SESSION_SOURCE_TYPE);
 		$source->setSessionId($sessionId);
 
-		$this->logger->logInfo(3, "Session Source Data Builder:\n" . $source->__toString());
+		$this->logger->logDebug(3, "Session Source Data Builder:\n" . $source->__toString(), "Order ID: $orderIncrementId");
+
 		return [ self::SESSION_SOURCE_KEY => $source ];
 	}
 }

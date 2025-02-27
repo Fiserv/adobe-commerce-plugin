@@ -6,7 +6,7 @@
 $valuelinkInvoiceTotal = $block->getValuelinkTotalCapturedOnInvoice();
 ?>
 
-<?php if ((float) $valuelinkInvoiceTotal) : ?>
+<?php if ((float) $valuelinkInvoiceTotal > 0.00) : ?>
 	<tr>
 		<td class="label"><?= $block->escapeHtml(__('Gift Cards')) ?></td>
 		<td>

@@ -26,7 +26,8 @@ define([
 		
 	return Component.extend({
 		defaults: {
-			template: 'Fiserv_Payments/payment/commercehub/valuelink_form'
+			template: 'Fiserv_Payments/payment/commercehub/valuelink_form',
+			balanceInquiryGeneralErrorMessage: 'Invalid gift card. Please try again or use another form of payment.'
 		},
 
 		valuelinkBalanceUrl: "fiserv/valuelink/getvaluelinkbalance",
@@ -69,7 +70,7 @@ define([
 		 */
 		isValuelinkEnabled: function() 
 		{
-			return valuelinkConfig.isActive;
+			return (config.isActive && valuelinkConfig.isActive);
 		},
 
 		/**
@@ -144,7 +145,7 @@ define([
 				sessionId, 
 				window.checkoutConfig.payment.fiserv_payments["storeUrl"], 
 				(data) => { this.balanceInquirySuccess(data); }, 
-				(err) => { this.balanceInquiryFailure(err); });
+				(err) => { this.balanceInquiryFailure(err.responseJSON.message); });
 		},
 
 		checkBalanceAndSetCardCb: function(sessionId)
@@ -155,7 +156,7 @@ define([
 				sessionId,
 				window.checkoutConfig.payment.fiserv_payments["storeUrl"],
 				(data) => { this.balanceInquirySuccess(data); this.setGiftCard(); },
-				(err) => { this.balanceInquiryFailure(err); });
+				(err) => { this.balanceInquiryFailure(err.responseJSON.message); });
 		},
 
 		balanceInquirySuccess: function(data)
@@ -228,10 +229,10 @@ define([
 
 			let message = typeof(response.valuelink_balance) !== "undefined" &&
 					typeof(response.valuelink_balance.responseMessage) !== "undefined" ?
-					response.valuelink_balance.responseMessage : "Error retreiving gift card balance.";
+					response.valuelink_balance.responseMessage : this.balanceInquiryGeneralErrorMessage;
 
 			// Remove this line one day with a propper message mapper...
-			message = message === "Invalid SKU/EAN/SCV" ? "Invalid security code provided" : "Error retreiving gift card balance.";
+			message = message === "Invalid SKU/EAN/SCV" ? "Invalid security code provided" : this.balanceInquiryGeneralErrorMessage;
 		
 			return { "isValid": valid, "message": message };
 		},
@@ -247,9 +248,6 @@ define([
 					successCb,
 					() => { this.cardCaptureFailure(); }
 				)
-			} else
-			{
-				console.log("Valuelink gift card form invalid");
 			}
 		},
 

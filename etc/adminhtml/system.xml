@@ -40,17 +40,21 @@
 						<backend_model>Fiserv\Payments\Model\System\Config\Backend\CommerceHub\Encrypted</backend_model>
 						<config_path>payment/fiserv_commercehub/api_secret</config_path>
 					</field>
-					<field id="api_environment" translate="label" type="select" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="merchant_integrator" translate="label" type="text" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Merchant Integrator</label>
+						<config_path>payment/fiserv_commercehub/merchant_integrator</config_path>
+					</field>
+					<field id="api_environment" translate="label" type="select" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>API Environment</label>
 						<source_model>Fiserv\Payments\Model\Source\CommerceHub\ApiEnvironment</source_model>
 						<config_path>payment/fiserv_commercehub/api_environment</config_path>
 					</field>
-					<field id="debug" translate="label" type="select" sortOrder="12" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="debug" translate="label" type="select" sortOrder="8" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Debug</label>
 						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 						<config_path>payment/fiserv_commercehub/debug</config_path>
 					</field>
-					<field id="logging_level" translate="label" type="select" sortOrder="13" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="logging_level" translate="label" type="select" sortOrder="9" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Logging Level</label>
 						<source_model>Fiserv\Payments\Model\Source\CommerceHub\LoggingLevel</source_model>
 						<config_path>payment/fiserv_commercehub/logging_level</config_path>
@@ -60,11 +64,6 @@
 					<label>Payment Acceptance Settings</label>
 					<attribute type="expanded">0</attribute>
 					<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
-					<field id="payment_action" translate="label" type="select" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="0">
-						<label>Charge Type</label>
-						<source_model>Fiserv\Payments\Model\Source\CommerceHub\TransactionType</source_model>
-						<config_path>payment/fiserv_commercehub/payment_action</config_path>
-					</field>
 					<!-- Removed pending CommerceHub availability PI9 -->
 					<!-- <field id="cctypes" translate="label" type="multiselect" sortOrder="8" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Credit Card Types</label>
@@ -94,16 +93,36 @@
 					<label>Credit/Debit Cards</label>
 					<attribute type="expanded">0</attribute>
 					<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
-					<field id="title" translate="label" type="text" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="isPaymentActive" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Enable Credit and Debit Cards</label>
+						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+						<config_path>payment/fiserv_commercehub/isPaymentActive</config_path>
+						<comment>Choose Yes to enable Credit and Debit as a payment method via Fiserv or leave No to disable.</comment>
+					</field>
+					<field id="payment_action" translate="label" type="select" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Charge Type</label>
+						<source_model>Fiserv\Payments\Model\Source\CommerceHub\TransactionType</source_model>
+						<config_path>payment/fiserv_commercehub/payment_action</config_path>
+					</field>
+					<field id="title" translate="label" type="text" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Payment Method Title</label>
 						<config_path>payment/fiserv_commercehub/title</config_path>
 					</field>
-					<field id="tokenization" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
-						<label>Allow Customers To Store (Tokenize) Payment Methods</label>
+
+					<field id="tokenization" translate="label" type="select" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Allow Stored (Tokenized) Payment Methods</label>
 						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 						<config_path>payment/fiserv_commercehub_vault/active</config_path>
 					</field>
-					<field id="standalone_spa" translate="label" type="select" sortOrder="11" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="tokenization_strategy" translate="label" type="select" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Payment Card Tokenization Strategy</label>
+						<depends>
+							<field id="tokenization">1</field>
+						</depends>
+						<source_model>Fiserv\Payments\Model\Source\CommerceHub\TokenizationStrategy</source_model>
+						<config_path>payment/fiserv_commercehub/tokenization_strategy</config_path>
+					</field>
+					<field id="standalone_spa" translate="label" type="select" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Allow Customers To Manage Stored Payment Methods</label>
 						<depends>
 							<field id="tokenization">1</field>
@@ -113,14 +132,14 @@
 					</field>
 				</group>
 				<group id="valuelink_gift_card" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="5">
-					<label>Valuelink Gift Cards</label>
+					<label>Gift Cards</label>
 					<attribute type="expanded">0</attribute>
 					<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
 					<field id="valuelink" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
-						<label>Enable Valuelink Gift Cards</label>
+						<label>Enable Fiserv Gift Cards</label>
 						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 						<config_path>payment/fiserv_valuelink/active</config_path>
-						<comment>Valuelink is a gift card solution native to Fiserv. Choose Yes to enable Valuelink as a payment method or leave No to disable Valuelink.</comment>
+						<comment>Gift card solution native to Fiserv. Choose Yes to enable Fiserv Gift Cards as a payment method. No to disable.</comment>
 					</field>
 					<field id="title" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Payment Method Title</label>
@@ -326,8 +345,8 @@
 					</group>
 
 					<group id="customer_valuelink_form_custom" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="2">
-						<label>Customer Checkout Valuelink Form</label>
-						<comment>Customer checkout valuelink form</comment>
+						<label>Customer Checkout GiftCard Form</label>
+						<comment>Customer checkout giftcard form</comment>
 						<attribute type="expanded">0</attribute>
 						<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
 						<group id="customer_valuelink_card_number" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="1">
@@ -428,7 +447,7 @@
 							<attribute type="expanded">0</attribute>
 							<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
 							<field id="customer_valuelink_css" translate="label" type="textarea" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
-								<label>Checkout Valuelink Form CSS</label>
+								<label>Checkout GiftCard Form CSS</label>
 								<backend_model>Fiserv\Payments\Model\System\Config\Backend\CommerceHub\CssJson</backend_model>
 								<config_path>payment/fiserv_valuelink/sdc_custom_checkout_valuelink_css</config_path>
 							</field>
@@ -639,8 +658,8 @@
 					</group>
 
 					<group id="admin_valuelink_form_custom" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="4">
-						<label>Admin Order Valuelink Form</label>
-						<comment>Admin Panel order creation checkout valuelink form</comment>
+						<label>Admin Order GiftCard Form</label>
+						<comment>Admin Panel order creation checkout giftcard form</comment>
 						<attribute type="expanded">0</attribute>
 						<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
 						<group id="admin_valuelink_card_number" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="1">
@@ -741,7 +760,7 @@
 							<attribute type="expanded">0</attribute>
 							<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
 							<field id="admin_valuelink_css" translate="label" type="textarea" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
-								<label>Admin Valuelink Form CSS</label>
+								<label>Admin GiftCard Form CSS</label>
 								<backend_model>Fiserv\Payments\Model\System\Config\Backend\CommerceHub\CssJson</backend_model>
 								<config_path>payment/fiserv_valuelink/sdc_custom_admin_valuelink_css</config_path>
 							</field>

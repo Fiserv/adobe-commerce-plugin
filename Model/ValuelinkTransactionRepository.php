@@ -64,7 +64,7 @@ class ValuelinkTransactionRepository implements ValuelinkTransactionRepositoryIn
 		try {
 			$this->valuelinkTransactionResource->save($valuelinkDataObject);
 		} catch (\Exception $e) {
-			throw new CouldNotSaveException(__('Unable to save Valuelink transaction.'), $e);
+			throw new CouldNotSaveException(__('Unable to save Gift Card transaction.'), $e);
 		}
 		return $valuelinkDataObject;
 	}
@@ -74,7 +74,7 @@ class ValuelinkTransactionRepository implements ValuelinkTransactionRepositoryIn
 		try {
 			$this->valuelinkTransactionResource->delete($valuelinkDataObject);
 		} catch (\Exception $e) {
-			throw new CouldNotSaveException(__('Unable to delete Valuelink transaction.'), $e);
+			throw new CouldNotSaveException(__('Unable to delete Gift Card transaction.'), $e);
 		}
 		return true;
 	}

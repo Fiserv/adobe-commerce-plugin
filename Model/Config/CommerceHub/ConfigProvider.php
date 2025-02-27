@@ -22,6 +22,7 @@ class ConfigProvider implements ConfigProviderInterface
 	const VAULT_CODE = 'fiserv_commercehub_vault';
 	const VALUELINK_CODE = 'fiserv_valuelink';
 	const IS_ACTIVE_KEY = 'isActive';
+	const IS_PAYMENT_ACTIVE_KEY = 'isPaymentActive';
 	const MERCHANT_ID_KEY = 'merchantId';
 	const API_KEY_KEY = 'apiKey';
 	const CC_MAPPER_KEY = 'ccTypesMapper';
@@ -78,6 +79,7 @@ class ConfigProvider implements ConfigProviderInterface
 		$storeId = $this->session->getStoreId();
 		$config = [
 			self::IS_ACTIVE_KEY => $this->config->isActive($storeId),
+			self::IS_PAYMENT_ACTIVE_KEY => $this->config->isPaymentActive($storeId),
 			self::MERCHANT_ID_KEY => $this->config->getMerchantId($storeId),
 			self::API_KEY_KEY => $this->config->getApiKey(),
 			self::CC_MAPPER_KEY => $this->config->getCcTypesMapper(),

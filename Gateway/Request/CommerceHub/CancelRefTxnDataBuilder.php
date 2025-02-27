@@ -61,7 +61,9 @@ class CancelRefTxnDataBuilder implements BuilderInterface
 		$refTxn = new ReferenceTransactionDetails();
 		$refTxn->setReferenceTransactionId($authTxnId);
 
-		$this->logger->logInfo(3, "Cancel Referece Transaction Data Builder:\n" . $refTxn->__toString());
+		$orderIncrementId = $orderDO->getOrderIncrementId();
+		$this->logger->logDebug(3, "Cancel Reference Transaction Data Builder:\n" . $refTxn->__toString(),"Order ID: $orderIncrementId");
+
 		return [ self::REF_TXN_KEY => $refTxn ];
 	}
 }

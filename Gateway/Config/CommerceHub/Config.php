@@ -6,6 +6,7 @@
 namespace Fiserv\Payments\Gateway\Config\CommerceHub;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Store\Model\ScopeInterface;
 use Magento\Framework\Serialize\Serializer\Json;
 
 /**
@@ -15,10 +16,12 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 {
 	// Gets config values using field names
 	const KEY_ACTIVE = 'active';
+	const KEY_PAYMENT_ACTIVE = 'isPaymentActive';
 	const KEY_MERCHANT_ID = 'merchant_id';
 	const KEY_TERMINAL_ID = 'terminal_id';
 	const KEY_API_KEY = 'api_key';
 	const KEY_API_SECRET = 'api_secret';
+	const KEY_MERCHANT_INTEGRATOR = 'merchant_integrator';
 	const KEY_ENVIRONMENT = 'api_environment';
 	const KEY_PAYMENT_TYPE = 'payment_type';
 	const KEY_PAYMENT_ACTION = 'payment_action';
@@ -28,8 +31,12 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	const KEY_CC_TYPES_MAPPER ='cc_types_ch_mapper';
 	const KEY_PROD_API_SERVICE = 'prod_api_service';
 	const KEY_CERT_API_SERVICE = 'cert_api_service';
+	const KEY_QA_API_SERVICE = 'qa_api_service';
 	const KEY_PROD_CLIENT_URL = 'prod_client_url';
 	const KEY_CERT_CLIENT_URL = 'cert_client_url';
+	const KEY_QA_CLIENT_URL = 'qa_client_url';
+	const KEY_TOKEN_STRATEGY = 'tokenization_strategy';
+	const KEY_TOKENIZATION = "tokenization";
 	const KEY_STANDALONE_SPA = 'standalone_spa';
 	const KEY_LOGGING_LEVEL = 'logging_level';
 
@@ -64,10 +71,14 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	const KEY_FONT_FORMAT = 'format';
 	const KEY_FONT_INTEGRITY = 'integrity';
 
+	const PATH_VAULT_ENABLED = "payment/fiserv_commercehub_vault/active";
+
 	/**
 	 * @var \Magento\Framework\Serialize\Serializer\Json
 	 */
 	private $serializer;
+	
+	private $scopeConfig;
 
 	/**
 	 * Fiserv CommerceHub config constructor
@@ -85,11 +96,12 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	) {
 		parent::__construct($scopeConfig, $methodCode, $pathPattern);
 		$this->serializer = $serializer ?: \Magento\Framework\App\ObjectManager::getInstance()
-			->get(Json::class);
+		       ->get(Json::class);
+		$this->scopeConfig = $scopeConfig;
 	}
 
 	/**
-	 * Gets Payment configuration status.
+	 * Gets Fiserv configuration status.
 	 *
 	 * @param int|null $storeId
 	 * @return bool
@@ -97,6 +109,17 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	public function isActive($storeId = null)
 	{
 		return (bool) $this->getValue(self::KEY_ACTIVE, $storeId);
+	}
+
+	/**
+	* Gets Payment configuration status.
+	*
+	* @param int|null $storeId
+	* @return bool
+	*/
+	public function isPaymentActive($storeId = null)
+	{
+		return (bool) $this->getValue(self::KEY_PAYMENT_ACTIVE, $storeId);
 	}
 
 	/**
@@ -133,7 +156,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	}
 
 	/**
-	 * Returns CommerceHub API 53cr37.
+	 * Returns CommerceHub API secret.
 	 *
 	 * @param int|null $storeId
 	 * @return string
@@ -141,6 +164,17 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	public function getApiSecret($storeId = null)
 	{
 		return $this->getValue(self::KEY_API_SECRET, $storeId);
+	}
+
+	/**
+	 * Returns software integrator used by merchant.
+	 *
+	 * @param int|null $storeId
+	 * @return string
+	 */
+	public function getMerchantIntegrator($storeId = null)
+	{
+		return $this->getValue(self::KEY_MERCHANT_INTEGRATOR, $storeId);
 	}
 
 	/**
@@ -226,6 +260,16 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	}
 
 	/**
+	 * Returns URL of CommerceHub API qa service.
+	 *
+	 * @return string
+	 */
+	public function getQaApiService()
+	{
+		return $this->getValue(self::KEY_QA_API_SERVICE);
+	}
+
+	/**
 	 * Returns URL of CommerceHub API production SDK.
 	 *
 	 * @return string
@@ -233,6 +277,16 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	public function getProdClientUrl()
 	{
 		return $this->getValue(self::KEY_PROD_CLIENT_URL);
+	}
+
+	/**
+	 * Returns URL of CommerceHub API qa SDK.
+	 *
+	 * @return string
+	 */
+	public function getQaClientUrl()
+	{
+		return $this->getValue(self::KEY_QA_CLIENT_URL);
 	}
 
 	/**
@@ -258,6 +312,29 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 		);
 
 		return is_array($result) ? $result : [];
+	}
+
+	/**
+	 * Can a customer tokenize their payment card 
+	 *
+	 * @param int|null $storeId
+	 * @return string
+	 */
+	public function getCanTokenize($storeId = null)
+	{
+		return $this->scopeConfig->isSetFlag(self::PATH_VAULT_ENABLED, ScopeInterface::SCOPE_STORE);
+	}	
+	
+	/**
+	 * What is the tokenization strategy?
+	 * e.g. 100% or customer prompted
+	 *
+	 * @param int|null $storeId
+	 * @return string
+	 */
+	public function getTokenStrategy($storeId = null)
+	{
+		return $this->getValue(self::KEY_TOKEN_STRATEGY, $storeId);
 	}
 
 	/**

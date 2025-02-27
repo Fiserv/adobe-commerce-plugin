@@ -53,8 +53,6 @@ class Totals extends \Fiserv\Payments\Block\Valuelink\Adminhtml\Sales\Order\Tota
 
 	public function getValuelinkTotalCapturedOnInvoice()
 	{
-		return $this->invoiceHelper->getValuelinkBalanceAppliedToInvoice($this->getInvoice());
+		return $this->orderHasValuelinkTransactions() ? $this->invoiceHelper->getValuelinkBalanceAppliedToInvoice($this->getInvoice()) : 0;
 	}
-
-	
 }

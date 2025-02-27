@@ -16,6 +16,7 @@ use Magento\Backend\Model\Session\Quote;
 use Magento\Payment\Block\Form\Cc;
 use Magento\Payment\Model\Config;
 use Magento\Framework\Serialize\Serializer\Json;
+use Fiserv\Payments\Logger\MultiLevelLogger;
 
 /**
  * Class Form
@@ -37,6 +38,10 @@ class Form extends Cc
 	 */
 	protected $gatewayConfig;
 
+	/**
+	 * @var MultiLevelLogger
+	 */
+	private $logger;
 
 	/**
 	 * @var Config
@@ -83,6 +88,7 @@ class Form extends Cc
 		CcType $ccType,
 		Json $json,
 		\Magento\Sales\Model\AdminOrder\Create $orderCreate,
+		MultiLevelLogger $logger,
 		array $data = []
 	) {
 		parent::__construct($context, $paymentConfig, $data);
@@ -94,6 +100,7 @@ class Form extends Cc
 		$this->ccType = $ccType;
 		$this->json = $json;
 		$this->orderCreate = $orderCreate;
+		$this->logger = $logger;
 	}
 
 	/**
@@ -120,7 +127,7 @@ class Form extends Cc
 	 */
 	public function useValuelink()
 	{
-		return $this->valuelinkGatewayConfig->isActive($this->sessionQuote->getStoreId());
+		return $this->gatewayConfig->isActive($this->sessionQuote->getStoreId()) && $this->valuelinkGatewayConfig->isActive($this->sessionQuote->getStoreId());
 	}
 
 	/**
@@ -164,7 +171,7 @@ class Form extends Cc
 		$config[self::INVALID_FIELDS_KEY] = $this->configProvider->getInvalidFieldMessages(GatewayConfig::KEY_SDC_ADMIN, $fconfig[FiservConfigProvider::STORE_ID_KEY]);
 
 		$config[self::USE_VALUELINK_KEY] = $fconfig[FiservConfigProvider::FISERV_VALUELINK_KEY][FiservConfigProvider::IS_ACTIVE_KEY];
-		if ($fconfig[FiservConfigProvider::FISERV_VALUELINK_KEY][FiservConfigProvider::IS_ACTIVE_KEY])
+		if ( $chConfig[ConfigProvider::IS_ACTIVE_KEY] && $fconfig[FiservConfigProvider::FISERV_VALUELINK_KEY][FiservConfigProvider::IS_ACTIVE_KEY])
 		{
 			$config[FiservConfigProvider::VALUELINK_FORM_CONFIG_KEY] = $this->fiservConfigProvider->buildValuelinkFormConfig(GatewayConfig::KEY_SDC_ADMIN, $fconfig[FiservConfigProvider::STORE_ID_KEY]);
 		}

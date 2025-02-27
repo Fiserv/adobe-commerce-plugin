@@ -201,13 +201,12 @@ class ValuelinkInvoiceHelper
 		$subTotal = $invoice->getSubtotal() ?? 0;
 		$tax = $invoice->getTaxAmount() ?? 0;
 		$shipping = $invoice->getShippingAmount() ?? 0;
-		$shippingTax = $invoice->getShippingTaxAmount() ?? 0;
-		$rawTotal = $subTotal + $tax + $shipping + $shippingTax;
+		$rawTotal = $subTotal + $tax + $shipping;
 
 		$discount = $invoice->getDiscountAmount() ?? 0;
 		$storeCredit = $invoice->getCustomerBalanceAmount() ?? 0;
 		$mageGift = $invoice->getGiftCardsAmount() ?? 0;
-		$deductions = $discount + $storeCredit;
+		$deductions = $storeCredit + $mageGift - $discount;
 
 		return $rawTotal - $deductions - $invoice->getGrandTotal();
 	}

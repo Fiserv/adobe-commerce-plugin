@@ -6,9 +6,11 @@
 namespace Fiserv\Payments\Gateway\Response\CommerceHub;
 
 use Fiserv\Payments\Lib\CommerceHub\BpResponse;
+use Fiserv\Payments\Model\Config\CommerceHub\ConfigProvider;
 use Fiserv\Payments\Model\System\Utils\VaultPaymentTokenUtils;
 use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use Fiserv\Payments\Gateway\Request\CommerceHub\TransactionDetailsDataBuilder;
+use Fiserv\Payments\Model\Source\CommerceHub\TokenizationStrategy;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Payment\Gateway\Response\HandlerInterface;
@@ -16,10 +18,14 @@ use Magento\Payment\Model\InfoInterface;
 use Magento\Sales\Api\Data\OrderPaymentExtensionInterface;
 use Magento\Sales\Api\Data\OrderPaymentExtensionInterfaceFactory;
 use Magento\Vault\Api\Data\PaymentTokenFactoryInterface;
+use Magento\Vault\Api\PaymentTokenRepositoryInterface;
+use Magento\Vault\Api\PaymentTokenManagementInterface;
 use Magento\Vault\Api\Data\PaymentTokenInterface;
+use Magento\Framework\Encryption\EncryptorInterface;
 use Fiserv\Payments\Model\System\Utils\PaymentTokenUtil;
 use Fiserv\Payments\Gateway\Config\CommerceHub\Config;
 use Fiserv\Payments\Logger\MultiLevelLogger;
+
 
 /**
  * Vault Details Handler
@@ -59,6 +65,12 @@ class VaultDetailsHandler implements HandlerInterface
 	**/
 	private $logger;
 
+	private $paymentTokenRepository;
+
+	private $paymentTokenManager;
+	
+	private $encryptor;
+	
 	/**
 	 * VaultDetailsHandler constructor.
 	 *
@@ -75,16 +87,22 @@ class VaultDetailsHandler implements HandlerInterface
 		PaymentTokenFactoryInterface $paymentTokenFactory,
 		OrderPaymentExtensionInterfaceFactory $paymentExtensionFactory,
 		SubjectReader $subjectReader,
-		Json $serializer = null,
-		MultiLevelLogger $logger
+		MultiLevelLogger $logger,
+		PaymentTokenRepositoryInterface $paymentTokenRepository,
+		PaymentTokenManagementInterface $paymentTokenManager,
+		EncryptorInterface $encryptor,
+		Json $serializer = null
 	) {
 		$this->config = $config;
 		$this->vaultPaymentTokenUtils = $vaultPaymentTokenUtils;
 		$this->paymentTokenFactory = $paymentTokenFactory;
 		$this->paymentExtensionFactory = $paymentExtensionFactory;
 		$this->subjectReader = $subjectReader;
-		$this->serializer = $serializer ?: ObjectManager::getInstance()->get(Json::class);
 		$this->logger = $logger;
+		$this->paymentTokenRepository = $paymentTokenRepository;
+		$this->paymentTokenManager = $paymentTokenManager;
+		$this->encryptor = $encryptor;
+		$this->serializer = $serializer ?: ObjectManager::getInstance()->get(Json::class);
 	}
 
 	/**
@@ -97,23 +115,27 @@ class VaultDetailsHandler implements HandlerInterface
 		$chResponse = $this->subjectReader->readChResponse($response)[\Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient::RESPONSE_KEY];
 		$payment = $paymentDO->getPayment();
 		
+		$tokenStrat = $this->config->getTokenStrategy();
+		$storeToken = $payment->getStoreVault() === TransactionDetailsDataBuilder::KEY_CREATE_TOKEN || 
+			$tokenStrat === TokenizationStrategy::ALWAYS;
 		
-		if(
-			$payment->getStoreVault() === TransactionDetailsDataBuilder::KEY_CREATE_TOKEN &&
-			$this->wasTokenRequestSuccessful($chResponse) &&
-			!($this->vaultPaymentTokenUtils->doesTokenExist(
+		$visible = $payment->getStoreVault() === TransactionDetailsDataBuilder::KEY_CREATE_TOKEN;
+				
+		if($storeToken && $this->wasTokenRequestSuccessful($chResponse)) {
+			$existingToken = $this->vaultPaymentTokenUtils->doesTokenExist(
 				$chResponse["paymentTokens"][0]["tokenData"], 
 				$payment->getMethodInstance()->getCode(),  
 				$payment->getOrder()->getCustomerId(),
 				$chResponse["source"]["card"]["expirationMonth"],
-				$chResponse["source"]["card"]["expirationYear"]
-			))
-		) {
-			$paymentToken = $this->getVaultCardToken($chResponse);
-			$extensionAttributes = $this->getExtensionAttributes($payment);
-			$extensionAttributes->setVaultPaymentToken($paymentToken);
+				$chResponse["source"]["card"]["expirationYear"]);
+
+			if ($existingToken === false || (isset($existingToken["is_visible"]) && $existingToken["is_visible"] != $visible))
+			{	
+				$paymentToken = $this->getVaultCardToken($chResponse, $visible);
+				$extensionAttributes = $this->getExtensionAttributes($payment);
+				$extensionAttributes->setVaultPaymentToken($paymentToken);
+			}
 		}
-		
 	}
 
 	/**
@@ -122,7 +144,7 @@ class VaultDetailsHandler implements HandlerInterface
 	 * @param array $chResponse
 	 * @return PaymentTokenInterface|null
 	 */
-	public function getVaultCardToken($chResponse)
+	public function getVaultCardToken($chResponse, $visible)
 	{
 		$paymentToken = $this->paymentTokenFactory->create(PaymentTokenFactoryInterface::TOKEN_TYPE_CREDIT_CARD);
 		
@@ -153,6 +175,10 @@ class VaultDetailsHandler implements HandlerInterface
 		$paymentToken->setGatewayToken(PaymentTokenUtil::formatTokenDataForPersistence($tokenArray["tokenData"]));
 		$paymentToken->setExpiresAt($this->getExpirationDate($cardArray));
 		$paymentToken->setTokenDetails($details);
+		$paymentToken->setIsVisible($visible);
+		$paymentToken->setIsActive(true);
+		$paymentToken->setPaymentMethodCode(ConfigProvider::CODE);
+		$paymentToken->setPublicHash($this->generatePublicHash($paymentToken));
 
 		return $paymentToken;
 	}
@@ -220,5 +246,19 @@ class VaultDetailsHandler implements HandlerInterface
 			$chResponse["paymentTokens"][0]["tokenResponseDescription"] == "SUCCESS" &&
 			isset($chResponse["paymentTokens"][0]["tokenData"])
 		);
+	}
+	
+	public function generatePublicHash(\Magento\Vault\Model\PaymentToken $paymentToken)
+	{
+		$hashKey = $paymentToken->getGatewayToken();
+		if ($paymentToken->getCustomerId()) {
+			$hashKey = $paymentToken->getCustomerId();
+		}
+
+		$hashKey .= $paymentToken->getPaymentMethodCode()
+			. $paymentToken->getType()
+			. $paymentToken->getTokenDetails();
+
+		return $this->encryptor->getHash($hashKey);
 	}
 }

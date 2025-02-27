@@ -98,7 +98,7 @@ class ValuelinkCard extends AbstractTotal
 		if (!empty($valuelinkCards)) {
 			return [
 				'code' => $this->getCode(),
-				'title' => __('Valuelink Gift Cards'),
+				'title' => __('Gift Cards'),
 				'value' => -$total->getValuelinkCardsAmount(),
 				'valuelink_cards' => $valuelinkCards
 			];

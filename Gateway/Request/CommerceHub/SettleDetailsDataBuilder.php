@@ -6,6 +6,7 @@
 namespace Fiserv\Payments\Gateway\Request\CommerceHub;
 
 use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
+use Fiserv\Payments\Gateway\Config\CommerceHub\Config;
 use Fiserv\Payments\Gateway\Request\CommerceHub\TransactionDetailsDataBuilder;
 use Fiserv\Payments\Lib\CommerceHub\Model\TransactionDetails;
 use Fiserv\Payments\Lib\CommerceHub\Model\SplitShipment;
@@ -32,10 +33,11 @@ class SettleDetailsDataBuilder extends TransactionDetailsDataBuilder
 	public function __construct(
 		SubjectReader $subjectReader,
 		MultiLevelLogger $logger,
+		Config $chConfig,
 		OrderRepositoryInterface $orderRepo
 	)
 	{
-		parent::__construct($subjectReader, $logger);
+		parent::__construct($subjectReader, $chConfig, $logger);
 		$this->orderRepo = $orderRepo;
 	}
 

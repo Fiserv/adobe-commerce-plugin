@@ -61,4 +61,24 @@ class SubjectReader extends FiservSubjectReader
 
 		return $this->readChResponse($response);
 	}
+
+	/**
+	 * Recursively checks if a nested key exists in an array and returns its value or a default value.
+	 *
+	 * @param array $haystack The array to search.
+	 * @param string $needle The key whose value we want to return. 
+	 * @param array $path The path array containing keys to traverse the nested array.
+	 * @return mixed The value found at the nested key or null.
+	 */
+	public function getValueSafely(array $haystack, string $needle, array $path)
+	{
+		foreach ($path as $key) {
+			if (isset($haystack[$key])) {
+				$haystack = $haystack[$key];
+			} else {
+				return null;
+			}
+		}
+		return isset($haystack[$needle]) ? $haystack[$needle] : null;
+	}
 }
