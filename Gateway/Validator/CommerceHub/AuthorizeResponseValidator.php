@@ -88,7 +88,7 @@ class AuthorizeResponseValidator extends TransactionResponseValidator
 			$this->logger->logError(2, "Transaction failure. Commerce Hub response returned with unsuccessful status", "Order ID: " . ($orderIncrementId ?? "Not found"));
 			$this->logger->logError(2, "Status Code: " . $statusCode, "Order ID: " . ($orderIncrementId ?? "Not found"));
 
-			$this->routeToFailedTransactions($chRawResponse, $paths);
+			$this->routeToFailedTransactions($chRawResponse);
 
 			return $this->createResult(false, $errorMessages, $errorCodes);
 		}
@@ -122,7 +122,7 @@ class AuthorizeResponseValidator extends TransactionResponseValidator
 				$this->logger->logError(2, "Cancel Transaction ID: " . $cancelResponseDecoded["gatewayResponse"]["transactionProcessingDetails"]["transactionId"], "Order ID: $orderIncrementId");
 			}
 
-			$this->routeToFailedTransactions($chRawResponse, $paths);
+			$this->routeToFailedTransactions($chRawResponse);
 
 			return $this->createResult(false, $errorMessages, $errorCodes);
 		}
