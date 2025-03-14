@@ -369,14 +369,15 @@
 	</type>
 
 	<!-- Valuelink Plugins -->
-    <type name="Magento\Quote\Model\Quote\TotalsCollector">
+   	<type name="Magento\Quote\Model\Quote\TotalsCollector">
 		<plugin name="quoteValuelinkAmountUpdater" type="Fiserv\Payments\Model\Plugin\Valuelink\TotalsCollector" />
 	</type>
 	<type name="Magento\Quote\Model\Cart\TotalsConverter">
 		<plugin name="valuelinkAmountTotal" type="Fiserv\Payments\Model\Plugin\Valuelink\TotalsConverter" />
 	</type>
 	<type name="Magento\Sales\Model\Order\Invoice">
-		<plugin name="valuelinkInvoiceRegister" type="Fiserv\Payments\Model\Plugin\Valuelink\InvoiceRegister" />
+		<plugin name="paymentCardInvoiceRegister" type="Fiserv\Payments\Model\Plugin\CommerceHub\InvoiceRegister" sortOrder="100"/>
+		<plugin name="valuelinkInvoiceRegister" type="Fiserv\Payments\Model\Plugin\Valuelink\InvoiceRegister" sortOrder="200"/>
 	</type>
 	<type name = "Magento\Sales\Model\Order\Payment">
 		<plugin name = "valueLinkPaymentPlace" type="Fiserv\Payments\Model\Plugin\Valuelink\PaymentPlace" />

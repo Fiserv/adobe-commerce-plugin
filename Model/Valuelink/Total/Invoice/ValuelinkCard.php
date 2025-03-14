@@ -65,7 +65,7 @@ class ValuelinkCard extends \Magento\Sales\Model\Order\Invoice\Total\AbstractTot
 			$invoice->setGrandTotal($newTotal);
 		}
 
-		$remainingAuth = $this->orderHelper->getRemainingAuthAmount($order);
+		$remainingAuth = $this->orderHelper->getRemainingGiftAuthAmount($order);
 		$valuelinkInvoiceAmount = $this->invoiceHelper->getValuelinkInvoiceAmount($order, $invoice, $remainingAuth);
 		if ($valuelinkInvoiceAmount > 0)
 		{

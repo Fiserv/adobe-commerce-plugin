@@ -47,7 +47,7 @@ class ValuelinkOrderHelper
 		return $primaryTxns;
 	}	
 		
-	public function getRemainingAuthAmount($order, $txns = null)
+	public function getRemainingGiftAuthAmount($order, $txns = null)
 	{
 		$txns = $txns ?? $this->filterCanceledValuelinkTransactions($this->getValuelinkTransactionsByOrderIncrementId($order->getIncrementId()));
 

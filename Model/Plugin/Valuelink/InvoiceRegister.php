@@ -36,12 +36,19 @@ class InvoiceRegister
 	public function aroundRegister(\Magento\Sales\Model\Order\Invoice $subject, callable $proceed)
 	{
 		$order = $subject->getOrder();
-		$remainingAuth = $this->orderHelper->getRemainingAuthAmount($order);
+		if (count($this->orderHelper->getValuelinkTransactions($order)) < 1)
+		{
+			return $proceed();
+		}
+		
+		$remainingGiftAuth = $this->orderHelper->getRemainingGiftAuthAmount($order);
 		$uninvoicedSaleAmt = $this->orderHelper->getUninvoicedSaleAmount($order);
+
+		$payment = $order->getPayment();
 
 		// if Grand Total is zero and there is remaining auth, then set Capture Case to offline
 		// so we don't trigger the payment gateway capture command.
-		if (($remainingAuth > 0 || $uninvoicedSaleAmt > 0) && $subject->getGrandTotal() < 0.01)
+		if (($remainingGiftAuth > 0 || $uninvoicedSaleAmt > 0) && $subject->getGrandTotal() < 0.01)
 		{
 			$subject->setRequestedCaptureCase(\Magento\Sales\Model\Order\Invoice::CAPTURE_OFFLINE);
 		}
@@ -49,9 +56,7 @@ class InvoiceRegister
 		$captures = array();
 		try
 		{
-			$order = $subject->getOrder();
-			$remainingAuth = $this->orderHelper->getRemainingAuthAmount($order);
-			$valuelinkInvoiceAmount = $this->invoiceHelper->getValuelinkInvoiceAmount($order, $subject, $remainingAuth);
+			$valuelinkInvoiceAmount = $this->invoiceHelper->getValuelinkInvoiceAmount($order, $subject, $remainingGiftAuth);
 
 			// Capture command will capture uncaptured Valuelink authorizations
 			// Orders being captured can contain uncaptured AND captured Valuelink authorizations.

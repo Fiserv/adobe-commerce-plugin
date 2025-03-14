@@ -39,8 +39,14 @@ class Totals extends \Fiserv\Payments\Block\Valuelink\Adminhtml\Sales\Order\Tota
 	public function getValuelinkTotalForNewInvoice()
 	{
 		$order = $this->getOrder();
+		// Only do this calculation if the order has gift cards
+		if (!$this->orderHasValuelinkTransactions())
+		{
+			return 0;
+		}
+
 		$invoice = $this->getInvoice();
-		$remainingAuth = $this->orderHelper->getRemainingAuthAmount($order);
+		$remainingAuth = $this->orderHelper->getRemainingGiftAuthAmount($order);
 
 		// Need to handle cases where we need to capture a VL auth OR apply a VL sale txn to this invoice. 
 		// It will never be the case that we both need to capture a VL auth AND apply value from a VL sale to an invoice.
