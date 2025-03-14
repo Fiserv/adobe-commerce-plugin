@@ -1,6 +1,9 @@
 .carat_img > .entry-edit-head {
-	background: url("../images/Carat_Endorsed_Horizontal_orange_RGB.png") no-repeat scroll 0 50% / 18rem auto;
-	padding-left: 20rem;
+	background: url("../images/fiserv_logo_orange_rgb.png") no-repeat scroll 0 50% / 12rem auto;
+	padding-left: 14rem;
+	margin-top: 12px;
+	margin-bottom: 12px;
+
 }
 #fiserv-card-logos {
 	background: url("../images/cardlogos.png") no-repeat scroll 0 50% / 75rem auto;
