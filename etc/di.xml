@@ -367,6 +367,9 @@
 	<type name="Magento\Payment\Model\Method\Adapter">
 		<plugin name="fiservCommerceHubAvailability" type="Fiserv\Payments\Model\Plugin\CommerceHub\PaymentMethodAvailable" />
 	</type>
+	<type name="Magento\Sales\Model\Order\RefundAdapter">
+		<plugin name="paymentCardCreditmemoRefund" type="Fiserv\Payments\Model\Plugin\CommerceHub\CreditMemoRefund" sortOrder="100"/>
+	</type>
 
 	<!-- Valuelink Plugins -->
    	<type name="Magento\Quote\Model\Quote\TotalsCollector">
