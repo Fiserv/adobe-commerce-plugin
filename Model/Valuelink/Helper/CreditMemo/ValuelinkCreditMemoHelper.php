@@ -29,7 +29,7 @@ class ValuelinkCreditMemoHelper
 		}
 
 		$vlCapturedAmt = $this->invoiceHelper->getCapturedValuelinkAmountByInvoice($invoice);	
-		return round($creditMemo->getGrandTotal(), 2) == round($invoice->getGrandTotal() + $vlCapturedAmt, 2);
+		return round($creditMemo->getGrandTotal(), 2) == round($invoice->getGrandTotal() + $invoice->getCustomerBalanceAmount() + $vlCapturedAmt, 2);
 	}
 
 	private function getTotalItems($obj)
@@ -50,7 +50,7 @@ class ValuelinkCreditMemoHelper
 	{
 		$invoice = $creditMemo->getInvoice();
 		$vlCapturedAmt = $this->invoiceHelper->getValuelinkBalanceAppliedToInvoice($invoice);
-
+		
 		// if no Valuelink captures on the invoice, no modification necessary 
 		if ($vlCapturedAmt < 0.01)
 		{
