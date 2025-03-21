@@ -79,7 +79,6 @@ class Transaction extends Action implements HttpGetActionInterface
 				->setData(TransactionBlock::KEY_TRANSACTION, $txn);
 
 			$resultPage->setActiveMenu("Fiserv_Payments::failed_transactions");
-			$resultPage->getConfig()->getTitle()->prepend(__('Transaction ID ' . $transactionId));
 
 			return $resultPage;
 		} catch (\Exception $e) {

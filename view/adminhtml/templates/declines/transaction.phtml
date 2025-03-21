@@ -1,122 +1,127 @@
 <?php
-
 /**
  * @var \Fiserv\Payments\Block\Adminhtml\Declines\Transaction $block
  */
 
-	$transaction  = $block->getTransactionDetails();
+$transaction = $block->getTransactionDetails();
 ?>
 
-	<div id="failed-transaction-container">
-		<div class="three-col">
-			<div class="failed-transaction-section">
-				<div class="failed-transaction-section-header">Card Information</div>
-				<div class="failed-transaction-section-body">
-					<div class="failed-transaction-detail">
-						<div class="failed-transaction-detail-label">Card Type</div>
-						<div class="failed-transaction-detail-value"><?= /* @noEscape */ isset($transaction["scheme"]) ? $transaction["scheme"] : "N/A"; ?></div>
-					</div>
-					<div class="failed-transaction-detail">
-						<div class="failed-transaction-detail-label">Card Last 4 Digits</div>
-						<div class="failed-transaction-detail-value"><?= /* @noEscape */ isset($transaction["last4"]) ? $transaction["last4"] : "N/A"; ?></div>
-					</div>
-					<div class="failed-transaction-detail">
-						<div class="failed-transaction-detail-label">Expiration Month</div>
-						<div class="failed-transaction-detail-value"><?= /* @noEscape */ isset($transaction["expiration_month"]) ? $transaction["expiration_month"] : "N/A"; ?></div>
-					</div>
-					<div class="failed-transaction-detail">
-						<div class="failed-transaction-detail-label">Expiration Year</div>
-						<div class="failed-transaction-detail-value"><?= /* @noEscape */ isset($transaction["expiration_year"]) ? $transaction["expiration_year"] : "N/A"; ?></div>
-					</div>
-					<div class="failed-transaction-detail">
-						<div class="failed-transaction-detail-label">BIN (Bank Identification Number)</div>
-						<div class="failed-transaction-detail-value"><?= /* @noEscape */ isset($transaction["bin"]) ? $transaction["bin"] : "N/A"; ?></div>
-					</div>
-				</div>
-			</div>
+<div class="admin__data-grid-wrap">
+    <!-- Black Navigation Bar -->
+    <div class="black-banner">
+        <div class="banner-left">
+            <button class="back-button"><?php echo __('<'); ?></button>
+            <span class="transaction-details"><?php echo strtoupper(__('Transaction Details')); ?></span>
+        </div>
+    </div>
 
-			<div class="failed-transaction-section">
-				<div class="failed-transaction-section-header">Transaction Identifiers</div>
-				<div class="failed-transaction-section-body">
-					<div class="failed-transaction-detail">
-						<div class="failed-transaction-detail-label">Transaction ID</div>
-						<div class="failed-transaction-detail-value"><?= /* @noEscape */ isset($transaction["transaction_id"]) ? $transaction["transaction_id"] : "N/A"; ?></div>
-					</div>
-					<div class="failed-transaction-detail">
-						<div class="failed-transaction-detail-label">API Trace ID</div>
-						<div class="failed-transaction-detail-value"><?= /* @noEscape */ isset($transaction["api_trace_id"]) ? $transaction["api_trace_id"] : "N/A"; ?></div>
-					</div>
-					<div class="failed-transaction-detail">
-						<div class="failed-transaction-detail-label">Order ID</div>
-						<div class="failed-transaction-detail-value"><?= /* @noEscape */ isset($transaction["order_increment_id"]) ? $transaction["order_increment_id"] : "N/A"; ?></div>
-					</div>
-					<div class="failed-transaction-detail">
-						<div class="failed-transaction-detail-label">Date/Time</div>
-						<div class="failed-transaction-detail-value"><?= /* @noEscape */ isset($transaction["date_time"]) ? $transaction["date_time"] : "N/A"; ?></div>
-					</div>
-				</div>
-			</div>
+    <div id="failed-transaction-container">
+        <div class="three-col">
+            <div class="failed-transaction-section">
+                <div class="failed-transaction-section-header">Card Information</div>
+                <div class="failed-transaction-section-body">
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label">Card Type</div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["scheme"]) ? $transaction["scheme"] : "N/A"; ?></div>
+                    </div>
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label">Card Last 4 Digits</div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["last4"]) ? $transaction["last4"] : "N/A"; ?></div>
+                    </div>
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label">Expiration Month</div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["expiration_month"]) ? $transaction["expiration_month"] : "N/A"; ?></div>
+                    </div>
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label">Expiration Year</div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["expiration_year"]) ? $transaction["expiration_year"] : "N/A"; ?></div>
+                    </div>
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label">BIN (Bank Identification Number)</div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["bin"]) ? $transaction["bin"] : "N/A"; ?></div>
+                    </div>
+                </div>
+            </div>
 
-			<div class="failed-transaction-section">
-				<div class="failed-transaction-section-header">Network Information</div>
-				<div class="failed-transaction-section-body">
-					<div class="failed-transaction-detail">
-						<div class="failed-transaction-detail-label">Network Response Code</div>
-						<div class="failed-transaction-detail-value"><?= /* @noEscape */ isset($transaction["network_response_code"]) ? $transaction["network_response_code"] : "N/A"; ?></div>
-					</div>
-					<div class="failed-transaction-detail">
-						<div class="failed-transaction-detail-label">Country Code</div>
-						<div class="failed-transaction-detail-value"><?= /* @noEscape */ isset($transaction["country"]) ? $transaction["country"] : "N/A"; ?></div>
-					</div>
-					<div class="failed-transaction-detail">
-						<div class="failed-transaction-detail-label">Bank Association Details</div>
-						<div class="failed-transaction-detail-value"><?= /* @noEscape */ isset($transaction["bank_association_details"]) ? $transaction["bank_association_details"] : "N/A"; ?></div>
-					</div>
-				</div>
-			</div>
-		</div>
+            <div class="failed-transaction-section">
+                <div class="failed-transaction-section-header">Transaction Identifiers</div>
+                <div class="failed-transaction-section-body">
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label">API Trace ID</div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["api_trace_id"]) ? $transaction["api_trace_id"] : "N/A"; ?></div>
+                    </div>
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label">Order ID</div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["order_increment_id"]) ? $transaction["order_increment_id"] : "N/A"; ?></div>
+                    </div>
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label">Date/Time</div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["date_time"]) ? $transaction["date_time"] : "N/A"; ?></div>
+                    </div>
+                </div>
+            </div>
 
-		<div class="two-col">
-			<div class="failed-transaction-section">
-				<div class="failed-transaction-section-header">Transaction Outcome</div>
-				<div class="failed-transaction-section-body">
-					<div class="failed-transaction-detail">
-						<div class="failed-transaction-detail-label">Transaction State</div>
-						<div class="failed-transaction-detail-value"><?= /* @noEscape */ isset($transaction["transaction_state"]) ? $transaction["transaction_state"] : "N/A"; ?></div>
-					</div>
-					<div class="failed-transaction-detail">
-						<div class="failed-transaction-detail-label">Approval Status</div>
-						<div class="failed-transaction-detail-value"><?= /* @noEscape */ isset($transaction["approval_status"]) ? $transaction["approval_status"] : "N/A"; ?></div>
-					</div>
-				</div>
-			</div>
+            <div class="failed-transaction-section">
+                <div class="failed-transaction-section-header">Network Information</div>
+                <div class="failed-transaction-section-body">
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label">Network Response Code</div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["network_response_code"]) ? $transaction["network_response_code"] : "N/A"; ?></div>
+                    </div>
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label">Country Code</div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["country"]) ? $transaction["country"] : "N/A"; ?></div>
+                    </div>
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label">Bank Association Details</div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["bank_association_details"]) ? $transaction["bank_association_details"] : "N/A"; ?></div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-			<div class="failed-transaction-section">
-				<div class="failed-transaction-section-header">Financial Information</div>
-				<div class="failed-transaction-section-body">
-					<div class="failed-transaction-detail">
-						<div class="failed-transaction-detail-label">Total Amount</div>
-						<div class="failed-transaction-detail-value"><?= /* @noEscape */ isset($transaction["total_amount"]) ? $transaction["total_amount"] : "N/A"; ?></div>
-					</div>
-					<div class="failed-transaction-detail">
-						<div class="failed-transaction-detail-label">Currency</div>
-						<div class="failed-transaction-detail-value"><?= /* @noEscape */ isset($transaction["currency"]) ? $transaction["currency"] : "N/A"; ?></div>
-					</div>
-				</div>
-			</div>
+        <div class="two-col">
+            <div class="failed-transaction-section">
+                <div class="failed-transaction-section-header">Transaction Outcome</div>
+                <div class="failed-transaction-section-body">
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label">Transaction State</div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["transaction_state"]) ? $transaction["transaction_state"] : "N/A"; ?></div>
+                    </div>
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label">Approval Status</div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["approval_status"]) ? $transaction["approval_status"] : "N/A"; ?></div>
+                    </div>
+                </div>
+            </div>
 
-			<div class="failed-transaction-section">
-				<div class="failed-transaction-section-header">Processor Information</div>
-				<div class="failed-transaction-section-body">
-					<div class="failed-transaction-detail">
-						<div class="failed-transaction-detail-label">Processor</div>
-						<div class="failed-transaction-detail-value"><?= /* @noEscape */ isset($transaction["processor"]) ? $transaction["processor"] : "N/A"; ?></div>
-					</div>
-					<div class="failed-transaction-detail">
-						<div class="failed-transaction-detail-label">Host</div>
-						<div class="failed-transaction-detail-value"><?= /* @noEscape */ isset($transaction["host"]) ? $transaction["host"] : "N/A"; ?></div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+            <div class="failed-transaction-section">
+                <div class="failed-transaction-section-header">Financial Information</div>
+                <div class="failed-transaction-section-body">
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label">Total Amount</div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["total_amount"]) ? $transaction["total_amount"] : "N/A"; ?></div>
+                    </div>
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label">Currency</div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["currency"]) ? $transaction["currency"] : "N/A"; ?></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="failed-transaction-section">
+                <div class="failed-transaction-section-header">Processor Information</div>
+                <div class="failed-transaction-section-body">
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label">Processor</div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["processor"]) ? $transaction["processor"] : "N/A"; ?></div>
+                    </div>
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label">Host</div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["host"]) ? $transaction["host"] : "N/A"; ?></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
