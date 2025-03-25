@@ -48,12 +48,21 @@
 						<source_model>Fiserv\Payments\Model\Source\CommerceHub\ApiEnvironment</source_model>
 						<config_path>payment/fiserv_commercehub/api_environment</config_path>
 					</field>
-					<field id="debug" translate="label" type="select" sortOrder="8" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="show_privacy_statement" translate="label" type="select" sortOrder="8" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Show Fiserv Privacy Statement</label>
+						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+						<config_path>payment/fiserv_commercehub/show_privacy_statement</config_path>
+					</field>
+					<field id="privacy_notice_link" translate="label" type="text" sortOrder="9" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Fiserv Privacy Notice link</label>
+						<config_path>payment/fiserv_commercehub/privacy_notice_link</config_path>
+					</field>
+					<field id="debug" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Debug</label>
 						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 						<config_path>payment/fiserv_commercehub/debug</config_path>
 					</field>
-					<field id="logging_level" translate="label" type="select" sortOrder="9" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="logging_level" translate="label" type="select" sortOrder="11" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Logging Level</label>
 						<source_model>Fiserv\Payments\Model\Source\CommerceHub\LoggingLevel</source_model>
 						<config_path>payment/fiserv_commercehub/logging_level</config_path>

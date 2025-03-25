@@ -75,10 +75,26 @@ define([
 
 		/**
 		 * Get Valuelink title
-		 d*/
+		 */
 		getValuelinkTitle: function() 
 		{
 			return valuelinkConfig.valuelink_title;
+		},
+
+		/**
+		 * Show Privacy statement
+		 */
+		showPrivacyStatement: function() 
+		{
+			return config.show_privacy_statement;
+		},
+
+		/**
+		 * Gets privacy notice link
+		 */
+		getPrivacyNoticeLink: function() 
+		{
+			return config.privacy_notice_link;
 		},
 
 		/**

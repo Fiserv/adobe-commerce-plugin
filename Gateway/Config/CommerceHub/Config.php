@@ -21,6 +21,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	const KEY_TERMINAL_ID = 'terminal_id';
 	const KEY_API_KEY = 'api_key';
 	const KEY_API_SECRET = 'api_secret';
+	const SHOW_PRIVACY_STATEMENT_KEY = "show_privacy_statement";
+	const KEY_PRIVACY_NOTICE_LINK = "privacy_notice_link";
 	const KEY_MERCHANT_INTEGRATOR = 'merchant_integrator';
 	const KEY_ENVIRONMENT = 'api_environment';
 	const KEY_PAYMENT_TYPE = 'payment_type';
@@ -120,6 +122,28 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	public function isPaymentActive($storeId = null)
 	{
 		return (bool) $this->getValue(self::KEY_PAYMENT_ACTIVE, $storeId);
+	}
+
+	/**
+	 * Gets privacy statement configuration status.
+	 *
+	 * @param int|null $storeId
+	 * @return bool
+	 */
+	public function showPrivacyStatement($storeId = null)
+	{
+		return (bool) $this->getValue(self::SHOW_PRIVACY_STATEMENT_KEY, $storeId);
+	}
+
+	/**
+	 * Gets privacy notice link
+	 *
+	 * @param int|null $storeId
+	 * @return string
+	 */
+	public function getPrivacyNoticeLink($storeId = null)
+	{
+		return $this->getValue(self::KEY_PRIVACY_NOTICE_LINK, $storeId);
 	}
 
 	/**

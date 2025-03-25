@@ -189,6 +189,22 @@ define(
 			},
 
 			/**
+			 * Show Privacy statement
+			 */
+			showPrivacyStatement: function() 
+			{
+				return window.checkoutConfig.payment[this.getCode()].show_privacy_statement;
+			},
+
+			/**
+			 * Gets privacy notice link
+			 */
+			getPrivacyNoticeLink: function() 
+			{
+				return window.checkoutConfig.payment[this.getCode()].privacy_notice_link;
+			},
+
+			/**
 			 * Returns vault code.
 			 *
 			 * @returns {String}
