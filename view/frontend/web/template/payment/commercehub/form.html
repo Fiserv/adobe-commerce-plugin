@@ -104,5 +104,11 @@
             </div>
         </div>
 
+	<!-- ko if: showPrivacyStatement() -->
+	<div class="privacyPolicy">
+		<span></span>Payments Powered by Fiserv.&nbsp; <a data-bind="attr: {'href': getPrivacyNoticeLink()}">Privacy Notice.</a>
+	</div>
+	<!-- /ko -->
+
 	</div>
 </div>
