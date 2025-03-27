@@ -70,7 +70,7 @@ class AuthorizeResponseValidator extends TransactionResponseValidator
 			'merchantOrderId' => [HttpClient::RESPONSE_KEY, 'transactionDetails'],
 			'transactionState' => [HttpClient::RESPONSE_KEY, 'gatewayResponse'],
 			'approvalStatus' => [HttpClient::RESPONSE_KEY, 'paymentReceipt', 'processorResponseDetails'],
-			'detailedCardProduct' => [HttpClient::RESPONSE_KEY, 'detailedCardProduct'],
+			'detailedCardProduct' => [HttpClient::RESPONSE_KEY, 'cardDetails'],
 			'approvedAmount' => [HttpClient::RESPONSE_KEY, 'paymentReceipt', 'approvedAmount'],
 			self::MERCHANT_DETAILS_KEY => [HttpClient::RESPONSE_KEY, 'transactionDetails', 'merchantDetails'],
 			HttpClient::STATUS_CODE_KEY => []
@@ -120,6 +120,7 @@ class AuthorizeResponseValidator extends TransactionResponseValidator
 			$cancelResponseDecoded = json_decode($cancelResponse->getBody(), true);
 			if (isset($cancelResponseDecoded["gatewayResponse"]["transactionProcessingDetails"]["transactionId"])) {
 				$this->logger->logError(2, "Cancel Transaction ID: " . $cancelResponseDecoded["gatewayResponse"]["transactionProcessingDetails"]["transactionId"], "Order ID: $orderIncrementId");
+				$this->logger->logDebug(3, "Cancel Response: " . json_encode($cancelResponseDecoded, JSON_PRETTY_PRINT));
 			}
 
 			$this->routeToFailedTransactions($chRawResponse);
