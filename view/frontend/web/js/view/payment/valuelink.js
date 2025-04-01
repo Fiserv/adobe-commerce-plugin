@@ -90,14 +90,6 @@ define([
 		},
 
 		/**
-		 * Gets privacy notice link
-		 */
-		getPrivacyNoticeLink: function() 
-		{
-			return config.privacy_notice_link;
-		},
-
-		/**
 		* Set gift card.
 		*/
 		setGiftCard: function () 

@@ -197,14 +197,6 @@ define(
 			},
 
 			/**
-			 * Gets privacy notice link
-			 */
-			getPrivacyNoticeLink: function() 
-			{
-				return window.checkoutConfig.payment[this.getCode()].privacy_notice_link;
-			},
-
-			/**
 			 * Returns vault code.
 			 *
 			 * @returns {String}
