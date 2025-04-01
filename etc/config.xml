@@ -22,7 +22,6 @@
 				<qa_client_url><![CDATA[https://qa.api.fiservapps.com/ch/sdk/v1/commercehub-client-sdk.js]]></qa_client_url>
 				<api_environment>CERT</api_environment>
 				<show_privacy_statement>1</show_privacy_statement>
-				<privacy_notice_link></privacy_notice_link>
 				<payment_action>AUTH</payment_action>
 				<cc_types>AE,VI,MC,DI,JCB,DN</cc_types>
 				<tokenization_strategy>CUSTOMER</tokenization_strategy>

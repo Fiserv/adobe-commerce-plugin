@@ -48,21 +48,12 @@
 						<source_model>Fiserv\Payments\Model\Source\CommerceHub\ApiEnvironment</source_model>
 						<config_path>payment/fiserv_commercehub/api_environment</config_path>
 					</field>
-					<field id="show_privacy_statement" translate="label" type="select" sortOrder="8" showInDefault="1" showInWebsite="1" showInStore="0">
-						<label>Show Fiserv Privacy Statement</label>
-						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-						<config_path>payment/fiserv_commercehub/show_privacy_statement</config_path>
-					</field>
-					<field id="privacy_notice_link" translate="label" type="text" sortOrder="9" showInDefault="1" showInWebsite="1" showInStore="0">
-						<label>Fiserv Privacy Notice link</label>
-						<config_path>payment/fiserv_commercehub/privacy_notice_link</config_path>
-					</field>
-					<field id="debug" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="debug" translate="label" type="select" sortOrder="8" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Debug</label>
 						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 						<config_path>payment/fiserv_commercehub/debug</config_path>
 					</field>
-					<field id="logging_level" translate="label" type="select" sortOrder="11" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="logging_level" translate="label" type="select" sortOrder="9" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Logging Level</label>
 						<source_model>Fiserv\Payments\Model\Source\CommerceHub\LoggingLevel</source_model>
 						<config_path>payment/fiserv_commercehub/logging_level</config_path>
@@ -171,13 +162,17 @@
 					<comment><![CDATA[<a href="https://developer.fiserv.com/product/CommerceHub/docs/?path=docs/Online-Mobile-Digital/Checkout/Hosted-Fields/Hosted-Fields-Customization.md&branch=main">Payment Form Customization Documentation.</a>]]></comment>
 					<attribute type="expanded">0</attribute>
 					<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
-
 					<group id="customer_form_custom" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="1">
 						<label>Customer Checkout Payment Form</label>
 						<comment>Customer checkout payment form</comment>
 						<attribute type="expanded">0</attribute>
 						<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
-						<group id="customer_card_number" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="1">
+						<field id="show_privacy_statement" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+							<label>Display Fiserv Privacy Statement?</label>
+							<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+							<config_path>payment/fiserv_commercehub/show_privacy_statement</config_path>
+						</field>
+						<group id="customer_card_number" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="2">
 							<label>Card Number Field</label>
 							<attribute type="expanded">0</attribute>
 							<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
@@ -230,7 +225,7 @@
 							</field>
 						</group>
 
-						<group id="customer_name_on_card" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="2">
+						<group id="customer_name_on_card" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="3">
 							<label>Name on Card Field</label>
 							<attribute type="expanded">0</attribute>
 							<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
@@ -244,7 +239,7 @@
 							</field>
 						</group>
 
-						<group id="customer_security_code" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="3">
+						<group id="customer_security_code" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="4">
 							<label>Security Code Field</label>
 							<attribute type="expanded">0</attribute>
 							<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
@@ -284,7 +279,7 @@
 							</field>
 						</group>
 
-						<group id="customer_expiration_month" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="4">
+						<group id="customer_expiration_month" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="5">
 							<label>Expiration Month Field</label>
 							<attribute type="expanded">0</attribute>
 							<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
@@ -303,7 +298,7 @@
 							</field>
 						</group>
 
-						<group id="customer_expiration_year" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="5">
+						<group id="customer_expiration_year" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="6">
 							<label>Expiration Year Field</label>
 							<attribute type="expanded">0</attribute>
 							<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
@@ -317,7 +312,7 @@
 							</field>
 						</group>
 
-						<group id="customer_css" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="6">
+						<group id="customer_css" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="7">
 							<label>Form CSS</label>
 							<attribute type="expanded">0</attribute>
 							<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
@@ -328,7 +323,7 @@
 							</field>
 						</group>
 
-						<group id="customer_font" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="7">
+						<group id="customer_font" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="8">
 							<label>Custom Font</label>
 							<comment>All fields are required to apply a custom font to the payment form.</comment>
 							<attribute type="expanded">0</attribute>
