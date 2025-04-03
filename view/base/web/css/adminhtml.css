@@ -3,7 +3,6 @@
 	padding-left: 14rem;
 	margin-top: 12px;
 	margin-bottom: 12px;
-
 }
 
 .main-content-container {
@@ -42,6 +41,13 @@
 
 .back-button:hover {
 	color: #777;
+	background: transparent;
+}
+
+.back-button a {
+	color: white;
+	font-size: 1.75rem;
+	text-decoration: none;
 }
 
 .transaction-details {
@@ -51,7 +57,9 @@
 	text-transform: uppercase; /* Ensuring text is in uppercase */
 }
 
-#failed-transaction-container {
+#failed-transaction-container,
+#failed-order-container,
+#failed-transaction-preview-container {
 	margin-top: 3rem;
 	display: flex;
 	justify-content: space-between;
@@ -59,17 +67,22 @@
 	width: 100%;
 }
 
-#failed-transaction-container .three-col, .two-col {
+#failed-transaction-container .three-col,
+#failed-transaction-container .two-col,
+#failed-order-container .three-col,
+#failed-order-container .two-col {
 	display: flex;
 	flex-direction: column;
 }
 
-#failed-transaction-container .three-col {
+#failed-transaction-container .three-col,
+#failed-order-container .three-col {
 	width: 60%;
 	padding-right: 2.5rem;
 }
 
-#failed-transaction-container .two-col {
+#failed-transaction-container .two-col,
+#failed-order-container .two-col {
 	width: 40%;
 	padding-left: 2.5rem;
 }
@@ -83,9 +96,11 @@
 	background-color: #f9f9f9;
 }
 
-.failed-transaction-section {
+.failed-transaction-section,
+.failed-order-section {
 	margin-bottom: 3rem;
 	padding-top: 1rem;  /* Add some padding to the top for spacing */
+	min-width: 20%;
 }
 
 .failed-transaction-detail {
@@ -95,8 +110,13 @@
 	width: fit-content;
 }
 
+.failed-transaction-detail-label {
+	font-weight: bold;  /* Making label text bold */
+}
+
 .failed-transaction-detail-value {
 	color: #777;
+	font-weight: normal;  /* Ensuring value text is normal weight */
 }
 
 .failed-transaction-section-header {
@@ -104,4 +124,80 @@
 	font-weight: 700;
 	text-transform: uppercase;
 	margin-bottom: .75rem;
+}
+
+.failed-transaction-amount {
+	font-size: 26px;
+	width: 100%;
+}
+
+#transactionsTable, #transactionsTable tr {
+	width: 100%;
+	margin-top: 20px;
+	margin-bottom: 20px;
+	border: 1px solid #d3d3d3;
+}
+
+#transactionsTable thead {
+	background: #000000;
+	color: #ffffff;
+}
+
+#transactionsTable thead th {
+	font-weight: 400;
+	text-transform: uppercase;
+	text-align: left;
+}
+
+#transactionsTable th, #transactionsTable td {
+	padding: 10px 15px;
+}
+
+#paginationControls {
+	float: right;
+}
+
+#paginationControls .pagination-button {
+	cursor: pointer;
+	margin: 0 5px;
+	color: #000000;
+}
+#paginationControls .pagination-button.disabled {
+	color: #cfcfcf;
+	cursor: default;
+	text-decoration: none;
+}
+#paginationControls .pagination-info {
+	margin: 0 5px;
+}
+
+.search-pagination-container {
+	display: flex;
+	justify-content: space-between;
+}
+
+.search-pagination-container #searchInput {
+	border-left: none;
+	border-right: none;
+	border-top: none;
+	border-bottom: 1px solid #cfcfcf;
+	padding-bottom: 8px;
+	max-width: 250px;
+	width: 100%;
+}
+
+.paginationContainerTop {
+	width: 100%;
+	max-width: 200px;
+}
+
+#paginationInfoTop {
+	float: right;
+}
+
+#rowsPerPage {
+	border-top: none;
+	border-right: none;
+	border-left: none;
+	border-bottom: 1px solid #cfcfcf;
 }

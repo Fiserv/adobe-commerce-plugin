@@ -68,4 +68,24 @@
 		<column xsi:type="varchar" name="country" nullable="true" length="50" comment="Country"/>
 		<column xsi:type="varchar" name="api_trace_id" nullable="true" length="255" comment="API Trace ID"/>
 	</table>
+
+	<!-- Simplified Table for Logging Failed Orders -->
+	<table name="failed_order" resource="default" engine="innodb" comment="Failed Order">
+		<column xsi:type="int" name="entity_id" unsigned="true" nullable="false" identity="true" comment="Entity ID"/>
+		<constraint xsi:type="primary" referenceId="PRIMARY">
+			<column name="entity_id"/>
+		</constraint>
+		<column xsi:type="varchar" name="order_increment_id" nullable="false" length="255" comment="Order Increment Id"/>
+		<column xsi:type="timestamp" name="date_time" nullable="false" default="CURRENT_TIMESTAMP" comment="Date and Time"/>
+		<column xsi:type="varchar" name="order_state" nullable="false" length="50" comment="Order State"/>
+		<column xsi:type="varchar" name="billing_address" nullable="false" length="1000" comment="Billing Address"/>
+		<column xsi:type="varchar" name="shipping_address" nullable="false" length="1000" comment="Shipping Address"/>
+		<column xsi:type="varchar" name="customer_name" nullable="false" length="255" comment="Customer Name"/>
+		<column xsi:type="varchar" name="customer_email" nullable="true" length="255" comment="Customer Email"/>
+		<column xsi:type="decimal" name="subtotal" scale="4" precision="20" unsigned="false" nullable="false" comment="Subtotal"/>        
+		<column xsi:type="decimal" name="shipping_handling" scale="4" precision="20" unsigned="false" nullable="false" comment="Shipping and Handling"/>        
+		<column xsi:type="decimal" name="grandTotal" scale="4" precision="20" unsigned="false" nullable="false" comment="Grand Total"/>        
+		<column xsi:type="varchar" name="notes" nullable="true" length="1000" comment="Order Notes"/>
+		<column xsi:type="text" name="items" nullable="false" comment="Items"/>
+	</table>
 </schema>

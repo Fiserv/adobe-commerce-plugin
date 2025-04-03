@@ -15,9 +15,9 @@ use Fiserv\Payments\Model\ValuelinkTransactionFactory;
 use Fiserv\Payments\Model\ValuelinkTransaction;
 use Fiserv\Payments\Api\Valuelink\ValuelinkTransactionRepositoryInterface;
 use Fiserv\Payments\Gateway\Config\Valuelink\Config as ValuelinkConfig;
-
+use Fiserv\Payments\Model\Service\CommerceHub\FailedTransactionManager;
 use Fiserv\Payments\Logger\MultiLevelLogger;
-
+use Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient;
 
 class ValuelinkTransactionManager
 {
@@ -50,10 +50,36 @@ class ValuelinkTransactionManager
 
 	private $_localeDate;
 
+	private $failedTxnManager;
+
 	/**
 	 * @var string
 	 */
 	private $merchantOrderId;
+
+	private $paths = [ 
+		'transactionId' => ['gatewayResponse', 'transactionProcessingDetails'],
+		'apiTraceId' => ['gatewayResponse', 'transactionProcessingDetails'],
+		'responseMessage' => ['paymentReceipt', 'processorResponseDetails'],
+		'sourceType' => ['source'],
+		'merchantOrderId' => ['transactionDetails'],
+		'transactionState' => ['gatewayResponse'],
+		'approvalStatus' => ['paymentReceipt', 'processorResponseDetails'],
+		'approvedAmount' => ['paymentReceipt', 'approvedAmount'],
+		'processor' => ['paymentReceipt', 'processorResponseDetails'],
+		'host' => ['paymentReceipt', 'processorResponseDetails'],
+		'merchantId' => ['merchantDetails'],
+		'expirationMonth' => ['source', 'card'],
+		'expirationYear' => ['source', 'card'],
+		'last4' => ['source', 'card'],
+		'scheme' => ['source', 'card'],
+		'bin' => ['source', 'card'],
+		'networkResponseCode' => ['networkDetails'],
+		'currency' => ['paymentReceipt', 'approvedAmount'],
+		'bankAssociationDetails' => ['paymentReceipt', 'processorResponseDetails', 'bankAssociationDetails'],
+		HttpClient::STATUS_CODE_KEY => []
+	];
+
 
 	public function __construct(
 		Json $serializer,	
@@ -66,6 +92,7 @@ class ValuelinkTransactionManager
 		ValuelinkTransactionFactory $valuelinkTransactionFactory,
 		ValuelinkConfig $valuelinkConfig,
 		\Magento\Framework\Stdlib\DateTime\TimezoneInterface $localeDate,
+		FailedTransactionManager $failedTxnManager,
 		MultiLevelLogger $logger
 	) {
 		$this->serializer = $serializer;
@@ -78,6 +105,7 @@ class ValuelinkTransactionManager
 		$this->valuelinkTransactionFactory = $valuelinkTransactionFactory;
 		$this->valuelinkConfig = $valuelinkConfig;
 		$this->_localeDate = $localeDate;
+		$this->failedTxnManager = $failedTxnManager;
 		$this->logger = $logger;
 	}
 
@@ -150,6 +178,12 @@ class ValuelinkTransactionManager
 	
 		} catch(\Exception $e)
 		{
+			$txnResponse = isset($chResponse) ? $chResponse : null;
+			if (isset($txnResponse))
+			{
+				$this->failedTxnManager->createFailedTransaction($merchantOrderId, $txnResponse, $this->paths);
+			}
+
 			$this->logger->logError(1, "An error occurred while redeeming Gift Card", "Order ID: {$merchantOrderId}");
 			$this->logger->logError(2, $e, "Order ID: {$merchantOrderId}");
 			throw $e;
@@ -209,6 +243,12 @@ class ValuelinkTransactionManager
 		
 		} catch(\Exception $e)
 		{
+			$txnResponse = isset($response) ? $response : null;
+			if (isset($txnResponse))
+			{
+				$this->failedTxnManager->createFailedTransaction($merchantOrderId, $txnResponse, $this->paths);
+			}
+
 			$this->logger->logError(1, "An error occurred while Voiding Gift Card transaction", "Order ID: {$merchantOrderId}");
 			$this->logger->logError(2, $e, "Order ID: {$merchantOrderId}");
 			throw $e;
@@ -271,6 +311,12 @@ class ValuelinkTransactionManager
 		
 		} catch(\Exception $e)
 		{
+			$txnResponse = isset($response) ? $response : null;
+			if (isset($txnResponse))
+			{
+				$this->failedTxnManager->createFailedTransaction($merchantOrderId, $txnResponse, $this->paths);
+			}
+	
 			$this->logger->logError(1, "An error occurred while capturing Gift Card  transaction", "Order ID: {$merchantOrderId}");
 			$this->logger->logError(2, $e, "Order ID: {$merchantOrderId}");
 			throw $e;

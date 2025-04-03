@@ -8,7 +8,22 @@ class FailedTransaction extends AbstractDb
 {
 	protected function _construct()
 	{
-		$this->_init('failed_transactions', 'entity_id');  // Table name and primary key field
+		$this->_init('failed_transactions', 'entity_id');  // Define table and primary key
+	}
+
+	/**
+	 * Fetches a paginated list of all failed transactions.
+	 *
+	 * @return array The list of failed transactions.
+	 */
+	public function getFailedTransactionsForPage($pageNum = 1)
+	{
+		$connection = $this->getConnection();
+		$select = $connection->select()
+					->from($this->getMainTable())
+					->order('entity_id DESC');
+
+		return $connection->fetchAll($select);
 	}
 
 	/**
@@ -56,6 +71,20 @@ class FailedTransaction extends AbstractDb
 
 		$this->getConnection()->update($this->getMainTable(), $bind, $where);
 		return $this;
+	}
+
+	/**
+	 * Get all records.
+	 *
+	 * @return array
+	 */
+	public function getFailedTransactions()
+	{
+		$connection = $this->getConnection();
+		$select = $connection->select()
+				->from($this->getMainTable())
+				->order('entity_id DESC');
+		return $connection->fetchAll($select);
 	}
 
 	/**
@@ -392,5 +421,65 @@ class FailedTransaction extends AbstractDb
 			->where('entity_id = :entity_id');
 
 		return $connection->fetchRow($select, ['entity_id' => $entityId]);
+	}
+
+	/**
+	 * Fetches the total amount of all transactions.
+	 *
+	 * @return float The total amount.
+	 */
+	public function fetchTotalAmount()
+	{
+		$connection = $this->getConnection();
+		$select = $connection->select()
+				->from($this->getMainTable(), ['COUNT(*) as count', 'SUM(total_amount) as total_amount']);
+
+		return $connection->fetchRow($select);
+	}
+
+	/**
+	 * Counts the total amount and number of transactions by state.
+	 *
+	 * @param string $state The transaction state.
+	 * @return array The count and total amount of transactions.
+	 */
+	public function countTotalAmountByState($state)
+	{
+		$connection = $this->getConnection();
+		$select = $connection->select()
+				->from($this->getMainTable(), ['COUNT(*) as count', 'SUM(total_amount) as total_amount'])
+				->where('transaction_state = ?', $state);
+
+		return $connection->fetchRow($select);
+	}
+
+	/**
+	 * Counts the total amount and number of DECLINED transactions.
+	 *
+	 * @return array The count and total amount of DECLINED transactions.
+	 */
+	public function countDeclinedTransactions()
+	{
+		return $this->countTotalAmountByState('DECLINED');
+	}
+
+	/**
+	 * Counts the total amount and number of FRAUD transactions.
+	 *
+	 * @return array The count and total amount of FRAUD transactions.
+	 */
+	public function countFraudTransactions()
+	{
+		return $this->countTotalAmountByState('FRAUD');
+	}
+
+	/**
+	 * Counts the total amount and number of ERROR transactions.
+	 *
+	 * @return array The count and total amount of ERROR transactions.
+	 */
+	public function countErrorTransactions()
+	{
+		return $this->countTotalAmountByState('ERROR');
 	}
 }

@@ -1,16 +1,14 @@
 <?php
 namespace Fiserv\Payments\Gateway\Validator\CommerceHub;
 
+use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
+use Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient;
+use Fiserv\Payments\Model\Adapter\CommerceHub\ChHttpAdapter;
 use Fiserv\Payments\Gateway\Validator\CommerceHub\TransactionResponseValidator;
 use Magento\Payment\Gateway\Validator\ResultInterface;
 use Magento\Payment\Gateway\Validator\ResultInterfaceFactory;
-use Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient;
-use Fiserv\Payments\Model\Adapter\CommerceHub\ChHttpAdapter;
 use Fiserv\Payments\Logger\MultiLevelLogger;
-use Fiserv\Payments\Api\FailedTransaction\FailedTransactionRepositoryInterface;
-use Fiserv\Payments\Model\FailedTransactionFactory;
-use Fiserv\Payments\Model\ResourceModel\FailedTransaction;
-use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
+use Fiserv\Payments\Model\Service\CommerceHub\FailedTransactionManager;
 
 /**
  * Validates the status of an attempted Auth transaction
@@ -30,26 +28,20 @@ class AuthorizeResponseValidator extends TransactionResponseValidator
 	 * @param SubjectReader $subjectReader
 	 * @param ChHttpAdapter $httpAdapter
 	 * @param MultiLevelLogger $logger
-	 * @param FailedTransactionRepositoryInterface $failedTransactionRepository
-	 * @param FailedTransactionFactory $failedTransactionFactory
-	 * @param FailedTransaction $failedTransactionResource
+	 * @param FailedTransactionManager $failedTransactionManager
 	 */
 	public function __construct(
-		ResultInterfaceFactory $resultFactory,
-		SubjectReader $subjectReader,
 		ChHttpAdapter $httpAdapter,
-		MultiLevelLogger $logger,
-		FailedTransactionRepositoryInterface $failedTransactionRepository,
-		FailedTransactionFactory $failedTransactionFactory,
-		FailedTransaction $failedTransactionResource
+		ResultInterfaceFactory $resultFactory, 
+		SubjectReader $subjectReader, 
+		MultiLevelLogger $logger, 
+		FailedTransactionManager $failedTransactionManager
 	) {
 		parent::__construct(
 			$resultFactory,
-			$subjectReader,
-			$logger,
-			$failedTransactionRepository,
-			$failedTransactionFactory,
-			$failedTransactionResource
+			$subjectReader, 
+			$logger, 
+			$failedTransactionManager
 		);
 		$this->httpAdapter = $httpAdapter;
 		array_push($this->successStates, self::STATE_AUTHORIZED);
@@ -88,8 +80,7 @@ class AuthorizeResponseValidator extends TransactionResponseValidator
 			$this->logger->logError(2, "Transaction failure. Commerce Hub response returned with unsuccessful status", "Order ID: " . ($orderIncrementId ?? "Not found"));
 			$this->logger->logError(2, "Status Code: " . $statusCode, "Order ID: " . ($orderIncrementId ?? "Not found"));
 
-			$this->routeToFailedTransactions($chRawResponse);
-
+			$this->failedTransactionManager->createFailedTransaction($orderIncrementId, $chRawResponse, $paths);
 			return $this->createResult(false, $errorMessages, $errorCodes);
 		}
 
@@ -123,8 +114,7 @@ class AuthorizeResponseValidator extends TransactionResponseValidator
 				$this->logger->logDebug(3, "Cancel Response: " . json_encode($cancelResponseDecoded, JSON_PRETTY_PRINT));
 			}
 
-			$this->routeToFailedTransactions($chRawResponse);
-
+			$this->failedTransactionManager->createFailedTransaction($orderIncrementId, $chRawResponse, $paths);
 			return $this->createResult(false, $errorMessages, $errorCodes);
 		}
 

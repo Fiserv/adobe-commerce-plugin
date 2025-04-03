@@ -371,6 +371,10 @@
 		<plugin name="paymentCardCreditmemoRefund" type="Fiserv\Payments\Model\Plugin\CommerceHub\CreditMemoRefund" sortOrder="100"/>
 	</type>
 
+	<type name = "Magento\Sales\Model\Order">
+		<plugin name = "commercehubFailedOrder" type="Fiserv\Payments\Model\Plugin\CommerceHub\OrderPlace" />
+	</type>
+
 	<!-- Valuelink Plugins -->
    	<type name="Magento\Quote\Model\Quote\TotalsCollector">
 		<plugin name="quoteValuelinkAmountUpdater" type="Fiserv\Payments\Model\Plugin\Valuelink\TotalsCollector" />
@@ -388,8 +392,17 @@
 	<type name = "Magento\Quote\Model\Quote\TotalsReader">
 		<plugin name = "valueLinkTotalsReader" type="Fiserv\Payments\Model\Plugin\Valuelink\TotalsReader" />
 	</type>
+
+	<virtualType name="Fiserv\Model\ResourceModel\FailedTransaction\Collection" type="Magento\Framework\View\Element\UiComponent\DataProvider\SearchResult">
+		<arguments>
+			<argument name="mainTable" xsi:type="string">failed_transaction_table</argument>
+			<argument name="resourceModel" xsi:type="string">Fiserv\Model\ResourceModel\FailedTransaction</argument>
+		</arguments>
+	</virtualType>
 	 
 	<preference for="Fiserv\Payments\Api\Valuelink\ValuelinkTransactionRepositoryInterface" type="Fiserv\Payments\Model\ValuelinkTransactionRepository"/>
 	<preference for="Fiserv\Payments\Api\FailedTransaction\FailedTransactionRepositoryInterface" type="Fiserv\Payments\Model\FailedTransactionRepository"/>
+	<preference for="Fiserv\Payments\Api\FailedOrder\FailedOrderRepositoryInterface" type="Fiserv\Payments\Model\FailedOrderRepository"/>
+	<preference for="Fiserv\Payments\Api\Data\FailedOrder\FailedOrderSearchResultInterface" type="Fiserv\Payments\Model\FailedOrder\FailedOrderSearchResult"/>
 
 </config>

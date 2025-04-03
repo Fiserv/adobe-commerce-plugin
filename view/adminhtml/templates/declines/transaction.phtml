@@ -2,7 +2,6 @@
 /**
  * @var \Fiserv\Payments\Block\Adminhtml\Declines\Transaction $block
  */
-
 $transaction = $block->getTransactionDetails();
 ?>
 
@@ -10,7 +9,7 @@ $transaction = $block->getTransactionDetails();
     <!-- Black Navigation Bar -->
     <div class="black-banner">
         <div class="banner-left">
-            <button class="back-button"><?php echo __('<'); ?></button>
+			<button class="back-button"><a href="<?php echo $block->getUrl('fiserv/declines/order', ['id' => $transaction['order_increment_id']]); ?>"><?php echo __('<'); ?></a></button>
             <span class="transaction-details"><?php echo strtoupper(__('Transaction Details')); ?></span>
         </div>
     </div>
