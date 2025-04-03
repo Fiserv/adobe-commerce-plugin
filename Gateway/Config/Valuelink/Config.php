@@ -15,6 +15,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	const KEY_PAYMENT_ACTION = 'payment_action';
 	const KEY_VALUELINK_TITLE = 'valuelink_title';
 	const KEY_CARD_AMOUNT_LIMIT = 'card_amount_limit';
+	const KEY_PRIVACY_STATEMENT = 'show_privacy_statement';
 
 	// Iframe Customization Fields
 	const KEY_SDC_CUSTOM = 'sdc_custom';
@@ -95,7 +96,6 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 		return $this->getValue(self::KEY_PAYMENT_ACTION, $storeId);
 	}
 
-
 	/**
 	 * Retrieve title for Valuelink cards section
 	 *
@@ -105,6 +105,17 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	public function getValuelinkTitle($storeId = null)
 	{
 		return $this->getValue(self::KEY_VALUELINK_TITLE, $storeId);
+	}
+
+	/**
+	 * Gets privacy statement configuration status for Valuelink.
+	 *
+	 * @param int|null $storeId
+	 * @return bool
+	 */
+	public function showPrivacyStatement($storeId = null)
+	{
+		return (bool) $this->getValue(self::KEY_PRIVACY_STATEMENT, $storeId);
 	}
 
 	/**

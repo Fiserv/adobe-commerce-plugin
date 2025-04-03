@@ -129,6 +129,14 @@
 						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 						<config_path>payment/fiserv_commercehub/standalone_spa</config_path>
 					</field>
+					<field id="show_card_privacy_statement" translate="label" type="select" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Display Fiserv Privacy Statement</label>
+						<depends>
+							<field id="isPaymentActive">1</field>
+						</depends>
+						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+						<config_path>payment/fiserv_commercehub/show_privacy_statement</config_path>
+					</field>
 				</group>
 				<group id="valuelink_gift_card" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="5">
 					<label>Gift Cards</label>
@@ -156,6 +164,14 @@
 						<comment>Number of gift cards currently restricted to 1 per order</comment>
 						<config_path>payment/fiserv_valuelink/card_amount_limit</config_path>
 					</field>
+					<field id="show_valuelink_privacy_statement" translate="label" type="select" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Display Fiserv Privacy Statement</label>
+						<depends>
+							<field id="valuelink">1</field>
+						</depends>
+						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+						<config_path>payment/fiserv_valuelink/show_privacy_statement</config_path>
+					</field>
 				</group>
 				<group id="sdc_custom" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="17">
 					<label>Payment Form Customization</label>
@@ -167,11 +183,6 @@
 						<comment>Customer checkout payment form</comment>
 						<attribute type="expanded">0</attribute>
 						<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
-						<field id="show_privacy_statement" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
-							<label>Display Fiserv Privacy Statement?</label>
-							<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-							<config_path>payment/fiserv_commercehub/show_privacy_statement</config_path>
-						</field>
 						<group id="customer_card_number" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="2">
 							<label>Card Number Field</label>
 							<attribute type="expanded">0</attribute>
@@ -352,7 +363,7 @@
 						<comment>Customer checkout giftcard form</comment>
 						<attribute type="expanded">0</attribute>
 						<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
-						<group id="customer_valuelink_card_number" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="1">
+						<group id="customer_valuelink_card_number" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="2">
 							<label>Card Number Field</label>
 							<attribute type="expanded">0</attribute>
 							<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>

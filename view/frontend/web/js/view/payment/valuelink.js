@@ -82,11 +82,11 @@ define([
 		},
 
 		/**
-		 * Show Privacy statement
+		 * Show Valuelink Privacy statement
 		 */
-		showPrivacyStatement: function() 
+		showValuelinkPrivacyStatement: function() 
 		{
-			return config.show_privacy_statement;
+			return valuelinkConfig.show_valuelink_privacy_statement;
 		},
 
 		/**
