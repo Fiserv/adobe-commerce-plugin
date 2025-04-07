@@ -3,12 +3,12 @@ namespace Fiserv\Payments\Gateway\Validator\CommerceHub;
 
 use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient;
-use Fiserv\Payments\Model\Adapter\CommerceHub\ChHttpAdapter;
 use Fiserv\Payments\Gateway\Validator\CommerceHub\TransactionResponseValidator;
 use Magento\Payment\Gateway\Validator\ResultInterface;
 use Magento\Payment\Gateway\Validator\ResultInterfaceFactory;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 use Fiserv\Payments\Model\Service\CommerceHub\FailedTransactionManager;
+use Fiserv\Payments\Model\Adapter\CommerceHub\CancelsRequest;
 
 /**
  * Validates the status of an attempted Auth transaction
@@ -16,22 +16,18 @@ use Fiserv\Payments\Model\Service\CommerceHub\FailedTransactionManager;
 class AuthorizeResponseValidator extends TransactionResponseValidator
 {
 	const PIN_ONLY = "PIN_ONLY";
-	const CANCELS_ENDPOINT = 'payments/v1/cancels';
 	const MERCHANT_DETAILS_KEY = "merchantDetails";
-	const REF_TXN_KEY = "referenceTransactionDetails";
-	const REF_MERCHANT_TRANSACTION_KEY = "referenceTransactionId";
 
-	private $httpAdapter;
+	private $cancelsAdapter;
 
 	/**
 	 * @param ResultInterfaceFactory $resultFactory
 	 * @param SubjectReader $subjectReader
-	 * @param ChHttpAdapter $httpAdapter
 	 * @param MultiLevelLogger $logger
 	 * @param FailedTransactionManager $failedTransactionManager
 	 */
 	public function __construct(
-		ChHttpAdapter $httpAdapter,
+		CancelsRequest $cancelsAdapter,
 		ResultInterfaceFactory $resultFactory, 
 		SubjectReader $subjectReader, 
 		MultiLevelLogger $logger, 
@@ -43,7 +39,7 @@ class AuthorizeResponseValidator extends TransactionResponseValidator
 			$logger, 
 			$failedTransactionManager
 		);
-		$this->httpAdapter = $httpAdapter;
+		$this->cancelsAdapter = $cancelsAdapter;
 		array_push($this->successStates, self::STATE_AUTHORIZED);
 	}
 
@@ -64,7 +60,7 @@ class AuthorizeResponseValidator extends TransactionResponseValidator
 			'approvalStatus' => [HttpClient::RESPONSE_KEY, 'paymentReceipt', 'processorResponseDetails'],
 			'detailedCardProduct' => [HttpClient::RESPONSE_KEY, 'cardDetails'],
 			'approvedAmount' => [HttpClient::RESPONSE_KEY, 'paymentReceipt', 'approvedAmount'],
-			self::MERCHANT_DETAILS_KEY => [HttpClient::RESPONSE_KEY, 'transactionDetails', 'merchantDetails'],
+			self::MERCHANT_DETAILS_KEY => [HttpClient::RESPONSE_KEY],
 			HttpClient::STATUS_CODE_KEY => []
 		];
 
@@ -86,35 +82,38 @@ class AuthorizeResponseValidator extends TransactionResponseValidator
 
 		// Extracting data from Response
 		$pinOnlyState = $this->subjectReader->getValueSafely($chRawResponse, 'detailedCardProduct', $paths['detailedCardProduct']);
-		$transactionId = $this->subjectReader->getValueSafely($chRawResponse, 'transactionId', $paths['transactionId']);
-		$merchantDetails = $this->subjectReader->getValueSafely($chRawResponse, self::MERCHANT_DETAILS_KEY, $paths[self::MERCHANT_DETAILS_KEY]);
 		$orderIncrementId = $this->subjectReader->getValueSafely($chRawResponse, 'merchantOrderId', $paths['merchantOrderId']);
 
 		// Check for PIN only Condition
 		if ($pinOnlyState === self::PIN_ONLY) {
 			array_push($errorMessages, "Invalid transaction processed for online payment: " . $pinOnlyState);
 			array_push($errorCodes, $pinOnlyState);
-
+			
+			$transactionId = $this->subjectReader->getValueSafely($chRawResponse, 'transactionId', $paths['transactionId']);
 			$this->logger->logError(2, "Invalid transaction processed for online payment. Canceling...", "Order ID: $orderIncrementId");
 			$this->logger->logError(2, "Invalid transaction ID: " . $transactionId, "Order ID: $orderIncrementId");
 			$this->logger->logError(2, "Invalid reason: " . $pinOnlyState, "Order ID: $orderIncrementId");
+			$this->logger->logError(2, "Canceling transaction", "Order ID: $orderIncrementId");
 
-			$payload = [
-				self::MERCHANT_DETAILS_KEY => $merchantDetails,
-				self::REF_TXN_KEY => [
-					self::REF_MERCHANT_TRANSACTION_KEY => $transactionId
-				]
-			];
-
-			// Send Cancel Request
-			$cancelResponse = $this->httpAdapter->sendRequest($payload, self::CANCELS_ENDPOINT);
-			$cancelResponseDecoded = json_decode($cancelResponse->getBody(), true);
-			if (isset($cancelResponseDecoded["gatewayResponse"]["transactionProcessingDetails"]["transactionId"])) {
-				$this->logger->logError(2, "Cancel Transaction ID: " . $cancelResponseDecoded["gatewayResponse"]["transactionProcessingDetails"]["transactionId"], "Order ID: $orderIncrementId");
-				$this->logger->logDebug(3, "Cancel Response: " . json_encode($cancelResponseDecoded, JSON_PRETTY_PRINT));
+			try
+			{	
+				// Send Cancel Request
+				$cancelResponse = $this->cancelsAdapter->requestCancel($transactionId);
+				if (isset($cancelResponse["gatewayResponse"]["transactionProcessingDetails"]["transactionId"])) {
+					$this->logger->logError(2, "Cancel Transaction ID: " . $cancelResponse["gatewayResponse"]["transactionProcessingDetails"]["transactionId"], "Order ID: $orderIncrementId");
+					$this->logger->logDebug(3, "Cancel Response: " . json_encode($cancelResponse, JSON_PRETTY_PRINT));
+				}
+			
+				$chRawResponse[HttpClient::RESPONSE_KEY]['paymentReceipt']['processorResponseDetails']['approvalStatus'] = $chRawResponse[HttpClient::RESPONSE_KEY]['paymentReceipt']['processorResponseDetails']['approvalStatus'] . " (PIN_ONLY CANCEL)";
+				$cancelResponse['paymentReceipt']['processorResponseDetails']['approvalStatus'] = $cancelResponse['paymentReceipt']['processorResponseDetails']['approvalStatus'] . " (PIN_ONLY CANCEL)";
+				$cancelResponseFormatted = array();
+				$cancelResponseFormatted[HttpClient::RESPONSE_KEY] = $cancelResponse;
+				$this->failedTransactionManager->createFailedTransaction($orderIncrementId, $chRawResponse, $this->paths);
+				$this->failedTransactionManager->createFailedTransaction($orderIncrementId, $cancelResponseFormatted, $this->paths);
+			} catch (\Exception $e) {	
+				$this->logger->logEmergency(1, "An error occurred while canceling PIN-ONLY authorization: " . $e->getMessage(), "Order ID: $orderIncrementId");
+				throw $e;
 			}
-
-			$this->failedTransactionManager->createFailedTransaction($orderIncrementId, $chRawResponse, $paths);
 			return $this->createResult(false, $errorMessages, $errorCodes);
 		}
 
