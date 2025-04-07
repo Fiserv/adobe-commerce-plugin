@@ -89,7 +89,23 @@ define([
 			data['additional_data'] = _.extend(data['additional_data'], this.additionalData);
 
 			return data;
-		}
+		},
 
+		/**
+		 * Show Privacy statement
+		 */
+		showPrivacyStatement: function() 
+		{
+			return window.checkoutConfig.payment[this.getCode()].show_privacy_statement;
+		},
+
+		/**
+		 * Get payment name
+		 *
+		 * @returns {String}
+		 */
+		getCode: function () {
+			return this.commercehubCode;
+		}
 	});
 });
