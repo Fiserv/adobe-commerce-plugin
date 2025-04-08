@@ -64,6 +64,7 @@ abstract class TransactionResponseValidator extends AbstractValidator
 		'errorCode' => [HttpClient::RESPONSE_KEY, 'error', 0],
 		'errorMessage' => [HttpClient::RESPONSE_KEY, 'error', 0],
 		'hostResponseMessage' => [HttpClient::RESPONSE_KEY, 'paymentReceipt', 'processorResponseDetails'],
+		'retrievalReferenceNumber' => [HttpClient::RESPONSE_KEY, 'transactionDetails'],
 		'countryCode' => [HttpClient::RESPONSE_KEY],
 		HttpClient::STATUS_CODE_KEY => []
 	];

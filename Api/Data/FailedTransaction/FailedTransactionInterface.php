@@ -187,4 +187,8 @@ interface FailedTransactionInterface
 	public function getHostResponseMessage();
 
 	public function setHostResponseMessage($hostResponseMessage);
+
+	public function getRetrievalReferenceNumber();
+
+	public function setRetrievalReferenceNumber($retrievalReferenceNumber);
 }
