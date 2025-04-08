@@ -56,7 +56,11 @@ $transaction = $block->getTransactionDetails();
                     <div class="failed-transaction-detail">
                         <div class="failed-transaction-detail-label">Date/Time</div>
                         <div class="failed-transaction-detail-value"><?= isset($transaction["date_time"]) ? $transaction["date_time"] : "N/A"; ?></div>
-                    </div>
+		    </div>
+		    <div class="failed-transaction-detail">
+		       <div class="failed-transaction-detail-label">Retrieval Reference Number</div>
+		       <div class="failed-transaction-detail-value"><?= isset($transaction["retrieval_reference_number"]) ? $transaction["retrieval_reference_number"] : "N/A"; ?></div>
+		    </div>
                 </div>
             </div>
 

@@ -28,6 +28,7 @@ class FailedTransaction extends AbstractModel implements FailedTransactionInterf
 	public const KEY_COUNTRY = 'country';
 	public const KEY_API_TRACE_ID = 'api_trace_id';
 	public const KEY_HOST_RESPONSE_MESSAGE = 'host_response_message';
+	public const KEY_RETRIEVAL_REFERENCE_NUMBER = 'retrieval_reference_number';
 
 	protected function _construct()
 	{
@@ -242,5 +243,15 @@ class FailedTransaction extends AbstractModel implements FailedTransactionInterf
 	public function setHostResponseMessage($hostResponseMessage)
 	{
 		return $this->setData(self::KEY_HOST_RESPONSE_MESSAGE, $hostResponseMessage);
+	}
+
+	public function getRetrievalReferenceNumber()
+	{
+		return $this->getData(self::KEY_HOST_RESPONSE_MESSAGE);
+	}
+
+	public function setRetrievalReferenceNumber($retrievalReferenceNumber)
+	{
+		return $this->setData(self::KEY_RETRIEVAL_REFERENCE_NUMBER, $retrievalReferenceNumber);
 	}
 }
