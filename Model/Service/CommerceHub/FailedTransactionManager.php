@@ -52,6 +52,8 @@ class FailedTransactionManager
 		$scheme = SubjectReader::getValueSafely($txnResponse, 'scheme', $paths['scheme']);
 		$networkResponseCode = SubjectReader::getValueSafely($txnResponse, 'networkResponseCode', $paths['networkResponseCode']);
 		$bin = SubjectReader::getValueSafely($txnResponse, 'bin', $paths['bin']);
+		$hostResponseMessage = SubjectReader::getValueSafely($txnResponse, 'hostResponseMessage', $paths['hostResponseMessage']);
+		$countryCode = SubjectReader::getValueSafely($txnResponse, 'countryCode', $paths['countryCode']);
 
 		$errorCode = SubjectReader::getValueSafely($txnResponse, 'code', $paths['errorCode']);
 		$errorMessage = SubjectReader::getValueSafely($txnResponse, 'message', $paths['errorMessage']);
@@ -81,6 +83,8 @@ class FailedTransactionManager
 		$failedTxn->setTransactionId($transactionId);
 		$failedTxn->setCurrency($currency); // Set currency
 		$failedTxn->setBankAssociationDetails($bankAssociationDetails); // Set bank association details
+		$failedTxn->setHostResponseMessage($hostResponseMessage);
+		$failedTxn->setCountry($countryCode);
 
 		return $failedTxn;
 	}

@@ -42,7 +42,7 @@
 	</table>
 
 	<!-- Simplified Table for Logging Failed Transactions -->
-	<table name="failed_transactions" resource="default" engine="innodb" comment="Failed Transactions">
+	<table name="failed_transaction" resource="default" engine="innodb" comment="Failed Transactions">
 		<column xsi:type="int" name="entity_id" unsigned="true" nullable="false" identity="true" comment="Entity ID"/>
 		<constraint xsi:type="primary" referenceId="PRIMARY">
 			<column name="entity_id"/>
@@ -61,6 +61,7 @@
 		<column xsi:type="varchar" name="scheme" nullable="true" length="255" comment="Scheme"/>
 		<column xsi:type="varchar" name="bin" nullable="true" length="255" comment="bin"/>
 		<column xsi:type="varchar" name="network_response_code" nullable="true" length="32" comment="Network Response Code"/>
+		<column xsi:type="varchar" name="host_response_message" nullable="true" length="32" comment="Host Response Message"/>
 		<column xsi:type="varchar" name="transaction_id" nullable="true" length="255" comment="Transaction ID"/>
 		<column xsi:type="varchar" name="currency" nullable="true" length="10" comment="Currency"/>
 		<column xsi:type="varchar" name="bank_association_details" nullable="true" length="255" comment="Bank Association Details"/>

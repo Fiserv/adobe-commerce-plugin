@@ -46,7 +46,6 @@ class AuthorizeResponseValidator extends TransactionResponseValidator
 	public function validate(array $validationSubject): ResultInterface
 	{
 		$chRawResponse = $this->subjectReader->readChResponseFromResponse($validationSubject);
-
 		$errorMessages = [];
 		$errorCodes = [];
 
@@ -60,6 +59,8 @@ class AuthorizeResponseValidator extends TransactionResponseValidator
 			'approvalStatus' => [HttpClient::RESPONSE_KEY, 'paymentReceipt', 'processorResponseDetails'],
 			'detailedCardProduct' => [HttpClient::RESPONSE_KEY, 'cardDetails'],
 			'approvedAmount' => [HttpClient::RESPONSE_KEY, 'paymentReceipt', 'approvedAmount'],
+			'hostResponseMessage' => [HttpClient::RESPONSE_KEY, 'paymentReceipt', 'processorResponseDetails'],
+			'countryCode' => [HttpClient::RESPONSE_KEY],
 			self::MERCHANT_DETAILS_KEY => [HttpClient::RESPONSE_KEY],
 			HttpClient::STATUS_CODE_KEY => []
 		];
@@ -67,6 +68,7 @@ class AuthorizeResponseValidator extends TransactionResponseValidator
 		// Extract order ID from the validation subject
 		$order = $this->subjectReader->readPayment($validationSubject)->getOrder();
 		$orderIncrementId = $order->getOrderIncrementId();
+		$countryCode = $order->getBillingAddress()->getCountryId();
 
 		// Verify Status Code
 		$statusCode = $this->subjectReader->getValueSafely($chRawResponse, HttpClient::STATUS_CODE_KEY, $paths[HttpClient::STATUS_CODE_KEY]);
@@ -75,7 +77,7 @@ class AuthorizeResponseValidator extends TransactionResponseValidator
 			array_push($errorCodes, $statusCode);
 			$this->logger->logError(2, "Transaction failure. Commerce Hub response returned with unsuccessful status", "Order ID: " . ($orderIncrementId ?? "Not found"));
 			$this->logger->logError(2, "Status Code: " . $statusCode, "Order ID: " . ($orderIncrementId ?? "Not found"));
-
+			
 			$this->failedTransactionManager->createFailedTransaction($orderIncrementId, $chRawResponse, $paths);
 			return $this->createResult(false, $errorMessages, $errorCodes);
 		}
@@ -103,8 +105,10 @@ class AuthorizeResponseValidator extends TransactionResponseValidator
 					$this->logger->logError(2, "Cancel Transaction ID: " . $cancelResponse["gatewayResponse"]["transactionProcessingDetails"]["transactionId"], "Order ID: $orderIncrementId");
 					$this->logger->logDebug(3, "Cancel Response: " . json_encode($cancelResponse, JSON_PRETTY_PRINT));
 				}
-			
+
+				$chRawResponse[HttpClient::RESPONSE_KEY]['countryCode'] = $countryCode;
 				$chRawResponse[HttpClient::RESPONSE_KEY]['paymentReceipt']['processorResponseDetails']['approvalStatus'] = $chRawResponse[HttpClient::RESPONSE_KEY]['paymentReceipt']['processorResponseDetails']['approvalStatus'] . " (PIN_ONLY CANCEL)";
+				$cancelResponse[HttpClient::RESPONSE_KEY]['countryCode'] = $countryCode;
 				$cancelResponse['paymentReceipt']['processorResponseDetails']['approvalStatus'] = $cancelResponse['paymentReceipt']['processorResponseDetails']['approvalStatus'] . " (PIN_ONLY CANCEL)";
 				$cancelResponseFormatted = array();
 				$cancelResponseFormatted[HttpClient::RESPONSE_KEY] = $cancelResponse;

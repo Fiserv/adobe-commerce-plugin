@@ -183,4 +183,8 @@ interface FailedTransactionInterface
 	 * @return $this
 	 */
 	public function setApiTraceId($apiTraceId);
+
+	public function getHostResponseMessage();
+
+	public function setHostResponseMessage($hostResponseMessage);
 }

@@ -8,7 +8,7 @@ class FailedTransaction extends AbstractDb
 {
 	protected function _construct()
 	{
-		$this->_init('failed_transactions', 'entity_id');  // Define table and primary key
+		$this->_init('failed_transaction', 'entity_id');  // Define table and primary key
 	}
 
 	/**

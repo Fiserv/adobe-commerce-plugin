@@ -112,7 +112,7 @@ class Preview extends \Magento\Backend\Block\Template
 	private function getOrderIncrementIdsFromFailedTxns()
 	{
 		$connection = $this->resourceConnection->getConnection();
-		$query = "SELECT DISTINCT order_increment_id FROM failed_transactions";
+		$query = "SELECT DISTINCT order_increment_id FROM failed_transaction";
 
 		return $connection->fetchCol($query);
 	}

@@ -91,7 +91,11 @@ $transaction = $block->getTransactionDetails();
                         <div class="failed-transaction-detail-label">Approval Status</div>
                         <div class="failed-transaction-detail-value"><?= isset($transaction["approval_status"]) ? $transaction["approval_status"] : "N/A"; ?></div>
                     </div>
-                </div>
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label">Host Response Message</div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["host_response_message"]) ? $transaction["host_response_message"] : "N/A"; ?></div>
+                    </div>
+				</div>
             </div>
 
             <div class="failed-transaction-section">
