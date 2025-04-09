@@ -50,7 +50,7 @@ class Preview extends Action implements HttpGetActionInterface
 
 		try {
 			$resultPage->setActiveMenu("Fiserv_Payments::failed_transaction_preview");
-			$resultPage->getConfig()->getTitle()->prepend(__('Orders with Failed Transactions'));
+			$resultPage->getConfig()->getTitle()->prepend(__('UNSUCESSFUL ORDERS'));
 
 			return $resultPage;
 		} catch (\Exception $e) {

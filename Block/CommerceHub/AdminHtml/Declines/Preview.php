@@ -66,16 +66,19 @@ class Preview extends \Magento\Backend\Block\Template
 		$orderList = array();
 		foreach($failedOrders as $fo)
 		{
-			array_push($orderList, $this->convertFailedOrderToArray($fo));
+			$orderArray = $this->convertFailedOrderToArray($fo);
+			$orderArray['failed_transaction_data'] = $this->getFailedTransactionDataForOrder($fo[OrderModel::KEY_ORDER_INCREMENT_ID]);
+			array_push($orderList, $orderArray);
 		}
 		foreach($realOrders as $ro)
 		{	
-			array_push($orderList, $this->convertRealOrderToArray($ro));
+			$orderArray = $this->convertRealOrderToArray($ro);
+			$orderArray['failed_transaction_data'] = $this->getFailedTransactionDataForOrder($fo[OrderModel::KEY_ORDER_INCREMENT_ID]);
+			array_push($orderList, $orderArray);
 		}
-
 		usort($orderList, function($a, $b) {
 			return intval(strtok($b[OrderModel::KEY_ORDER_INCREMENT_ID], "-")) <=> intval(strtok($a[OrderModel::KEY_ORDER_INCREMENT_ID], "-"));
-		});		
+		});
 		return $orderList;
 	}
 
@@ -139,6 +142,13 @@ class Preview extends \Magento\Backend\Block\Template
 	public function formatPrice($amount)
 	{
 		return $this->pricingHelper->currency($amount, true, false);
+	}
+
+	public function getFailedTransactionDataForOrder($order_increment_id)
+	{
+		$connection = $this->resourceConnection->getConnection();
+		$query = "select remote_ip from failed_transaction where order_increment_id = $order_increment_id";
+		return $connection->fetchRow($query);
 	}
 }
 
