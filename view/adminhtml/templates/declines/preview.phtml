@@ -22,12 +22,12 @@ $orders = $block->getOrdersWithDeclines();
 <table id="transactionsTable" class="data-table">
 	<thead>
 		<tr>
-			<th>Date/Time</th>
-			<th>Order ID</th>
-			<th>Customer Name</th>
-			<th>Order State</th>
-			<th>Order Amount</th>
-			<th>Action</th>
+			<th><?php echo __('Date/Time (UTC)'); ?></th>
+			<th><?php echo __('Order ID'); ?></th>
+			<th><?php echo __('Customer Name'); ?></th>
+			<th><?php echo __('Order State'); ?></th>
+			<th><?php echo __('Order Amount'); ?></th>
+			<th><?php echo __('Action'); ?></th>
 		</tr>
 	</thead>
 	<tbody id="tableBody">
