@@ -55,13 +55,16 @@ class FailedTransactionManager
 		$hostResponseMessage = SubjectReader::getValueSafely($txnResponse, 'hostResponseMessage', $paths['hostResponseMessage']);
 		$retrievalReferenceNumber = SubjectReader::getValueSafely($txnResponse, 'retrievalReferenceNumber', $paths['retrievalReferenceNumber']);
 		$countryCode = SubjectReader::getValueSafely($txnResponse, 'countryCode', $paths['countryCode']);
-
+		$responseCode = SubjectReader::getValueSafely($txnResponse, 'responseCode', $paths['responseCode']);
+		$responseMessage = SubjectReader::getValueSafely($txnResponse, 'responseMessage', $paths['responseMessage']);
+		$merchantAdviceCode = SubjectReader::getValueSafely($txnResponse, 'merchantAdviceCode', $paths['merchantAdviceCode']);
 		$errorCode = SubjectReader::getValueSafely($txnResponse, 'code', $paths['errorCode']);
 		$errorMessage = SubjectReader::getValueSafely($txnResponse, 'message', $paths['errorMessage']);
+		$securityCodeMatch = SubjectReader::getValueSafely($txnResponse, 'securityCodeMatch', $paths['securityCodeMatch']);
 		if (isset($errorCode))
 		{
 			$networkResponseCode = $errorCode;
-		}		
+		}
 		if (isset($errorMessage))
 		{
 			$approvalStatus = $errorMessage;
@@ -87,6 +90,10 @@ class FailedTransactionManager
 		$failedTxn->setHostResponseMessage($hostResponseMessage);
 		$failedTxn->setRetrievalReferenceNumber($retrievalReferenceNumber);
 		$failedTxn->setCountry($countryCode);
+		$failedTxn->setResponseCode($responseCode);
+		$failedTxn->setResponseMessage($responseMessage);
+		$failedTxn->setMerchantAdviceCode($merchantAdviceCode);
+		$failedTxn->setSecurityCodeMatch($securityCodeMatch);
 
 		return $failedTxn;
 	}

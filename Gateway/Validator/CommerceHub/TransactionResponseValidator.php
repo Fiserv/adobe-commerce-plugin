@@ -61,11 +61,14 @@ abstract class TransactionResponseValidator extends AbstractValidator
 		'networkResponseCode' => [HttpClient::RESPONSE_KEY, 'networkDetails'],
 		'currency' => [HttpClient::RESPONSE_KEY, 'paymentReceipt', 'approvedAmount'],
 		'bankAssociationDetails' => [HttpClient::RESPONSE_KEY, 'paymentReceipt', 'processorResponseDetails', 'bankAssociationDetails'],
+		'securityCodeMatch' => [HttpClient::RESPONSE_KEY, 'paymentReceipt', 'processorResponseDetails', 'securityCodeMatch'],
 		'errorCode' => [HttpClient::RESPONSE_KEY, 'error', 0],
 		'errorMessage' => [HttpClient::RESPONSE_KEY, 'error', 0],
 		'hostResponseMessage' => [HttpClient::RESPONSE_KEY, 'paymentReceipt', 'processorResponseDetails'],
 		'retrievalReferenceNumber' => [HttpClient::RESPONSE_KEY, 'transactionDetails'],
 		'countryCode' => [HttpClient::RESPONSE_KEY],
+		'responseCode' => [HttpClient::RESPONSE_KEY, 'paymentReceipt', 'processorResponseDetails'],
+		'merchantAdviceCode' => [HttpClient::RESPONSE_KEY, 'paymentReceipt', 'processorResponseDetails'],
 		HttpClient::STATUS_CODE_KEY => []
 	];
 
@@ -85,7 +88,7 @@ abstract class TransactionResponseValidator extends AbstractValidator
 	 * @param ResultInterfaceFactory $resultFactory
 	 * @param SubjectReader $subjectReader
 	 * @param MultiLevelLogger $logger
-	 * @param FailedTransactionFactory $failedTransactionFactory
+	 * @param FailedTransactionManager $failedTransactionManager
 	 */
 	public function __construct(
 		ResultInterfaceFactory $resultFactory,
@@ -106,12 +109,11 @@ abstract class TransactionResponseValidator extends AbstractValidator
 		$errorMessages = [];
 		$errorCodes = [];
 
-		// Extract order ID from the validation subject
+		// Extract order ID & country Code from the validation subject
 		$order = $this->subjectReader->readPayment($validationSubject)->getOrder();
 		$orderIncrementId = $order->getOrderIncrementId();
 		$countryCode = $order->getBillingAddress()->getCountryId();
 
-		
 		// Verify Status Code
 		if (!$this->isStatusSuccessful($chRawResponse[HttpClient::STATUS_CODE_KEY])) {
 			array_push($errorMessages, "Something went wrong while processing CommerceHub transaction.");
@@ -120,7 +122,6 @@ abstract class TransactionResponseValidator extends AbstractValidator
 			$this->logger->logError(2, "Status Code: " . $chRawResponse[HttpClient::STATUS_CODE_KEY], "Order ID: " . ($orderIncrementId ?? "Not found"));
 			$amount = $this->subjectReader->readAmount($validationSubject);
 			$chRawResponse[HttpClient::RESPONSE_KEY]['countryCode'] = $countryCode;
-			
 			$this->failedTransactionManager->createFailedTransaction($orderIncrementId, $chRawResponse, $this->paths);
 			return $this->createResult(false, $errorMessages, $errorCodes);
 		}

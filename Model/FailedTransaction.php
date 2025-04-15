@@ -29,6 +29,11 @@ class FailedTransaction extends AbstractModel implements FailedTransactionInterf
 	public const KEY_API_TRACE_ID = 'api_trace_id';
 	public const KEY_HOST_RESPONSE_MESSAGE = 'host_response_message';
 	public const KEY_RETRIEVAL_REFERENCE_NUMBER = 'retrieval_reference_number';
+	public const KEY_RESPONSE_CODE = 'responseCode';
+	public const KEY_RESPONSE_MESSAGE = 'responseMessage';
+	public const KEY_MERCHANT_ADVICE_CODE = 'merchantAdviceCode';
+	public const KEY_SECURITY_CODE_MATCH = 'securityCodeMatch';
+
 
 	protected function _construct()
 	{
@@ -253,5 +258,44 @@ class FailedTransaction extends AbstractModel implements FailedTransactionInterf
 	public function setRetrievalReferenceNumber($retrievalReferenceNumber)
 	{
 		return $this->setData(self::KEY_RETRIEVAL_REFERENCE_NUMBER, $retrievalReferenceNumber);
+	}
+
+	public function getResponseCode()
+	{
+		return $this->getData(self::KEY_RESPONSE_CODE);
+	}
+
+	public function setResponseCode($responseCode)
+	{
+		return $this->setData(self::KEY_RESPONSE_CODE, $responseCode);
+	}
+
+	public function getResponseMessage()
+	{
+		return $this->getData(self::KEY_RESPONSE_MESSAGE);
+	}
+
+	public function setResponseMessage($responseMessage)
+	{
+		return $this->setData(self::KEY_RESPONSE_MESSAGE, $responseMessage);
+	}
+
+	public function getMerchantAdviceCode()
+	{
+		return $this->getData(self::KEY_MERCHANT_ADVICE_CODE);
+	}
+
+	public function setMerchantAdviceCode($merchantAdviceCode)
+	{
+		return $this->setData(self::KEY_MERCHANT_ADVICE_CODE, $merchantAdviceCode);
+	}
+	public function getSecurityCodeMatch()
+	{
+		return $this->getData(self::KEY_SECURITY_CODE_MATCH);
+	}
+
+	public function setSecurityCodeMatch($securityCodeMatch)
+	{
+		return $this->setData(self::KEY_SECURITY_CODE_MATCH, $securityCodeMatch);
 	}
 }
