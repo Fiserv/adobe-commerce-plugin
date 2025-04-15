@@ -175,20 +175,23 @@ interface FailedTransactionInterface
 	 * @return string|null
 	 */
 	public function getApiTraceId();
-
-	/**
-	 * Set apiTraceId
-	 *
-	 * @param string $apiTraceId
-	 * @return $this
-	 */
 	public function setApiTraceId($apiTraceId);
 
 	public function getHostResponseMessage();
-
 	public function setHostResponseMessage($hostResponseMessage);
 
 	public function getRetrievalReferenceNumber();
-
 	public function setRetrievalReferenceNumber($retrievalReferenceNumber);
+
+	public function getResponseCode();
+	public function setResponseCode($responseCode);
+
+	public function getResponseMessage();
+	public function setResponseMessage($responseMessage);
+
+	public function getMerchantAdviceCode();
+	public function setMerchantAdviceCode($merchantAdviceCode);
+
+	public function getSecurityCodeMatch();
+	public function setSecurityCodeMatch($securityCodeMatch);
 }
