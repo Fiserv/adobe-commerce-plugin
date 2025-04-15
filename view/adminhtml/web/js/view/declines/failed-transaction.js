@@ -3,13 +3,14 @@ define([
 ], function ($) {
 
 	var currentPage = 1;
-	var rowsPerPage = 5;
+	var rowsPerPage = 20;
 
 	function displayTable(page) {
 		var start = (page - 1) * rowsPerPage;
 		var end = page * rowsPerPage;
 		var visibleRowIndex = 0;
 		var searchInput = $('#searchInput').val().toUpperCase();
+		var noRecordsFound = true;
 
 		$('#transactionsTable tr').each(function(index) {
 			if (index === 0) return; // Skip header row
@@ -17,6 +18,7 @@ define([
 			if (searchInput === "" || $row.attr('searchedRow') === 'true') {
 				if (visibleRowIndex >= start && visibleRowIndex < end) {
 					$row.addClass('visible').removeClass('hidden');
+					noRecordsFound = false;
 				} else {
 					$row.addClass('hidden').removeClass('visible');
 				}
@@ -25,6 +27,12 @@ define([
 				$row.addClass('hidden').removeClass('visible');
 			}
 		});
+
+		if (noRecordsFound) {
+			$('#noRecordsMessage').show();
+		} else {
+			$('#noRecordsMessage').hide();
+		}
 	}
 
 	function setupPagination() {
