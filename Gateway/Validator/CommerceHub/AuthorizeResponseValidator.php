@@ -17,6 +17,7 @@ class AuthorizeResponseValidator extends TransactionResponseValidator
 {
 	const PIN_ONLY = "PIN_ONLY";
 	const MERCHANT_DETAILS_KEY = "merchantDetails";
+	const PIN_ONLY_ERROR = "PIN-ONLY-AUTH-ERROR";
 
 	private $cancelsAdapter;
 
@@ -91,7 +92,7 @@ class AuthorizeResponseValidator extends TransactionResponseValidator
 
 		// Check for PIN only Condition
 		if ($pinOnlyState === self::PIN_ONLY) {
-			array_push($errorMessages, "Invalid transaction processed for online payment: " . $pinOnlyState);
+			array_push($errorMessages, self::PIN_ONLY_ERROR);
 			array_push($errorCodes, $pinOnlyState);
 			
 			$transactionId = $this->subjectReader->getValueSafely($chRawResponse, 'transactionId', $paths['transactionId']);
