@@ -3,7 +3,7 @@
 	xsi:noNamespaceSchemaLocation="urn:magento:framework:Config/etc/menu.xsd">
     <menu>
 		<add id="Fiserv_Payments::failed_transactions_preview"
-			title="Decline Dashboard"
+			title="Unsuccessful Orders"
 			module="Fiserv_Payments"
 			sortOrder="100"
 			parent="Magento_Sales::sales"

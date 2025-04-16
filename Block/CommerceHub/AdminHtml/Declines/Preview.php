@@ -74,7 +74,7 @@ class Preview extends \Magento\Backend\Block\Template
 		}
 
 		usort($orderList, function($a, $b) {
-			return intval(strtok($b[OrderModel::KEY_ORDER_INCREMENT_ID], "-")) <=> intval(strtok($a[OrderModel::KEY_ORDER_INCREMENT_ID], "-"));
+			return strtotime($b[OrderModel::KEY_DATE_TIME]) <=> strtotime($a[OrderModel::KEY_DATE_TIME]);
 		});		
 		return $orderList;
 	}
@@ -133,6 +133,7 @@ class Preview extends \Magento\Backend\Block\Template
 	private function convertRealOrderToArray($realOrder)
 	{
 		$failedOrder = $this->failedOrderManager->createFailedOrder($realOrder);
+		$failedOrder->setDateTime($realOrder->getData('created_at'));
 		return $this->convertFailedOrderToArray($failedOrder);	
 	}
 
