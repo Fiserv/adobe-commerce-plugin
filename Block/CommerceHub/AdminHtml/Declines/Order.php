@@ -16,6 +16,7 @@ class Order extends \Magento\Backend\Block\Template
 {
 	const KEY_FAILED_ORDERS = 'failed_orders';
 	const KEY_SUCCESSFUL = 'successful';
+	const KEY_SUCCESSFUL_TXN = 'successful_txn';
 
 	private $_failedOrderResource;
 	private $_failedTxnResource;
@@ -142,7 +143,8 @@ class Order extends \Magento\Backend\Block\Template
 		$fTxn[TxnModel::KEY_TRANSACTION_STATE] = $txn["is_closed"] == true ? "CLOSED" : "OPEN";
 		$fTxn[TxnModel::KEY_TOTAL_AMOUNT] = $txn->getTxnAmdsljount();
 		$fTxn[TxnModel::KEY_REMOTE_IP] = "N/A";
-		$fTxn[TxnModel::KEY_TRANSACTION_ID] = $txn["transaction_id"];
+		$fTxn[TxnModel::KEY_TRANSACTION_ID] = $txn["txn_id"];
+		$fTxn[self::KEY_SUCCESSFUL_TXN] = $txn["transaction_id"];
 		$fTxn[self::KEY_SUCCESSFUL] = true;
 
 		return $fTxn;
