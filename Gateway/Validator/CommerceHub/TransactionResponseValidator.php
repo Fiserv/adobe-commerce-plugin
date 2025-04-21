@@ -61,7 +61,7 @@ abstract class TransactionResponseValidator extends AbstractValidator
 		'networkResponseCode' => [HttpClient::RESPONSE_KEY, 'networkDetails'],
 		'currency' => [HttpClient::RESPONSE_KEY, 'paymentReceipt', 'approvedAmount'],
 		'bankAssociationDetails' => [HttpClient::RESPONSE_KEY, 'paymentReceipt', 'processorResponseDetails', 'bankAssociationDetails'],
-		'securityCodeMatch' => [HttpClient::RESPONSE_KEY, 'paymentReceipt', 'processorResponseDetails', 'securityCodeMatch'],
+		'securityCodeMatch' => [HttpClient::RESPONSE_KEY, 'paymentReceipt', 'processorResponseDetails', 'bankAssociationDetails', 'avsSecurityCodeResponse'],
 		'errorCode' => [HttpClient::RESPONSE_KEY, 'error', 0],
 		'errorMessage' => [HttpClient::RESPONSE_KEY, 'error', 0],
 		'hostResponseMessage' => [HttpClient::RESPONSE_KEY, 'paymentReceipt', 'processorResponseDetails'],
