@@ -28,6 +28,7 @@ $orders = $block->getOrdersWithDeclines();
 				<th><?php echo __('Customer Name'); ?></th>
 				<th><?php echo __('Order State'); ?></th>
 				<th><?php echo __('Order Amount'); ?></th>
+				<th><?php echo __('Remote IP'); ?></th>
 				<th><?php echo __('Action'); ?></th>
 			</tr>
 		</thead>
@@ -38,7 +39,8 @@ $orders = $block->getOrdersWithDeclines();
 	        	    <td><?php echo isset($order['order_increment_id']) ? $order['order_increment_id'] : "N/A"; ?></td>
 		            <td><?php echo isset($order['customer_name']) ? $order['customer_name'] : "N/A"; ?></td>
 	        	    <td><?php echo isset($order['order_state']) ? strtoupper($order['order_state']) : "N/A"; ?></td>
-		            <td><?php echo isset($order['grandTotal']) ? $block->formatPrice($order['grandTotal']) : "N/A"; ?></td>
+			    <td><?php echo isset($order['grandTotal']) ? $block->formatPrice($order['grandTotal']) : "N/A"; ?></td>
+			    <td><?php echo isset($order['remote_ip']) ? $order['remote_ip'] : "N/A"; ?></td>
 		            <td>
 	        	        <a href="<?php echo $block->getUrl('fiserv/declines/order', ['id' => $order['order_increment_id']]); ?>">View</a>
 		            </td>

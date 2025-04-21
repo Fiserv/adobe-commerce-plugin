@@ -122,7 +122,7 @@ abstract class TransactionResponseValidator extends AbstractValidator
 			$this->logger->logError(2, "Status Code: " . $chRawResponse[HttpClient::STATUS_CODE_KEY], "Order ID: " . ($orderIncrementId ?? "Not found"));
 			$amount = $this->subjectReader->readAmount($validationSubject);
 			$chRawResponse[HttpClient::RESPONSE_KEY]['countryCode'] = $countryCode;
-			$this->failedTransactionManager->createFailedTransaction($orderIncrementId, $chRawResponse, $this->paths);
+			$this->failedTransactionManager->createFailedTransaction($orderIncrementId, $chRawResponse, $this->paths, $this->getPaymentAction());
 			return $this->createResult(false, $errorMessages, $errorCodes);
 		}
 
@@ -141,7 +141,7 @@ abstract class TransactionResponseValidator extends AbstractValidator
 			$amount = $this->subjectReader->readAmount($validationSubject);
 			$chRawResponse[HttpClient::RESPONSE_KEY]['countryCode'] = $countryCode;
 		
-			$this->failedTransactionManager->createFailedTransaction($orderIncrementId, $chRawResponse, $this->paths);
+			$this->failedTransactionManager->createFailedTransaction($orderIncrementId, $chRawResponse, $this->paths, $this->getPaymentAction());
 			return $this->createResult(false, $errorMessages, $errorCodes);
 		}
 
@@ -165,4 +165,7 @@ abstract class TransactionResponseValidator extends AbstractValidator
 			!in_array($state, $this->failureStates)
 		);
 	}
+
+	abstract protected function getPaymentAction();
+	
 }

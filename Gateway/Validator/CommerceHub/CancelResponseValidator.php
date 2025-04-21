@@ -15,7 +15,9 @@ use Fiserv\Payments\Model\Service\CommerceHub\FailedTransactionManager;
  * Validates the status of an attempted Cancel transaction
  */
 class CancelResponseValidator extends TransactionResponseValidator
-{	
+{
+	const PAYMENT_ACTION = "VOID";
+
 	/**
 	 * @param ResultInterfaceFactory $resultFactory
 	 * @param SubjectReader $subjectReader
@@ -33,5 +35,10 @@ class CancelResponseValidator extends TransactionResponseValidator
 			$failedTxnManager
 		);
 		array_push($this->successStates, self::STATE_VOIDED);
+	}
+
+	protected function getPaymentAction()
+	{
+		return self::PAYMENT_ACTION;
 	}
 }

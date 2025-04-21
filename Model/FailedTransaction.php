@@ -33,6 +33,7 @@ class FailedTransaction extends AbstractModel implements FailedTransactionInterf
 	public const KEY_RESPONSE_MESSAGE = 'responseMessage';
 	public const KEY_MERCHANT_ADVICE_CODE = 'merchantAdviceCode';
 	public const KEY_SECURITY_CODE_MATCH = 'securityCodeMatch';
+	public const KEY_PAYMENT_ACTION = 'paymentAction';
 
 
 	protected function _construct()
@@ -297,5 +298,15 @@ class FailedTransaction extends AbstractModel implements FailedTransactionInterf
 	public function setSecurityCodeMatch($securityCodeMatch)
 	{
 		return $this->setData(self::KEY_SECURITY_CODE_MATCH, $securityCodeMatch);
+	}
+
+	public function getPaymentAction()
+	{
+		return $this->getData(self::KEY_PAYMENT_ACTION);
+	}
+
+	public function setPaymentAction($paymentAction)
+	{
+		return $this->setData(self::KEY_PAYMENT_ACTION, $paymentAction);
 	}
 }
