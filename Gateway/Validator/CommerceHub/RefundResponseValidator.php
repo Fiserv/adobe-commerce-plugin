@@ -40,7 +40,7 @@ class RefundResponseValidator extends TransactionResponseValidator
 
 	protected function getPaymentAction()
 	{
-		self::PAYMENT_ACTION;
+		return self::PAYMENT_ACTION;
 	}
 
 }

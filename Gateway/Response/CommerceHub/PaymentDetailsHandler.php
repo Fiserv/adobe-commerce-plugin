@@ -15,8 +15,11 @@ use Magento\Sales\Api\Data\OrderPaymentInterface;
 class PaymentDetailsHandler implements HandlerInterface
 {
 	const API_TRACE_ID = "apiTraceId";
-	const ORDER_ID = "orderId";
+	const KEY_AMOUNT = "amount";
+	const KEY_ORDER_ID = "orderId";
 	const TXN_TIMESTAMP = "txnTimestamp";
+
+	private $amountPath = array( "total" => "paymentReceipt", "approvedAmount" );
 
 	/**
 	 * @var SubjectReader
@@ -59,13 +62,13 @@ class PaymentDetailsHandler implements HandlerInterface
 		);
 
 		$payment->setTransactionAdditionalInfo(
-			self::API_TRACE_ID,
+			self::KEY_ORDER_ID,
 			$tnxDetails["orderId"]
 		);
 
 		$payment->setTransactionAdditionalInfo(
-			self::API_TRACE_ID,
-			$tnxDetails["orderId"]
+			self::KEY_AMOUNT,
+			SubjectReader::getValueSafely($chResponse, "total", $this->amountPath)
 		);
 	}
 }

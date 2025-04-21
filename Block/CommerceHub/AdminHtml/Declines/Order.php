@@ -8,9 +8,12 @@ use Fiserv\Payments\Model\Valuelink\Helper\Order\ValuelinkOrderHelper;
 use Fiserv\Payments\Model\ValuelinkTransaction as GiftModel;
 use Fiserv\Payments\Model\FailedTransaction as TxnModel;
 use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
+use Fiserv\Payments\Gateway\Validator\CommerceHub\AuthorizeResponseValidator;
+use Fiserv\Payments\Gateway\Validator\CommerceHub\SaleResponseValidator;
 use Magento\Framework\Pricing\Helper\Data as PricingHelper;
 use Magento\Sales\Api\TransactionRepositoryInterface;
 use Magento\Framework\Api\SearchCriteriaBuilder;
+use Magento\Sales\Api\Data\TransactionInterface;
 
 class Order extends \Magento\Backend\Block\Template
 {
@@ -66,6 +69,15 @@ class Order extends \Magento\Backend\Block\Template
 	{
 		$failedOrder = $this->getFailedOrder();
 		$failedTransactions = $this->_failedTxnResource->getByOrderIncrementId($failedOrder["order_increment_id"]);
+		// Set IP Address to Admin for secondary transactions to match real transactions
+		for($i = 0; $i < count($failedTransactions); $i++ )
+		{
+			if ($failedTransactions[$i][TxnModel::KEY_PAYMENT_ACTION] != SaleResponseValidator::PAYMENT_ACTION && $failedTransactions[$i][TxnModel::KEY_PAYMENT_ACTION] != AuthorizeResponseValidator::PAYMENT_ACTION)
+			{
+				$failedTransactions[$i][TxnModel::KEY_REMOTE_IP] = "Admin";
+			}
+		}
+		
 		$giftTxns = $this->_valuelinkOrderHelper->getValuelinkTransactionsByOrderIncrementId($failedOrder["order_increment_id"]);
 		
 		foreach($giftTxns as $giftTxn)
@@ -141,13 +153,39 @@ class Order extends \Magento\Backend\Block\Template
 		$fTxn[TxnModel::KEY_ORDER_INCREMENT_ID] = $orderIncrementId;
 		$fTxn[TxnModel::KEY_APPROVAL_STATUS] = $txn["txn_type"];
 		$fTxn[TxnModel::KEY_TRANSACTION_STATE] = $txn["is_closed"] == true ? "CLOSED" : "OPEN";
-		$fTxn[TxnModel::KEY_TOTAL_AMOUNT] = $txn->getTxnAmdsljount();
-		$fTxn[TxnModel::KEY_REMOTE_IP] = "N/A";
+		$fTxn[TxnModel::KEY_TOTAL_AMOUNT] = $txn->getAdditionalInformation("amount");
+		$fTxn[TxnModel::KEY_REMOTE_IP] = $this->getRealTxnIp($txn);
 		$fTxn[TxnModel::KEY_TRANSACTION_ID] = $txn["txn_id"];
+		$fTxn[TxnModel::KEY_PAYMENT_ACTION] = $txn->getTxnType();
 		$fTxn[self::KEY_SUCCESSFUL_TXN] = $txn["transaction_id"];
 		$fTxn[self::KEY_SUCCESSFUL] = true;
 
 		return $fTxn;
+	}
+
+	private function getRealTxnIp(\Magento\Sales\Model\Order\Payment\Transaction $txn)
+	{
+		$txnType = $txn->getTxnType();
+		switch($txnType)
+		{
+			case TransactionInterface::TYPE_AUTH:
+				return $this->getPrimaryTxnIp($txn);
+			case TransactionInterface::TYPE_CAPTURE:
+				return $this->isCaptureSale($txn) ? $this->getPrimaryTxnIp($txn) : "Admin";
+			default:
+				return "Admin";
+		}
+	}
+
+	private function getPrimaryTxnIp($txn)
+	{
+		return !is_null($txn->getOrder()->getData("remote_ip")) ? $txn->getOrder()->getData("remote_ip") : "Admin";
+	}
+
+	private function isCaptureSale($txn)
+	{
+		$auth = $txn->getOrder()->getPayment()->getBaseAmountAuthorized();
+		return is_null($auth) || $auth < 0.01;
 	}
 
 	private function getTxnsOnSuccessfulOrder($orderId)
