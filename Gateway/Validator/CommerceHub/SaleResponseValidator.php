@@ -11,7 +11,10 @@ use Fiserv\Payments\Model\Service\CommerceHub\FailedTransactionManager;
  * Validates the status of an attempted Sale transaction
  */
 class SaleResponseValidator extends TransactionResponseValidator
-{	
+{
+
+	const PAYMENT_ACTION = "SALE";
+
 	/**
 	 * @param ResultInterfaceFactory $resultFactory
 	 * @param SubjectReader $subjectReader
@@ -33,5 +36,10 @@ class SaleResponseValidator extends TransactionResponseValidator
 			$failedTxnManager
 		);
 		array_push($this->successStates, self::STATE_CAPTURE);
+	}
+
+	protected function getPaymentAction()
+	{
+		return self::PAYMENT_ACTION;
 	}
 }

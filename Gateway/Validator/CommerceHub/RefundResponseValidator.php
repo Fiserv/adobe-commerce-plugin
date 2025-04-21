@@ -15,7 +15,10 @@ use Fiserv\Payments\Model\Service\CommerceHub\FailedTransactionManager;
  * Validates the status of an attempted Refund transaction
  */
 class RefundResponseValidator extends TransactionResponseValidator
-{	
+{
+
+	const PAYMENT_ACTION = "REFUND";
+
 	/**
 	 * @param ResultInterfaceFactory $resultFactory
 	 * @param SubjectReader $subjectReader
@@ -33,6 +36,11 @@ class RefundResponseValidator extends TransactionResponseValidator
 			$failedTxnManager
 		);
 		array_push($this->successStates, self::STATE_CAPTURE);
+	}
+
+	protected function getPaymentAction()
+	{
+		self::PAYMENT_ACTION;
 	}
 
 }

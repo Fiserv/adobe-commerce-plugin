@@ -194,4 +194,7 @@ interface FailedTransactionInterface
 
 	public function getSecurityCodeMatch();
 	public function setSecurityCodeMatch($securityCodeMatch);
+
+	public function getPaymentAction();
+	public function setPaymentAction($paymentAction);
 }

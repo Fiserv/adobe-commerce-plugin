@@ -18,6 +18,7 @@ class AuthorizeResponseValidator extends TransactionResponseValidator
 	const PIN_ONLY = "PIN_ONLY";
 	const MERCHANT_DETAILS_KEY = "merchantDetails";
 	const PIN_ONLY_ERROR = "PIN-ONLY-AUTH-ERROR";
+	const PAYMENT_ACTION = "AUTH";
 
 	private $cancelsAdapter;
 
@@ -82,7 +83,7 @@ class AuthorizeResponseValidator extends TransactionResponseValidator
 			$this->logger->logError(2, "Transaction failure. Commerce Hub response returned with unsuccessful status", "Order ID: " . ($orderIncrementId ?? "Not found"));
 			$this->logger->logError(2, "Status Code: " . $statusCode, "Order ID: " . ($orderIncrementId ?? "Not found"));
 			
-			$this->failedTransactionManager->createFailedTransaction($orderIncrementId, $chRawResponse, $paths);
+			$this->failedTransactionManager->createFailedTransaction($orderIncrementId, $chRawResponse, $paths, $this->getPaymentAction());
 			return $this->createResult(false, $errorMessages, $errorCodes);
 		}
 
@@ -116,8 +117,8 @@ class AuthorizeResponseValidator extends TransactionResponseValidator
 				$cancelResponse['paymentReceipt']['processorResponseDetails']['approvalStatus'] = $cancelResponse['paymentReceipt']['processorResponseDetails']['approvalStatus'] . " (PIN_ONLY CANCEL)";
 				$cancelResponseFormatted = array();
 				$cancelResponseFormatted[HttpClient::RESPONSE_KEY] = $cancelResponse;
-				$this->failedTransactionManager->createFailedTransaction($orderIncrementId, $chRawResponse, $this->paths);
-				$this->failedTransactionManager->createFailedTransaction($orderIncrementId, $cancelResponseFormatted, $this->paths);
+				$this->failedTransactionManager->createFailedTransaction($orderIncrementId, $chRawResponse, $this->paths, $this->getPaymentAction());
+				$this->failedTransactionManager->createFailedTransaction($orderIncrementId, $cancelResponseFormatted, $this->paths, $this->getPaymentAction());
 			} catch (\Exception $e) {	
 				$this->logger->logEmergency(1, "An error occurred while canceling PIN-ONLY authorization: " . $e->getMessage(), "Order ID: $orderIncrementId");
 				throw $e;
@@ -131,5 +132,10 @@ class AuthorizeResponseValidator extends TransactionResponseValidator
 			return $parentResult;
 		}
 		return $this->createResult(true);
+	}
+
+	protected function getPaymentAction()
+	{
+		return self::PAYMENT_ACTION;
 	}
 }

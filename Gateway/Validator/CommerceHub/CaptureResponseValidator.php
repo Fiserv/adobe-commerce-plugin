@@ -13,6 +13,8 @@ use Fiserv\Payments\Model\Service\CommerceHub\FailedTransactionManager;
 class CaptureResponseValidator extends TransactionResponseValidator
 {
 
+	const PAYMENT_ACTION = "CAPTURE";
+
 	/**
 	 * @param ResultInterfaceFactory $resultFactory
 	 * @param SubjectReader $subjectReader
@@ -34,5 +36,10 @@ class CaptureResponseValidator extends TransactionResponseValidator
 			$failedTxnManager
 		); 	
 		array_push($this->successStates, self::STATE_CAPTURE);
+	}
+
+	protected function getPaymentAction()
+	{
+		return self::PAYMENT_ACTION;
 	}
 }

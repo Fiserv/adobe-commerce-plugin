@@ -3,6 +3,7 @@ namespace Fiserv\Payments\Block\CommerceHub\AdminHtml\Declines;
 
 use Fiserv\Payments\Api\FailedOrder\FailedOrderRepositoryInterface;
 use Fiserv\Payments\Model\FailedOrder as OrderModel;
+use Fiserv\Payments\Model\FailedTransaction as FailedTransactionModel;
 use Fiserv\Payments\Model\Service\CommerceHub\FailedOrderManager;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Framework\Api\FilterBuilder;
@@ -29,6 +30,7 @@ class Preview extends \Magento\Backend\Block\Template
 	private $failedOrderManager;
 
 	const KEY_TRANSACTION = 'transactions';
+	const ADMIN_PANEL_LABEL = 'Admin Panel';
 
 	public function __construct(
 		\Magento\Backend\Block\Template\Context $context,
@@ -62,27 +64,45 @@ class Preview extends \Magento\Backend\Block\Template
 		$orderIncrementIds = $this->getOrderIncrementIdsFromFailedTxns();
 		$failedOrders = $this->getFailedOrdersWithDeclines($orderIncrementIds);
 		$realOrders = $this->getRealOrdersWithDeclines($orderIncrementIds);
+		$failedTransactionData = $this->getFailedTransactionData($orderIncrementIds);
+
+		$failedTransactionDataArray = [];
+		foreach($failedTransactionData as $ft) {
+			$failedTransactionDataArray[$ft[OrderModel::KEY_ORDER_INCREMENT_ID]] = $ft;
+		}
 
 		$orderList = array();
 		foreach($failedOrders as $fo)
 		{
-			array_push($orderList, $this->convertFailedOrderToArray($fo));
+			$orderArray = $this->convertFailedOrderToArray($fo);
+			$orderArray[FailedTransactionModel::KEY_REMOTE_IP] = $this->getRemoteIp($failedTransactionDataArray, $fo[OrderModel::KEY_ORDER_INCREMENT_ID] ?? "");
+			array_push($orderList, $orderArray); 
 		}
+
 		foreach($realOrders as $ro)
 		{	
-			array_push($orderList, $this->convertRealOrderToArray($ro));
+			$orderArray = $this->convertRealOrderToArray($ro);	
+			$orderArray[FailedTransactionModel::KEY_REMOTE_IP] = $this->getRemoteIp($failedTransactionDataArray, $ro[OrderModel::KEY_ORDER_INCREMENT_ID] ?? "");
+			array_push($orderList, $orderArray);
 		}
 
 		usort($orderList, function($a, $b) {
 			return strtotime($b[OrderModel::KEY_DATE_TIME]) <=> strtotime($a[OrderModel::KEY_DATE_TIME]);
-		});		
+		});
+
 		return $orderList;
+	}
+
+	private function getRemoteIp(Array $failedTxnData, string $orderIncrementId)
+	{
+		$data = isset($failedTxnData[$orderIncrementId]) ? $failedTxnData[$orderIncrementId] : null;
+		return !is_null($data) ? $data[FailedTransactionModel::KEY_REMOTE_IP] : self::ADMIN_PANEL_LABEL;
 	}
 
 	private function getFailedOrdersWithDeclines(Array $orderIncrementIds)
 	{
 		$filter = $this->filterBuilder
-			->setField('order_increment_id')
+			->setField(OrderModel::KEY_ORDER_INCREMENT_ID)
 			->setConditionType('in')
 			->setValue($orderIncrementIds)
 			->create();
@@ -112,9 +132,28 @@ class Preview extends \Magento\Backend\Block\Template
 	private function getOrderIncrementIdsFromFailedTxns()
 	{
 		$connection = $this->resourceConnection->getConnection();
-		$query = "SELECT DISTINCT order_increment_id FROM failed_transaction";
+		$query = "SELECT DISTINCT order_increment_id FROM failed_transaction WHERE order_increment_id IS NOT NULL";
 
 		return $connection->fetchCol($query);
+	}
+
+	private function getFailedTransactionData(Array $orderIncrementIds) {
+
+		$connection = $this->resourceConnection->getConnection();
+		$orderIncrementIdsString = implode(',', $orderIncrementIds);
+		$query = "
+			SELECT ft.order_increment_id, ft.date_time AS oldest_date_time, ft.remote_ip
+			FROM failed_transaction ft
+			INNER JOIN (
+				SELECT order_increment_id, MIN(date_time) AS oldest_date_time
+				FROM failed_transaction
+				WHERE order_increment_id IN ($orderIncrementIdsString)
+				GROUP BY order_increment_id
+			) AS subquery
+			ON ft.order_increment_id = subquery.order_increment_id AND ft.date_time = subquery.oldest_date_time
+		";
+
+		return $connection->fetchAll($query);
 	}
 
 	private function convertFailedOrderToArray($failedOrder)
@@ -134,7 +173,7 @@ class Preview extends \Magento\Backend\Block\Template
 	{
 		$failedOrder = $this->failedOrderManager->createFailedOrder($realOrder);
 		$failedOrder->setDateTime($realOrder->getData('created_at'));
-		return $this->convertFailedOrderToArray($failedOrder);	
+		return $this->convertFailedOrderToArray($failedOrder);
 	}
 
 	public function formatPrice($amount)

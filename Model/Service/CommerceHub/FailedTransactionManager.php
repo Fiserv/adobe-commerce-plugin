@@ -23,17 +23,17 @@ class FailedTransactionManager
 		$this->failedTxnFactory = $failedTxnFactory;
 	}
 
-	public function createFailedTransaction($merchantOrderId, $txnResponse, $paths)
+	public function createFailedTransaction($merchantOrderId, $txnResponse, $paths, $paymentAction)
 	{
 		$failedTxn = $this->failedTxnFactory->create();
-		$failedTxn = $this->populateFailedTxn($failedTxn, $txnResponse, $paths);
+		$failedTxn = $this->populateFailedTxn($failedTxn, $txnResponse, $paths, $paymentAction);
 		$failedTxn->setOrderIncrementId($merchantOrderId);
 		$this->failedTxnRepo->save($failedTxn);
 
 		return $failedTxn;
 	}
 
-	public function populateFailedTxn($failedTxn, $txnResponse, $paths)
+	public function populateFailedTxn($failedTxn, $txnResponse, $paths, $paymentAction)
 	{
 		$transactionState = SubjectReader::getValueSafely($txnResponse, 'transactionState', $paths['transactionState']);
 		$transactionId = SubjectReader::getValueSafely($txnResponse, 'transactionId', $paths['transactionId']);
@@ -94,6 +94,7 @@ class FailedTransactionManager
 		$failedTxn->setResponseMessage($responseMessage);
 		$failedTxn->setMerchantAdviceCode($merchantAdviceCode);
 		$failedTxn->setSecurityCodeMatch($securityCodeMatch);
+		$failedTxn->setPaymentAction($paymentAction);
 
 		return $failedTxn;
 	}

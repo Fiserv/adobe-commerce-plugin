@@ -73,6 +73,7 @@
 		<column xsi:type="varchar" name="responseMessage" nullable="true" length="255" comment="Response Message"/>
 		<column xsi:type="varchar" name="merchantAdviceCode" nullable="true" length="255" comment="Merchant Advice Code"/>
 		<column xsi:type="varchar" name="securityCodeMatch" nullable="true" length="255" comment="Security Code Match"/>
+		<column xsi:type="varchar" name="paymentAction" nullable="true" length="255" comment="Payment Action"/>
 
 
 	</table>
