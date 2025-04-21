@@ -18,7 +18,7 @@ class AuthorizeResponseValidator extends TransactionResponseValidator
 	const PIN_ONLY = "PIN_ONLY";
 	const MERCHANT_DETAILS_KEY = "merchantDetails";
 	const PIN_ONLY_ERROR = "PIN-ONLY-AUTH-ERROR";
-	const PAYMENT_ACTION = "AUTH";
+	const PAYMENT_ACTION = "AUTHORIZATION";
 
 	private $cancelsAdapter;
 
