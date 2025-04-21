@@ -353,3 +353,8 @@
 .pagination-controls .pagination-info {
     margin: 0 0.5rem; /* Space between button and info */
 }
+
+.failed-transaction-detail-header .failed-transaction-detail-column
+{
+    font-weight: bold;
+}
