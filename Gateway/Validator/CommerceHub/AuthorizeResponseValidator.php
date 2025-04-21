@@ -65,7 +65,7 @@ class AuthorizeResponseValidator extends TransactionResponseValidator
 			'countryCode' => [HttpClient::RESPONSE_KEY],
 			'responseCode' => [HttpClient::RESPONSE_KEY, 'paymentReceipt', 'processorResponseDetails'],
 			'merchantAdviceCode' => [HttpClient::RESPONSE_KEY, 'networkDetails'],
-			'securityCodeMatch' => [HttpClient::RESPONSE_KEY, 'paymentReceipt', 'processorResponseDetails', 'securityCodeMatch'],
+			'securityCodeMatch' => [HttpClient::RESPONSE_KEY, 'paymentReceipt', 'processorResponseDetails', 'bankAssociationDetails', 'avsSecurityCodeResponse'],
 			self::MERCHANT_DETAILS_KEY => [HttpClient::RESPONSE_KEY],
 			HttpClient::STATUS_CODE_KEY => []
 		];
