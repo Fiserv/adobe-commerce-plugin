@@ -63,6 +63,7 @@ class FailedOrderManager
 		$failedOrder->setShipping($order->getData("shipping_amount"));
 		$failedOrder->setGrandTotal($order->getData("grand_total"));
 		$failedOrder->setNotes($order->getData("customer_note"));
+		$failedOrder->setStoreCredit($order->getData("customer_balance_amount"));
 
 		$items = array();
 		foreach($order->getData("items") as $item)

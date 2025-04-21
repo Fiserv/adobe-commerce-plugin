@@ -136,18 +136,26 @@ class Order extends \Magento\Backend\Block\Template
 
 	private function convertSuccessfulTxnToFailedTxnArray(\Magento\Sales\Model\Order\Payment\Transaction $txn, string $orderIncrementId)
 	{
+		$remoteIp = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : null;
+		$order = $txn->getOrder();
+
 		$fTxn = array();
 		$fTxn[TxnModel::KEY_DATE_TIME] = $txn["created_at"];
 		$fTxn[TxnModel::KEY_ORDER_INCREMENT_ID] = $orderIncrementId;
 		$fTxn[TxnModel::KEY_APPROVAL_STATUS] = $txn["txn_type"];
 		$fTxn[TxnModel::KEY_TRANSACTION_STATE] = $txn["is_closed"] == true ? "CLOSED" : "OPEN";
-		$fTxn[TxnModel::KEY_TOTAL_AMOUNT] = $txn->getTxnAmdsljount();
-		$fTxn[TxnModel::KEY_REMOTE_IP] = "N/A";
+		$fTxn[TxnModel::KEY_TOTAL_AMOUNT] = $this->extractOrderAmount($order);
+		$fTxn[TxnModel::KEY_REMOTE_IP] = $remoteIp;
 		$fTxn[TxnModel::KEY_TRANSACTION_ID] = $txn["txn_id"];
 		$fTxn[self::KEY_SUCCESSFUL_TXN] = $txn["transaction_id"];
 		$fTxn[self::KEY_SUCCESSFUL] = true;
 
 		return $fTxn;
+	}
+
+	private function extractOrderAmount($order)
+	{
+		return $order->getBaseAmountOrdered();
 	}
 
 	private function getTxnsOnSuccessfulOrder($orderId)

@@ -96,5 +96,6 @@
 		<column xsi:type="decimal" name="grandTotal" scale="4" precision="20" unsigned="false" nullable="false" comment="Grand Total"/>        
 		<column xsi:type="varchar" name="notes" nullable="true" length="1000" comment="Order Notes"/>
 		<column xsi:type="text" name="items" nullable="false" comment="Items"/>
+		<column xsi:type="decimal" name="storeCredit" scale="4" precision="20" unsigned="false" nullable="false" comment="Store Credit"/>
 	</table>
 </schema>

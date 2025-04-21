@@ -24,6 +24,7 @@ class FailedOrder extends AbstractModel implements FailedOrderInterface
 	public const KEY_ITEM_QTY = "qty";
 	public const KEY_ITEM_PRICE = "price";
 	public const KEY_ITEM_ID = "product_id";
+	public const KEY_STORE_CREDIT = "storeCredit";
 
 	protected function _construct()
 	{
@@ -158,5 +159,15 @@ class FailedOrder extends AbstractModel implements FailedOrderInterface
 	public function setItems($items)
 	{
 		return $this->setData(self::KEY_ITEMS, $items);
+	}
+
+	public function getStoreCredit()
+	{
+		return $this->getData(self::KEY_STORE_CREDIT);
+	}
+
+	public function setStoreCredit($storeCredit)
+	{
+		return $this->setData(self::KEY_STORE_CREDIT, $storeCredit);
 	}
 }

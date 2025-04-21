@@ -99,4 +99,8 @@ interface FailedOrderInterface
 	public function getItems();
 
 	public function setItems($items);
+
+	public function getStoreCredit();
+
+	public function setStoreCredit($storeCredit);
 }
