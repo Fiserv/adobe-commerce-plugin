@@ -370,3 +370,8 @@
 .two-col .failed-transaction-detail {
 	width: 100%;
 }
+
+table#transactionsTable td {
+	word-wrap: break-word;
+	max-width: 250px;
+}
