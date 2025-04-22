@@ -40,6 +40,10 @@ class FailedTransactionManager
 		$apiTraceId = SubjectReader::getValueSafely($txnResponse, 'apiTraceId', $paths['apiTraceId']);
 		$approvalStatus = SubjectReader::getValueSafely($txnResponse, 'approvalStatus', $paths['approvalStatus']);
 		$totalAmount = SubjectReader::getValueSafely($txnResponse, 'total', $paths['approvedAmount']);
+		if (!isset($totalAmount) && isset($paths['amount']))
+		{
+			$totalAmount = SubjectReader::getValueSafely($txnResponse, 'amount', $paths['amount']);
+		}
 		$remoteIp = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : null;
 		$currency = SubjectReader::getValueSafely($txnResponse, 'currency', $paths['currency']);
 		$bankAssociationDetails = isset($paths['bankAssociationDetails']) ? SubjectReader::getValueSafely($txnResponse, 'associationResponseCode', $paths['bankAssociationDetails']) : null;

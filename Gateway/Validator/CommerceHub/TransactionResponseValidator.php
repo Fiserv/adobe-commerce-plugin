@@ -69,6 +69,7 @@ abstract class TransactionResponseValidator extends AbstractValidator
 		'countryCode' => [HttpClient::RESPONSE_KEY],
 		'responseCode' => [HttpClient::RESPONSE_KEY, 'paymentReceipt', 'processorResponseDetails'],
 		'merchantAdviceCode' => [HttpClient::RESPONSE_KEY, 'networkDetails'],
+		'amount' => [HttpClient::RESPONSE_KEY],
 		HttpClient::STATUS_CODE_KEY => []
 	];
 
@@ -118,6 +119,7 @@ abstract class TransactionResponseValidator extends AbstractValidator
 		if (!$this->isStatusSuccessful($chRawResponse[HttpClient::STATUS_CODE_KEY])) {
 			array_push($errorMessages, "Something went wrong while processing CommerceHub transaction.");
 			array_push($errorCodes, $chRawResponse[HttpClient::STATUS_CODE_KEY]);
+			$chRawResponse[HttpClient::RESPONSE_KEY]["amount"] = $validationSubject["amount"];
 			$this->logger->logError(2, "Transaction failure. Commerce Hub response returned with unsuccessful status", "Order ID: " . ($orderIncrementId ?? "Not found"));
 			$this->logger->logError(2, "Status Code: " . $chRawResponse[HttpClient::STATUS_CODE_KEY], "Order ID: " . ($orderIncrementId ?? "Not found"));
 			$amount = $this->subjectReader->readAmount($validationSubject);
@@ -132,6 +134,7 @@ abstract class TransactionResponseValidator extends AbstractValidator
 		if (!$this->isStateSuccessful($transactionState)) {
 			array_push($errorMessages, "Transaction state failure: " . ($transactionState ?? "Transaction state not found"));
 			array_push($errorCodes, $transactionState);
+			$chRawResponse[HttpClient::RESPONSE_KEY]["amount"] = $validationSubject["amount"];
 			$context = "Transaction ID: " . ($transactionId ?? "Not found") . "\n"
 				. "API Trace ID: " . ($apiTraceId ?? "Not found") . "\n"
 				. ", Transaction state: " . ($transactionState ?? "Not found") . "\n"
