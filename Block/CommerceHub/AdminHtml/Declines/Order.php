@@ -21,6 +21,8 @@ class Order extends \Magento\Backend\Block\Template
 	const KEY_SUCCESSFUL = 'successful';
 	const KEY_SUCCESSFUL_TXN = 'successful_txn';
 
+	const ADMIN_PANEL_LABEL = "Admin";
+	
 	private $_failedOrderResource;
 	private $_failedTxnResource;
 	private $_valuelinkOrderHelper;
@@ -74,7 +76,7 @@ class Order extends \Magento\Backend\Block\Template
 		{
 			if ($failedTransactions[$i][TxnModel::KEY_PAYMENT_ACTION] != SaleResponseValidator::PAYMENT_ACTION && $failedTransactions[$i][TxnModel::KEY_PAYMENT_ACTION] != AuthorizeResponseValidator::PAYMENT_ACTION)
 			{
-				$failedTransactions[$i][TxnModel::KEY_REMOTE_IP] = "Admin";
+				$failedTransactions[$i][TxnModel::KEY_REMOTE_IP] = self::ADMIN_PANEL_LABEL;
 			}
 		}
 		
@@ -171,15 +173,15 @@ class Order extends \Magento\Backend\Block\Template
 			case TransactionInterface::TYPE_AUTH:
 				return $this->getPrimaryTxnIp($txn);
 			case TransactionInterface::TYPE_CAPTURE:
-				return $this->isCaptureSale($txn) ? $this->getPrimaryTxnIp($txn) : "Admin";
+				return $this->isCaptureSale($txn) ? $this->getPrimaryTxnIp($txn) : self::ADMIN_PANEL_LABEL;
 			default:
-				return "Admin";
+				return self::ADMIN_PANEL_LABEL;
 		}
 	}
 
 	private function getPrimaryTxnIp($txn)
 	{
-		return !is_null($txn->getOrder()->getData("remote_ip")) ? $txn->getOrder()->getData("remote_ip") : "Admin";
+		return !is_null($txn->getOrder()->getData("remote_ip")) ? $txn->getOrder()->getData("remote_ip") : self::ADMIN_PANEL_LABEL;
 	}
 
 	private function isCaptureSale($txn)

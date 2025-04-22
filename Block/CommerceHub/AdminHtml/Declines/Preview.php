@@ -30,7 +30,7 @@ class Preview extends \Magento\Backend\Block\Template
 	private $failedOrderManager;
 
 	const KEY_TRANSACTION = 'transactions';
-	const ADMIN_PANEL_LABEL = 'Admin Panel';
+	const ADMIN_PANEL_LABEL = 'Admin';
 
 	public function __construct(
 		\Magento\Backend\Block\Template\Context $context,
