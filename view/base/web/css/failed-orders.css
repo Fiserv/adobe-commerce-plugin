@@ -358,3 +358,15 @@
 {
     font-weight: bold;
 }
+
+.three-col .failed-transaction-detail-label {
+	width: 40%;
+}
+
+.two-col .failed-transaction-detail-label {
+	width: 33%;
+}
+
+.two-col .failed-transaction-detail {
+	width: 100%;
+}
