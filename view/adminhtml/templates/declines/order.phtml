@@ -126,7 +126,7 @@ $orderTotalFormatted = (isset($order["grandTotal"]) ? $block->formatPrice($order
                             <div class="order-notes-header"><?php echo __('Order Notes'); ?></div>
                             <div class="order-notes-box">
                                 <div class="order-notes-list">
-									<?php echo htmlspecialchars(isset($order['notes']) && !is_null($order['notes']) ? $order['notes'] : "", ENT_QUOTES, 'UTF-8'); ?>
+									<?= htmlspecialchars(isset($order['notes']) && !is_null($order['notes']) ? $order['notes'] : "", ENT_QUOTES, 'UTF-8'); ?>
                                 </div>
                             </div>
                         </div>
@@ -135,69 +135,86 @@ $orderTotalFormatted = (isset($order["grandTotal"]) ? $block->formatPrice($order
             </div>
         </div>
     </div>
+
     <hr>
-	<div class="search-pagination-container">
-		<input type="text" id="searchInput" placeholder="Search for keywords">
-		<div class="paginationContainerTop">
-			<label for="rowsPerPage">Limit:</label>
-			<select id="rowsPerPage">
-				<option value="5">5</option>
-				<option value="10">10</option>
-				<option value="15">15</option>
-				<option value="20" selected>20</option>
-			</select>
-			<span id="paginationInfoTop" class="pagination-info"></span>
-		</div>
-	</div>
+    <div class="search-pagination-container">
+        <input type="text" id="searchInput" placeholder="Search for keywords">
+        <div class="paginationContainerTop">
+            <label for="rowsPerPage">Limit:</label>
+            <select id="rowsPerPage" class="limit-dropdown">
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="15">15</option>
+                <option value="20" selected>20</option>
+            </select>
+            <span id="paginationInfoTop" class="pagination-info"></span>
+        </div>
+    </div>
 
     <table id="transactionsTable" class="data-table">
         <thead>
         <tr>
-            <th>Date/Time (UTC)</th>
-            <th>Transaction ID</th>
-            <th>Transaction State</th>
-            <th>Approval Status</th>
-            <th>Total Amount</th>
-			<th>IP Address</th>
+            <th data-sortable="true" data-index="0">Date/Time (UTC) <span id="dateSortArrow" class="sort-arrow">&#9660;</span></th>
+            <th data-sortable="true" data-index="1">Transaction ID</th>
+            <th data-sortable="true" data-index="2">Transaction State
+                <span class="filter-arrow transaction-state-filter-arrow">&#9660;</span>
+                <div class="dropdown-menu" id="transactionStateMenu">
+                    <div data-value="">All</div>
+                    <div data-value="OPEN">OPEN</div>
+                    <div data-value="FAILED">FAILED</div>
+                    <div data-value="DECLINED">DECLINED</div>
+                </div>
+            </th>
+            <th data-sortable="true" data-index="3">Approval Status
+                <span class="filter-arrow approval-status-filter-arrow">&#9660;</span>
+                <div class="dropdown-menu" id="approvalStatusMenu">
+                    <div data-value="">All</div>
+                    <div data-value="DECLINED">DECLINED</div>
+                    <div data-value="Authorization">Authorization</div>
+                    <div data-value="Unable to Capture: No remaining authorized amount">Unable to Capture: No remaining authorized amount</div>
+                </div>
+            </th>
+            <th data-sortable="true" data-index="4">Total Amount</th>
+            <th data-sortable="true" data-index="5">IP Address</th>
             <th>Action</th>
         </tr>
         </thead>
         <tbody id="tableBody">
 		<?php foreach ($transactions as $transaction): ?>
             <tr>
-                <td><?php echo htmlspecialchars(isset($transaction['date_time']) ? $transaction['date_time'] : "N/A", ENT_QUOTES, 'UTF-8'); ?></td>
-				<td>
-					<?php echo htmlspecialchars(isset($transaction['transaction_id']) ? $transaction['transaction_id'] : "N/A", ENT_QUOTES, 'UTF-8'); ?>
-				</td>
-                <td><?php echo htmlspecialchars(isset($transaction["transaction_state"]) ? strtoupper($transaction["transaction_state"]) : "N/A", ENT_QUOTES, 'UTF-8'); ?></td>
-                <td><?php echo htmlspecialchars(isset($transaction["approval_status"]) ? ucfirst($transaction["approval_status"]) : "N/A", ENT_QUOTES, 'UTF-8'); ?></td>
-                <td><?php echo htmlspecialchars(isset($transaction["total_amount"]) ? $block->formatPrice($transaction["total_amount"]) : "N/A", ENT_QUOTES, 'UTF-8'); ?></td>
-				<td><?php echo htmlspecialchars(isset($transaction['remote_ip']) ? $transaction['remote_ip'] : "N/A", ENT_QUOTES, 'UTF-8'); ?></td>
+                <td><?= htmlspecialchars($transaction['date_time'] ?? "N/A", ENT_QUOTES, 'UTF-8'); ?></td>
+                <td><?= htmlspecialchars($transaction['transaction_id'] ?? "N/A", ENT_QUOTES, 'UTF-8'); ?></td>
+                <td><?= htmlspecialchars(strtoupper($transaction['transaction_state'] ?? "N/A"), ENT_QUOTES, 'UTF-8'); ?></td>
+                <td><?= htmlspecialchars(ucfirst($transaction['approval_status'] ?? "N/A"), ENT_QUOTES, 'UTF-8'); ?></td>
+                <td><?= htmlspecialchars(isset($transaction["total_amount"]) ? $block->formatPrice($transaction["total_amount"]) : "N/A", ENT_QUOTES, 'UTF-8'); ?></td>
+                <td><?= htmlspecialchars($transaction['remote_ip'] ?? "N/A", ENT_QUOTES, 'UTF-8'); ?></td>
                 <td>
-					<?php if(isset($transaction[$block::KEY_SUCCESSFUL]) && $transaction[$block::KEY_SUCCESSFUL] === true): ?>
-                        <a href="<?php echo $block->getUrl('sales/transactions/view', ['txn_id' => $transaction[$block::KEY_SUCCESSFUL_TXN]]); ?>">View</a>
-					<?php elseif($transaction['transaction_id'] !== "N/A"): ?>
-                        <a href="<?php echo $block->getUrl('fiserv/declines/transaction', ['transaction_id' => $transaction['transaction_id']]); ?>">View</a>
-					<?php endif ?>
+					<?php if (isset($transaction[$block::KEY_SUCCESSFUL]) && $transaction[$block::KEY_SUCCESSFUL] === true): ?>
+                        <a href="<?= $block->getUrl('sales/transactions/view', ['txn_id' => $transaction[$block::KEY_SUCCESSFUL_TXN]]); ?>">View</a>
+					<?php elseif ($transaction['transaction_id'] !== "N/A"): ?>
+                        <a href="<?= $block->getUrl('fiserv/declines/transaction', ['transaction_id' => $transaction['transaction_id']]); ?>">View</a>
+					<?php endif; ?>
                 </td>
             </tr>
 		<?php endforeach; ?>
         </tbody>
     </table>
-	<div id="paginationControls"></div>
+    <input type="hidden" id="transactionStateFilter" value="">
+    <input type="hidden" id="approvalStatusFilter" value="">
+    <div id="paginationControls"></div>
+    <div id="noRecordsMessage" style="display:none;"><?= __('No records found'); ?></div>
 </div>
 
 <script type="text/x-magento-init">
-{
-	"*": {
-		"Magento_Ui/js/core/app": {
-			"components": {
-				"failed-transaction": {
-					"component": "Fiserv_Payments/js/view/declines/failed-transaction"
-				}
-			}
-		}
-	}
-}
+    {
+        "*": {
+            "Magento_Ui/js/core/app": {
+                "components": {
+                    "failed-transaction": {
+                        "component": "Fiserv_Payments/js/view/declines/failed-transaction"
+                    }
+                }
+            }
+        }
+    }
 </script>
-

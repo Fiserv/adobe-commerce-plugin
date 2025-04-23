@@ -164,7 +164,7 @@
     padding: 1rem;
     background-color: #fafafa; /* Light background color for better UI distinction */
     width: calc(100% + 10px); /* Extend the box by 10 pixels */
-	min-height: 75px;
+    min-height: 75px;
 }
 
 .order-notes-list {
@@ -198,21 +198,55 @@
 .table th {
     background-color: #f6f6f6;
     font-weight: bold;
+    position: relative; /* Ensure the dropdown is positioned correctly within the header */
+}
+
+/* Styling for the Transaction State filter dropdown */
+.filter-arrow {
+    cursor: pointer;
+    margin-left: 0.5rem; /* Optional spacing between text and arrow */
+    position: relative;
+}
+
+/* Dropdown menu */
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    background-color: white;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    min-width: 120px;
+    top: 100%;
+}
+
+.dropdown-menu div {
+    padding: 10px;
+    cursor: pointer;
+    color: #333;
+}
+
+.dropdown-menu div:hover {
+    background-color: #f6f6f6;
+}
+
+.dropdown-menu.show {
+    display: block; /* Show the menu */
 }
 
 /* Search and Pagination Container */
 .search-pagination-container {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
+    justify-content: space-between; /* Ensure two sections are spaced apart */
+    align-items: center; /* Center align items in the container */
+    margin-bottom: 2rem; /* Add spacing at the bottom */
     width: 100%;
 }
 
 .pagination-controls {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.5rem; /* Spacing between elements */
 }
 
 .limit-dropdown-container {
@@ -236,6 +270,8 @@
     -webkit-appearance: none;
     -moz-appearance: none;
     margin-left: 0.5rem;
+    position: relative; /* Needed for the custom arrow */
+    padding-right: 1.5rem; /* Add space for the custom arrow */
 }
 
 .limit-dropdown::after {
@@ -354,24 +390,23 @@
     margin: 0 0.5rem; /* Space between button and info */
 }
 
-.failed-transaction-detail-header .failed-transaction-detail-column
-{
+.failed-transaction-detail-header .failed-transaction-detail-column {
     font-weight: bold;
 }
 
 .three-col .failed-transaction-detail-label {
-	width: 40%;
+    width: 40%;
 }
 
 .two-col .failed-transaction-detail-label {
-	width: 33%;
+    width: 33%;
 }
 
 .two-col .failed-transaction-detail {
-	width: 100%;
+    width: 100%;
 }
 
 table#transactionsTable td {
-	word-wrap: break-word;
-	max-width: 250px;
+    word-wrap: break-word;
+    max-width: 250px;
 }
