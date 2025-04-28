@@ -54,6 +54,7 @@ class ValuelinkOnlySaleCreateInvoice implements ObserverInterface
 
 		if ($order->canInvoice() &&
 			!empty($valuelinkTxns) &&
+			$this->config->createValuelinkInvoice() &&
 			$this->config->getPaymentAction() === MethodInterface::ACTION_AUTHORIZE_CAPTURE &&
 			$order->getPayment()->getMethodInstance()->getTitle() === "No Payment Information Required"
 		) {
