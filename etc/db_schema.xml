@@ -97,5 +97,7 @@
 		<column xsi:type="varchar" name="notes" nullable="true" length="1000" comment="Order Notes"/>
 		<column xsi:type="text" name="items" nullable="false" comment="Items"/>
 		<column xsi:type="decimal" name="storeCredit" scale="4" precision="20" unsigned="false" nullable="false" comment="Store Credit"/>
+		<column xsi:type="decimal" name="discountCode" scale="4" precision="20" unsigned="false" nullable="false" comment="Discount Code"/>
+
 	</table>
 </schema>
