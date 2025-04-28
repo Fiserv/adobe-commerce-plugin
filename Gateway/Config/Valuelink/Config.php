@@ -13,6 +13,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	// Gets config values using field names
 	const KEY_ACTIVE = 'active';
 	const KEY_PAYMENT_ACTION = 'payment_action';
+	const KEY_CREATE_VALUELINK_INVOICE = 'create_valuelink_invoice';
 	const KEY_VALUELINK_TITLE = 'valuelink_title';
 	const KEY_CARD_AMOUNT_LIMIT = 'card_amount_limit';
 	const KEY_PRIVACY_STATEMENT = 'show_privacy_statement';
@@ -94,6 +95,19 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	public function getPaymentAction($storeId = null)
 	{
 		return $this->getValue(self::KEY_PAYMENT_ACTION, $storeId);
+	}
+
+	/**
+	 * Gets value of create invoice for valuelink sales.
+	 *
+	 * Possible values: Yes or No.
+	 *
+	 * @param int|null $storeId
+	 * @return bool
+	 */
+	public function createValuelinkInvoice($storeId = null)
+	{
+		return (bool) $this->getValue(self::KEY_CREATE_VALUELINK_INVOICE, $storeId);
 	}
 
 	/**
