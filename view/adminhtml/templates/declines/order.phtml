@@ -138,6 +138,16 @@ $orderTotalFormatted = (isset($order["grandTotal"]) ? $block->formatPrice($order
 
     <hr>
     <div class="search-pagination-container">
+        <!-- Filter by Date -->
+        <div class="filter-by-date">
+            <label for="startDate">Start Date:</label>
+            <input type="text" id="startDate" class="date-picker" placeholder="Select start date">
+            <label for="endDate">End Date:</label>
+            <input type="text" id="endDate" class="date-picker" placeholder="Select end date">
+            <button id="applyDateFilter">Apply Filter</button>
+            <button id="resetFilters">Reset</button>
+        </div>
+
         <input type="text" id="searchInput" placeholder="Search for keywords">
         <div class="paginationContainerTop">
             <label for="rowsPerPage">Limit:</label>
@@ -154,7 +164,7 @@ $orderTotalFormatted = (isset($order["grandTotal"]) ? $block->formatPrice($order
     <table id="transactionsTable" class="data-table">
         <thead>
         <tr>
-            <th data-sortable="true" data-index="0">Date/Time (UTC) <span id="dateSortArrow" class="sort-arrow">&#9660;</span></th>
+            <th data-sortable="true" data-index="0">Date/Time (UTC)</th>
             <th data-sortable="true" data-index="1">Transaction ID</th>
             <th data-sortable="true" data-index="2">Transaction State
                 <span class="filter-arrow transaction-state-filter-arrow">&#9660;</span>
@@ -203,7 +213,6 @@ $orderTotalFormatted = (isset($order["grandTotal"]) ? $block->formatPrice($order
     <input type="hidden" id="approvalStatusFilter" value="">
     <div id="paginationControls"></div>
     <div id="noRecordsMessage" style="display:none;"><?= __('No records found'); ?></div>
-</div>
 
 <script type="text/x-magento-init">
     {

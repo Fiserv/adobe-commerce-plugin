@@ -237,10 +237,25 @@
 /* Search and Pagination Container */
 .search-pagination-container {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between; /* Ensure two sections are spaced apart */
     align-items: center; /* Center align items in the container */
     margin-bottom: 2rem; /* Add spacing at the bottom */
     width: 100%;
+}
+
+/* Add styles for the date filter section */
+.filter-by-date {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem; /* Space between elements */
+    margin-bottom: 1rem;
+}
+
+.date-picker {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
 }
 
 .pagination-controls {

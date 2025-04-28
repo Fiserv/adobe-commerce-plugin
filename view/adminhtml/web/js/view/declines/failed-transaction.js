@@ -1,10 +1,10 @@
 define([
 	'jquery',
+	'jquery/ui'
 ], function ($) {
 	var currentPage = 1;
 	var rowsPerPage = 20;
-	var reverseDateOrder = false; // Determines the direction of Date/Time sorting
-	var originalData = []; // Stores original data for sorting purposes
+	var originalData = [];
 
 	function storeOriginalData() {
 		$('#transactionsTable tbody tr').each(function () {
@@ -13,52 +13,29 @@ define([
 	}
 
 	function applyFiltersAndSort() {
-		var stateFilter = $('#transactionStateFilter').val().toUpperCase(); // Get the selected transaction state filter
-		var statusFilter = $('#approvalStatusFilter').val().toUpperCase(); // Get the selected approval status filter
+		var stateFilter = $('#transactionStateFilter').val().toUpperCase();
+		var statusFilter = $('#approvalStatusFilter').val().toUpperCase();
 		var searchInput = $('#searchInput').val().toUpperCase();
+		var startDate = $('#startDate').datepicker("getDate");
+		var endDate = $('#endDate').datepicker("getDate");
 		var filteredData = originalData.filter(function ($row) {
-			var rowState = $row.find('td').eq(2).text().toUpperCase(); // Extract the transaction state
-			var rowStatus = $row.find('td').eq(3).text().toUpperCase(); // Extract the approval status
+			var rowState = $row.find('td').eq(2).text().toUpperCase();
+			var rowStatus = $row.find('td').eq(3).text().toUpperCase();
+			var dateText = $row.find('td').eq(0).text();
+			var rowDate = new Date(dateText);
 			var containsSearch = false;
 			$row.find('td').each(function () {
 				var txtValue = $(this).text();
 				if (txtValue.toUpperCase().indexOf(searchInput) > -1) {
 					containsSearch = true;
-					return false; // Stop searching further cells in this row
+					return false;
 				}
 			});
-			return (stateFilter === "" || rowState === stateFilter) && (statusFilter === "" || rowStatus === statusFilter) && (searchInput === "" || containsSearch);
+			var dateInRange = (!startDate || rowDate >= startDate) && (!endDate || rowDate <= endDate);
+			return (stateFilter === "" || rowState === stateFilter) && (statusFilter === "" || rowStatus === statusFilter) && (searchInput === "" || containsSearch) && dateInRange;
 		});
 
-		var sortedData = filterDataBySortDirection(filteredData);
-		updateTableBody(sortedData);
-	}
-
-	function filterDataBySortDirection(data) {
-		if (reverseDateOrder) {
-			data.sort(function (rowA, rowB) {
-				const keyA = rowA.find('td').eq(0).text();
-				const keyB = rowB.find('td').eq(0).text();
-				if (!isNaN(Date.parse(keyA)) && !isNaN(Date.parse(keyB))) {
-					const dateA = new Date(keyA);
-					const dateB = new Date(keyB);
-					return dateB - dateA;
-				}
-				return keyB.localeCompare(keyA);
-			});
-		} else {
-			data.sort(function (rowA, rowB) {
-				const keyA = rowA.find('td').eq(0).text();
-				const keyB = rowB.find('td').eq(0).text();
-				if (!isNaN(Date.parse(keyA)) && !isNaN(Date.parse(keyB))) {
-					const dateA = new Date(keyA);
-					const dateB = new Date(keyB);
-					return dateA - dateB;
-				}
-				return keyA.localeCompare(keyB);
-			});
-		}
-		return data;
+		updateTableBody(filteredData);
 	}
 
 	function updateTableBody(data) {
@@ -119,14 +96,13 @@ define([
 		}
 		$paginationControls.append($nextButton);
 
-		// Update the pagination info at the top
 		$('#paginationInfoTop').text(currentPage + ' of ' + pageCount);
 	}
 
 	function changePage(page) {
 		currentPage = page;
 		displayTable(page);
-		setupPagination(); // Update pagination info
+		setupPagination();
 	}
 
 	function changeRowsPerPage() {
@@ -137,14 +113,25 @@ define([
 	}
 
 	function searchTable() {
-		currentPage = 1; // Reset current page to 1 when search is applied
+		currentPage = 1;
 		requestAnimationFrame(function () {
 			applyFiltersAndSort();
 		});
 	}
 
+	function resetFilters() {
+		$('#startDate').val('');
+		$('#endDate').val('');
+		$('#searchInput').val('');
+		$('#transactionStateFilter').val('');
+		$('#approvalStatusFilter').val('');
+		$('.dropdown-menu').removeClass('show');
+		currentPage = 1;
+		applyFiltersAndSort();
+	}
+
 	$(document).ready(function () {
-		storeOriginalData(); // Store original data on page load
+		storeOriginalData();
 
 		$('#searchInput').on('keyup', searchTable);
 		$('#rowsPerPage').on('change', changeRowsPerPage);
@@ -184,14 +171,19 @@ define([
 			}
 		});
 
-		// Attach click event only to the sort arrow for Date/Time
-		$('#dateSortArrow').on('click', function () {
-			reverseDateOrder = !reverseDateOrder;
-			applyFiltersAndSort();
-
-			// Toggle arrow direction
-			$('#dateSortArrow').html(reverseDateOrder ? '&#9650;' : '&#9660;'); // Up arrow on reverse sort, down arrow on normal sort
+		// Initialize datepickers
+		$(".date-picker").datepicker({
+			dateFormat: "yy-mm-dd"
 		});
+
+		// Apply date filter when button is clicked
+		$('#applyDateFilter').on('click', function () {
+			currentPage = 1;
+			applyFiltersAndSort();
+		});
+
+		// Reset filters when the reset button is clicked
+		$('#resetFilters').on('click', resetFilters);
 
 		setupPagination();
 		displayTable(1);
