@@ -99,5 +99,6 @@
 		<column xsi:type="decimal" name="storeCredit" scale="4" precision="20" unsigned="false" nullable="false" comment="Store Credit"/>
 		<column xsi:type="decimal" name="discountAmount" scale="4" precision="20" unsigned="false" nullable="false" comment="Discount Amount"/>
 
+
 	</table>
 </schema>

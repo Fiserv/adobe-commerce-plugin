@@ -103,4 +103,8 @@ interface FailedOrderInterface
 	public function getStoreCredit();
 
 	public function setStoreCredit($storeCredit);
+
+	public function getDiscountCode();
+
+	public function setDiscountCode($discountCode);
 }

@@ -157,14 +157,20 @@
 						<source_model>Fiserv\Payments\Model\Source\CommerceHub\TransactionType</source_model>
 						<config_path>payment/fiserv_valuelink/payment_action</config_path>
 					</field>
-					<field id="card_amount_limit" translate="label" type="select" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="create_valuelink_invoice" translate="label" type="select" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Create Invoice on Sale</label>
+						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+						<config_path>payment/fiserv_valuelink/create_valuelink_invoice</config_path>
+						<comment>Enable or disable invoice creation on sale.</comment>
+					</field>
+					<field id="card_amount_limit" translate="label" type="select" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Max Number of Gift Cards Allowed per Order</label>
 						<source_model>Fiserv\Payments\Model\Source\CommerceHub\ValuelinkCardAmount</source_model>
 						<frontend_model>Fiserv\Payments\Model\Source\CommerceHub\Disable</frontend_model>
 						<comment>Number of gift cards currently restricted to 1 per order</comment>
 						<config_path>payment/fiserv_valuelink/card_amount_limit</config_path>
 					</field>
-					<field id="show_valuelink_privacy_statement" translate="label" type="select" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="show_valuelink_privacy_statement" translate="label" type="select" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Display Fiserv Privacy Statement</label>
 						<depends>
 							<field id="valuelink">1</field>
