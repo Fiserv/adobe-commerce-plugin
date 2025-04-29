@@ -1,192 +1,113 @@
 define([
-	'jquery',
-	'jquery/ui'
-], function ($) {
-	var currentPage = 1;
-	var rowsPerPage = 20;
-	var originalData = [];
+	    'jquery',
+	    'mage/url'
+], function ($, url) {
 
-	function storeOriginalData() {
-		$('#transactionsTable tbody tr').each(function () {
-			originalData.push($(this).clone());
-		});
-	}
+	    var currentPage = 1;
+	    var rowsPerPage = 5;
 
-	function applyFiltersAndSort() {
-		var stateFilter = $('#transactionStateFilter').val().toUpperCase();
-		var statusFilter = $('#approvalStatus').val().toUpperCase();
-		var searchInput = $('#searchInput').val().toUpperCase();
-		var startDate = $('#startDate').val();
-		var endDate = $('#endDate').val();
+	    function fetchOrders(page) {
+		            $.ajax({
+				                url: url.build('payments/declines/preview'),
+				                type: 'GET',
+				                data: {
+							                page: page,
+							                pageSize: rowsPerPage
+							            },
+				                success: function (data) {
+							                renderTable(data.orders);
+							                setupPagination(data.totalPages);
+							            },
+				                error: function () {
+							                console.error('Failed to fetch orders');
+							            }
+				            });
+		        }
 
-		var filteredData = originalData.filter(function ($row) {
-			var rowState = $row.find('td').eq(2).text().toUpperCase();
-			var rowStatus = $row.find('td').eq(3).text().toUpperCase();
-			var dateText = $row.find('td').eq(0).text();
-			var rowDate = new Date(dateText);
-			var containsSearch = false;
-			$row.find('td').each(function () {
-				var txtValue = $(this).text();
-				if (txtValue.toUpperCase().indexOf(searchInput) > -1) {
-					containsSearch = true;
-					return false;
-				}
-			});
-			var dateInRange = (!startDate || new Date(startDate) <= rowDate) && (!endDate || rowDate <= new Date(endDate));
-			return (stateFilter === "" || rowState === stateFilter) && (statusFilter === "" || rowStatus === statusFilter) && (searchInput === "" || containsSearch) && dateInRange;
-		});
+	    function renderTable(orders) {
+		            var $tableBody = $('#tableBody');
+		            $tableBody.empty();
 
-		updateTableBody(filteredData);
-		setupPagination();
-		toggleResetButton();
-	}
+		            orders.forEach(function (order) {
+				                var row = '<tr>' +
+					                    '<td>' + (order.date_time || 'N/A') + '</td>' +
+					                    '<td>' + (order.order_increment_id || 'N/A') + '</td>' +
+					                    '<td>' + (order.customer_name || 'N/A') + '</td>' +
+					                    '<td>' + (order.order_state || 'N/A') + '</td>' +
+					                    '<td>' + (order.grandTotal || 'N/A') + '</td>' +
+					                    '<td>' + (order.remote_ip || 'N/A') + '</td>' +
+					                    '<td><a href="' + order.viewUrl + '">View</a></td>' +
+					                    '</tr>';
+				                $tableBody.append(row);
+				            });
+		        }
 
-	function updateTableBody(data) {
-		$('#transactionsTable tbody').empty().append(data);
-		setupPagination();
-		displayTable(currentPage);
-	}
+	    function setupPagination(totalPages) {
+		            var $paginationControls = $('#paginationControls');
+		            $paginationControls.empty();
 
-	function displayTable(page) {
-		var start = (page - 1) * rowsPerPage;
-		var end = page * rowsPerPage;
-		var visibleRowIndex = 0;
-		var noRecordsFound = true;
+		            var $prevButton = $('<span>').text('<').addClass('pagination-button').on('click', function () {
+				                if (currentPage > 1) {
+							                currentPage--;
+							                fetchOrders(currentPage);
+							            }
+				            });
+		            if (currentPage === 1) {
+				                $prevButton.addClass('disabled');
+				            }
+		            $paginationControls.append($prevButton);
 
-		$('#transactionsTable tbody tr').each(function (index) {
-			if (visibleRowIndex >= start && visibleRowIndex < end) {
-				$(this).show();
-				noRecordsFound = false;
-			} else {
-				$(this).hide();
-			}
-			visibleRowIndex++;
-		});
+		            var $pageInfo = $('<span>').text(currentPage + ' of ' + totalPages).addClass('pagination-info');
+		            $paginationControls.append($pageInfo);
 
-		if (noRecordsFound) {
-			$('#noRecordsMessage').show();
-		} else {
-			$('#noRecordsMessage').hide();
-		}
-	}
+		            var $nextButton = $('<span>').text('>').addClass('pagination-button').on('click', function () {
+				                if (currentPage < totalPages) {
+							                currentPage++;
+							                fetchOrders(currentPage);
+							            }
+				            });
+		            if (currentPage === totalPages) {
+				                $nextButton.addClass('disabled');
+				            }
+		            $paginationControls.append($nextButton);
 
-	function setupPagination() {
-		var visibleRowCount = $('#transactionsTable tbody tr').length;
-		var pageCount = Math.ceil(visibleRowCount / rowsPerPage);
-		var $paginationControls = $('#paginationControls');
-		$paginationControls.empty();
+		            $('#paginationInfoTop').text(currentPage + ' of ' + totalPages); // Update the pagination info at the top
+		        }
 
-		var $prevButton = $('<span>').text('<').addClass('pagination-button').on('click', function () {
-			if (currentPage > 1) {
-				changePage(currentPage - 1);
-			}
-		});
-		if (currentPage === 1) {
-			$prevButton.addClass('disabled');
-		}
-		$paginationControls.append($prevButton);
+	    function changeRowsPerPage() {
+		            rowsPerPage = parseInt($('#rowsPerPage').val());
+		            currentPage = 1; // Reset current page to 1 when rows per page is changed
+		            fetchOrders(currentPage);
+		        }
 
-		var $pageInfo = $('<span>').text(currentPage + ' of ' + pageCount).addClass('pagination-info');
-		$paginationControls.append($pageInfo);
+	    function searchTable() {
+		            var filter = $('#searchInput').val().toUpperCase();
 
-		var $nextButton = $('<span>').text('>').addClass('pagination-button').on('click', function () {
-			if (currentPage < pageCount) {
-				changePage(currentPage + 1);
-			}
-		});
-		if (currentPage === pageCount) {
-			$nextButton.addClass('disabled');
-		}
-		$paginationControls.append($nextButton);
+		            $('#transactionsTable tr').each(function (index) {
+				                if (index === 0) return; // Skip header row
+				                var $row = $(this);
+				                $row.attr('searchedRow', 'false');
+				                $row.find('td').each(function () {
+							                var txtValue = $(this).text();
+							                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+										                    $row.attr('searchedRow', 'true');
+										                    return false; // Stop searching further cells in this row
+										                }
+							            });
+				            });
 
-		$('#paginationInfoTop').text(currentPage + ' of ' + pageCount);
-	}
+		            currentPage = 1; // Reset current page to 1 when search is applied
 
-	function changePage(page) {
-		currentPage = page;
-		displayTable(page);
-		setupPagination();
-	}
+		            requestAnimationFrame(function () {
+				                fetchOrders(currentPage);
+				            });
+		        }
 
-	function changeRowsPerPage() {
-		rowsPerPage = parseInt($('#rowsPerPage').val());
-		currentPage = 1;
-		applyFiltersAndSort();
-	}
+	    $(document).ready(function () {
+		            $('#searchInput').on('keyup', searchTable);
+		            $('#rowsPerPage').on('change', changeRowsPerPage);
+		            fetchOrders(currentPage);
+		        });
 
-	function searchTable() {
-		currentPage = 1;
-		requestAnimationFrame(function () {
-			applyFiltersAndSort();
-		});
-	}
-
-	function resetFilters() {
-		$('#startDate').val('');
-		$('#endDate').val('');
-		$('#searchInput').val('');
-		$('#transactionStateFilter').val('');
-		$('#approvalStatus').val('');
-		currentPage = 1;
-		applyFiltersAndSort();
-		hideResetButton();
-	}
-
-	function toggleResetButton() {
-		if ($('#searchInput').val() || $('#transactionStateFilter').val() || $('#approvalStatus').val() || $('#startDate').val() || $('#endDate').val()) {
-			$('#resetFilters').show();
-		} else {
-			$('#resetFilters').hide();
-		}
-	}
-
-	function hideResetButton() {
-		$('#resetFilters').hide();
-	}
-
-	function handleDatePickers() {
-		var startDatePicker = $('#startDate').datepicker({
-			dateFormat: 'yy-mm-dd',
-			onSelect: function (selectedDate) {
-				var endDatePicker = $('#endDate');
-				endDatePicker.datepicker('option', 'minDate', selectedDate);
-				applyFiltersAndSort();
-			}
-		});
-		var endDatePicker = $('#endDate').datepicker({
-			dateFormat: 'yy-mm-dd',
-			onSelect: function (selectedDate) {
-				var startDatePicker = $('#startDate');
-				startDatePicker.datepicker('option', 'maxDate', selectedDate);
-				applyFiltersAndSort();
-			}
-		});
-	}
-
-	$(document).ready(function () {
-		storeOriginalData();
-
-		handleDatePickers();
-
-		$('#searchInput').on('keyup', searchTable);
-		$('#rowsPerPage').on('change', changeRowsPerPage);
-
-		$('#transactionStateFilter').on('change', function () {
-			$('option.selected-dropdown').removeClass('selected-dropdown');
-			$(this).find('option:selected').addClass('selected-dropdown');
-			applyFiltersAndSort();
-		});
-
-		$('#approvalStatus').on('change', function () {
-			$('option.selected-dropdown').removeClass('selected-dropdown');
-			$(this).find('option:selected').addClass('selected-dropdown');
-			applyFiltersAndSort();
-		});
-
-		$('#resetFilters').on('click', resetFilters);
-
-		toggleResetButton();
-		setupPagination();
-		displayTable(1);
-	});
 });
+
