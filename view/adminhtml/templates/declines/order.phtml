@@ -8,7 +8,9 @@ $giftAmount = $block->getAppliedGiftCardAmount();
 $isSuccessful = isset($order[$block::KEY_SUCCESSFUL]) && $order[$block::KEY_SUCCESSFUL] === true;
 $orderTotalFormatted = (isset($order["grandTotal"]) ? $block->formatPrice($order["grandTotal"]) : "N/A");
 $discountCode = isset($order["discount_code"]) ? $order["discount_code"] : "N/A";
-$discountAmount = isset($order["discountAmount"]) ? $order["discountAmount"] : "N/A";
+$discountAmount = isset($order["discountAmount"]) ? $order["discountAmount"] : 0; // Initialize to 0 if not set
+$storeCreditAmount = isset($order["storeCredit"]) ? $order["storeCredit"] : 0; // Initialize to 0 if not set
+$totalDiscountAmount = $discountAmount + $storeCreditAmount;
 ?>
 
 <div class="admin__data-grid-wrap">
@@ -102,15 +104,12 @@ $discountAmount = isset($order["discountAmount"]) ? $order["discountAmount"] : "
                             <div class="failed-transaction-detail-value"><?= htmlspecialchars(isset($order["subtotal"]) ? $block->formatPrice($order["subtotal"]) : "N/A", ENT_QUOTES, 'UTF-8'); ?></div>
                         </div>
 
-                        <div class="failed-transaction-detail">
-                            <div class="failed-transaction-detail-label"><?php echo __('Discount Total'); ?></div>
-                            <div class="failed-transaction-detail-value"><?= htmlspecialchars(isset($discountAmount) ? "-".$block->formatPrice(abs($discountAmount)) : "N/A", ENT_QUOTES, 'UTF-8'); ?></div>
-                        </div>
-
-                        <div class="failed-transaction-detail">
-                            <div class="failed-transaction-detail-label"><?php echo __('Discount Code'); ?></div>
-                            <div class="failed-transaction-detail-value"><?= htmlspecialchars($discountCode, ENT_QUOTES, 'UTF-8'); ?></div>
-                        </div>
+						<?php if ($totalDiscountAmount > 0.00): ?>
+                            <div class="failed-transaction-detail">
+                                <div class="failed-transaction-detail-label"><?php echo __('Discount Total'); ?></div>
+                                <div class="failed-transaction-detail-value"><?= htmlspecialchars("-".$block->formatPrice($totalDiscountAmount), ENT_QUOTES, 'UTF-8'); ?></div>
+                            </div>
+						<?php endif; ?>
 
 						<?php if ($giftAmount > 0.00): ?>
                             <div class="failed-transaction-detail">
@@ -118,10 +117,10 @@ $discountAmount = isset($order["discountAmount"]) ? $order["discountAmount"] : "
                                 <div class="failed-transaction-detail-value">-<?= htmlspecialchars($block->formatPrice($giftAmount), ENT_QUOTES, 'UTF-8'); ?></div>
                             </div>
 						<?php endif; ?>
-						<?php if (isset($order["storeCredit"]) && $order["storeCredit"] > 0.00): ?>
+						<?php if ($storeCreditAmount > 0.00): ?>
                             <div class="failed-transaction-detail">
                                 <div class="failed-transaction-detail-label"><?php echo __('Store Credit'); ?></div>
-                                <div class="failed-transaction-detail-value">-<?= htmlspecialchars($block->formatPrice($order["storeCredit"]), ENT_QUOTES, 'UTF-8'); ?></div>
+                                <div class="failed-transaction-detail-value">-<?= htmlspecialchars($block->formatPrice($storeCreditAmount), ENT_QUOTES, 'UTF-8'); ?></div>
                             </div>
 						<?php endif; ?>
                         <div class="failed-transaction-detail">
