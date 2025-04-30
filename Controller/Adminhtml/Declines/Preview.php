@@ -80,8 +80,8 @@ class Preview extends Action implements HttpGetActionInterface
 		$orderIncrementData = $this->getOrderIncrementIdsFromFailedTxns($page, $pageSize);
 		$orderIncrementIds = $orderIncrementData['ids'];
 
-		$failedOrders = $this->getFailedOrdersWithDeclines($orderIncrementIds, $page, $pageSize);
-		$realOrders = $this->getRealOrdersWithDeclines($orderIncrementIds, $page, $pageSize);
+		$failedOrders = $this->getFailedOrdersWithDeclines($orderIncrementIds);
+		$realOrders = $this->getRealOrdersWithDeclines($orderIncrementIds);
 		$failedTransactionData = $this->getFailedTransactionData($orderIncrementIds);
 
 		$failedTransactionDataArray = [];
@@ -106,7 +106,7 @@ class Preview extends Action implements HttpGetActionInterface
 			return strtotime($b['date_time']) <=> strtotime($a['date_time']);
 		});
 
-		$orderList = array_slice($orderList, ($page - 1) * $pageSize, $pageSize);
+		//$orderList = array_slice($orderList, ($page - 1) * $pageSize, $pageSize);
 
 		return [
 			'orders' => $orderList,
@@ -150,19 +150,45 @@ class Preview extends Action implements HttpGetActionInterface
 		return $this->orderRepo->getList($search)->getItems();
 	}
 
-	private function getOrderIncrementIdsFromFailedTxns($page, $pageSize)
+	private function getOrderIncrementIdsFromFailedTxns($page, $pageSize, $search = null)
 	{
 		$connection = $this->resourceConnection->getConnection();
 		$offset = ($page - 1) * $pageSize;
 
-		$query = "SELECT DISTINCT order_increment_id FROM failed_transaction WHERE order_increment_id IS NOT NULL ORDER BY order_increment_id DESC  LIMIT $pageSize OFFSET $offset";
+		$searchCondition = '';
+		if ($search) {
+			$searchCondition = "AND (
+				sales_order.increment_id LIKE '%$search%' OR
+				sales_order.customer_name LIKE '%$search%' OR
+				sales_order.order_state LIKE '%$search%' OR
+				sales_order.grandTotal LIKE '%$search%' OR
+				failed_order.order_increment_id LIKE '%$search%' OR
+				failed_order.customer_name LIKE '%$search%' OR
+				failed_order.order_state LIKE '%$search%' OR
+				failed_order.grandTotal LIKE '%$search%' OR
+				failed_transaction.remote_ip LIKE '%$search%'
+			)";
+		}
+
+		$query = "SELECT DISTINCT failed_transaction.order_increment_id 
+			FROM failed_transaction 
+			LEFT JOIN sales_order ON failed_transaction.order_increment_id = sales_order.increment_id
+			LEFT JOIN failed_order ON failed_transaction.order_increment_id = failed_order.order_increment_id
+			WHERE failed_transaction.order_increment_id IS NOT NULL $searchCondition 
+			ORDER BY failed_transaction.order_increment_id DESC 
+			LIMIT $pageSize OFFSET $offset";
 		$orderIncrementIds = $connection->fetchCol($query);
 
-		$countQuery = "SELECT COUNT(DISTINCT order_increment_id) FROM failed_transaction WHERE order_increment_id IS NOT NULL";
+		$countQuery = "SELECT COUNT(DISTINCT failed_transaction.order_increment_id) 
+			FROM failed_transaction 
+			LEFT JOIN sales_order ON failed_transaction.order_increment_id = sales_order.increment_id
+			LEFT JOIN failed_order ON failed_transaction.order_increment_id = failed_order.order_increment_id
+			WHERE failed_transaction.order_increment_id IS NOT NULL $searchCondition";
 		$totalCount = $connection->fetchOne($countQuery);
 
 		return ['ids' => $orderIncrementIds, 'count' => $totalCount];
 	}
+
 
 	private function getFailedTransactionData(array $orderIncrementIds)
 	{

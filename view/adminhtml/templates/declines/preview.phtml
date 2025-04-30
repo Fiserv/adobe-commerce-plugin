@@ -53,7 +53,7 @@ $totalPages = $block->getTotalPages();
 
     <div id="noRecordsMessage" style="display: none;margin-bottom: 20%;"><?php echo __('No failed orders found!'); ?></div>
 
-    <div id="paginationControls"></div>
+    <div id="paginationControls" data-totalPage="<?php echo $totalPages; ?>"></div>
 <?php else: ?>
     <div style="margin-bottom: 20%"><?php echo __('No failed orders found!'); ?></div>
 <?php endif; ?>
