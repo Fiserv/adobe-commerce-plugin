@@ -57,8 +57,9 @@ class Preview extends Action implements HttpGetActionInterface
 		if ($this->getRequest()->isAjax()) {
 			$page = (int) $this->getRequest()->getParam('page', 1);
 			$pageSize = (int) $this->getRequest()->getParam('pageSize', 5);
+			$search = $this->getRequest()->getParam('searchFilter', '');
 
-			$orders = $this->getOrdersWithDeclines($page, $pageSize);
+			$orders = $this->getOrdersWithDeclines($page, $pageSize, $search);
 
 			$result = $this->jsonFactory->create();
 			return $result->setData($orders);
@@ -75,9 +76,9 @@ class Preview extends Action implements HttpGetActionInterface
 		return $resultPage;
 	}
 
-	private function getOrdersWithDeclines($page, $pageSize)
+	private function getOrdersWithDeclines($page=1, $pageSize=5, $search='')
 	{
-		$orderIncrementData = $this->getOrderIncrementIdsFromFailedTxns($page, $pageSize);
+		$orderIncrementData = $this->getOrderIncrementIdsFromFailedTxns($page, $pageSize, $search);
 		$orderIncrementIds = $orderIncrementData['ids'];
 
 		$failedOrders = $this->getFailedOrdersWithDeclines($orderIncrementIds);
@@ -157,9 +158,10 @@ class Preview extends Action implements HttpGetActionInterface
 		if ($search) {
 			$searchCondition = "AND (
 				sales_order.increment_id LIKE '%$search%' OR
-				sales_order.customer_name LIKE '%$search%' OR
-				sales_order.order_state LIKE '%$search%' OR
-				sales_order.grandTotal LIKE '%$search%' OR
+				sales_order.customer_firstname LIKE '%$search%' OR
+				sales_order.customer_lastname LIKE '%$search%' OR
+				sales_order.status LIKE '%$search%' OR
+				sales_order.grand_total LIKE '%$search%' OR
 				failed_order.order_increment_id LIKE '%$search%' OR
 				failed_order.customer_name LIKE '%$search%' OR
 				failed_order.order_state LIKE '%$search%' OR

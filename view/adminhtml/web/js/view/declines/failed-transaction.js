@@ -5,6 +5,7 @@ define([
 
 	var currentPage = 1;
 	var rowsPerPage = 5;
+	var searchFilter = '';
 
 	function fetchOrders(page) {
 		$.ajax({
@@ -12,7 +13,8 @@ define([
 			type: 'GET',
 			data: {
 				page: page,
-				pageSize: rowsPerPage
+				pageSize: rowsPerPage,
+				searchFilter: searchFilter
 			},
 			success: function (data) {
 				renderTable(data.orders);
@@ -81,26 +83,9 @@ define([
 	}
 
 	function searchTable() {
-		var filter = $('#searchInput').val().toUpperCase();
-
-		$('#transactionsTable tr').each(function (index) {
-			if (index === 0) return; // Skip header row
-			var $row = $(this);
-			$row.attr('searchedRow', 'false');
-			$row.find('td').each(function () {
-				var txtValue = $(this).text();
-				if (txtValue.toUpperCase().indexOf(filter) > -1) {
-					$row.attr('searchedRow', 'true');
-					return false; // Stop searching further cells in this row
-				}
-			});
-		});
-
+		searchFilter = $('#searchInput').val().toLowerCase();
 		currentPage = 1; // Reset current page to 1 when search is applied
-
-		requestAnimationFrame(function () {
-			fetchOrders(currentPage);
-		});
+		fetchOrders(currentPage);
 	}
 
 	$(document).ready(function () {
