@@ -77,7 +77,9 @@ class Preview extends Action implements HttpGetActionInterface
 
 	private function getOrdersWithDeclines($page, $pageSize)
 	{
-		$orderIncrementIds = $this->getOrderIncrementIdsFromFailedTxns();
+		$orderIncrementData = $this->getOrderIncrementIdsFromFailedTxns($page, $pageSize);
+		$orderIncrementIds = $orderIncrementData['ids'];
+
 		$failedOrders = $this->getFailedOrdersWithDeclines($orderIncrementIds, $page, $pageSize);
 		$realOrders = $this->getRealOrdersWithDeclines($orderIncrementIds, $page, $pageSize);
 		$failedTransactionData = $this->getFailedTransactionData($orderIncrementIds);
@@ -108,7 +110,7 @@ class Preview extends Action implements HttpGetActionInterface
 
 		return [
 			'orders' => $orderList,
-			'totalPages' => ceil(count($orderList) / $pageSize)
+			'totalPages' => ceil($orderIncrementData['count'] / $pageSize)
 		];
 	}
 
@@ -118,7 +120,7 @@ class Preview extends Action implements HttpGetActionInterface
 		return $data ? $data['remote_ip'] : 'Admin';
 	}
 
-	private function getFailedOrdersWithDeclines(array $orderIncrementIds, $page, $pageSize)
+	private function getFailedOrdersWithDeclines(array $orderIncrementIds)
 	{
 		$filter = $this->filterBuilder
 		 ->setField(OrderModel::KEY_ORDER_INCREMENT_ID)
@@ -128,14 +130,12 @@ class Preview extends Action implements HttpGetActionInterface
 
 		$search = $this->searchBuilder
 		 ->addFilters([$filter])
-		 ->setPageSize($pageSize)
-		 ->setCurrentPage($page)
 		 ->create();
 
 		return $this->failedOrderRepo->getList($search)->getItems();
 	}
 
-	private function getRealOrdersWithDeclines(array $orderIncrementIds, $page, $pageSize)
+	private function getRealOrdersWithDeclines(array $orderIncrementIds)
 	{
 		$filter = $this->filterBuilder
 		 ->setField('increment_id')
@@ -145,19 +145,23 @@ class Preview extends Action implements HttpGetActionInterface
 
 		$search = $this->searchBuilder
 		 ->addFilters([$filter])
-		 ->setPageSize($pageSize)
-		 ->setCurrentPage($page)
 		 ->create();
 
 		return $this->orderRepo->getList($search)->getItems();
 	}
 
-	private function getOrderIncrementIdsFromFailedTxns()
+	private function getOrderIncrementIdsFromFailedTxns($page, $pageSize)
 	{
 		$connection = $this->resourceConnection->getConnection();
-		$query = "SELECT DISTINCT order_increment_id FROM failed_transaction WHERE order_increment_id IS NOT NULL";
+		$offset = ($page - 1) * $pageSize;
 
-		return $connection->fetchCol($query);
+		$query = "SELECT DISTINCT order_increment_id FROM failed_transaction WHERE order_increment_id IS NOT NULL ORDER BY order_increment_id DESC  LIMIT $pageSize OFFSET $offset";
+		$orderIncrementIds = $connection->fetchCol($query);
+
+		$countQuery = "SELECT COUNT(DISTINCT order_increment_id) FROM failed_transaction WHERE order_increment_id IS NOT NULL";
+		$totalCount = $connection->fetchOne($countQuery);
+
+		return ['ids' => $orderIncrementIds, 'count' => $totalCount];
 	}
 
 	private function getFailedTransactionData(array $orderIncrementIds)
