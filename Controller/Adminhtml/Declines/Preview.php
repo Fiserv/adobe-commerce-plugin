@@ -106,8 +106,6 @@ class Preview extends Action implements HttpGetActionInterface
 			return strtotime($b['date_time']) <=> strtotime($a['date_time']);
 		});
 
-		//$orderList = array_slice($orderList, ($page - 1) * $pageSize, $pageSize);
-
 		return [
 			'orders' => $orderList,
 			'totalPages' => ceil($orderIncrementData['count'] / $pageSize)
@@ -170,18 +168,18 @@ class Preview extends Action implements HttpGetActionInterface
 			)";
 		}
 
-		$query = "SELECT DISTINCT failed_transaction.order_increment_id 
-			FROM failed_transaction 
-			LEFT JOIN sales_order ON failed_transaction.order_increment_id = sales_order.increment_id
+		$query = "SELECT DISTINCT failed_transaction.order_increment_id
+ 			FROM failed_transaction
+ 			LEFT JOIN sales_order ON failed_transaction.order_increment_id = sales_order.increment_id
 			LEFT JOIN failed_order ON failed_transaction.order_increment_id = failed_order.order_increment_id
-			WHERE failed_transaction.order_increment_id IS NOT NULL $searchCondition 
-			ORDER BY failed_transaction.order_increment_id DESC 
-			LIMIT $pageSize OFFSET $offset";
+			WHERE failed_transaction.order_increment_id IS NOT NULL $searchCondition
+ 			ORDER BY failed_transaction.order_increment_id DESC
+ 			LIMIT $pageSize OFFSET $offset";
 		$orderIncrementIds = $connection->fetchCol($query);
 
-		$countQuery = "SELECT COUNT(DISTINCT failed_transaction.order_increment_id) 
-			FROM failed_transaction 
-			LEFT JOIN sales_order ON failed_transaction.order_increment_id = sales_order.increment_id
+		$countQuery = "SELECT COUNT(DISTINCT failed_transaction.order_increment_id)
+ 			FROM failed_transaction
+ 			LEFT JOIN sales_order ON failed_transaction.order_increment_id = sales_order.increment_id
 			LEFT JOIN failed_order ON failed_transaction.order_increment_id = failed_order.order_increment_id
 			WHERE failed_transaction.order_increment_id IS NOT NULL $searchCondition";
 		$totalCount = $connection->fetchOne($countQuery);
@@ -195,16 +193,16 @@ class Preview extends Action implements HttpGetActionInterface
 		$connection = $this->resourceConnection->getConnection();
 		$orderIncrementIdsString = implode(',', $orderIncrementIds);
 		$query = "
-SELECT ft.order_increment_id, ft.date_time AS oldest_date_time, ft.remote_ip
-FROM failed_transaction ft
-INNER JOIN (
-SELECT order_increment_id, MIN(date_time) AS oldest_date_time
-FROM failed_transaction
-WHERE order_increment_id IN ($orderIncrementIdsString)
-GROUP BY order_increment_id
-) AS subquery
-ON ft.order_increment_id = subquery.order_increment_id AND ft.date_time = subquery.oldest_date_time
-";
+			SELECT ft.order_increment_id, ft.date_time AS oldest_date_time, ft.remote_ip
+			FROM failed_transaction ft
+			INNER JOIN (
+				SELECT order_increment_id, MIN(date_time) AS oldest_date_time
+				FROM failed_transaction
+				WHERE order_increment_id IN ($orderIncrementIdsString)
+				GROUP BY order_increment_id
+			) AS subquery
+			ON ft.order_increment_id = subquery.order_increment_id AND ft.date_time = subquery.oldest_date_time
+		";
 
 		return $connection->fetchAll($query);
 	}
