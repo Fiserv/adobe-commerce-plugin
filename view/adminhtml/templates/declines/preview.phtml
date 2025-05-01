@@ -44,7 +44,7 @@ $totalPages = $block->getTotalPages();
 					<td><?php echo isset($order['grandTotal']) ? $block->formatPrice($order['grandTotal']) : "N/A"; ?></td>
 					<td><?php echo isset($order['remote_ip']) ? $order['remote_ip'] : "N/A"; ?></td>
 					<td>
-						<a href="<?php echo $block->getUrl('fiserv/declines/order', ['id' => $order['order_increment_id']]); ?>">View</a>
+						<a href="<?php echo isset($order['orderViewUrl']) ? $order['orderViewUrl'] : "`"; ?>">View</a>
 					</td>
 				</tr>
 			<?php endforeach; ?>

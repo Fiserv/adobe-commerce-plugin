@@ -38,7 +38,7 @@ define([
 			'<td>' + (order.order_state || 'N/A') + '</td>' +
 			'<td>' + (order.grandTotal || 'N/A') + '</td>' +
 			'<td>' + (order.remote_ip || 'N/A') + '</td>' +
-			'<td><a href="' + order.viewUrl + '">View</a></td>' +
+			'<td><a href="' + order.orderViewUrl + '">View</a></td>' +
 			'</tr>';
 			$tableBody.append(row);
 		});

@@ -27,6 +27,7 @@ class Preview extends Action implements HttpGetActionInterface
 	private $searchBuilder;
 	private $resourceConnection;
 	private $failedOrderManager;
+	const ORDER_URL = 'orderViewUrl';
 
 	public function __construct(
 		Context $context,
@@ -216,7 +217,8 @@ class Preview extends Action implements HttpGetActionInterface
 			OrderModel::KEY_ORDER_INCREMENT_ID => $failedOrder[OrderModel::KEY_ORDER_INCREMENT_ID],
 			OrderModel::KEY_CUSTOMER_NAME => $failedOrder[OrderModel::KEY_CUSTOMER_NAME],
 			OrderModel::KEY_ORDER_STATE => $failedOrder[OrderModel::KEY_ORDER_STATE],
-			OrderModel::KEY_GRAND_TOTAL => $failedOrder[OrderModel::KEY_GRAND_TOTAL]
+			OrderModel::KEY_GRAND_TOTAL => $failedOrder[OrderModel::KEY_GRAND_TOTAL],
+			self::ORDER_URL => $this->getUrl('fiserv/declines/order', ['id' => $failedOrder[OrderModel::KEY_ORDER_INCREMENT_ID]])
 		];
 	}
 
