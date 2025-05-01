@@ -25,7 +25,8 @@ class FailedOrder extends AbstractModel implements FailedOrderInterface
 	public const KEY_ITEM_PRICE = "price";
 	public const KEY_ITEM_ID = "product_id";
 	public const KEY_STORE_CREDIT = "storeCredit";
-	public const KEY_DISCOUNT_CODE = "discountCode";
+	public const KEY_DISCOUNT_AMOUNT = "discountAmount";
+
 
 	protected function _construct()
 	{
@@ -172,13 +173,13 @@ class FailedOrder extends AbstractModel implements FailedOrderInterface
 		return $this->setData(self::KEY_STORE_CREDIT, $storeCredit);
 	}
 
-	public function getDiscountCode()
+	public function getDiscountAmount()
 	{
-		return $this->getDiscountCode(self::KEY_DISCOUNT_CODE);
+		return $this->getData(self::KEY_DISCOUNT_AMOUNT);
 	}
 
-	public function setDiscountCode($discountCode)
+	public function setDiscountAmount($discountAmount)
 	{
-		return $this->setData(self::KEY_DISCOUNT_CODE, $discountCode);
+		return $this->setData(self::KEY_DISCOUNT_AMOUNT, $discountAmount);
 	}
 }
