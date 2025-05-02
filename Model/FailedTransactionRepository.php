@@ -12,6 +12,7 @@ use Magento\Framework\Api\SearchCriteria\CollectionProcessorInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\CouldNotDeleteException;
+use Magento\Framework\App\ResourceConnection;
 
 class FailedTransactionRepository implements FailedTransactionRepositoryInterface
 {
@@ -20,19 +21,22 @@ class FailedTransactionRepository implements FailedTransactionRepositoryInterfac
 	protected $searchResultsFactory;
 	protected $collectionProcessor;
 	protected $collectionFactory;
+	private $resourceConnection;
 
 	public function __construct(
 		\Fiserv\Payments\Model\FailedTransactionFactory $failedTransactionFactory,
 		FailedTransactionResource $failedTransactionResource,
 		FailedTransactionSearchResultInterfaceFactory $searchResultsFactory,
 		CollectionProcessorInterface $collectionProcessor,
-		FailedTransactionCollectionFactory $collectionFactory
+		FailedTransactionCollectionFactory $collectionFactory,
+		ResourceConnection $resourceConnection
 	) {
 		$this->failedTransactionFactory = $failedTransactionFactory;
 		$this->failedTransactionResource = $failedTransactionResource;
 		$this->searchResultsFactory = $searchResultsFactory;
 		$this->collectionProcessor = $collectionProcessor;
 		$this->collectionFactory = $collectionFactory;
+		$this->resourceConnection = $resourceConnection;
 	}
 
 	public function get($id)
@@ -87,5 +91,24 @@ class FailedTransactionRepository implements FailedTransactionRepositoryInterfac
 		$collection = $this->collectionFactory->create();
 		$collection->addFieldToFilter('order_increment_id', $orderIncrementId);
 		return $collection->getItems();
+	}
+
+	private function getFailedTransactionData(array $orderIncrementIds)
+	{
+		$connection = $this->resourceConnection->getConnection();
+		$orderIncrementIdsString = implode(',', $orderIncrementIds);
+		$query = "
+			SELECT ft.order_increment_id, ft.date_time AS oldest_date_time, ft.remote_ip
+			FROM failed_transaction ft
+			INNER JOIN (
+				SELECT order_increment_id, MIN(date_time) AS oldest_date_time
+				FROM failed_transaction
+				WHERE order_increment_id IN ($orderIncrementIdsString)
+				GROUP BY order_increment_id
+			) AS subquery
+			ON ft.order_increment_id = subquery.order_increment_id AND ft.date_time = subquery.oldest_date_time
+		";
+
+		return $connection->fetchAll($query);
 	}
 }

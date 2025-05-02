@@ -12,6 +12,8 @@ use Magento\Framework\Api\SearchCriteria\CollectionProcessorInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\CouldNotDeleteException;
+use Magento\Framework\Api\FilterBuilder;
+use Magento\Framework\Api\SearchCriteriaBuilder;
 
 class FailedOrderRepository implements FailedOrderRepositoryInterface
 {
@@ -20,19 +22,25 @@ class FailedOrderRepository implements FailedOrderRepositoryInterface
 	protected $searchResultsFactory;
 	protected $collectionProcessor;
 	protected $collectionFactory;
+	private $filterBuilder;
+	private $searchBuilder;
 
 	public function __construct(
 		\Fiserv\Payments\Model\FailedOrderFactory $failedOrderFactory,
 		FailedOrderResource $failedOrderResource,
 		FailedOrderSearchResultInterfaceFactory $searchResultsFactory,
 		CollectionProcessorInterface $collectionProcessor,
-		FailedOrderCollectionFactory $collectionFactory
+		FailedOrderCollectionFactory $collectionFactory,
+		FilterBuilder $filterBuilder,
+		SearchCriteriaBuilder $searchBuilder
 	) {
 		$this->failedOrderFactory = $failedOrderFactory;
 		$this->failedOrderResource = $failedOrderResource;
 		$this->searchResultsFactory = $searchResultsFactory;
 		$this->collectionProcessor = $collectionProcessor;
 		$this->collectionFactory = $collectionFactory;
+		$this->filterBuilder = $filterBuilder;
+		$this->searchBuilder = $searchBuilder;
 	}
 
 	public function get($id)
@@ -87,5 +95,20 @@ class FailedOrderRepository implements FailedOrderRepositoryInterface
 		$collection = $this->collectionFactory->create();
 		$collection->addFieldToFilter('order_increment_id', $orderIncrementId);
 		return $collection->getItems();
+	}
+
+	private function getFailedOrdersWithDeclines(array $orderIncrementIds)
+	{
+		$filter = $this->filterBuilder
+		 ->setField(OrderModel::KEY_ORDER_INCREMENT_ID)
+		 ->setConditionType('in')
+		 ->setValue($orderIncrementIds)
+		 ->create();
+
+		$search = $this->searchBuilder
+		 ->addFilters([$filter])
+		 ->create();
+
+		return $this->getList($search)->getItems();
 	}
 }
