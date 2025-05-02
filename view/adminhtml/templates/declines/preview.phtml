@@ -5,6 +5,7 @@
  */
 $orders = $block->getOrders();
 $totalPages = $block->getTotalPages();
+$allApprovalStatus = $block->getAllApprovalStatus();
 ?>
 
 <?php if ($orders) : ?>
@@ -18,6 +19,19 @@ $totalPages = $block->getTotalPages();
 				<option value="15">15</option>
 				<option value="20">20</option>
 			</select>
+			<?php if($allApprovalStatus): ?>
+				<label for="approvalStatus">Cause of failure:</label>
+				<select id="approvalStatus">
+						<option value="">Select</option>
+					<?php foreach ($allApprovalStatus as $approvalStatus): ?>
+						<option value="<?php echo  $approvalStatus; ?>"><?php echo  $approvalStatus; ?></option>
+					<?php endforeach; ?>
+				</select>
+			<?php endif; ?>
+			<label for="fromDate">From:</label>
+			<input id="fromDate" type="date"/>
+			<label for="toDate">To:</label>
+			<input id="toDate" type="date"/>
 			<span id="paginationInfoTop" class="pagination-info"></span>
 		</div>
 	</div>
@@ -30,6 +44,7 @@ $totalPages = $block->getTotalPages();
 				<th><?php echo __('Customer Name'); ?></th>
 				<th><?php echo __('Order State'); ?></th>
 				<th><?php echo __('Order Amount'); ?></th>
+				<th><?php echo __('Cause of Failure'); ?></th>
 				<th><?php echo __('IP Address'); ?></th>
 				<th><?php echo __('Action'); ?></th>
 			</tr>
@@ -42,6 +57,7 @@ $totalPages = $block->getTotalPages();
 					<td><?php echo isset($order['customer_name']) ? $order['customer_name'] : "N/A"; ?></td>
 					<td><?php echo isset($order['order_state']) ? strtoupper($order['order_state']) : "N/A"; ?></td>
 					<td><?php echo isset($order['grandTotal']) ? $block->formatPrice($order['grandTotal']) : "N/A"; ?></td>
+					<td><?php echo isset($order['approval_status']) ? $order['approval_status'] : "N/A"; ?></td>
 					<td><?php echo isset($order['remote_ip']) ? $order['remote_ip'] : "N/A"; ?></td>
 					<td>
 						<a href="<?php echo isset($order['orderViewUrl']) ? $order['orderViewUrl'] : "`"; ?>">View</a>

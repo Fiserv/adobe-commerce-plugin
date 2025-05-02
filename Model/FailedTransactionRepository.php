@@ -93,12 +93,12 @@ class FailedTransactionRepository implements FailedTransactionRepositoryInterfac
 		return $collection->getItems();
 	}
 
-	private function getFailedTransactionData(array $orderIncrementIds)
+	public function getFailedTransactionData(array $orderIncrementIds)
 	{
 		$connection = $this->resourceConnection->getConnection();
 		$orderIncrementIdsString = implode(',', $orderIncrementIds);
 		$query = "
-			SELECT ft.order_increment_id, ft.date_time AS oldest_date_time, ft.remote_ip
+			SELECT ft.order_increment_id, ft.date_time AS oldest_date_time, ft.remote_ip, ft.approval_status
 			FROM failed_transaction ft
 			INNER JOIN (
 				SELECT order_increment_id, MIN(date_time) AS oldest_date_time
@@ -110,5 +110,11 @@ class FailedTransactionRepository implements FailedTransactionRepositoryInterfac
 		";
 
 		return $connection->fetchAll($query);
+	}
+
+	public function getAllAprovalStatus() {
+		$connection = $this->resourceConnection->getConnection();
+		$query = "SELECT DISTINCT approval_status FROM failed_transaction";
+		return $connection->fetchCol($query);
 	}
 }

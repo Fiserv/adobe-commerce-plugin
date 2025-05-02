@@ -8,6 +8,13 @@ use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Sales\Api\OrderRepositoryInterface;
 
 class DeclinedRealOrdersHelper {
+
+	private $orderRepo;
+
+	private $filterBuilder;
+
+	private $searchBuilder;
+
 	
 	public function __construct(
 		OrderRepositoryInterface $orderRepo,
@@ -19,7 +26,7 @@ class DeclinedRealOrdersHelper {
 		$this->searchBuilder = $searchBuilder;
 	}
 
-	public static function getRealOrdersWithDeclines(array $orderIncrementIds)
+	public function getRealOrdersWithDeclines(array $orderIncrementIds)
 	{
 		$filter = $this->filterBuilder
 		 ->setField('increment_id')

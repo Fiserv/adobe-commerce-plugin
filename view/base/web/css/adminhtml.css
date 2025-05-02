@@ -246,20 +246,25 @@
 }
 
 .paginationContainerTop {
-	display: flex;
-	align-items: center; /* Ensures items are aligned to the center vertically */
-	margin-left: auto; /* Pushes the pagination container to the rightmost side */
+	width: 100%;
+	max-width: 50vw;
+}
+
+.paginationContainerTop label {
+	margin-left: 20px;
 }
 
 #paginationInfoTop {
 	margin-left: 0.5rem; /* Adds some space between the select dropdown and the pagination info */
 }
 
-#rowsPerPage {
+#rowsPerPage,
+#approvalStatus{
 	border-top: none;
 	border-right: none;
 	border-left: none;
 	border-bottom: 1px solid #cfcfcf;
+	max-width: 150px;
 }
 
 .failed-transaction-detail-row {

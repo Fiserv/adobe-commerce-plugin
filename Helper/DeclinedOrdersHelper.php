@@ -8,6 +8,8 @@ use Fiserv\Payments\Model\Service\CommerceHub\FailedOrderManager;
 use Fiserv\Payments\Helper\DeclinedRealOrdersHelper;
 use Fiserv\Payments\Model\FailedTransactionRepository;
 use Fiserv\Payments\Model\FailedOrderRepository;
+use Fiserv\Payments\Model\FailedOrder as OrderModel;
+use Magento\Framework\UrlInterface;
 
 class DeclinedOrdersHelper
 {
@@ -16,6 +18,8 @@ class DeclinedOrdersHelper
 	private $failedOrderManager;
 	private $failedTransactionRepo;
 	private $failedOrderRepo;
+	private $declinedRealOrderHelper;
+	private $urlBuilder;
 	const ORDER_URL = 'orderViewUrl';
 
 	public function __construct(
@@ -23,22 +27,28 @@ class DeclinedOrdersHelper
 		ResourceConnection $resourceConnection,
 		FailedOrderManager $failedOrderManager,
 		FailedTransactionRepository $failedTransactionRepo,
-		FailedOrderRepository $failedOrderRepo
+		FailedOrderRepository $failedOrderRepo,
+		DeclinedRealOrdersHelper $declinedRealOrderHelper,
+		UrlInterface $urlBuilder
 	) {
 		$this->logger = $logger;
 		$this->resourceConnection = $resourceConnection;
 		$this->failedOrderManager = $failedOrderManager;
 		$this->failedTransactionRepo = $failedTransactionRepo;
 		$this->failedOrderRepo = $failedOrderRepo;
+		$this->declinedRealOrderHelper = $declinedRealOrderHelper;
+		$this->urlBuilder = $urlBuilder;
 	}
 
-	public static function getOrdersWithDeclines($page=1, $pageSize=5, $search='')
+	public function getOrdersWithDeclines($page=1, $pageSize=5, $search='', $approvalStatus='')
 	{
-		$orderIncrementData = $this->getOrderIncrementIdsFromFailedTxns($page, $pageSize, $search);
+		$orderIncrementData = $this->getOrderIncrementIdsFromFailedTxns($page, $pageSize, $search, $approvalStatus);
 		$orderIncrementIds = $orderIncrementData['ids'];
 
+		$allApprovalStatus = $this->failedTransactionRepo->getAllAprovalStatus();
+		
 		$failedOrders = $this->failedOrderRepo->getFailedOrdersWithDeclines($orderIncrementIds);
-		$realOrders = DeclinedRealOrdersHelper::getRealOrdersWithDeclines($orderIncrementIds);
+		$realOrders = $this->declinedRealOrderHelper->getRealOrdersWithDeclines($orderIncrementIds);
 		$failedTransactionData = $this->failedTransactionRepo->getFailedTransactionData($orderIncrementIds);
 
 		$failedTransactionDataArray = [];
@@ -46,16 +56,20 @@ class DeclinedOrdersHelper
 			$failedTransactionDataArray[$ft['order_increment_id']] = $ft;
 		}
 
+
+
 		$orderList = [];
 		foreach ($failedOrders as $fo) {
 			$orderArray = $this->convertFailedOrderToArray($fo);
 			$orderArray['remote_ip'] = $this->getRemoteIp($failedTransactionDataArray, $fo['order_increment_id'] ?? "");
+			$orderArray['approval_status'] = $failedTransactionDataArray[$orderArray['order_increment_id']]['approval_status'];
 			array_push($orderList, $orderArray);
 		}
 
 		foreach ($realOrders as $ro) {
 			$orderArray = $this->convertRealOrderToArray($ro);
 			$orderArray['remote_ip'] = $this->getRemoteIp($failedTransactionDataArray, $ro['order_increment_id'] ?? "");
+			$orderArray['approval_status'] = $failedTransactionDataArray[$orderArray['order_increment_id']]['approval_status'];
 			array_push($orderList, $orderArray);
 		}
 
@@ -65,17 +79,18 @@ class DeclinedOrdersHelper
 
 		return [
 			'orders' => $orderList,
-			'totalPages' => ceil($orderIncrementData['count'] / $pageSize)
+			'totalPages' => ceil($orderIncrementData['count'] / $pageSize),
+			'approval_status' => $allApprovalStatus
 		];
 	}
-	
+
 	private function getRemoteIp(array $failedTxnData, string $orderIncrementId)
 	{
 		$data = $failedTxnData[$orderIncrementId] ?? null;
 		return $data ? $data['remote_ip'] : 'Admin';
 	}
 	
-	private function getOrderIncrementIdsFromFailedTxns($page, $pageSize, $search = null)
+	private function getOrderIncrementIdsFromFailedTxns($page, $pageSize, $search = null, $approvalStatus = null)
 	{
 		$connection = $this->resourceConnection->getConnection();
 		$offset = ($page - 1) * $pageSize;
@@ -92,15 +107,22 @@ class DeclinedOrdersHelper
 				failed_order.customer_name LIKE '%$search%' OR
 				failed_order.order_state LIKE '%$search%' OR
 				failed_order.grandTotal LIKE '%$search%' OR
-				failed_transaction.remote_ip LIKE '%$search%'
+				failed_transaction.remote_ip LIKE '%$search%' OR
+				failed_transaction.approval_status LIKE '%$search%'
 			)";
+		}
+
+		$approvalCondition = '';
+		if ($approvalStatus !== null && $approvalStatus !== '') {
+			$approvalStatus = addslashes($approvalStatus); // Prevent SQL injection
+			$approvalCondition = "AND failed_transaction.approval_status = '$approvalStatus'";
 		}
 
 		$query = "SELECT DISTINCT failed_transaction.order_increment_id
 			FROM failed_transaction
 			LEFT JOIN sales_order ON failed_transaction.order_increment_id = sales_order.increment_id
 			LEFT JOIN failed_order ON failed_transaction.order_increment_id = failed_order.order_increment_id
-			WHERE failed_transaction.order_increment_id IS NOT NULL $searchCondition
+			WHERE failed_transaction.order_increment_id IS NOT NULL $searchCondition $approvalCondition
 			ORDER BY failed_transaction.order_increment_id DESC
 			LIMIT $pageSize OFFSET $offset";
 		$orderIncrementIds = $connection->fetchCol($query);
@@ -109,7 +131,7 @@ class DeclinedOrdersHelper
 			FROM failed_transaction
 			LEFT JOIN sales_order ON failed_transaction.order_increment_id = sales_order.increment_id
 			LEFT JOIN failed_order ON failed_transaction.order_increment_id = failed_order.order_increment_id
-			WHERE failed_transaction.order_increment_id IS NOT NULL $searchCondition";
+			WHERE failed_transaction.order_increment_id IS NOT NULL $searchCondition $approvalCondition";
 		$totalCount = $connection->fetchOne($countQuery);
 
 		return ['ids' => $orderIncrementIds, 'count' => $totalCount];
@@ -123,7 +145,7 @@ class DeclinedOrdersHelper
 			OrderModel::KEY_CUSTOMER_NAME => $failedOrder[OrderModel::KEY_CUSTOMER_NAME],
 			OrderModel::KEY_ORDER_STATE => $failedOrder[OrderModel::KEY_ORDER_STATE],
 			OrderModel::KEY_GRAND_TOTAL => $failedOrder[OrderModel::KEY_GRAND_TOTAL],
-			self::ORDER_URL => $this->getUrl('fiserv/declines/order', ['id' => $failedOrder[OrderModel::KEY_ORDER_INCREMENT_ID]])
+			self::ORDER_URL => $this->urlBuilder->getUrl('fiserv/declines/order', ['id' => $failedOrder[OrderModel::KEY_ORDER_INCREMENT_ID]])
 		];
 	}
 

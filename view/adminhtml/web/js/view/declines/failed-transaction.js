@@ -6,6 +6,7 @@ define([
 	var currentPage = 1;
 	var rowsPerPage = 5;
 	var searchFilter = '';
+	var approvalStatus = '';
 
 	function fetchOrders(page) {
 		$.ajax({
@@ -14,7 +15,8 @@ define([
 			data: {
 				page: page,
 				pageSize: rowsPerPage,
-				searchFilter: searchFilter
+				searchFilter: searchFilter,
+				approvalStatus: encodeURIComponent(approvalStatus)
 			},
 			success: function (data) {
 				renderTable(data.orders);
@@ -37,6 +39,7 @@ define([
 			'<td>' + (order.customer_name || 'N/A') + '</td>' +
 			'<td>' + (order.order_state || 'N/A') + '</td>' +
 			'<td>' + (order.grandTotal || 'N/A') + '</td>' +
+			'<td>' + (order.approval_status || 'N/A') + '</td>' +
 			'<td>' + (order.remote_ip || 'N/A') + '</td>' +
 			'<td><a href="' + order.orderViewUrl + '">View</a></td>' +
 			'</tr>';
@@ -82,6 +85,12 @@ define([
 		fetchOrders(currentPage);
 	}
 
+	function filterByApprovalStatus() {
+		approvalStatus = $('#approvalStatus').val();
+		currentPage = 1; // Reset current page to 1 when filter applied
+		fetchOrders(currentPage);
+	}
+
 	function searchTable() {
 		searchFilter = $('#searchInput').val().toLowerCase();
 		currentPage = 1; // Reset current page to 1 when search is applied
@@ -95,7 +104,7 @@ define([
 			}
 		});
 		$('#rowsPerPage').on('change', changeRowsPerPage);
+		$('#approvalStatus').on('change', filterByApprovalStatus);
 		setupPagination($('#paginationControls').data('totalpage'));
 	});
-
 });

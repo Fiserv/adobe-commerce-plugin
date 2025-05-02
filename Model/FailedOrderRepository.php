@@ -14,6 +14,7 @@ use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\CouldNotDeleteException;
 use Magento\Framework\Api\FilterBuilder;
 use Magento\Framework\Api\SearchCriteriaBuilder;
+use Fiserv\Payments\Model\FailedOrder as OrderModel;
 
 class FailedOrderRepository implements FailedOrderRepositoryInterface
 {
@@ -97,7 +98,7 @@ class FailedOrderRepository implements FailedOrderRepositoryInterface
 		return $collection->getItems();
 	}
 
-	private function getFailedOrdersWithDeclines(array $orderIncrementIds)
+	public function getFailedOrdersWithDeclines(array $orderIncrementIds)
 	{
 		$filter = $this->filterBuilder
 		 ->setField(OrderModel::KEY_ORDER_INCREMENT_ID)
