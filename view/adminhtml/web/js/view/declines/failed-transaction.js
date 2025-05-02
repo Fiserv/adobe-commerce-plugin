@@ -133,6 +133,29 @@ define([
 	$(document).ready(function () {
 		storeOriginalData();
 
+		var dateOptions = {
+			dateFormat: "yy-mm-dd",
+			beforeShow: function(input, inst) {
+				if (input.id === 'startDate') {
+					var endDate = $('#endDate').datepicker("getDate");
+					$(this).datepicker("option", "maxDate", endDate);
+				} else if (input.id === 'endDate') {
+					var startDate = $('#startDate').datepicker("getDate");
+					$(this).datepicker("option", "minDate", startDate);
+				}
+			},
+			onSelect: function(selectedDate) {
+				if (this.id === 'startDate') {
+					$('#endDate').datepicker('option', 'minDate', selectedDate);
+				} else if (this.id === 'endDate') {
+					$('#startDate').datepicker('option', 'maxDate', selectedDate);
+				}
+			}
+		};
+
+		$('#startDate').datepicker(dateOptions);
+		$('#endDate').datepicker(dateOptions);
+
 		$('#searchInput').on('keyup', searchTable);
 		$('#rowsPerPage').on('change', changeRowsPerPage);
 
@@ -169,11 +192,6 @@ define([
 			if (!$(event.target).closest('.approval-status-filter-arrow, #approvalStatusMenu').length) {
 				$('#approvalStatusMenu').removeClass('show');
 			}
-		});
-
-		// Initialize datepickers
-		$(".date-picker").datepicker({
-			dateFormat: "yy-mm-dd"
 		});
 
 		// Apply date filter when button is clicked
