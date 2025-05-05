@@ -28,6 +28,10 @@ class DeclinedRealOrdersHelper {
 
 	public function getRealOrdersWithDeclines(array $orderIncrementIds)
 	{
+		if (empty($orderIncrementIds)) {
+			return []; // Return an empty array
+		}
+
 		$filter = $this->filterBuilder
 		 ->setField('increment_id')
 		 ->setConditionType('in')

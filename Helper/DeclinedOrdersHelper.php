@@ -10,6 +10,7 @@ use Fiserv\Payments\Model\FailedTransactionRepository;
 use Fiserv\Payments\Model\FailedOrderRepository;
 use Fiserv\Payments\Model\FailedOrder as OrderModel;
 use Magento\Framework\UrlInterface;
+use Magento\Framework\Pricing\Helper\Data as PricingHelper;
 
 class DeclinedOrdersHelper
 {
@@ -20,6 +21,7 @@ class DeclinedOrdersHelper
 	private $failedOrderRepo;
 	private $declinedRealOrderHelper;
 	private $urlBuilder;
+	private $pricingHelper;
 	const ORDER_URL = 'orderViewUrl';
 
 	public function __construct(
@@ -29,7 +31,8 @@ class DeclinedOrdersHelper
 		FailedTransactionRepository $failedTransactionRepo,
 		FailedOrderRepository $failedOrderRepo,
 		DeclinedRealOrdersHelper $declinedRealOrderHelper,
-		UrlInterface $urlBuilder
+		UrlInterface $urlBuilder,
+		PricingHelper $pricingHelper
 	) {
 		$this->logger = $logger;
 		$this->resourceConnection = $resourceConnection;
@@ -38,6 +41,7 @@ class DeclinedOrdersHelper
 		$this->failedOrderRepo = $failedOrderRepo;
 		$this->declinedRealOrderHelper = $declinedRealOrderHelper;
 		$this->urlBuilder = $urlBuilder;
+		$this->pricingHelper = $pricingHelper;
 	}
 
 	public function getOrdersWithDeclines($page=1, $pageSize=5, $search='', $approvalStatus='')
@@ -89,54 +93,76 @@ class DeclinedOrdersHelper
 		$data = $failedTxnData[$orderIncrementId] ?? null;
 		return $data ? $data['remote_ip'] : 'Admin';
 	}
-	
+
 	private function getOrderIncrementIdsFromFailedTxns($page, $pageSize, $search = null, $approvalStatus = null)
 	{
 		$connection = $this->resourceConnection->getConnection();
 		$offset = ($page - 1) * $pageSize;
 
-		$searchCondition = '';
+		$select = $connection->select()
+		       ->distinct(true)
+		       ->from(['ft' => 'failed_transaction'], ['order_increment_id'])
+		       ->joinLeft(['so' => 'sales_order'], 'ft.order_increment_id = so.increment_id', [])
+		       ->joinLeft(['fo' => 'failed_order'], 'ft.order_increment_id = fo.order_increment_id', [])
+		       ->where('ft.order_increment_id IS NOT NULL')
+		       ->order('ft.order_increment_id DESC')
+		       ->limit($pageSize, $offset);
+
 		if ($search) {
-			$searchCondition = "AND (
-				sales_order.increment_id LIKE '%$search%' OR
-				sales_order.customer_firstname LIKE '%$search%' OR
-				sales_order.customer_lastname LIKE '%$search%' OR
-				sales_order.status LIKE '%$search%' OR
-				sales_order.grand_total LIKE '%$search%' OR
-				failed_order.order_increment_id LIKE '%$search%' OR
-				failed_order.customer_name LIKE '%$search%' OR
-				failed_order.order_state LIKE '%$search%' OR
-				failed_order.grandTotal LIKE '%$search%' OR
-				failed_transaction.remote_ip LIKE '%$search%' OR
-				failed_transaction.approval_status LIKE '%$search%'
-			)";
+			$search = '%' . $search . '%';
+			$searchFields = [
+				'so.increment_id',
+				'so.customer_firstname',
+				'so.customer_lastname',
+				'so.status',
+				'so.grand_total',
+				'fo.order_increment_id',
+				'fo.customer_name',
+				'fo.order_state',
+				'fo.grandTotal',
+				'ft.remote_ip',
+				'ft.approval_status'
+			];
+
+			$conditions = [];
+			foreach ($searchFields as $field) {
+				$conditions[] = $connection->quoteInto("$field LIKE ?", $search);
+			}
+
+			$select->where(new \Zend_Db_Expr('(' . implode(' OR ', $conditions) . ')'));
 		}
 
-		$approvalCondition = '';
 		if ($approvalStatus !== null && $approvalStatus !== '') {
-			$approvalStatus = addslashes($approvalStatus); // Prevent SQL injection
-			$approvalCondition = "AND failed_transaction.approval_status = '$approvalStatus'";
+			$select->where('ft.approval_status = ?', $approvalStatus);
 		}
 
-		$query = "SELECT DISTINCT failed_transaction.order_increment_id
-			FROM failed_transaction
-			LEFT JOIN sales_order ON failed_transaction.order_increment_id = sales_order.increment_id
-			LEFT JOIN failed_order ON failed_transaction.order_increment_id = failed_order.order_increment_id
-			WHERE failed_transaction.order_increment_id IS NOT NULL $searchCondition $approvalCondition
-			ORDER BY failed_transaction.order_increment_id DESC
-			LIMIT $pageSize OFFSET $offset";
-		$orderIncrementIds = $connection->fetchCol($query);
+		$orderIncrementIds = $connection->fetchCol($select);
 
-		$countQuery = "SELECT COUNT(DISTINCT failed_transaction.order_increment_id)
-			FROM failed_transaction
-			LEFT JOIN sales_order ON failed_transaction.order_increment_id = sales_order.increment_id
-			LEFT JOIN failed_order ON failed_transaction.order_increment_id = failed_order.order_increment_id
-			WHERE failed_transaction.order_increment_id IS NOT NULL $searchCondition $approvalCondition";
-		$totalCount = $connection->fetchOne($countQuery);
+		$countSelect = $connection->select()
+			    ->from(['ft' => 'failed_transaction'], ['total' => new \Zend_Db_Expr('COUNT(DISTINCT ft.order_increment_id)')])
+			    ->joinLeft(['so' => 'sales_order'], 'ft.order_increment_id = so.increment_id', [])
+			    ->joinLeft(['fo' => 'failed_order'], 'ft.order_increment_id = fo.order_increment_id', [])
+			    ->where('ft.order_increment_id IS NOT NULL');
+
+		if ($search) {
+			$conditions = [];
+			foreach ($searchFields as $field) {
+				$conditions[] = $connection->quoteInto("$field LIKE ?", $search);
+			}
+
+			$countSelect->where(new \Zend_Db_Expr('(' . implode(' OR ', $conditions) . ')'));
+		}
+
+		if ($approvalStatus !== null && $approvalStatus !== '') {
+			$countSelect->where('ft.approval_status = ?', $approvalStatus);
+		}
+
+		$totalCount = $connection->fetchOne($countSelect);
 
 		return ['ids' => $orderIncrementIds, 'count' => $totalCount];
 	}
-	
+
+
 	private function convertFailedOrderToArray($failedOrder)
 	{
 		return [
@@ -144,7 +170,7 @@ class DeclinedOrdersHelper
 			OrderModel::KEY_ORDER_INCREMENT_ID => $failedOrder[OrderModel::KEY_ORDER_INCREMENT_ID],
 			OrderModel::KEY_CUSTOMER_NAME => $failedOrder[OrderModel::KEY_CUSTOMER_NAME],
 			OrderModel::KEY_ORDER_STATE => $failedOrder[OrderModel::KEY_ORDER_STATE],
-			OrderModel::KEY_GRAND_TOTAL => $failedOrder[OrderModel::KEY_GRAND_TOTAL],
+			OrderModel::KEY_GRAND_TOTAL => $this->formatPrice($failedOrder[OrderModel::KEY_GRAND_TOTAL]),
 			self::ORDER_URL => $this->urlBuilder->getUrl('fiserv/declines/order', ['id' => $failedOrder[OrderModel::KEY_ORDER_INCREMENT_ID]])
 		];
 	}
@@ -154,5 +180,10 @@ class DeclinedOrdersHelper
 		$failedOrder = $this->failedOrderManager->createFailedOrder($realOrder);
 		$failedOrder->setDateTime($realOrder->getData('created_at'));
 		return $this->convertFailedOrderToArray($failedOrder);
+	}
+
+	public function formatPrice($amount)
+	{
+		return $this->pricingHelper->currency($amount, true, false);
 	}
 }

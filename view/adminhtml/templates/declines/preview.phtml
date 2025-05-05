@@ -56,7 +56,7 @@ $allApprovalStatus = $block->getAllApprovalStatus();
 					<td><?php echo isset($order['order_increment_id']) ? $order['order_increment_id'] : "N/A"; ?></td>
 					<td><?php echo isset($order['customer_name']) ? $order['customer_name'] : "N/A"; ?></td>
 					<td><?php echo isset($order['order_state']) ? strtoupper($order['order_state']) : "N/A"; ?></td>
-					<td><?php echo isset($order['grandTotal']) ? $block->formatPrice($order['grandTotal']) : "N/A"; ?></td>
+					<td><?php echo isset($order['grandTotal']) ? $order['grandTotal'] : "N/A"; ?></td>
 					<td><?php echo isset($order['approval_status']) ? $order['approval_status'] : "N/A"; ?></td>
 					<td><?php echo isset($order['remote_ip']) ? $order['remote_ip'] : "N/A"; ?></td>
 					<td>

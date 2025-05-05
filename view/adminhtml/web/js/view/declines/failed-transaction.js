@@ -29,8 +29,23 @@ define([
 	}
 
 	function renderTable(orders) {
-		var $tableBody = $('#tableBody');
-		$tableBody.empty();
+		var tableBody = $('#tableBody');
+		var noRecordsMessage = $('#noRecordsMessage');
+		var paginationInfoTop = $('#paginationInfoTop');
+		var paginationControls = $('#paginationControls');
+
+		tableBody.empty();
+
+		if (!orders || orders.length === 0) {
+			noRecordsMessage.show(); // Show message if no orders
+			paginationInfoTop.hide();
+			paginationControls.hide();
+			return;
+		} else {
+			noRecordsMessage.hide(); // Hide message if orders exist
+			paginationInfoTop.show();
+			paginationControls.show();
+		}
 
 		orders.forEach(function (order) {
 			var row = '<tr>' +
@@ -43,7 +58,7 @@ define([
 			'<td>' + (order.remote_ip || 'N/A') + '</td>' +
 			'<td><a href="' + order.orderViewUrl + '">View</a></td>' +
 			'</tr>';
-			$tableBody.append(row);
+			tableBody.append(row);
 		});
 	}
 

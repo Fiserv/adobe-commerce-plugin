@@ -100,6 +100,10 @@ class FailedOrderRepository implements FailedOrderRepositoryInterface
 
 	public function getFailedOrdersWithDeclines(array $orderIncrementIds)
 	{
+		if (empty($orderIncrementIds)) {
+			return []; // Return an empty array
+		}
+
 		$filter = $this->filterBuilder
 		 ->setField(OrderModel::KEY_ORDER_INCREMENT_ID)
 		 ->setConditionType('in')

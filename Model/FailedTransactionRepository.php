@@ -95,21 +95,30 @@ class FailedTransactionRepository implements FailedTransactionRepositoryInterfac
 
 	public function getFailedTransactionData(array $orderIncrementIds)
 	{
-		$connection = $this->resourceConnection->getConnection();
-		$orderIncrementIdsString = implode(',', $orderIncrementIds);
-		$query = "
-			SELECT ft.order_increment_id, ft.date_time AS oldest_date_time, ft.remote_ip, ft.approval_status
-			FROM failed_transaction ft
-			INNER JOIN (
-				SELECT order_increment_id, MIN(date_time) AS oldest_date_time
-				FROM failed_transaction
-				WHERE order_increment_id IN ($orderIncrementIdsString)
-				GROUP BY order_increment_id
-			) AS subquery
-			ON ft.order_increment_id = subquery.order_increment_id AND ft.date_time = subquery.oldest_date_time
-		";
+		if (empty($orderIncrementIds)) {
+			return []; // Return an empty array
+		}
 
-		return $connection->fetchAll($query);
+		$connection = $this->resourceConnection->getConnection();
+		$mainTable = 'failed_transaction';
+
+		$subSelect = $connection->select()
+			  ->from(
+				  ['ft_sub' => $mainTable],
+				  ['order_increment_id', 'oldest_date_time' => new \Zend_Db_Expr('MIN(date_time)')]
+			  )
+			  ->where('order_increment_id IN (?)', $orderIncrementIds)
+			  ->group('order_increment_id');
+
+		$select = $connection->select()
+		       ->from(['ft' => $mainTable], ['order_increment_id', 'date_time AS oldest_date_time', 'remote_ip', 'approval_status'])
+		       ->joinInner(
+			       ['subquery' => $subSelect],
+			       'ft.order_increment_id = subquery.order_increment_id AND ft.date_time = subquery.oldest_date_time',
+			       []
+		       );
+
+		return $connection->fetchAll($select);
 	}
 
 	public function getAllAprovalStatus() {
