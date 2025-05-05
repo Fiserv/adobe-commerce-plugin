@@ -162,6 +162,9 @@
 						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 						<config_path>payment/fiserv_valuelink/create_valuelink_invoice</config_path>
 						<comment>Enable or disable invoice creation on sale.</comment>
+						<depends>
+							<field id="payment_action">authorize_capture</field>
+						</depends>
 					</field>
 					<field id="card_amount_limit" translate="label" type="select" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Max Number of Gift Cards Allowed per Order</label>
