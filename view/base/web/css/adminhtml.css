@@ -259,7 +259,9 @@
 }
 
 #rowsPerPage,
-#approvalStatus{
+#approvalStatus,
+#fromDate,
+#toDate {
 	border-top: none;
 	border-right: none;
 	border-left: none;

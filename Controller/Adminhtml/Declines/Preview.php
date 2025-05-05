@@ -39,8 +39,10 @@ class Preview extends Action implements HttpGetActionInterface
 			$pageSize = (int) $this->getRequest()->getParam('pageSize', 5);
 			$search = $this->getRequest()->getParam('searchFilter', '');
 			$approvalStatus = urldecode( $this->getRequest()->getParam('approvalStatus', '') );
+			$fromDate = $this->getRequest()->getParam('fromDate', '');
+			$toDate = $this->getRequest()->getParam('toDate', '');
 
-			$orders = $this->declinedOrdersHelper->getOrdersWithDeclines($page, $pageSize, $search, $approvalStatus);
+			$orders = $this->declinedOrdersHelper->getOrdersWithDeclines($page, $pageSize, $search, $approvalStatus, $fromDate, $toDate);
 
 			$result = $this->jsonFactory->create();
 			return $result->setData($orders);
@@ -50,7 +52,7 @@ class Preview extends Action implements HttpGetActionInterface
 		$resultPage->setActiveMenu("Fiserv_Payments::failed_transaction_preview");
 		$resultPage->getConfig()->getTitle()->prepend(__('UNSUCCESSFUL ORDERS'));
 
-		$orders = $this->declinedOrdersHelper->getOrdersWithDeclines(1, 5);
+		$orders = $this->declinedOrdersHelper->getOrdersWithDeclines();
 		$resultPage->getLayout()->getBlock('failed_transaction_preview')->setData('orders', $orders['orders']);
 		$resultPage->getLayout()->getBlock('failed_transaction_preview')->setData('totalPages', $orders['totalPages']);
 		$resultPage->getLayout()->getBlock('failed_transaction_preview')->setData('approval_status', $orders['approval_status']);

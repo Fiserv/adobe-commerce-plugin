@@ -44,9 +44,9 @@ class DeclinedOrdersHelper
 		$this->pricingHelper = $pricingHelper;
 	}
 
-	public function getOrdersWithDeclines($page=1, $pageSize=5, $search='', $approvalStatus='')
+	public function getOrdersWithDeclines($page=1, $pageSize=5, $search='', $approvalStatus='', $fromDate = null, $toDate = null)
 	{
-		$orderIncrementData = $this->getOrderIncrementIdsFromFailedTxns($page, $pageSize, $search, $approvalStatus);
+		$orderIncrementData = $this->getOrderIncrementIdsFromFailedTxns($page, $pageSize, $search, $approvalStatus, $fromDate, $toDate);
 		$orderIncrementIds = $orderIncrementData['ids'];
 
 		$allApprovalStatus = $this->failedTransactionRepo->getAllAprovalStatus();
@@ -59,8 +59,6 @@ class DeclinedOrdersHelper
 		foreach ($failedTransactionData as $ft) {
 			$failedTransactionDataArray[$ft['order_increment_id']] = $ft;
 		}
-
-
 
 		$orderList = [];
 		foreach ($failedOrders as $fo) {
@@ -94,7 +92,7 @@ class DeclinedOrdersHelper
 		return $data ? $data['remote_ip'] : 'Admin';
 	}
 
-	private function getOrderIncrementIdsFromFailedTxns($page, $pageSize, $search = null, $approvalStatus = null)
+	private function getOrderIncrementIdsFromFailedTxns($page, $pageSize, $search = null, $approvalStatus = null, $fromDate = null, $toDate = null)
 	{
 		$connection = $this->resourceConnection->getConnection();
 		$offset = ($page - 1) * $pageSize;
@@ -136,6 +134,14 @@ class DeclinedOrdersHelper
 			$select->where('ft.approval_status = ?', $approvalStatus);
 		}
 
+		if ($fromDate) {
+			$select->where('DATE(ft.date_time) >= ?', $fromDate);
+		}
+
+		if ($toDate) {
+			$select->where('DATE(ft.date_time) <= ?', $toDate);
+		}
+
 		$orderIncrementIds = $connection->fetchCol($select);
 
 		$countSelect = $connection->select()
@@ -155,6 +161,14 @@ class DeclinedOrdersHelper
 
 		if ($approvalStatus !== null && $approvalStatus !== '') {
 			$countSelect->where('ft.approval_status = ?', $approvalStatus);
+		}
+
+		if ($fromDate) {
+			$countSelect->where('DATE(ft.date_time) >= ?', $fromDate);
+		}
+
+		if ($toDate) {
+			$countSelect->where('DATE(ft.date_time) <= ?', $toDate);
 		}
 
 		$totalCount = $connection->fetchOne($countSelect);

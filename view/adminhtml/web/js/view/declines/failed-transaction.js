@@ -7,6 +7,8 @@ define([
 	var rowsPerPage = 5;
 	var searchFilter = '';
 	var approvalStatus = '';
+	var fromDate = '';
+	var toDate = '';
 
 	function fetchOrders(page) {
 		$.ajax({
@@ -16,7 +18,9 @@ define([
 				page: page,
 				pageSize: rowsPerPage,
 				searchFilter: searchFilter,
-				approvalStatus: encodeURIComponent(approvalStatus)
+				approvalStatus: encodeURIComponent(approvalStatus),
+				fromDate: fromDate,
+				toDate: toDate
 			},
 			success: function (data) {
 				renderTable(data.orders);
@@ -106,6 +110,13 @@ define([
 		fetchOrders(currentPage);
 	}
 
+	function filterByDateRange() {
+		fromDate = $('#fromDate').val();
+		toDate = $('#toDate').val();
+		currentPage = 1; // Reset to first page
+		fetchOrders(currentPage);
+	}
+
 	function searchTable() {
 		searchFilter = $('#searchInput').val().toLowerCase();
 		currentPage = 1; // Reset current page to 1 when search is applied
@@ -120,6 +131,7 @@ define([
 		});
 		$('#rowsPerPage').on('change', changeRowsPerPage);
 		$('#approvalStatus').on('change', filterByApprovalStatus);
+		$('#fromDate, #toDate').on('change', filterByDateRange);
 		setupPagination($('#paginationControls').data('totalpage'));
 	});
 });
