@@ -160,8 +160,10 @@ define([
 		$('#searchInput').on('keyup', searchTable);
 		$('#rowsPerPage').on('change', changeRowsPerPage);
 
-		$('.transaction-state-filter-arrow').on('click', function () {
-			$('#transactionStateMenu').toggleClass('show');
+		$('.dropdown-header').on('click', function () {
+			var $menu = $(this).find('.dropdown-menu');
+			$('.dropdown-menu').not($menu).removeClass('show');
+			$menu.toggleClass('show');
 		});
 
 		$('#transactionStateMenu div').on('click', function () {
@@ -171,10 +173,6 @@ define([
 
 			currentPage = 1;
 			applyFiltersAndSort();
-		});
-
-		$('.approval-status-filter-arrow').on('click', function () {
-			$('#approvalStatusMenu').toggleClass('show');
 		});
 
 		$('#approvalStatusMenu div').on('click', function () {
@@ -188,11 +186,8 @@ define([
 
 		// Close dropdowns when clicking outside
 		$(document).on('click', function (event) {
-			if (!$(event.target).closest('.transaction-state-filter-arrow, #transactionStateMenu').length) {
-				$('#transactionStateMenu').removeClass('show');
-			}
-			if (!$(event.target).closest('.approval-status-filter-arrow, #approvalStatusMenu').length) {
-				$('#approvalStatusMenu').removeClass('show');
+			if (!$(event.target).closest('.dropdown-header').length) {
+				$('.dropdown-menu').removeClass('show');
 			}
 		});
 

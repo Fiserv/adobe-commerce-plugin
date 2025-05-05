@@ -179,14 +179,14 @@ function createDropdownOptions($values) {
         <tr>
             <th data-sortable="true" data-index="0">Date/Time (UTC)</th>
             <th data-sortable="true" data-index="1">Transaction ID</th>
-            <th data-sortable="true" data-index="2">Transaction State
-                <span class="filter-arrow transaction-state-filter-arrow">&#9660;</span>
+            <th class="dropdown-header" data-sortable="true" data-index="2">Transaction State
+                <span class="filter-arrow">▼</span>
                 <div class="dropdown-menu" id="transactionStateMenu">
 					<?= createDropdownOptions($transactionStates); ?>
                 </div>
             </th>
-            <th data-sortable="true" data-index="3">Approval Status
-                <span class="filter-arrow approval-status-filter-arrow">&#9660;</span>
+            <th class="dropdown-header" data-sortable="true" data-index="3">Approval Status
+                <span class="filter-arrow">▼</span>
                 <div class="dropdown-menu" id="approvalStatusMenu">
 					<?= createDropdownOptions($approvalStatuses); ?>
                 </div>
