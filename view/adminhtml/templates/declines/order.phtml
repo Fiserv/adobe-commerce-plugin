@@ -221,16 +221,17 @@ function createDropdownOptions($values) {
     <div id="paginationControls"></div>
     <div id="noRecordsMessage" style="display:none;"><?= __('No records found'); ?></div>
 
-<script type="text/x-magento-init">
-    {
-        "*": {
-            "Magento_Ui/js/core/app": {
-                "components": {
-                    "failed-transaction": {
-                        "component": "Fiserv_Payments/js/view/declines/failed-transaction"
-                    }
-                }
-            }
-        }
-    }
-</script>
+    <script type="text/x-magento-init">
+        {
+			"*": {
+				"Magento_Ui/js/core/app": {
+					"components": {
+						"failed-transaction": {
+							"component": "Fiserv_Payments/js/view/declines/failed-transaction"
+						}
+					}
+				}
+			}
+		}
+    </script>
+</div>

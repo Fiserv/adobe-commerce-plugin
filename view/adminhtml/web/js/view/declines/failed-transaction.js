@@ -18,6 +18,7 @@ define([
 		var searchInput = $('#searchInput').val().toUpperCase();
 		var startDate = $('#startDate').datepicker("getDate");
 		var endDate = $('#endDate').datepicker("getDate");
+
 		var filteredData = originalData.filter(function ($row) {
 			var rowState = $row.find('td').eq(2).text().toUpperCase();
 			var rowStatus = $row.find('td').eq(3).text().toUpperCase();
@@ -185,6 +186,7 @@ define([
 			applyFiltersAndSort();
 		});
 
+		// Close dropdowns when clicking outside
 		$(document).on('click', function (event) {
 			if (!$(event.target).closest('.transaction-state-filter-arrow, #transactionStateMenu').length) {
 				$('#transactionStateMenu').removeClass('show');
@@ -203,6 +205,7 @@ define([
 		// Reset filters when the reset button is clicked
 		$('#resetFilters').on('click', resetFilters);
 
+		// Initialize pagination and display the first page
 		setupPagination();
 		displayTable(1);
 	});

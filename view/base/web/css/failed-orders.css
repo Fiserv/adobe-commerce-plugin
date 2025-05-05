@@ -3,6 +3,7 @@
     padding-left: 20rem;
 }
 
+/* Main content layout */
 .main-content-container {
     width: 100%;
     display: flex;
@@ -10,6 +11,7 @@
     align-items: flex-start;
 }
 
+/* Black banner styling */
 .black-banner {
     background-color: #000;
     padding: 1rem 2rem;
@@ -21,7 +23,8 @@
     box-sizing: border-box;
 }
 
-.banner-left, .banner-right {
+.banner-left,
+.banner-right {
     display: flex;
     align-items: center;
     gap: 1rem;
@@ -41,36 +44,40 @@
     color: #777;
 }
 
-.order-id, .order-state {
+.order-id,
+.order-state {
     color: #fff;
-    font-size: 16px; /* Matching the "Card Information" font size */
+    font-size: 16px;
     font-weight: 700;
 }
 
+/* Failed transaction container styling */
 #failed-transaction-container {
     display: flex;
     justify-content: space-between;
-    align-items: stretch; /* Ensures that the child elements stretch to the same height */
+    align-items: stretch;
     width: 100%;
 }
 
-#failed-transaction-container .three-col, .two-col {
+#failed-transaction-container .three-col,
+.two-col {
     display: flex;
     flex-direction: column;
 }
 
 #failed-transaction-container .three-col {
-    flex: 3; /* Use flex instead of width to ensure responsive layout */
-    padding-right: 2.5rem; /* Space between columns */
+    flex: 3;
+    padding-right: 2.5rem;
 }
 
 #failed-transaction-container .two-col {
-    flex: 2; /* Use flex instead of width to ensure responsive layout */
-    padding-left: 2.5rem; /* Space between columns */
+    flex: 2;
+    padding-left: 2.5rem;
 }
 
+/* Failed transaction section body styling */
 .failed-transaction-section-body {
-    border: 1px solid black;
+    border: 1px solid #000;
     padding: 2rem 3rem;
     display: flex;
     flex-direction: column;
@@ -88,20 +95,23 @@
 
 .failed-transaction-section.header-margin,
 .failed-order-section.header-margin {
-    margin-top: 2rem; /* Add space between the navigation bar and section headers */
+    margin-top: 2rem;
 }
 
 .failed-transaction-section.wide {
     width: 100%;
 }
 
-.failed-transaction-detail-header, .failed-transaction-detail-row {
+/* Detail header and row styling */
+.failed-transaction-detail-header,
+.failed-transaction-detail-row {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
 }
 
-.failed-transaction-detail-column, .transaction-detail-column {
+.failed-transaction-detail-column,
+.transaction-detail-column {
     padding: 0.5rem;
     box-sizing: border-box;
 }
@@ -110,13 +120,14 @@
     flex: 1;
 }
 
-/* Styling for the horizontal line */
-.failed-transaction-line, .order-account-line {
-    border-bottom: 2px solid #000; /* Thick black line */
-    margin: 1rem 0; /* Spacing above and below */
+/* Horizontal line styling */
+.failed-transaction-line,
+.order-account-line {
+    border-bottom: 2px solid #000;
+    margin: 1rem 0;
 }
 
-/* Styling for the 2x2 block in Order and Account Details */
+/* 2x2 block in Order and Account Details */
 .order-account-top .failed-transaction-detail-row,
 .order-account-bottom .failed-transaction-detail-row {
     display: flex;
@@ -147,7 +158,7 @@
     margin-bottom: .75rem;
 }
 
-/* Styles for Order Notes Section */
+/* Order Notes Section */
 .order-notes-section {
     margin-top: 1.5rem;
 }
@@ -162,8 +173,8 @@
     border: 1px solid #ddd;
     border-radius: 4px;
     padding: 1rem;
-    background-color: #fafafa; /* Light background color for better UI distinction */
-    width: calc(100% + 10px); /* Extend the box by 10 pixels */
+    background-color: #fafafa;
+    width: calc(100% + 10px);
     min-height: 75px;
 }
 
@@ -182,6 +193,7 @@
     border-bottom: none;
 }
 
+/* Table styling */
 .table {
     width: 100%;
     border-collapse: collapse;
@@ -189,7 +201,8 @@
     background-color: #fff;
 }
 
-.table th, .table td {
+.table th,
+.table td {
     border: 1px solid #ddd;
     padding: 10px;
     text-align: left;
@@ -198,23 +211,22 @@
 .table th {
     background-color: #f6f6f6;
     font-weight: bold;
-    position: relative; /* Ensure the dropdown is positioned correctly within the header */
-}
-
-/* Styling for the Transaction State filter dropdown */
-.filter-arrow {
-    cursor: pointer;
-    margin-left: 0.5rem; /* Optional spacing between text and arrow */
     position: relative;
 }
 
-/* Dropdown menu */
+/* Dropdown menu styling */
+.filter-arrow {
+    cursor: pointer;
+    margin-left: 0.5rem;
+    position: relative;
+}
+
 .dropdown-menu {
     display: none;
     position: absolute;
-    background-color: white;
+    background-color: #ffffff;
     border: 1px solid #ddd;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     z-index: 1000;
     min-width: 120px;
     top: 100%;
@@ -231,24 +243,24 @@
 }
 
 .dropdown-menu.show {
-    display: block; /* Show the menu */
+    display: block;
 }
 
 /* Search and Pagination Container */
 .search-pagination-container {
     display: flex;
     flex-wrap: wrap;
-    justify-content: space-between; /* Ensure two sections are spaced apart */
-    align-items: center; /* Center align items in the container */
-    margin-bottom: 2rem; /* Add spacing at the bottom */
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
     width: 100%;
 }
 
-/* Add styles for the date filter section */
+/* Date filter section */
 .filter-by-date {
     display: flex;
     align-items: center;
-    gap: 0.5rem; /* Space between elements */
+    gap: 0.5rem;
     margin-bottom: 1rem;
 }
 
@@ -258,10 +270,11 @@
     border-radius: 4px;
 }
 
+/* Pagination controls */
 .pagination-controls {
     display: flex;
     align-items: center;
-    gap: 0.5rem; /* Spacing between elements */
+    gap: 0.5rem;
 }
 
 .limit-dropdown-container {
@@ -271,7 +284,7 @@
     color: #333;
     cursor: pointer;
     position: relative;
-    text-decoration: underline; /* Underline entire container */
+    text-decoration: underline;
 }
 
 .limit-dropdown {
@@ -281,16 +294,14 @@
     font-size: 14px;
     cursor: pointer;
     outline: none;
-    appearance: none; /* Remove dropdown arrow */
-    -webkit-appearance: none;
-    -moz-appearance: none;
+    appearance: none;
     margin-left: 0.5rem;
-    position: relative; /* Needed for the custom arrow */
-    padding-right: 1.5rem; /* Add space for the custom arrow */
+    position: relative;
+    padding-right: 1.5rem;
 }
 
 .limit-dropdown::after {
-    content: '▼'; /* Append custom arrow */
+    content: '▼';
     position: absolute;
     right: 0;
     top: 50%;
@@ -301,7 +312,7 @@
 }
 
 .pagination-info {
-    margin: 0 1rem; /* Adjusted to be centered between the buttons */
+    margin: 0 1rem;
     font-weight: bold;
 }
 
@@ -309,8 +320,8 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    border-bottom: 1px solid #333; /* Underline the search container */
-    padding-bottom: 0.35rem; /* Adjust bottom padding for better spacing */
+    border-bottom: 1px solid #333;
+    padding-bottom: 0.35rem;
 }
 
 .search-input {
@@ -330,7 +341,7 @@
 }
 
 .search-button img {
-    width: 16px; /* Adjust icon size */
+    width: 16px;
     height: 16px;
     display: block;
 }
@@ -386,8 +397,8 @@
 }
 
 .pagination-button {
-    background: none; /* Remove background */
-    border: none; /* Remove border */
+    background: none;
+    border: none;
     color: #333;
     font-size: 1.25rem;
     cursor: pointer;
@@ -402,7 +413,7 @@
 
 /* Additional styles for pagination placement */
 .pagination-controls .pagination-info {
-    margin: 0 0.5rem; /* Space between button and info */
+    margin: 0 0.5rem;
 }
 
 .failed-transaction-detail-header .failed-transaction-detail-column {
