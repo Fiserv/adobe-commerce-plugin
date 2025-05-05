@@ -169,6 +169,8 @@ define([
 		$('#transactionStateMenu div').on('click', function () {
 			var filterValue = $(this).data('value');
 			$('#transactionStateFilter').val(filterValue);
+			$('#transactionStateMenu div').removeClass('selected-dropdown');
+			$(this).toggleClass('selected-dropdown');
 			$('#transactionStateMenu').removeClass('show');
 
 			currentPage = 1;
@@ -178,6 +180,8 @@ define([
 		$('#approvalStatusMenu div').on('click', function () {
 			var filterValue = $(this).data('value');
 			$('#approvalStatusFilter').val(filterValue);
+			$('#approvalStatusMenu div').removeClass('selected-dropdown');
+			$(this).toggleClass('selected-dropdown');
 			$('#approvalStatusMenu').removeClass('show');
 
 			currentPage = 1;

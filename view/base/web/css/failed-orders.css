@@ -228,8 +228,6 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     z-index: 1000;
     min-width: 120px;
-    top: 100%;
-    left: 0;
 }
 
 .dropdown-menu div {
@@ -240,6 +238,10 @@
 
 .dropdown-menu div:hover {
     background-color: #f6f6f6;
+}
+
+.selected-dropdown {
+    background-color: #e6e6e6;
 }
 
 .dropdown-menu.show {
