@@ -12,6 +12,10 @@ define([
 	var toDate = '';
 
 	function fetchOrders(page) {
+
+		const filters = [searchFilter, approvalStatus, orderState, fromDate, toDate];
+		$('#resetFilter').toggle(!filters.every(val => val === ''));
+
 		$.ajax({
 			url: url.build('payments/declines/preview'),
 			type: 'GET',
@@ -125,6 +129,26 @@ define([
 		fetchOrders(currentPage);
 	}
 
+	function resetFilter() {
+
+		$('#searchInput').val('');
+		$('#approvalStatus').val('');
+		$('#orderState').val('');
+		$('#fromDate').val('');
+		$('#toDate').val('');
+
+		searchFilter = '';
+		approvalStatus = '';
+		orderState = '';
+		fromDate = '';
+		toDate = '';
+
+		$(this).hide();
+
+		currentPage = 1;
+		fetchOrders(currentPage);
+	}
+
 	function searchTable() {
 		searchFilter = $('#searchInput').val().toLowerCase();
 		currentPage = 1; // Reset current page to 1 when search is applied
@@ -141,6 +165,7 @@ define([
 		$('#approvalStatus').on('change', filterByApprovalStatus);
 		$('#orderState').on('change', filterByOrderState);
 		$('#fromDate, #toDate').on('change', filterByDateRange);
+		$('#resetFilter').on('click', resetFilter);
 		setupPagination($('#paginationControls').data('totalpage'));
 	});
 });

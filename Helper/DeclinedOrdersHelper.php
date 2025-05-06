@@ -73,6 +73,7 @@ class DeclinedOrdersHelper
 			$orderArray = $this->convertRealOrderToArray($ro);
 			$orderArray['remote_ip'] = $this->getRemoteIp($failedTransactionDataArray, $ro['order_increment_id'] ?? "");
 			$orderArray['approval_status'] = $failedTransactionDataArray[$orderArray['order_increment_id']]['approval_status'];
+			array_push($allOrderState, $orderArray['order_state']);
 			array_push($orderList, $orderArray);
 		}
 
@@ -137,7 +138,9 @@ class DeclinedOrdersHelper
 		}
 
 		if ($orderState !== null && $orderState !== '') {
-			$select->where('fo.order_state = ?', $orderState);
+			$select->where(
+				new \Zend_Db_Expr('(fo.order_state = ' . $connection->quote($orderState) . ' OR so.status = ' . $connection->quote($orderState) . ')')
+			);
 		}
 
 		if ($fromDate) {
@@ -170,7 +173,9 @@ class DeclinedOrdersHelper
 		}
 
 		if ($orderState !== null && $orderState !== '') {
-			$countSelect->where('fo.order_state = ?', $orderState);
+			$countSelect->where(
+				new \Zend_Db_Expr('(fo.order_state = ' . $connection->quote($orderState) . ' OR so.status = ' . $connection->quote($orderState) . ')')
+			);
 		}
 
 		if ($fromDate) {
