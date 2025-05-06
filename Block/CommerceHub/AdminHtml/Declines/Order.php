@@ -2,18 +2,20 @@
 
 namespace Fiserv\Payments\Block\CommerceHub\AdminHtml\Declines;
 
-use Fiserv\Payments\Model\ResourceModel\FailedOrder; 
-use Fiserv\Payments\Model\ResourceModel\FailedTransaction; 
+use Fiserv\Payments\Model\ResourceModel\FailedOrder;
+use Fiserv\Payments\Model\ResourceModel\FailedTransaction;
 use Fiserv\Payments\Model\Valuelink\Helper\Order\ValuelinkOrderHelper;
 use Fiserv\Payments\Model\ValuelinkTransaction as GiftModel;
 use Fiserv\Payments\Model\FailedTransaction as TxnModel;
 use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use Fiserv\Payments\Gateway\Validator\CommerceHub\AuthorizeResponseValidator;
 use Fiserv\Payments\Gateway\Validator\CommerceHub\SaleResponseValidator;
+use Fiserv\Payments\Gateway\Validator\CommerceHub\RefundResponseValidator;
 use Magento\Framework\Pricing\Helper\Data as PricingHelper;
 use Magento\Sales\Api\TransactionRepositoryInterface;
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Sales\Api\Data\TransactionInterface;
+use Fiserv\Payments\Logger\MultiLevelLogger;
 
 class Order extends \Magento\Backend\Block\Template
 {
@@ -22,13 +24,16 @@ class Order extends \Magento\Backend\Block\Template
 	const KEY_SUCCESSFUL_TXN = 'successful_txn';
 
 	const ADMIN_PANEL_LABEL = "Admin";
-	
+
 	private $_failedOrderResource;
 	private $_failedTxnResource;
 	private $_valuelinkOrderHelper;
 	private $_pricingHelper;
 	private $_txnRepo;
 	private $_search;
+	private $refundResponseValidator;
+	private $messageManager;
+	private $logger;
 
 	public function __construct(
 		\Magento\Backend\Block\Template\Context $context,
@@ -38,6 +43,9 @@ class Order extends \Magento\Backend\Block\Template
 		PricingHelper $pricingHelper,
 		TransactionRepositoryInterface $txnRepo,
 		SearchCriteriaBuilder $search,
+		RefundResponseValidator $refundResponseValidator,
+		\Magento\Framework\Message\ManagerInterface $messageManager,
+		MultiLevelLogger $logger,
 		array $data = []
 	) {
 		$this->_failedOrderResource = $failedOrderResource;
@@ -46,9 +54,11 @@ class Order extends \Magento\Backend\Block\Template
 		$this->_pricingHelper = $pricingHelper;
 		$this->_txnRepo = $txnRepo;
 		$this->_search = $search;
+		$this->refundResponseValidator = $refundResponseValidator;
+		$this->messageManager = $messageManager;
+		$this->logger = $logger;
 		parent::__construct($context, $data);
 	}
-
 
 	/**
 	 * Retrieve failed orders data
@@ -71,32 +81,39 @@ class Order extends \Magento\Backend\Block\Template
 	{
 		$failedOrder = $this->getFailedOrder();
 		$failedTransactions = $this->_failedTxnResource->getByOrderIncrementId($failedOrder["order_increment_id"]);
+
 		// Set IP Address to Admin for secondary transactions to match real transactions
-		for($i = 0; $i < count($failedTransactions); $i++ )
+		for($i = 0; $i < count($failedTransactions); $i++)
 		{
 			if ($failedTransactions[$i][TxnModel::KEY_PAYMENT_ACTION] != SaleResponseValidator::PAYMENT_ACTION && $failedTransactions[$i][TxnModel::KEY_PAYMENT_ACTION] != AuthorizeResponseValidator::PAYMENT_ACTION)
 			{
 				$failedTransactions[$i][TxnModel::KEY_REMOTE_IP] = self::ADMIN_PANEL_LABEL;
 			}
 		}
-		
+
 		$giftTxns = $this->_valuelinkOrderHelper->getValuelinkTransactionsByOrderIncrementId($failedOrder["order_increment_id"]);
-		
+
 		foreach($giftTxns as $giftTxn)
 		{
 			array_push($failedTransactions, $this->convertGiftTxnToFailedTxnArray($giftTxn));
 		}
 
-
-		// if there's a order id, this is not actually a failed order, but a successful order with a failed txn
+		// if there's an order id, this is not actually a failed order, but a successful order with a failed transaction
 		if (isset($failedOrder["real_order_id"]))
 		{
 			$txns = $this->getTxnsOnSuccessfulOrder($failedOrder["real_order_id"]);
 
 			foreach($txns as $txn)
 			{
-				array_push($failedTransactions, $this->convertSuccessfulTxnToFailedTxnArray($txn, $failedOrder["order_increment_id"]));
-			}			
+				$failedTxnArray = $this->convertSuccessfulTxnToFailedTxnArray($txn, $failedOrder["order_increment_id"]);
+
+				// Identify if any transaction is a failed refund
+				if (in_array($txn->getTxnType(), [RefundResponseValidator::PAYMENT_ACTION])) {
+					$failedTxnArray['has_failed_refund'] = true;
+				}
+
+				array_push($failedTransactions, $failedTxnArray);
+			}
 		}
 
 		usort($failedTransactions, function($a, $b) {
@@ -130,6 +147,77 @@ class Order extends \Magento\Backend\Block\Template
 		$fTxn[TxnModel::KEY_TRANSACTION_ID] = "N/A";
 
 		return $fTxn;
+	}
+
+	private function validateRefundTransaction(array $transaction)
+	{
+		// Prepare the validation subject with the provided transaction data
+		$validationSubject = ['transaction' => $transaction];
+
+		// Validate the transaction using the refundResponseValidator
+		$validationResult = $this->refundResponseValidator->validate($validationSubject);
+
+		// Check if the validation failed
+		if (!$validationResult->isValid()) {
+			// Handle invalid transaction logic here
+			// Possibly log the error or display it to the admin
+			// Example: $this->logger->logError(2, 'Refund transaction validation failed.', json_encode($transaction));
+		}
+	}
+
+	private function handleFailedRefundTransaction(array $transaction)
+	{
+		// Prepare the validation subject with the provided transaction data
+		$validationSubject = ['transaction' => $transaction];
+
+		// Validate the transaction using the refundResponseValidator
+		$validationResult = $this->refundResponseValidator->validate($validationSubject);
+
+		// Check if the validation failed
+		if (!$validationResult->isValid()) {
+			// Prepare the error details as a JSON string for logging
+			$errorDetails = json_encode([
+				'transaction_id' => $transaction[TxnModel::KEY_TRANSACTION_ID] ?? 'N/A',
+				'order_increment_id' => $transaction[TxnModel::KEY_ORDER_INCREMENT_ID] ?? 'N/A',
+				'approval_status' => $transaction[TxnModel::KEY_APPROVAL_STATUS] ?? 'N/A',
+				'total_amount' => $transaction[TxnModel::KEY_TOTAL_AMOUNT] ?? 'N/A',
+				'validation_errors' => $validationResult->getFailsDescription(),
+			]);
+
+			// Detailed logging of the failed transaction using MultiLevelLogger
+			$this->logger->logError(2, "Refund transaction validation failed.", $errorDetails);
+
+			// Add an error message for the admin
+			$this->messageManager->addError(__('Refund transaction validation failed for transaction ID: %1.', $transaction[TxnModel::KEY_TRANSACTION_ID] ?? 'N/A'));
+
+			// Mark the order as failed due to the refund failure
+			$this->markOrderAsFailed($transaction[TxnModel::KEY_ORDER_INCREMENT_ID]);
+
+			// Now throw an exception with a message for the invalid transaction
+			// This exception can be caught further up in the call stack for additional handling
+			throw new \Exception('Refund transaction validation failed for transaction ID: ' . ($transaction[TxnModel::KEY_TRANSACTION_ID] ?? 'N/A'));
+		}
+	}
+
+	/**
+	 * Mark the order as failed due to the refund failure
+	 *
+	 * @param string $orderIncrementId
+	 */
+	private function markOrderAsFailed($orderIncrementId)
+	{
+		try {
+			$searchCriteria = $this->_search->addFilter('increment_id', $orderIncrementId)->create();
+			$orders = $this->_txnRepo->getList($searchCriteria)->getItems();
+			if (!empty($orders)) {
+				$order = reset($orders);
+				// Set custom status to indicate that order has a failed refund transaction
+				$order->setStatus('failed_refund'); // assuming 'failed_refund' is a custom order status
+				$this->_txnRepo->save($order);
+			}
+		} catch (\Exception $e) {
+			$this->logger->logError(2, "Error marking order as failed.", $e->getMessage());
+		}
 	}
 
 	private function extractApprovalStatusFromGiftTxn($giftTxn)

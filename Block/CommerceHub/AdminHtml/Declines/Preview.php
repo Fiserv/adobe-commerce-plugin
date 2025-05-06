@@ -76,12 +76,12 @@ class Preview extends \Magento\Backend\Block\Template
 		{
 			$orderArray = $this->convertFailedOrderToArray($fo);
 			$orderArray[FailedTransactionModel::KEY_REMOTE_IP] = $this->getRemoteIp($failedTransactionDataArray, $fo[OrderModel::KEY_ORDER_INCREMENT_ID] ?? "");
-			array_push($orderList, $orderArray); 
+			array_push($orderList, $orderArray);
 		}
 
 		foreach($realOrders as $ro)
-		{	
-			$orderArray = $this->convertRealOrderToArray($ro);	
+		{
+			$orderArray = $this->convertRealOrderToArray($ro);
 			$orderArray[FailedTransactionModel::KEY_REMOTE_IP] = $this->getRemoteIp($failedTransactionDataArray, $ro[OrderModel::KEY_ORDER_INCREMENT_ID] ?? "");
 			array_push($orderList, $orderArray);
 		}
@@ -112,8 +112,8 @@ class Preview extends \Magento\Backend\Block\Template
 			->create();
 
 		return $this->failedOrderRepo->getList($search)->getItems();
-	}	
-		
+	}
+
 	private function getRealOrdersWithDeclines(Array $orderIncrementIds)
 	{
 		$filter = $this->filterBuilder
@@ -128,7 +128,7 @@ class Preview extends \Magento\Backend\Block\Template
 
 		return $this->orderRepo->getList($search)->getItems();
 	}
-				
+
 	private function getOrderIncrementIdsFromFailedTxns()
 	{
 		$connection = $this->resourceConnection->getConnection();
