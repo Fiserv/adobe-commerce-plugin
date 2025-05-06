@@ -15,6 +15,7 @@ use Magento\Framework\Exception\CouldNotDeleteException;
 use Magento\Framework\Api\FilterBuilder;
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Fiserv\Payments\Model\FailedOrder as OrderModel;
+use Magento\Framework\App\ResourceConnection;
 
 class FailedOrderRepository implements FailedOrderRepositoryInterface
 {
@@ -25,6 +26,7 @@ class FailedOrderRepository implements FailedOrderRepositoryInterface
 	protected $collectionFactory;
 	private $filterBuilder;
 	private $searchBuilder;
+	private $resourceConnection;
 
 	public function __construct(
 		\Fiserv\Payments\Model\FailedOrderFactory $failedOrderFactory,
@@ -33,7 +35,8 @@ class FailedOrderRepository implements FailedOrderRepositoryInterface
 		CollectionProcessorInterface $collectionProcessor,
 		FailedOrderCollectionFactory $collectionFactory,
 		FilterBuilder $filterBuilder,
-		SearchCriteriaBuilder $searchBuilder
+		SearchCriteriaBuilder $searchBuilder,
+		ResourceConnection $resourceConnection
 	) {
 		$this->failedOrderFactory = $failedOrderFactory;
 		$this->failedOrderResource = $failedOrderResource;
@@ -42,6 +45,7 @@ class FailedOrderRepository implements FailedOrderRepositoryInterface
 		$this->collectionFactory = $collectionFactory;
 		$this->filterBuilder = $filterBuilder;
 		$this->searchBuilder = $searchBuilder;
+		$this->resourceConnection = $resourceConnection;
 	}
 
 	public function get($id)

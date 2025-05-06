@@ -245,12 +245,17 @@
 	display: none; /* Initially hidden */
 }
 
-.paginationContainerTop {
-	width: 100%;
-	max-width: 50vw;
+.filter-wrapper {
+	width: 70vw;
 }
 
-.paginationContainerTop label {
+
+.paginationContainerTop {
+	width: 8vw;
+}
+
+.paginationContainerTop label,
+.filter-wrapper label {
 	margin-left: 20px;
 }
 

@@ -57,6 +57,7 @@ class Preview extends Action implements HttpGetActionInterface
 		$resultPage->getLayout()->getBlock('failed_transaction_preview')->setData('orders', $orders['orders']);
 		$resultPage->getLayout()->getBlock('failed_transaction_preview')->setData('totalPages', $orders['totalPages']);
 		$resultPage->getLayout()->getBlock('failed_transaction_preview')->setData('approval_status', $orders['approval_status']);
+		$resultPage->getLayout()->getBlock('failed_transaction_preview')->setData('order_state', $orders['order_state']);
 
 		return $resultPage;
 	}
