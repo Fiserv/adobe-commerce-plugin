@@ -6,6 +6,7 @@
 $orders = $block->getOrders();
 $totalPages = $block->getTotalPages();
 $allApprovalStatus = $block->getAllApprovalStatus();
+$allOrderState = $block->getAllOrderState();
 ?>
 
 <?php if ($orders) : ?>
@@ -13,12 +14,6 @@ $allApprovalStatus = $block->getAllApprovalStatus();
 		<input type="text" id="searchInput" placeholder="Search for keywords">
 		<div class="paginationContainerTop">
 			<label for="rowsPerPage">Limit:</label>
-			<select id="rowsPerPage">
-				<option value="5">5</option>
-				<option value="10">10</option>
-				<option value="15">15</option>
-				<option value="20">20</option>
-			</select>
 			<?php if($allApprovalStatus): ?>
 				<label for="approvalStatus">Cause of failure:</label>
 				<select id="approvalStatus">
@@ -28,10 +23,25 @@ $allApprovalStatus = $block->getAllApprovalStatus();
 					<?php endforeach; ?>
 				</select>
 			<?php endif; ?>
+			<?php if($allOrderState): ?>
+				<label for="orderState">Order State:</label>
+				<select id="orderState">
+						<option value="">Select</option>
+					<?php foreach ($allOrderState as $orderState): ?>
+						<option value="<?php echo  $orderState; ?>"><?php echo  $orderState; ?></option>
+					<?php endforeach; ?>
+				</select>
+			<?php endif; ?>
 			<label for="fromDate">From:</label>
 			<input id="fromDate" type="date"/>
 			<label for="toDate">To:</label>
 			<input id="toDate" type="date"/>
+			<select id="rowsPerPage">
+				<option value="5">5</option>
+				<option value="10">10</option>
+				<option value="15">15</option>
+				<option value="20">20</option>
+			</select>
 			<span id="paginationInfoTop" class="pagination-info"></span>
 		</div>
 	</div>

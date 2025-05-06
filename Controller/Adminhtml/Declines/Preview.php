@@ -39,10 +39,11 @@ class Preview extends Action implements HttpGetActionInterface
 			$pageSize = (int) $this->getRequest()->getParam('pageSize', 5);
 			$search = $this->getRequest()->getParam('searchFilter', '');
 			$approvalStatus = urldecode( $this->getRequest()->getParam('approvalStatus', '') );
+			$orderState = urldecode( $this->getRequest()->getParam('orderState', '') );
 			$fromDate = $this->getRequest()->getParam('fromDate', '');
 			$toDate = $this->getRequest()->getParam('toDate', '');
 
-			$orders = $this->declinedOrdersHelper->getOrdersWithDeclines($page, $pageSize, $search, $approvalStatus, $fromDate, $toDate);
+			$orders = $this->declinedOrdersHelper->getOrdersWithDeclines($page, $pageSize, $search, $approvalStatus, $orderState, $fromDate, $toDate);
 
 			$result = $this->jsonFactory->create();
 			return $result->setData($orders);

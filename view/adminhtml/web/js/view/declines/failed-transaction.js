@@ -7,6 +7,7 @@ define([
 	var rowsPerPage = 5;
 	var searchFilter = '';
 	var approvalStatus = '';
+	var orderState = '';
 	var fromDate = '';
 	var toDate = '';
 
@@ -19,6 +20,7 @@ define([
 				pageSize: rowsPerPage,
 				searchFilter: searchFilter,
 				approvalStatus: encodeURIComponent(approvalStatus),
+				orderState: encodeURIComponent(orderState),
 				fromDate: fromDate,
 				toDate: toDate
 			},
@@ -110,6 +112,12 @@ define([
 		fetchOrders(currentPage);
 	}
 
+	function filterByOrderState() {
+		orderState = $('#orderState').val();
+		currentPage = 1; // Reset current page to 1 when filter applied
+		fetchOrders(currentPage);
+	}
+
 	function filterByDateRange() {
 		fromDate = $('#fromDate').val();
 		toDate = $('#toDate').val();
@@ -131,6 +139,7 @@ define([
 		});
 		$('#rowsPerPage').on('change', changeRowsPerPage);
 		$('#approvalStatus').on('change', filterByApprovalStatus);
+		$('#orderState').on('change', filterByOrderState);
 		$('#fromDate, #toDate').on('change', filterByDateRange);
 		setupPagination($('#paginationControls').data('totalpage'));
 	});

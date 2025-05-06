@@ -116,4 +116,10 @@ class FailedOrderRepository implements FailedOrderRepositoryInterface
 
 		return $this->getList($search)->getItems();
 	}
+
+	public function getAllOrderState() {
+		$connection = $this->resourceConnection->getConnection();
+		$query = "SELECT DISTINCT order_state FROM failed_order";
+		return $connection->fetchCol($query);
+	}
 }

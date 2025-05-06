@@ -26,5 +26,10 @@ class Preview extends Template
 	{
 		return $this->getData('approval_status');
 	}
+
+	public function getAllOrderState()
+	{
+		return $this->getData('order_state');
+	}
 }
 

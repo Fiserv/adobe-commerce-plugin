@@ -44,12 +44,13 @@ class DeclinedOrdersHelper
 		$this->pricingHelper = $pricingHelper;
 	}
 
-	public function getOrdersWithDeclines($page=1, $pageSize=5, $search='', $approvalStatus='', $fromDate = null, $toDate = null)
+	public function getOrdersWithDeclines($page=1, $pageSize=5, $search='', $approvalStatus='', $orderState='', $fromDate = null, $toDate = null)
 	{
-		$orderIncrementData = $this->getOrderIncrementIdsFromFailedTxns($page, $pageSize, $search, $approvalStatus, $fromDate, $toDate);
+		$orderIncrementData = $this->getOrderIncrementIdsFromFailedTxns($page, $pageSize, $search, $approvalStatus, $orderState, $fromDate, $toDate);
 		$orderIncrementIds = $orderIncrementData['ids'];
 
 		$allApprovalStatus = $this->failedTransactionRepo->getAllAprovalStatus();
+		$allOrderState = $this->failedOrderRepo->getAllOrderState();
 		
 		$failedOrders = $this->failedOrderRepo->getFailedOrdersWithDeclines($orderIncrementIds);
 		$realOrders = $this->declinedRealOrderHelper->getRealOrdersWithDeclines($orderIncrementIds);
@@ -82,7 +83,8 @@ class DeclinedOrdersHelper
 		return [
 			'orders' => $orderList,
 			'totalPages' => ceil($orderIncrementData['count'] / $pageSize),
-			'approval_status' => $allApprovalStatus
+			'approval_status' => $allApprovalStatus,
+			'order_state' => $allOrderState
 		];
 	}
 
@@ -92,7 +94,7 @@ class DeclinedOrdersHelper
 		return $data ? $data['remote_ip'] : 'Admin';
 	}
 
-	private function getOrderIncrementIdsFromFailedTxns($page, $pageSize, $search = null, $approvalStatus = null, $fromDate = null, $toDate = null)
+	private function getOrderIncrementIdsFromFailedTxns($page, $pageSize, $search = null, $approvalStatus = null, $orderState = null, $fromDate = null, $toDate = null)
 	{
 		$connection = $this->resourceConnection->getConnection();
 		$offset = ($page - 1) * $pageSize;
@@ -134,6 +136,10 @@ class DeclinedOrdersHelper
 			$select->where('ft.approval_status = ?', $approvalStatus);
 		}
 
+		if ($orderState !== null && $orderState !== '') {
+			$select->where('fo.order_state = ?', $orderState);
+		}
+
 		if ($fromDate) {
 			$select->where('DATE(ft.date_time) >= ?', $fromDate);
 		}
@@ -161,6 +167,10 @@ class DeclinedOrdersHelper
 
 		if ($approvalStatus !== null && $approvalStatus !== '') {
 			$countSelect->where('ft.approval_status = ?', $approvalStatus);
+		}
+
+		if ($orderState !== null && $orderState !== '') {
+			$countSelect->where('fo.order_state = ?', $orderState);
 		}
 
 		if ($fromDate) {

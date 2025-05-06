@@ -260,6 +260,7 @@
 
 #rowsPerPage,
 #approvalStatus,
+#orderState,
 #fromDate,
 #toDate {
 	border-top: none;
