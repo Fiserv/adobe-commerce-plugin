@@ -36,7 +36,7 @@ class Preview extends Action implements HttpGetActionInterface
 	{
 		if ($this->getRequest()->isAjax()) {
 			$page = (int) $this->getRequest()->getParam('page', 1);
-			$pageSize = (int) $this->getRequest()->getParam('pageSize', 5);
+			$pageSize = (int) $this->getRequest()->getParam('pageSize', 20);
 			$search = $this->getRequest()->getParam('searchFilter', '');
 			$approvalStatus = urldecode( $this->getRequest()->getParam('approvalStatus', '') );
 			$orderState = urldecode( $this->getRequest()->getParam('orderState', '') );

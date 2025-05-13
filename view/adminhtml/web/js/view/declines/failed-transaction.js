@@ -4,7 +4,7 @@ define([
 ], function ($, url) {
 
 	var currentPage = 1;
-	var rowsPerPage = 5;
+	var rowsPerPage = 20;
 	var searchFilter = '';
 	var approvalStatus = '';
 	var orderState = '';

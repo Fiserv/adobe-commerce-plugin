@@ -44,7 +44,7 @@ class DeclinedOrdersHelper
 		$this->pricingHelper = $pricingHelper;
 	}
 
-	public function getOrdersWithDeclines($page=1, $pageSize=5, $search='', $approvalStatus='', $orderState='', $fromDate = null, $toDate = null)
+	public function getOrdersWithDeclines($page=1, $pageSize=20, $search='', $approvalStatus='', $orderState='', $fromDate = null, $toDate = null)
 	{
 		$orderIncrementData = $this->getOrderIncrementIdsFromFailedTxns($page, $pageSize, $search, $approvalStatus, $orderState, $fromDate, $toDate);
 		$orderIncrementIds = $orderIncrementData['ids'];
@@ -80,6 +80,8 @@ class DeclinedOrdersHelper
 		usort($orderList, function ($a, $b) {
 			return strtotime($b['date_time']) <=> strtotime($a['date_time']);
 		});
+
+		$allOrderState = array_map('strtoupper', array_unique(sort($allOrderState) ? $allOrderState : []));
 
 		return [
 			'orders' => $orderList,
@@ -198,7 +200,7 @@ class DeclinedOrdersHelper
 			OrderModel::KEY_DATE_TIME => $failedOrder[OrderModel::KEY_DATE_TIME],
 			OrderModel::KEY_ORDER_INCREMENT_ID => $failedOrder[OrderModel::KEY_ORDER_INCREMENT_ID],
 			OrderModel::KEY_CUSTOMER_NAME => $failedOrder[OrderModel::KEY_CUSTOMER_NAME],
-			OrderModel::KEY_ORDER_STATE => $failedOrder[OrderModel::KEY_ORDER_STATE],
+			OrderModel::KEY_ORDER_STATE => strtoupper($failedOrder[OrderModel::KEY_ORDER_STATE]),
 			OrderModel::KEY_GRAND_TOTAL => $this->formatPrice($failedOrder[OrderModel::KEY_GRAND_TOTAL]),
 			self::ORDER_URL => $this->urlBuilder->getUrl('fiserv/declines/order', ['id' => $failedOrder[OrderModel::KEY_ORDER_INCREMENT_ID]])
 		];
