@@ -245,21 +245,34 @@
 	display: none; /* Initially hidden */
 }
 
+.filter-wrapper {
+	width: 70vw;
+}
+
+
 .paginationContainerTop {
-	display: flex;
-	align-items: center; /* Ensures items are aligned to the center vertically */
-	margin-left: auto; /* Pushes the pagination container to the rightmost side */
+	width: 8vw;
+}
+
+.paginationContainerTop label,
+.filter-wrapper label {
+	margin-left: 20px;
 }
 
 #paginationInfoTop {
 	margin-left: 0.5rem; /* Adds some space between the select dropdown and the pagination info */
 }
 
-#rowsPerPage {
+#rowsPerPage,
+#approvalStatus,
+#orderState,
+#fromDate,
+#toDate {
 	border-top: none;
 	border-right: none;
 	border-left: none;
 	border-bottom: 1px solid #cfcfcf;
+	max-width: 150px;
 }
 
 .failed-transaction-detail-row {

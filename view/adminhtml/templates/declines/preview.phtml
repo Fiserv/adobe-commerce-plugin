@@ -1,13 +1,42 @@
 <?php
+
 /**
  * @var \Fiserv\Payments\Block\Adminhtml\Declines\Preview $block
  */
-$orders = $block->getOrdersWithDeclines();
+$orders = $block->getOrders();
+$totalPages = $block->getTotalPages();
+$allApprovalStatus = $block->getAllApprovalStatus();
+$allOrderState = $block->getAllOrderState();
 ?>
 
-<?php if($orders) : ?>
+<?php if ($orders) : ?>
 	<div class="search-pagination-container">
-		<input type="text" id="searchInput" placeholder="Search for keywords">
+		<div class="filter-wrapper">
+			<input type="text" id="searchInput" placeholder="Search for keywords">
+			<?php if($allApprovalStatus): ?>
+				<label for="approvalStatus">Cause of failure:</label>
+				<select id="approvalStatus">
+						<option value="">Select</option>
+					<?php foreach ($allApprovalStatus as $approvalStatus): ?>
+						<option value="<?php echo  $approvalStatus; ?>"><?php echo  $approvalStatus; ?></option>
+					<?php endforeach; ?>
+				</select>
+			<?php endif; ?>
+			<?php if($allOrderState): ?>
+				<label for="orderState">Order State:</label>
+				<select id="orderState">
+						<option value="">Select</option>
+					<?php foreach ($allOrderState as $orderState): ?>
+						<option value="<?php echo  $orderState; ?>"><?php echo  $orderState; ?></option>
+					<?php endforeach; ?>
+				</select>
+			<?php endif; ?>
+			<label for="fromDate">From:</label>
+			<input id="fromDate" type="date"/>
+			<label for="toDate">To:</label>
+			<input id="toDate" type="date"/>
+			<button id="resetFilter" style="display: none;font-size: 1rem;margin-left: 30px;background-color: #f1f1f1;padding: 5px 8px;">RESET</button>
+		</div>
 		<div class="paginationContainerTop">
 			<label for="rowsPerPage">Limit:</label>
 			<select id="rowsPerPage">
@@ -28,30 +57,32 @@ $orders = $block->getOrdersWithDeclines();
 				<th><?php echo __('Customer Name'); ?></th>
 				<th><?php echo __('Order State'); ?></th>
 				<th><?php echo __('Order Amount'); ?></th>
+				<th><?php echo __('Cause of Failure'); ?></th>
 				<th><?php echo __('IP Address'); ?></th>
 				<th><?php echo __('Action'); ?></th>
 			</tr>
 		</thead>
 		<tbody id="tableBody">
 			<?php foreach ($orders as $order): ?>
-		        <tr>
-		            <td><?php echo isset($order['date_time']) ? $order['date_time'] : "N/A"; ?></td>
-	        	    <td><?php echo isset($order['order_increment_id']) ? $order['order_increment_id'] : "N/A"; ?></td>
-		            <td><?php echo isset($order['customer_name']) ? $order['customer_name'] : "N/A"; ?></td>
-	        	    <td><?php echo isset($order['order_state']) ? strtoupper($order['order_state']) : "N/A"; ?></td>
-			    <td><?php echo isset($order['grandTotal']) ? $block->formatPrice($order['grandTotal']) : "N/A"; ?></td>
-			    <td><?php echo isset($order['remote_ip']) ? $order['remote_ip'] : "N/A"; ?></td>
-		            <td>
-	        	        <a href="<?php echo $block->getUrl('fiserv/declines/order', ['id' => $order['order_increment_id']]); ?>">View</a>
-		            </td>
-		        </tr>
-		    <?php endforeach; ?>
+				<tr>
+					<td><?php echo isset($order['date_time']) ? $order['date_time'] : "N/A"; ?></td>
+					<td><?php echo isset($order['order_increment_id']) ? $order['order_increment_id'] : "N/A"; ?></td>
+					<td><?php echo isset($order['customer_name']) ? $order['customer_name'] : "N/A"; ?></td>
+					<td><?php echo isset($order['order_state']) ? strtoupper($order['order_state']) : "N/A"; ?></td>
+					<td><?php echo isset($order['grandTotal']) ? $order['grandTotal'] : "N/A"; ?></td>
+					<td><?php echo isset($order['approval_status']) ? $order['approval_status'] : "N/A"; ?></td>
+					<td><?php echo isset($order['remote_ip']) ? $order['remote_ip'] : "N/A"; ?></td>
+					<td>
+						<a href="<?php echo isset($order['orderViewUrl']) ? $order['orderViewUrl'] : "`"; ?>">View</a>
+					</td>
+				</tr>
+			<?php endforeach; ?>
 		</tbody>
 	</table>
 
 	<div id="noRecordsMessage" style="display: none;margin-bottom: 20%;"><?php echo __('No failed orders found!'); ?></div>
 
-	<div id="paginationControls"></div>
+	<div id="paginationControls" data-totalPage="<?php echo $totalPages; ?>"></div>
 <?php else: ?>
 	<div style="margin-bottom: 20%"><?php echo __('No failed orders found!'); ?></div>
 <?php endif; ?>
@@ -69,4 +100,3 @@ $orders = $block->getOrdersWithDeclines();
 	}
 }
 </script>
-

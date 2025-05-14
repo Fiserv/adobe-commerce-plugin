@@ -12,6 +12,10 @@ use Magento\Framework\Api\SearchCriteria\CollectionProcessorInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\CouldNotDeleteException;
+use Magento\Framework\Api\FilterBuilder;
+use Magento\Framework\Api\SearchCriteriaBuilder;
+use Fiserv\Payments\Model\FailedOrder as OrderModel;
+use Magento\Framework\App\ResourceConnection;
 
 class FailedOrderRepository implements FailedOrderRepositoryInterface
 {
@@ -20,19 +24,28 @@ class FailedOrderRepository implements FailedOrderRepositoryInterface
 	protected $searchResultsFactory;
 	protected $collectionProcessor;
 	protected $collectionFactory;
+	private $filterBuilder;
+	private $searchBuilder;
+	private $resourceConnection;
 
 	public function __construct(
 		\Fiserv\Payments\Model\FailedOrderFactory $failedOrderFactory,
 		FailedOrderResource $failedOrderResource,
 		FailedOrderSearchResultInterfaceFactory $searchResultsFactory,
 		CollectionProcessorInterface $collectionProcessor,
-		FailedOrderCollectionFactory $collectionFactory
+		FailedOrderCollectionFactory $collectionFactory,
+		FilterBuilder $filterBuilder,
+		SearchCriteriaBuilder $searchBuilder,
+		ResourceConnection $resourceConnection
 	) {
 		$this->failedOrderFactory = $failedOrderFactory;
 		$this->failedOrderResource = $failedOrderResource;
 		$this->searchResultsFactory = $searchResultsFactory;
 		$this->collectionProcessor = $collectionProcessor;
 		$this->collectionFactory = $collectionFactory;
+		$this->filterBuilder = $filterBuilder;
+		$this->searchBuilder = $searchBuilder;
+		$this->resourceConnection = $resourceConnection;
 	}
 
 	public function get($id)
@@ -87,5 +100,30 @@ class FailedOrderRepository implements FailedOrderRepositoryInterface
 		$collection = $this->collectionFactory->create();
 		$collection->addFieldToFilter('order_increment_id', $orderIncrementId);
 		return $collection->getItems();
+	}
+
+	public function getFailedOrdersWithDeclines(array $orderIncrementIds)
+	{
+		if (empty($orderIncrementIds)) {
+			return []; // Return an empty array
+		}
+
+		$filter = $this->filterBuilder
+		 ->setField(OrderModel::KEY_ORDER_INCREMENT_ID)
+		 ->setConditionType('in')
+		 ->setValue($orderIncrementIds)
+		 ->create();
+
+		$search = $this->searchBuilder
+		 ->addFilters([$filter])
+		 ->create();
+
+		return $this->getList($search)->getItems();
+	}
+
+	public function getAllOrderState() {
+		$connection = $this->resourceConnection->getConnection();
+		$query = "SELECT DISTINCT order_state FROM failed_order";
+		return $connection->fetchCol($query);
 	}
 }

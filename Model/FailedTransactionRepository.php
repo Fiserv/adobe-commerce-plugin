@@ -12,6 +12,7 @@ use Magento\Framework\Api\SearchCriteria\CollectionProcessorInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\CouldNotDeleteException;
+use Magento\Framework\App\ResourceConnection;
 
 class FailedTransactionRepository implements FailedTransactionRepositoryInterface
 {
@@ -20,19 +21,22 @@ class FailedTransactionRepository implements FailedTransactionRepositoryInterfac
 	protected $searchResultsFactory;
 	protected $collectionProcessor;
 	protected $collectionFactory;
+	private $resourceConnection;
 
 	public function __construct(
 		\Fiserv\Payments\Model\FailedTransactionFactory $failedTransactionFactory,
 		FailedTransactionResource $failedTransactionResource,
 		FailedTransactionSearchResultInterfaceFactory $searchResultsFactory,
 		CollectionProcessorInterface $collectionProcessor,
-		FailedTransactionCollectionFactory $collectionFactory
+		FailedTransactionCollectionFactory $collectionFactory,
+		ResourceConnection $resourceConnection
 	) {
 		$this->failedTransactionFactory = $failedTransactionFactory;
 		$this->failedTransactionResource = $failedTransactionResource;
 		$this->searchResultsFactory = $searchResultsFactory;
 		$this->collectionProcessor = $collectionProcessor;
 		$this->collectionFactory = $collectionFactory;
+		$this->resourceConnection = $resourceConnection;
 	}
 
 	public function get($id)
@@ -87,5 +91,39 @@ class FailedTransactionRepository implements FailedTransactionRepositoryInterfac
 		$collection = $this->collectionFactory->create();
 		$collection->addFieldToFilter('order_increment_id', $orderIncrementId);
 		return $collection->getItems();
+	}
+
+	public function getFailedTransactionData(array $orderIncrementIds)
+	{
+		if (empty($orderIncrementIds)) {
+			return []; // Return an empty array
+		}
+
+		$connection = $this->resourceConnection->getConnection();
+		$mainTable = 'failed_transaction';
+
+		$subSelect = $connection->select()
+			  ->from(
+				  ['ft_sub' => $mainTable],
+				  ['order_increment_id', 'oldest_date_time' => new \Zend_Db_Expr('MIN(date_time)')]
+			  )
+			  ->where('order_increment_id IN (?)', $orderIncrementIds)
+			  ->group('order_increment_id');
+
+		$select = $connection->select()
+		       ->from(['ft' => $mainTable], ['order_increment_id', 'date_time AS oldest_date_time', 'remote_ip', 'approval_status'])
+		       ->joinInner(
+			       ['subquery' => $subSelect],
+			       'ft.order_increment_id = subquery.order_increment_id AND ft.date_time = subquery.oldest_date_time',
+			       []
+		       );
+
+		return $connection->fetchAll($select);
+	}
+
+	public function getAllAprovalStatus() {
+		$connection = $this->resourceConnection->getConnection();
+		$query = "SELECT DISTINCT approval_status FROM failed_transaction";
+		return $connection->fetchCol($query);
 	}
 }
