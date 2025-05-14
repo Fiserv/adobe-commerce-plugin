@@ -194,10 +194,6 @@
 	gap: 0.5rem;
 }
 
-.filter-wrapper label {
-	font-weight: bold;
-}
-
 .fixed-width {
 	width: 200px; /* Set your desired fixed width */
 }
@@ -245,18 +241,10 @@
 	display: none; /* Initially hidden */
 }
 
-.filter-wrapper {
-	width: 70vw;
-}
-
-
-.paginationContainerTop {
-	width: 8vw;
-}
-
 .paginationContainerTop label,
 .filter-wrapper label {
 	margin-left: 20px;
+	font-weight: bold;
 }
 
 #paginationInfoTop {
