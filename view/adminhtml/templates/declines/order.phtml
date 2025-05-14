@@ -164,9 +164,8 @@ function createDropdownOptions($values) {
     <hr>
     <div class="search-pagination-container">
         <div class="filter-wrapper">
-            <div class="filter-item">
-                <label for="searchInput">Search:</label>
-                <input type="text" id="searchInput" class="fixed-width" placeholder="Enter Keywords">
+	    <div class="filter-item">
+		<input type="text" id="searchInput" placeholder="Search for keywords" class="fixed-width">
             </div>
             <div class="filter-item">
                 <label for="approvalStatus">Approval Status:</label>
@@ -242,7 +241,7 @@ function createDropdownOptions($values) {
     </table>
     <input type="hidden" id="transactionStateFilterValue" value="">
     <input type="hidden" id="approvalStatusFilterValue" value="">
-    <div id="paginationControls"></div>
+    <div id="paginationControls" data-totalPage="<?php echo count($transactions); ?>"></div>
     <div id="noRecordsMessage" style="display:none;"><?= __('No records found'); ?></div>
 
     <script type="text/x-magento-init">
