@@ -14,6 +14,7 @@ use Magento\Framework\App\Action\HttpGetActionInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Fiserv\Payments\Model\Service\CommerceHub\FailedOrderManager;
+use Fiserv\Payments\Helper\FailedTransactionHelper;
 
 /**
  * Class FailedOrders
@@ -48,6 +49,8 @@ class Order extends Action implements HttpGetActionInterface
 
 	private $failedOrderManager;
 
+	private $failedTransactionHelper;
+
 	/**
 	 * @param Context $context
 	 * @param MultiLevelLogger $logger
@@ -64,7 +67,8 @@ class Order extends Action implements HttpGetActionInterface
 		FailedTxnResource $txnResourceModel,
 		OrderRepositoryInterface $orderRepo,
 		SearchCriteriaBuilder $search,
-		FailedOrderManager $failedOrderManager
+		FailedOrderManager $failedOrderManager,
+		FailedTransactionHelper $failedTransactionHelper
 	) {
 		parent::__construct($context);
 		$this->logger = $logger;
@@ -75,6 +79,7 @@ class Order extends Action implements HttpGetActionInterface
 		$this->orderRepo = $orderRepo;
 		$this->search = $search;
 		$this->failedOrderManager = $failedOrderManager;
+		$this->failedTransactionHelper = $failedTransactionHelper;
 	}
 
 	/**
@@ -115,7 +120,18 @@ class Order extends Action implements HttpGetActionInterface
 				$failedOrders = [$failedOrder];
 			}
 			
-			$resultPage->getLayout()->getBlock('failed_orders')->setData('failed_orders', $failedOrders);
+			//$resultPage->getLayout()->getBlock('failed_orders')->setData('failed_orders', $failedOrders);
+
+			$order = $this->failedTransactionHelper->getFailedOrder($failedOrders);
+
+			$transactions = $this->failedTransactionHelper->getFailedTransactionsForOrder($failedOrders);
+
+			$giftAmount = $this->failedTransactionHelper->getAppliedGiftCardAmount($failedOrders);
+
+			$resultPage->getLayout()->getBlock('failed_orders')->setData('order', $order);
+			$resultPage->getLayout()->getBlock('failed_orders')->setData('transactions', $transactions);
+			$resultPage->getLayout()->getBlock('failed_orders')->setData('giftAmount', $giftAmount);
+
 			$resultPage->setActiveMenu("Fiserv_Payments::failed_orders");
 
 			return $resultPage;
