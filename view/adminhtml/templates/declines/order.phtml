@@ -161,8 +161,8 @@ function createDropdownOptions($values) {
         </div>
     </div>
 
-    <hr>
-    <div class="search-pagination-container">
+    <hr class="mb-40">
+    <div class="search-pagination-container failed-transaction">
         <div class="filter-wrapper">
 	    <div class="filter-item">
 		<input type="text" id="searchInput" placeholder="Search for keywords" class="fixed-width">
@@ -187,11 +187,11 @@ function createDropdownOptions($values) {
             </div>
             <div class="filter-item">
                 <label for="startDate">From:</label>
-                <input type="date" id="startDate" class="fixed-width">
+                <input type="date" id="fromDate" class="fixed-width">
             </div>
             <div class="filter-item">
                 <label for="endDate">To:</label>
-                <input type="date" id="endDate" class="fixed-width">
+                <input type="date" id="toDate" class="fixed-width">
             </div>
             <button id="resetFilters" class="filter-button" style="display: none;">Reset</button>
         </div>

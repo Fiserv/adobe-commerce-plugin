@@ -1,3 +1,7 @@
+.mb-40 {
+	margin-bottom: 40px;
+}
+
 .carat_img > .entry-edit-head {
 	background: url("../images/fiserv_logo_orange_rgb.png") no-repeat scroll 0 50% / 12rem auto;
 	padding-left: 14rem;
@@ -198,17 +202,6 @@
 	width: 200px; /* Set your desired fixed width */
 }
 
-#searchInput,
-#approvalStatus,
-#transactionStateFilter,
-#rowsPerPage,
-#startDate,
-#endDate {
-	padding: 0.5rem;
-	border: 1px solid #ccc;
-	border-radius: 5px;
-}
-
 .dropdown-menu {
 	position: absolute;
 	display: none;
@@ -251,11 +244,14 @@
 	margin-left: 0.5rem; /* Adds some space between the select dropdown and the pagination info */
 }
 
+#searchInput,
+#transactionStateFilter,
 #rowsPerPage,
 #approvalStatus,
 #orderState,
 #fromDate,
 #toDate {
+	padding: 0.5rem;
 	border-top: none;
 	border-right: none;
 	border-left: none;
