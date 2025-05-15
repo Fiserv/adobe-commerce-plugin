@@ -8,6 +8,7 @@ namespace Fiserv\Payments\Gateway\Validator\CommerceHub;
 use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use Fiserv\Payments\Gateway\Validator\CommerceHub\TransactionResponseValidator;
 use Magento\Payment\Gateway\Validator\ResultInterfaceFactory;
+use Magento\Payment\Gateway\Validator\ResultInterface;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 use Fiserv\Payments\Model\Service\CommerceHub\FailedTransactionManager;
 
@@ -18,6 +19,11 @@ class RefundResponseValidator extends TransactionResponseValidator
 {
 
 	const PAYMENT_ACTION = "REFUND";
+
+	/**
+	 * @var SubjectReader
+	 */
+	protected $subjectReader;
 
 	/**
 	 * @param ResultInterfaceFactory $resultFactory
@@ -35,12 +41,29 @@ class RefundResponseValidator extends TransactionResponseValidator
 			$logger, 
 			$failedTxnManager
 		);
+		$this->subjectReader = $subjectReader;
 		array_push($this->successStates, self::STATE_CAPTURE);
 	}
 
 	protected function getPaymentAction()
 	{
 		return self::PAYMENT_ACTION;
+	}
+
+	public function validate(array $validationSubject): ResultInterface
+	{
+		$parentResult = parent::validate($validationSubject);
+		if (!$parentResult->isValid()) {
+			$chRawResponse = $this->subjectReader->readChResponseFromResponse($validationSubject);
+			$payment = $this->subjectReader->readPayment($validationSubject)->getPayment();
+			$data = [
+				'response' => $chRawResponse,
+				'paths' => $this->paths,
+				'payment_action' => $this->getPaymentAction()
+			];
+			$payment->setAdditionalInformation('ch_failed_transaction_data', $data);
+		}
+		return $parentResult; // Ensure to return the result
 	}
 
 }

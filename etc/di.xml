@@ -374,6 +374,9 @@
 	<type name = "Magento\Sales\Model\Order">
 		<plugin name = "commercehubFailedOrder" type="Fiserv\Payments\Model\Plugin\CommerceHub\OrderPlace" />
 	</type>
+	<type name = "Magento\Sales\Model\Service\CreditmemoService">
+		<plugin name = "refundFailedTransactionHandler" type="Fiserv\Payments\Model\Plugin\CommerceHub\CreditMemoServicePlugin" />
+	</type>
 
 	<!-- Valuelink Plugins -->
    	<type name="Magento\Quote\Model\Quote\TotalsCollector">
