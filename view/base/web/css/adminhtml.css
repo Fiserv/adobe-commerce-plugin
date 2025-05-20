@@ -238,6 +238,7 @@
 .filter-wrapper label {
 	margin-left: 20px;
 	font-weight: bold;
+	text-transform: capitalize;
 }
 
 #paginationInfoTop {
