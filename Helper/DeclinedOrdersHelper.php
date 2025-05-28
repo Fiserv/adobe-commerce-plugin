@@ -62,16 +62,22 @@ class DeclinedOrdersHelper
 		}
 
 		$orderList = [];
+		$processedOrderIds = [];
+
 		foreach ($failedOrders as $fo) {
 			$orderArray = $this->convertFailedOrderToArray($fo);
 			$orderArray['remote_ip'] = $this->getRemoteIp($failedTransactionDataArray, $fo['order_increment_id'] ?? "");
 			$orderArray['approval_status'] = $failedTransactionDataArray[$orderArray['order_increment_id']]['approval_status'];
 			array_push($orderList, $orderArray);
+			$processedOrderIds[] = $orderArray['order_increment_id'];
 		}
 
 		foreach ($realOrders as $ro) {
+			if (in_array($ro['increment_id'], $processedOrderIds)) {
+				continue;
+			}
 			$orderArray = $this->convertRealOrderToArray($ro);
-			$orderArray['remote_ip'] = $this->getRemoteIp($failedTransactionDataArray, $ro['order_increment_id'] ?? "");
+			$orderArray['remote_ip'] = $this->getRemoteIp($failedTransactionDataArray, $ro['increment_id'] ?? "");
 			$orderArray['approval_status'] = $failedTransactionDataArray[$orderArray['order_increment_id']]['approval_status'];
 			array_push($allOrderState, $orderArray['order_state']);
 			array_push($orderList, $orderArray);
@@ -81,7 +87,8 @@ class DeclinedOrdersHelper
 			return strtotime($b['date_time']) <=> strtotime($a['date_time']);
 		});
 
-		$allOrderState = array_map('strtoupper', array_unique(sort($allOrderState) ? $allOrderState : []));
+		$allOrderState = array_values(array_unique(array_map('strtoupper', $allOrderState)));
+		sort($allOrderState);
 
 		return [
 			'orders' => $orderList,
@@ -112,7 +119,7 @@ class DeclinedOrdersHelper
 		       ->limit($pageSize, $offset);
 
 		if ($search) {
-			$search = '%' . $search . '%';
+			$search = '%' . trim($search) . '%';
 			$searchFields = [
 				'so.increment_id',
 				'so.customer_firstname',
@@ -141,7 +148,7 @@ class DeclinedOrdersHelper
 
 		if ($orderState !== null && $orderState !== '') {
 			$select->where(
-				new \Zend_Db_Expr('(fo.order_state = ' . $connection->quote($orderState) . ' OR so.status = ' . $connection->quote($orderState) . ')')
+				new \Zend_Db_Expr('COALESCE(fo.order_state, so.status) = ' . $connection->quote($orderState))
 			);
 		}
 
@@ -176,7 +183,7 @@ class DeclinedOrdersHelper
 
 		if ($orderState !== null && $orderState !== '') {
 			$countSelect->where(
-				new \Zend_Db_Expr('(fo.order_state = ' . $connection->quote($orderState) . ' OR so.status = ' . $connection->quote($orderState) . ')')
+				new \Zend_Db_Expr('COALESCE(fo.order_state, so.status) = ' . $connection->quote($orderState))
 			);
 		}
 
