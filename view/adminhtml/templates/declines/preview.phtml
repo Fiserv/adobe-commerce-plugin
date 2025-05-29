@@ -56,6 +56,12 @@ $allOrderState = $block->getAllOrderState();
 				<th><?php echo __('Order ID'); ?></th>
 				<th><?php echo __('Customer Name'); ?></th>
 				<th><?php echo __('Order State'); ?></th>
+                <span class="tooltip-icon">
+                    <i class ="fas fa-info circle"></i>
+                    <span class = "tooltip-text">
+                        <strong>PROCESSING</strong>: This order is in a non-complete state. See "Cause of Failure".<br><br>
+                        <strong>FAILED</strong>: This order has failed to complete. See "Cause of Failure".
+                    </span>
 				<th><?php echo __('Order Amount'); ?></th>
 				<th><?php echo __('Cause of Failure'); ?></th>
 				<th><?php echo __('IP Address'); ?></th>
@@ -100,3 +106,4 @@ $allOrderState = $block->getAllOrderState();
 	}
 }
 </script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
