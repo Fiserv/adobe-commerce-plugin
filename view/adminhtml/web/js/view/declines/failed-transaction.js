@@ -12,7 +12,6 @@ define([
 	var toDate = '';
 
 	function fetchOrders(page) {
-
 		const filters = [searchFilter, approvalStatus, orderState, fromDate, toDate];
 		$('#resetFilter').toggle(!filters.every(val => val === ''));
 
@@ -130,7 +129,6 @@ define([
 	}
 
 	function resetFilter() {
-
 		$('#searchInput').val('');
 		$('#approvalStatus').val('');
 		$('#orderState').val('');
@@ -166,6 +164,16 @@ define([
 		$('#orderState').on('change', filterByOrderState);
 		$('#fromDate, #toDate').on('change', filterByDateRange);
 		$('#resetFilter').on('click', resetFilter);
+
+		// Tooltip functionality
+		$(document).on('mouseenter', '.tooltip-icon', function() {
+			const tooltipText = $(this).find('.tooltip-text');
+			tooltipText.css('visibility', 'visible').css('opacity', '1');
+		}).on('mouseleave', '.tooltip-icon', function() {
+			const tooltipText = $(this).find('.tooltip-text');
+			tooltipText.css('visibility', 'hidden').css('opacity', '0');
+		});
+
 		setupPagination($('#paginationControls').data('totalpage'));
 	});
 });

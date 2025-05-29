@@ -295,3 +295,45 @@
 	font-size: 12px;
 	color: #333;
 }
+
+.tooltip-icon {
+	position: relative;
+	display: inline-block;
+	color: #ffffff; /* White color for the icon */
+	margin-left: 5px;
+	cursor: pointer;
+}
+
+.tooltip-icon:hover .tooltip-text {
+	visibility: visible;
+	opacity: 1;
+	transition: opacity 0.4s;  /* Smooth transition effect */
+}
+
+.tooltip-text {
+	visibility: hidden;
+	width: 250px;
+	background-color: #fff;
+	color: #000;
+	text-align: left;
+	border-radius: 5px;
+	padding: 10px;
+	position: absolute;
+	z-index: 1;
+	top: 150%;  /* Position tooltip below the icon */
+	left: 50%;
+	transform: translateX(-50%);  /* Center the tooltip */
+	box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+	opacity: 0;  /* Start off transparent */
+}
+
+.tooltip-text::after {
+	content: "";
+	position: absolute;
+	top: -10px;  /* Position arrow at the top of the tooltip box */
+	left: 50%;
+	transform: translateX(-50%);
+	border-width: 5px;
+	border-style: solid;
+	border-color: transparent transparent #fff transparent;  /* Arrow color matches the tooltip */
+}
