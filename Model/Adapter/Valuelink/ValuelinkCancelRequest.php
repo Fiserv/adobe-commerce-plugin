@@ -17,9 +17,12 @@ use Fiserv\Payments\Lib\CommerceHub\Model\MerchantDetails;
 class ValuelinkCancelRequest
 {
 	// Cancel endpoint on dev portal is incorrect
-	//const CANCEL_ENDPOINT = 'payments-vas/v1/accounts/gift-cards';
 	const CANCEL_ENDPOINT = 'payments/v1/cancels';
 	const KEY_OPERATION_TYPE = "CANCEL";
+
+	// CommerceHub Transaction Result Keys
+	const KEY_RESPONSE = "response";
+	const KEY_STATUS_CODE = "statusCode";
 
 	/**
 	 * @var Config
@@ -93,16 +96,10 @@ class ValuelinkCancelRequest
 			}
 		}
 
-		$bodyArray = json_decode($body, true);
-
-		if ($statusCode !== 201) {
-			$this->logger->logError(1, "Transaction failure. Gift card response returned with unsuccessful status", "Order ID: {$merchantOrderId}");
-			$this->logger->logError(2, "Status Code: " . $statusCode, "Order ID: {$merchantOrderId}");
-
-			throw new \Exception('CommerceHub Gift Card Cancel Request HTTP error code: ' . $statusCode, 1);
-		};
-
-		return $bodyArray;
+		return array(
+			self::KEY_RESPONSE => $bodyArray = json_decode($body, true),
+			self::KEY_STATUS_CODE => $statusCode
+		);
 	}
 
 	public function getValuelinkCancelPayload($txnId, $merchantTxnId, $merchantOrderId) : CancelRequest

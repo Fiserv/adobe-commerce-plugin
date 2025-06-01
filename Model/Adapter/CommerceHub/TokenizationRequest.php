@@ -69,6 +69,8 @@ class TokenizationRequest
 		$body = $httpResponse->getBody();		
 		$bodyArray = json_decode($body, true);
 
+		$this->logger->logError(2, 'TOKENIZATION REPSONSE BODY: ' . $body);
+
 		if ($statusCode === 200 && $this->isTokenizeSuccessful($bodyArray)) {
 			$this->logger->logInfo(1, "Tokenization request success");
 			return $bodyArray;

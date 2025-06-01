@@ -6,6 +6,7 @@ use Magento\Framework\Event\ObserverInterface;
 use Fiserv\Payments\Model\Valuelink\ValuelinkQuoteRecord;
 use Fiserv\Payments\Model\Service\Valuelink\ValuelinkQuoteManager;
 use Fiserv\Payments\Model\Service\Valuelink\ValuelinkTransactionManager;
+use Fiserv\Payments\Model\Service\CommerceHub\FailedOrderManager;
 
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\OrderFactory;
@@ -40,6 +41,8 @@ class ProcessOrderPlace implements ObserverInterface
 	private $orderRepository;
 	
 	private $orderFactory;
+	
+	private $failedOrderManager;
 
     /**
      * @param \Magento\GiftCardAccount\Helper\Data $giftCAHelper
@@ -52,7 +55,8 @@ class ProcessOrderPlace implements ObserverInterface
 		Json $serializer,
 		OrderRepositoryInterface $orderRepository,
 		OrderFactory $orderFactory,
-		MultiLevelLogger $logger
+		MultiLevelLogger $logger,
+		FailedOrderManager $failedOrderManager,
 	) {
         $this->valuelinkHelper = $valuelinkHelper;
 		$this->quoteManager = $quoteManager;
@@ -61,6 +65,7 @@ class ProcessOrderPlace implements ObserverInterface
 		$this->orderRepository = $orderRepository;
 		$this->orderFactory = $orderFactory;
 		$this->logger = $logger;
+		$this->failedOrderManager = $failedOrderManager;
 	}
 
     /**
@@ -137,6 +142,9 @@ class ProcessOrderPlace implements ObserverInterface
 					array_push($cardsToRemove, ValuelinkQuoteRecord::createFromArray($card));
 				}
 				$this->quoteManager->RemoveValuelinkCardsFromQuote($cardsToRemove, $observer->getEvent()->getQuote());
+
+				$failedOrder = $this->failedOrderManager->createFailedOrder($order);
+				$this->failedOrderManager->saveFailedOrder($failedOrder, $order->getQuoteId(), $order->getStoreId());
 
 				throw new LocalizedException(__("Gift card(s) applied to this order could not be redeemed and were removed."));	
 			}
