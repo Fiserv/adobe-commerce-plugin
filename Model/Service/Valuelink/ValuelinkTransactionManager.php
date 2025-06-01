@@ -198,7 +198,7 @@ class ValuelinkTransactionManager
 				$this->failedTxnManager->createFailedTransaction($merchantOrderId, $chResponse, $this->paths, $transactionType);
 			}
 
-			$this->logger->logError(1, "An error occurred while redeeming Gift Card", "Order ID: {$merchantOrderId}");
+			$this->logger->logError(1, "An error occurred while creating primary gift transaction", "Order ID: {$merchantOrderId}");
 			$this->logger->logError(2, $e, "Order ID: {$merchantOrderId}");
 			throw $e;
 		}
@@ -273,7 +273,7 @@ class ValuelinkTransactionManager
 				$this->failedTxnManager->createFailedTransaction($merchantOrderId, $chResponse, $this->paths, "CANCEL";
 			}
 
-			$this->logger->logError(1, "An error occurred while voiding Gift Card transaction", "Order ID: {$merchantOrderId}");
+			$this->logger->logError(1, "An error occurred while voiding gift transaction", "Order ID: {$merchantOrderId}");
 			$this->logger->logError(2, $e, "Order ID: {$merchantOrderId}");
 			throw $e;
 		}
@@ -351,7 +351,7 @@ class ValuelinkTransactionManager
 				$this->failedTxnManager->createFailedTransaction($merchantOrderId, $chResponse, $this->paths, "CAPTURE";
 			}
 	
-			$this->logger->logError(1, "An error occurred while capturing Gift Card transaction", "Order ID: {$merchantOrderId}");
+			$this->logger->logError(1, "An error occurred while capturing gift transaction", "Order ID: {$merchantOrderId}");
 			$this->logger->logError(2, $e, "Order ID: {$merchantOrderId}");
 			throw $e;
 		}
