@@ -268,9 +268,9 @@ class ValuelinkTransactionManager
 		
 		} catch(\Exception $e)
 		{
-			if (!is_null($chRequest))
+			if (!is_null($chResponse))
 			{
-				$this->failedTxnManager->createFailedTransaction($merchantOrderId, $chResponse, $this->paths, "CANCEL";
+				$this->failedTxnManager->createFailedTransaction($merchantOrderId, $chResponse, $this->paths, "CANCEL");
 			}
 
 			$this->logger->logError(1, "An error occurred while voiding gift transaction", "Order ID: {$merchantOrderId}");
@@ -348,7 +348,7 @@ class ValuelinkTransactionManager
 		{
 			if (!is_null($chResponse))
 			{
-				$this->failedTxnManager->createFailedTransaction($merchantOrderId, $chResponse, $this->paths, "CAPTURE";
+				$this->failedTxnManager->createFailedTransaction($merchantOrderId, $chResponse, $this->paths, "CAPTURE");
 			}
 	
 			$this->logger->logError(1, "An error occurred while capturing gift transaction", "Order ID: {$merchantOrderId}");

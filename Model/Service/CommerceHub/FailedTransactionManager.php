@@ -29,7 +29,7 @@ class FailedTransactionManager
 		$failedTxn = $this->populateFailedTxn($failedTxn, $txnResponse, $paths, $paymentAction);
 		$failedTxn->setOrderIncrementId($merchantOrderId);
 		$this->failedTxnRepo->save($failedTxn);
-
+		
 		return $failedTxn;
 	}
 
