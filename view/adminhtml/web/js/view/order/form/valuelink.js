@@ -29,6 +29,7 @@ define([
 		addedMessage: "Gift card added successfully",
 		emptyMessage: "Gift card has no balance",
 		addErrorMessage: "An error occurred. Gift card was not added.",
+		giftCardStates: ko.observableArray([]),
 
 		initialize: function (config) {
 			if (typeof(config.valuelinkConfig) === "undefined") {
@@ -67,6 +68,7 @@ define([
 
 				// Handle adding new gift card entry
 				$('#add-gift-card').on('click', this.addGiftCardEntry.bind(this));
+				this.giftCardStates.push(false);
 			}
 
 			return this;
@@ -75,6 +77,8 @@ define([
 		addGiftCardEntry: function() {
 			let newEntry = $('.gift-card-entry').first().clone();
 			$('#gift-card-entries').append(newEntry);
+			$('#add-gift-card').prop('disabled', true); // Disable add button until current card is validated
+			this.giftCardStates.push(false);
 		},
 
 		createGiftCardForm: function()
@@ -233,6 +237,9 @@ define([
 			order.loadArea(['totals', 'billing_method', 'items'], true, data, () => {
 				if( $('#valuelink-card-'.concat(sessionId)).length > 0 ) {
 					this.showSuccessMessage(this.addedMessage);
+					this.giftCardStates().pop();
+					this.giftCardStates().push(true); // Update the state to true (validated)
+					$('#add-gift-card').prop('disabled', false); // Enable add button when card is validated
 				} else {
 					this.showErrorMessage(this.addErrorMessage);
 				}
