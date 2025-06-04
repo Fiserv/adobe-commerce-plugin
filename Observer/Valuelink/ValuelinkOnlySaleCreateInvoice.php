@@ -52,25 +52,30 @@ class ValuelinkOnlySaleCreateInvoice implements ObserverInterface
 		$valuelinkTxns = $this->orderHelper->getValuelinkTransactionsByOrderIncrementId($incrementId);
 		$valuelinkTxns = $this->orderHelper->filterCanceledValuelinkTransactions($valuelinkTxns);
 
-		if ($order->canInvoice() &&
-			!empty($valuelinkTxns) &&
-			$this->config->createValuelinkInvoice() &&
-			$this->config->getPaymentAction() === MethodInterface::ACTION_AUTHORIZE_CAPTURE &&
-			$order->getPayment()->getMethodInstance()->getTitle() === "No Payment Information Required"
-		) {
-			$invoice = $this->invoiceService->prepareInvoice($order);
-			$invoice->register();
-			$invoice->save();
+		// Check if order contains only ValueLink transactions
+		if (!empty($valuelinkTxns)) {
+			// Check if the order can be invoiced and create the invoice if conditions are met
+			if ($order->canInvoice() &&
+				$this->config->createValuelinkInvoice() &&
+				$this->config->getPaymentAction() === MethodInterface::ACTION_AUTHORIZE_CAPTURE &&
+				$order->getPayment()->getMethodInstance()->getTitle() === "No Payment Information Required"
+			) {
 
-			$transaction = new Transaction();
-			$transactionSave = $transaction->addObject($invoice)->addObject($invoice->getOrder());
-			$transactionSave->save();
-			$this->invoiceSender->send($invoice);
+				$invoice = $this->invoiceService->prepareInvoice($order);
+				$invoice->register();
+				$invoice->save();
 
-			$order->setStatus('processing');
+				$transaction = new Transaction();
+				$transactionSave = $transaction->addObject($invoice)->addObject($invoice->getOrder());
+				$transactionSave->save();
+				$this->invoiceSender->send($invoice);
+			}
+
+			// Update order status to 'processing'
+			$order->setState(\Magento\Sales\Model\Order::STATE_PROCESSING)->
+			setStatus(\Magento\Sales\Model\Order::STATE_PROCESSING);
 			$order->save();
 		}
-		
         return $this;
     }
 }

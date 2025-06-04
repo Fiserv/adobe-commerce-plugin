@@ -92,8 +92,8 @@ class InvoiceRegister
 					$this->logger->logInfo(1, "All Valuelink transactions successfully canceled");
 				}
 			}
-
-			throw new \Magento\Framework\Exception\LocalizedException(__("Invoice not created. An error during transaction processing: " . $e->getMessage())); // Ensure the original exception is re-thrown
+			throw new \Magento\Framework\Exception\LocalizedException(__("Invoice not created. An error during transaction processing: Transaction has been declined. Please try again later. " ));
+			//throw new \Magento\Framework\Exception\LocalizedException(__("Invoice not created. An error during transaction processing: " . $e->getMessage())); // Ensure the original exception is re-thrown
 		}
 
 	}
