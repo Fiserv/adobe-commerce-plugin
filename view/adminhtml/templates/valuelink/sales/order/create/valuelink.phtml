@@ -70,9 +70,9 @@ $secureRenderer = $objectManager->create(SecureRenderer::class);
 				<?php foreach ($block->getValuelinkCards() as $card): ?>
                     <p class="added-valuelink-card" id="valuelink-card-<?= /* @noEscape */ $card["sessionId"]; ?>">
 						<?php if ($card["amountToCharge"] !== 0): ?>
-                            <span><?= $block->escapeHtml("Gift card: $" . round($card["amountToCharge"],2)) ?></span>
+                            <span><?= $block->escapeHtml("Gift card: $" . round($card["amountToCharge"], 2)) ?></span>
 						<?php else: ?>
-                            <span><?= $block->escapeHtml("Gift card (Unused): $" . round($card["amountToCharge"],2)) ?></span>
+                            <span><?= $block->escapeHtml("Gift card (Unused): $" . round($card["amountToCharge"], 2)) ?></span>
 						<?php endif; ?>
                         <input type="hidden" class="valuelink-session-id" value="<?= /* @noEscape */ $card["sessionId"]; ?>">
                         <a href="#"

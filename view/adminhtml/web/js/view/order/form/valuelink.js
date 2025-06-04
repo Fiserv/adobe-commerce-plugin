@@ -76,6 +76,7 @@ define([
 
 		addGiftCardEntry: function() {
 			let newEntry = $('.gift-card-entry').first().clone();
+			newEntry.find('input, .sdc-field').val(''); // Clear the values in the cloned entry
 			$('#gift-card-entries').append(newEntry);
 			$('#add-gift-card').prop('disabled', true); // Disable add button until current card is validated
 			this.giftCardStates.push(false);
@@ -237,8 +238,9 @@ define([
 			order.loadArea(['totals', 'billing_method', 'items'], true, data, () => {
 				if( $('#valuelink-card-'.concat(sessionId)).length > 0 ) {
 					this.showSuccessMessage(this.addedMessage);
-					this.giftCardStates().pop();
-					this.giftCardStates().push(true); // Update the state to true (validated)
+					let giftCardStates = this.giftCardStates();
+					giftCardStates[giftCardStates.length - 1] = true; // Update the state to true (validated)
+					this.giftCardStates(giftCardStates);
 					$('#add-gift-card').prop('disabled', false); // Enable add button when card is validated
 				} else {
 					this.showErrorMessage(this.addErrorMessage);
@@ -457,7 +459,6 @@ define([
 			}
 
 			return "";
-
 		},
 
 		fieldValidityHandler: function(data) {
