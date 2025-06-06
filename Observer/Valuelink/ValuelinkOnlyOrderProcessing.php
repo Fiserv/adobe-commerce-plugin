@@ -12,7 +12,7 @@ use Magento\Sales\Model\Order\Email\Sender\InvoiceSender;
 use Magento\Payment\Model\MethodInterface;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 
-class ValuelinkOnlySaleCreateInvoice implements ObserverInterface
+class ValuelinkOnlyOrderProcessing implements ObserverInterface
 {
 	private $valuelinkResource;
 
@@ -72,8 +72,8 @@ class ValuelinkOnlySaleCreateInvoice implements ObserverInterface
 			}
 
 			// Update order status to 'processing'
-			$order->setState(\Magento\Sales\Model\Order::STATE_PROCESSING)->
-			setStatus(\Magento\Sales\Model\Order::STATE_PROCESSING);
+			$order->setState(\Magento\Sales\Model\Order::STATE_PROCESSING);
+			$order->setStatus(\Magento\Sales\Model\Order::STATE_PROCESSING);
 			$order->save();
 		}
         return $this;
