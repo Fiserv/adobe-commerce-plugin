@@ -12,6 +12,8 @@ use Fiserv\Payments\Gateway\Request\CommerceHub\TokenSourceDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\TransactionDetailsDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\TransactionInteractionDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder;
+use Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder;
+use Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder;
 use Magento\Framework\ObjectManager\TMapFactory;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 
@@ -58,6 +60,8 @@ class TokenAuthComposite extends ChCompositeBase
 		$req->setTransactionDetails($result[TransactionDetailsDataBuilder::TXN_DETAILS_KEY]);
 		$req->setTransactionInteraction($result[TransactionInteractionDataBuilder::TXN_INTERACTION_KEY]);
 		$req->setMerchantDetails($result[MerchantDetailsDataBuilder::MERCHANT_DETAILS_KEY]);
+		$req->setBillingAddress($result[BillingAddressDataBuilder::BILLING_ADDRESS_KEY]);
+		$req->setCustomer($result[CustomerDataBuilder::CUSTOMER_KEY]);
 
 		return [ 
 			self::REQUEST_KEY => $req,
