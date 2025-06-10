@@ -20,6 +20,7 @@ class DataAssignObserver extends AbstractDataAssignObserver
 	const TOKEN_SOURCE_KEY = 'token_source';
 	const EXP_MONTH_KEY = 'expiration_month';
 	const EXP_YEAR_KEY = 'expiration_year';
+	const NAME_ON_CARD_KEY = 'nameOnCard';
 
 	
 	/**

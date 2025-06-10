@@ -206,6 +206,8 @@
 				<item name="auth_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AuthDetailsDataBuilder</item>
 				<item name="txn_interaction" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\TransactionInteractionDataBuilder</item>
 				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
+				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
+				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
 			</argument>
 		</arguments>
 	</virtualType>
@@ -218,6 +220,8 @@
 				<item name="auth_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AuthDetailsDataBuilder</item>
 				<item name="txn_interaction" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\TransactionInteractionDataBuilder</item>
 				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
+				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
+				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
 			</argument>
 		</arguments>
 	</virtualType>
@@ -230,6 +234,8 @@
 				<item name="sale_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\SaleDetailsDataBuilder</item>
 				<item name="txn_interaction" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\TransactionInteractionDataBuilder</item>
 				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
+				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
+				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
 			</argument>
 		</arguments>
 	</virtualType>
@@ -242,6 +248,8 @@
 				<item name="auth_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\SaleDetailsDataBuilder</item>
 				<item name="txn_interaction" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\TransactionInteractionDataBuilder</item>
 				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
+				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
+				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
 			</argument>
 		</arguments>
 	</virtualType>
@@ -253,6 +261,8 @@
 				<item name="settle_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\SettleDetailsDataBuilder</item>
 				<item name="ref_txn" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\ReferenceTransactionDataBuilder</item>
 				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
+				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
+				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
 			</argument>
 		</arguments>
 	</virtualType>
@@ -264,6 +274,7 @@
 				<item name="refund_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\RefundRefTxnDataBuilder</item>
 				<item name="refund_txn_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\SaleDetailsDataBuilder</item>
 				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
+				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
 			</argument>
 		</arguments>
 	</virtualType>
@@ -274,6 +285,7 @@
 				<item name="cancel_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CancelRefTxnDataBuilder</item>
 				<item name="cancel_txn_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AuthDetailsDataBuilder</item>
 				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
+				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
 			</argument>
 		</arguments>
 	</virtualType>
