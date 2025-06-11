@@ -15,6 +15,7 @@ use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Fiserv\Payments\Model\Service\CommerceHub\FailedOrderManager;
 use Fiserv\Payments\Helper\FailedTransactionHelper;
+use Magento\Framework\Controller\Result\JsonFactory;
 
 /**
  * Class FailedOrders
@@ -51,6 +52,8 @@ class Order extends Action implements HttpGetActionInterface
 
 	private $failedTransactionHelper;
 
+	private $jsonFactory;
+
 	/**
 	 * @param Context $context
 	 * @param MultiLevelLogger $logger
@@ -68,7 +71,8 @@ class Order extends Action implements HttpGetActionInterface
 		OrderRepositoryInterface $orderRepo,
 		SearchCriteriaBuilder $search,
 		FailedOrderManager $failedOrderManager,
-		FailedTransactionHelper $failedTransactionHelper
+		FailedTransactionHelper $failedTransactionHelper,
+		JsonFactory $jsonFactory
 	) {
 		parent::__construct($context);
 		$this->logger = $logger;
@@ -80,6 +84,7 @@ class Order extends Action implements HttpGetActionInterface
 		$this->search = $search;
 		$this->failedOrderManager = $failedOrderManager;
 		$this->failedTransactionHelper = $failedTransactionHelper;
+		$this->jsonFactory = $jsonFactory;
 	}
 
 	/**
@@ -87,16 +92,16 @@ class Order extends Action implements HttpGetActionInterface
 	 */
 	public function execute()
 	{
-		/** @var \Magento\Framework\View\Result\Page $resultPage */
-		$resultPage = $this->pageFactory->create();
-
 		try {
+
 			$orderIncrementId = $this->getRequest()->getParam('id');
+
 			if (!isset($orderIncrementId) || empty($orderIncrementId)) {
 				throw new \Exception("Order Increment ID not found");
 			}
 
 			$failedOrders = $this->orderResourceModel->getByOrderIncrementId($orderIncrementId);
+
 			if (!isset($failedOrders) || empty($failedOrders)) {
 					
 				// this could be a successful order, so first retrieve successful order
@@ -114,23 +119,42 @@ class Order extends Action implements HttpGetActionInterface
 				}
 
 				// create FailedOrder object for dashboard
-				$orderId = $failedOrders["entity_id"]; 
+				$orderId = $failedOrders["entity_id"];
 				$failedOrder = $this->failedOrderManager->createFailedOrder($failedOrders);
 				$failedOrder["real_order_id"] = $orderId;
 				$failedOrders = [$failedOrder];
 			}
-			
-			//$resultPage->getLayout()->getBlock('failed_orders')->setData('failed_orders', $failedOrders);
+
+			if ($this->getRequest()->isAjax()) {
+				$page = (int) $this->getRequest()->getParam('page', 1);
+				$pageSize = (int) $this->getRequest()->getParam('pageSize', 20);
+				$search = $this->getRequest()->getParam('searchFilter', '');
+				$approvalStatus = urldecode( $this->getRequest()->getParam('approvalStatus', '') );
+				$transactionState = urldecode( $this->getRequest()->getParam('transactionState', '') );
+				$fromDate = $this->getRequest()->getParam('fromDate', '');
+				$toDate = $this->getRequest()->getParam('toDate', '');
+
+				$transactions = $this->failedTransactionHelper->getFailedTransactionsForOrder($failedOrders, $page, $pageSize, $search, $approvalStatus, $transactionState, $fromDate, $toDate);
+				$transactions['totalPages'] = ceil($transactions['count'] / $pageSize);
+
+				$result = $this->jsonFactory->create();
+				return $result->setData($transactions);
+			}
+
+			/** @var \Magento\Framework\View\Result\Page $resultPage */
+			$resultPage = $this->pageFactory->create();
 
 			$order = $this->failedTransactionHelper->getFailedOrder($failedOrders);
 
 			$transactions = $this->failedTransactionHelper->getFailedTransactionsForOrder($failedOrders);
+			$transactions['totalPages'] = ceil($transactions['count'] / 20);
 
 			$giftAmount = $this->failedTransactionHelper->getAppliedGiftCardAmount($failedOrders);
 
 			$resultPage->getLayout()->getBlock('failed_orders')->setData('order', $order);
 			$resultPage->getLayout()->getBlock('failed_orders')->setData('transactions', $transactions);
 			$resultPage->getLayout()->getBlock('failed_orders')->setData('giftAmount', $giftAmount);
+			$resultPage->getLayout()->getBlock('failed_orders')->setData('totalPages', $transactions['totalPages']);
 
 			$resultPage->setActiveMenu("Fiserv_Payments::failed_orders");
 

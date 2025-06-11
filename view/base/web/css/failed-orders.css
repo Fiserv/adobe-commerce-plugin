@@ -250,7 +250,7 @@
 
 /* Search and Pagination Container */
 .search-pagination-container {
-    display: flex;
+   /* display: flex;*/
     flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;

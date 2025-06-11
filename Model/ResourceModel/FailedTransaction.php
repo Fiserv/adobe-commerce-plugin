@@ -482,4 +482,102 @@ class FailedTransaction extends AbstractDb
 	{
 		return $this->countTotalAmountByState('ERROR');
 	}
+
+	/**
+	 * Retrieves a paginated list of failed transactions filtered by order increment ID (required),
+	 * and optionally by search term, approval status, transaction state, and date range.
+	 * Also returns the total count of matching records.
+	 *
+	 * @param string      $orderIncrementId  The required order increment ID to filter transactions.
+	 * @param int         $page              The current page number for pagination.
+	 * @param int         $pageSize          The number of records per page.
+	 * @param string|null $search            Optional search keyword to match against multiple fields.
+	 * @param string|null $approvalStatus    Optional filter for approval status.
+	 * @param string|null $transactionState  Optional filter for transaction state.
+	 * @param string|null $fromDate          Optional start date for filtering.
+	 * @param string|null $toDate            Optional end date for filtering.
+	 *
+	 * @return array Returns an array with two keys:
+	 *               - 'transactions': array of filtered transaction records.
+	 *               - 'count': total number of matching records.
+	 */
+	public function getFilteredTransactions($orderIncrementId, $page, $pageSize, $search = null, $approvalStatus = null, $transactionState = null, $fromDate = null, $toDate = null)
+	{
+		$connection = $this->getConnection();
+		$count = $page * $pageSize;
+
+		$select = $connection->select()
+		       ->from(['ft' => 'failed_transaction'])
+		       ->where('ft.order_increment_id = ?', $orderIncrementId)
+		       ->order('ft.date_time DESC')
+		       ->limit($count, 0);
+
+		if ($search) {
+			$search = '%' . trim($search) . '%';
+			$searchFields = [
+				'ft.transaction_id',
+				'ft.remote_ip',
+				'ft.approval_status',
+				'ft.transaction_state',
+			];
+
+			$conditions = [];
+			foreach ($searchFields as $field) {
+				$conditions[] = $connection->quoteInto("$field LIKE ?", $search);
+			}
+
+			$select->where(new \Zend_Db_Expr('(' . implode(' OR ', $conditions) . ')'));
+		}
+
+		if (!empty($approvalStatus)) {
+			$select->where('ft.approval_status = ?', $approvalStatus);
+		}
+
+		if (!empty($transactionState)) {
+			$select->where('ft.transaction_state = ?', $transactionState);
+		}
+
+		if (!empty($fromDate)) {
+			$select->where('DATE(ft.date_time) >= ?', $fromDate);
+		}
+
+		if (!empty($toDate)) {
+			$select->where('DATE(ft.date_time) <= ?', $toDate);
+		}
+
+		$transactions = $connection->fetchAll($select);
+
+		$countSelect = $connection->select()
+			    ->from(['ft' => 'failed_transaction'], ['total' => new \Zend_Db_Expr('COUNT(*)')])
+			    ->where('ft.order_increment_id = ?', $orderIncrementId);
+
+		if ($search) {
+			$conditions = [];
+			foreach ($searchFields as $field) {
+				$conditions[] = $connection->quoteInto("$field LIKE ?", $search);
+			}
+
+			$countSelect->where(new \Zend_Db_Expr('(' . implode(' OR ', $conditions) . ')'));
+		}
+
+		if (!empty($approvalStatus)) {
+			$countSelect->where('ft.approval_status = ?', $approvalStatus);
+		}
+
+		if (!empty($transactionState)) {
+			$countSelect->where('ft.transaction_state = ?', $transactionState);
+		}
+
+		if (!empty($fromDate)) {
+			$countSelect->where('DATE(ft.date_time) >= ?', $fromDate);
+		}
+
+		if (!empty($toDate)) {
+			$countSelect->where('DATE(ft.date_time) <= ?', $toDate);
+		}
+
+		$totalCount = $connection->fetchOne($countSelect);
+
+		return ['transactions' => $transactions, 'count' => $totalCount];
+	}
 }

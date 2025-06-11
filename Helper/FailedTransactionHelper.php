@@ -14,12 +14,14 @@ use Magento\Framework\Pricing\Helper\Data as PricingHelper;
 use Magento\Sales\Api\TransactionRepositoryInterface;
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Sales\Api\Data\TransactionInterface;
+use Magento\Framework\UrlInterface;
 
 class FailedTransactionHelper
 {
 	const KEY_FAILED_ORDERS = 'failed_orders';
 	const KEY_SUCCESSFUL = 'successful';
 	const KEY_SUCCESSFUL_TXN = 'successful_txn';
+	const KEY_TXN_URL = 'transaction_url';
 
 	const ADMIN_PANEL_LABEL = "Admin";
 	
@@ -29,6 +31,7 @@ class FailedTransactionHelper
 	private $_pricingHelper;
 	private $_txnRepo;
 	private $_search;
+	private $_urlBuilder;
 
 	public function __construct(
 		FailedOrder $failedOrderResource,
@@ -36,7 +39,8 @@ class FailedTransactionHelper
 		ValuelinkOrderHelper $valuelinkOrderHelper,
 		PricingHelper $pricingHelper,
 		TransactionRepositoryInterface $txnRepo,
-		SearchCriteriaBuilder $search
+		SearchCriteriaBuilder $search,
+		UrlInterface $urlBuilder
 	) {
 		$this->_failedOrderResource = $failedOrderResource;
 		$this->_failedTxnResource = $failedTxnResource;
@@ -44,6 +48,7 @@ class FailedTransactionHelper
 		$this->_pricingHelper = $pricingHelper;
 		$this->_txnRepo = $txnRepo;
 		$this->_search = $search;
+		$this->_urlBuilder = $urlBuilder;
 	}
 
 	/**
@@ -63,41 +68,82 @@ class FailedTransactionHelper
 		return $failedOrder[0];
 	}
 
-	public function getFailedTransactionsForOrder($order)
+	public function getFailedTransactionsForOrder($order, $page = 1, $pageSize = 20, $search = '', $approvalStatus = '', $transactionState = '', $fromDate = '', $toDate = '')
 	{
 		$failedOrder = $this->getFailedOrder($order);
-		$failedTransactions = $this->_failedTxnResource->getByOrderIncrementId($failedOrder["order_increment_id"]);
+		$failedTransactions = $this->_failedTxnResource->getFilteredTransactions($failedOrder["order_increment_id"], $page, $pageSize, $search, $approvalStatus, $transactionState, $fromDate, $toDate);
+
 		// Set IP Address to Admin for secondary transactions to match real transactions
-		for($i = 0; $i < count($failedTransactions); $i++ )
+		foreach($failedTransactions['transactions'] as &$failedTransaction)
 		{
-			if ($failedTransactions[$i][TxnModel::KEY_PAYMENT_ACTION] != SaleResponseValidator::PAYMENT_ACTION && $failedTransactions[$i][TxnModel::KEY_PAYMENT_ACTION] != AuthorizeResponseValidator::PAYMENT_ACTION)
+			$failedTransaction[self::KEY_TXN_URL] = $this->_urlBuilder->getUrl('fiserv/declines/transaction', ['transaction_id' => $failedTransaction['transaction_id']]);
+			if ($failedTransaction[TxnModel::KEY_PAYMENT_ACTION] != SaleResponseValidator::PAYMENT_ACTION && $failedTransaction[TxnModel::KEY_PAYMENT_ACTION] != AuthorizeResponseValidator::PAYMENT_ACTION)
 			{
-				$failedTransactions[$i][TxnModel::KEY_REMOTE_IP] = self::ADMIN_PANEL_LABEL;
+				$failedTransaction[TxnModel::KEY_REMOTE_IP] = self::ADMIN_PANEL_LABEL;
 			}
 		}
 		
 		$giftTxns = $this->_valuelinkOrderHelper->getValuelinkTransactionsByOrderIncrementId($failedOrder["order_increment_id"]);
-		
-		foreach($giftTxns as $giftTxn)
-		{
-			array_push($failedTransactions, $this->convertGiftTxnToFailedTxnArray($giftTxn));
-		}
 
+		foreach ($giftTxns as $giftTxn) {
+			$successTxn = $this->convertGiftTxnToFailedTxnArray($giftTxn);
+
+			$matchesApprovalStatus = !$approvalStatus || $successTxn['approval_status'] === $approvalStatus;
+			$matchesTransactionState = !$transactionState || $successTxn['transaction_state'] === $transactionState;
+			$matchesSearch = !$search || !empty(array_filter(
+				$successTxn,
+				fn($v) => is_scalar($v) && stripos((string)$v, trim($search)) !== false
+			));
+
+			$txnDate = isset($successTxn['date_time']) ? new \DateTime($successTxn['date_time']) : null;
+			$fromDateObj = $fromDate ? new \DateTime($fromDate) : null;
+			$toDateObj = $toDate ? new \DateTime($toDate) : null;
+
+			$matchesFromDate = !$fromDateObj || ($txnDate && $txnDate >= $fromDateObj);
+			$matchesToDate = !$toDateObj || ($txnDate && $txnDate <= $toDateObj);
+
+			if ($matchesApprovalStatus && $matchesTransactionState && $matchesSearch && $matchesFromDate && $matchesToDate) {
+				$failedTransactions['count']++;
+				$failedTransactions['transactions'][] = $successTxn;
+			}
+		}
 
 		// if there's a order id, this is not actually a failed order, but a successful order with a failed txn
 		if (isset($failedOrder["real_order_id"]))
 		{
-			$txns = $this->getTxnsOnSuccessfulOrder($failedOrder["real_order_id"]);
+			$txns = $this->getTxnsOnSuccessfulOrder($failedOrder["real_order_id"], $page, $pageSize);
 
 			foreach($txns as $txn)
 			{
-				array_push($failedTransactions, $this->convertSuccessfulTxnToFailedTxnArray($txn, $failedOrder["order_increment_id"]));
-			}			
+				$successTxn = $this->convertSuccessfulTxnToFailedTxnArray($txn, $failedOrder["order_increment_id"]);
+
+				$matchesApprovalStatus = !$approvalStatus || $successTxn['approval_status'] === $approvalStatus;
+				$matchesTransactionState = !$transactionState || $successTxn['transaction_state'] === $transactionState;
+				$matchesSearch = !$search || !empty(array_filter(
+					$successTxn,
+					fn($v) => is_scalar($v) && stripos((string)$v, trim($search)) !== false
+				));
+
+				$txnDate = isset($successTxn['date_time']) ? new \DateTime($successTxn['date_time']) : null;
+				$fromDateObj = $fromDate ? new \DateTime($fromDate) : null;
+				$toDateObj = $toDate ? new \DateTime($toDate) : null;
+
+				$matchesFromDate = !$fromDateObj || ($txnDate && $txnDate >= $fromDateObj);
+				$matchesToDate = !$toDateObj || ($txnDate && $txnDate <= $toDateObj);
+
+				if ($matchesApprovalStatus && $matchesTransactionState && $matchesSearch && $matchesFromDate && $matchesToDate) {
+					$failedTransactions['count']++;
+					$failedTransactions['transactions'][] = $successTxn;
+				}
+			}
 		}
 
-		usort($failedTransactions, function($a, $b) {
+		usort($failedTransactions['transactions'], function($a, $b) {
 			return strtotime($a[TxnModel::KEY_DATE_TIME]) <=> strtotime($b[TxnModel::KEY_DATE_TIME]);
 		});
+
+		$failedTransactions['transactions'] = array_slice($failedTransactions['transactions'], (($page - 1) * $pageSize), $pageSize);
+
 		return $failedTransactions;
 	}
 
@@ -124,6 +170,7 @@ class FailedTransactionHelper
 		$fTxn[TxnModel::KEY_TOTAL_AMOUNT] = $giftTxn[GiftModel::KEY_AMOUNT];
 		$fTxn[TxnModel::KEY_REMOTE_IP] = "N/A";
 		$fTxn[TxnModel::KEY_TRANSACTION_ID] = "N/A";
+		$fTxn[self::KEY_TXN_URL] = '';
 
 		return $fTxn;
 	}
@@ -157,6 +204,7 @@ class FailedTransactionHelper
 		$fTxn[TxnModel::KEY_PAYMENT_ACTION] = $txn->getTxnType();
 		$fTxn[self::KEY_SUCCESSFUL_TXN] = $txn["transaction_id"];
 		$fTxn[self::KEY_SUCCESSFUL] = true;
+		$fTxn[self::KEY_TXN_URL] = $this->_urlBuilder->getUrl('sales/transactions/view', ['txn_id' =>  $txn["txn_id"]]);
 
 		return $fTxn;
 	}
@@ -186,10 +234,12 @@ class FailedTransactionHelper
 		return is_null($auth) || $auth < 0.01;
 	}
 
-	private function getTxnsOnSuccessfulOrder($orderId)
+	private function getTxnsOnSuccessfulOrder($orderId, $page, $pageSize)
 	{
 		$criteria = $this->_search
 			->addFilter('order_id', $orderId)
+			->setPageSize($page * $pageSize)
+			->setCurrentPage(1)
 			->create();
 
 		return $this->_txnRepo->getList($criteria)->getItems();

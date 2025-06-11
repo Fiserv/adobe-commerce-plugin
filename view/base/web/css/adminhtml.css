@@ -177,7 +177,7 @@
 }
 
 .search-pagination-container {
-	display: flex;
+	/*display: flex;*/
 	justify-content: space-between;
 	align-items: center;
 	flex-wrap: wrap;
@@ -256,7 +256,18 @@
 	border-right: none;
 	border-left: none;
 	border-bottom: 1px solid #cfcfcf;
-	max-width: 150px;
+}
+
+#searchInput {
+	width: 340px;
+}
+
+#transactionStateFilter,
+#approvalStatus,
+#orderState,
+#fromDate,
+#toDate {
+	background: #f9f9f9;
 }
 
 .failed-transaction-detail-row {
@@ -268,6 +279,49 @@
 .failed-transaction-detail-row > .failed-transaction-detail {
 	flex: 0 1 calc(50% - 1rem);
 	margin-bottom: 2rem;
+}
+
+#toggleFilterBtn.open {
+	background: #f9f9f9;
+	border-color: #00000010;
+	border-bottom-color: transparent;
+}
+
+#toggleFilterBtn {
+	padding: 15px 20px;
+}
+
+#filterSection {
+	display: flex;
+	gap: 30px;
+	/*justify-content: space-evenly;*/
+	max-height: 0;
+	overflow: hidden;
+	transition: max-height 0.4s ease, padding 0.4s ease;
+	background-color: #f9f9f9;
+	/*border: 1px solid #ccc;*/
+	/*margin-top: 10px;*/
+	padding: 0px 20px;
+	margin-top: -2px;
+	flex-wrap: wrap;
+}
+
+#filterSection.open {
+	max-height: 500px;
+	border: 1px solid #00000010;
+	padding: 30px 20px;
+}
+
+#transactionStateFilter, #approvalStatus, #orderState, #fromDate, #toDate {
+	width: 150px;
+	max-width: unset;
+	background: #f9f9f9;
+}
+
+.actionContainer {
+	float: right;
+	margin-left: auto;
+	display: flex;
 }
 
 .external-link {
