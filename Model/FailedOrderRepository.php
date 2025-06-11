@@ -105,20 +105,32 @@ class FailedOrderRepository implements FailedOrderRepositoryInterface
 	public function getFailedOrdersWithDeclines(array $orderIncrementIds)
 	{
 		if (empty($orderIncrementIds)) {
-			return []; // Return an empty array
+			return [];
 		}
 
-		$filter = $this->filterBuilder
-		 ->setField(OrderModel::KEY_ORDER_INCREMENT_ID)
-		 ->setConditionType('in')
-		 ->setValue($orderIncrementIds)
-		 ->create();
+		$connection = $this->resourceConnection->getConnection();
+		$tableName = $this->resourceConnection->getTableName('failed_order');
 
-		$search = $this->searchBuilder
-		 ->addFilters([$filter])
-		 ->create();
+		// Subquery: Get the minimum date_time per order_increment_id
+		$subSelect = $connection->select()
+			  ->from(
+				  ['fo' => $tableName],
+				  ['order_increment_id', 'min_date_time' => new \Zend_Db_Expr('MIN(date_time)')]
+			  )
+			  ->where('fo.order_increment_id IN (?)', $orderIncrementIds)
+			  ->group('fo.order_increment_id');
 
-		return $this->getList($search)->getItems();
+		// Main query: Join with subquery to get full rows
+		$select = $connection->select()
+		       ->from(['main_table' => $tableName])
+		       ->joinInner(
+			       ['min_table' => $subSelect],
+			       'main_table.order_increment_id = min_table.order_increment_id AND main_table.date_time = min_table.min_date_time',
+			       []
+		       )
+		       ->order('main_table.order_increment_id ASC');
+
+		return $connection->fetchAll($select);
 	}
 
 	public function getAllOrderState() {

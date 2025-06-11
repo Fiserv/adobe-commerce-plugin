@@ -8,15 +8,23 @@ define([
 	var searchFilter = '';
 	var approvalStatus = '';
 	var orderState = '';
+	var transactionState = '';
 	var fromDate = '';
 	var toDate = '';
 
-	function fetchOrders(page) {
-		const filters = [searchFilter, approvalStatus, orderState, fromDate, toDate];
+	function fetchData(page) {
+
+		if( jQuery('.search-pagination-container.failed-transaction').length ) {
+			actionUrl = url.build('payments/declines/order');
+		} else {
+			actionUrl = url.build('payments/declines/preview');
+		}
+
+		const filters = [searchFilter, approvalStatus, orderState, transactionState, fromDate, toDate];
 		$('#resetFilter').toggle(!filters.every(val => val === ''));
 
 		$.ajax({
-			url: url.build('payments/declines/preview'),
+			url: actionUrl,
 			type: 'GET',
 			data: {
 				page: page,
@@ -24,11 +32,17 @@ define([
 				searchFilter: searchFilter,
 				approvalStatus: encodeURIComponent(approvalStatus),
 				orderState: encodeURIComponent(orderState),
+				transactionState: encodeURIComponent(transactionState),
 				fromDate: fromDate,
 				toDate: toDate
 			},
 			success: function (data) {
-				renderTable(data.orders);
+				if( jQuery('.search-pagination-container.failed-transaction').length ) {
+					renderTransactionTable(data.transactions);
+				} else {
+					renderOrderTable(data.orders);
+				}
+
 				setupPagination(data.totalPages);
 			},
 			error: function () {
@@ -37,7 +51,7 @@ define([
 		});
 	}
 
-	function renderTable(orders) {
+	function renderOrderTable(orders) {
 		var tableBody = $('#tableBody');
 		var noRecordsMessage = $('#noRecordsMessage');
 		var paginationInfoTop = $('#paginationInfoTop');
@@ -71,6 +85,43 @@ define([
 		});
 	}
 
+	function renderTransactionTable(transactions) {
+		var tableBody = $('#tableBody');
+		var noRecordsMessage = $('#noRecordsMessage');
+		var paginationInfoTop = $('#paginationInfoTop');
+		var paginationControls = $('#paginationControls');
+
+		tableBody.empty();
+
+		if (!transactions || transactions.length === 0) {
+			noRecordsMessage.show(); // Show message if no orders
+			paginationInfoTop.hide();
+			paginationControls.hide();
+			return;
+		} else {
+			noRecordsMessage.hide(); // Hide message if orders exist
+			paginationInfoTop.show();
+			paginationControls.show();
+		}
+
+		transactions.forEach(function (transaction) {
+			actionURL = '';
+			if(transaction.transaction_url) {
+				actionURL = '<td><a href="' + transaction.transaction_url + '">View</a></td>';
+			}
+			var row = '<tr>' +
+			'<td>' + (transaction.date_time || 'N/A') + '</td>' +
+			'<td>' + (transaction.transaction_id || 'N/A') + '</td>' +
+			'<td>' + (transaction.transaction_state || 'N/A') + '</td>' +
+			'<td>' + (transaction.approval_status || 'N/A') + '</td>' +
+			'<td>' + (transaction.total_amount || 'N/A') + '</td>' +
+			'<td>' + (transaction.remote_ip || 'N/A') + '</td>' +
+			actionURL +
+			'</tr>';
+			tableBody.append(row);
+		});
+	}
+
 	function setupPagination(totalPages) {
 		var $paginationControls = $('#paginationControls');
 		$paginationControls.empty();
@@ -78,7 +129,7 @@ define([
 		var $prevButton = $('<span>').text('<').addClass('pagination-button').on('click', function () {
 			if (currentPage > 1) {
 				currentPage--;
-				fetchOrders(currentPage);
+				fetchData(currentPage);
 			}
 		});
 		if (currentPage === 1) {
@@ -92,7 +143,7 @@ define([
 		var $nextButton = $('<span>').text('>').addClass('pagination-button').on('click', function () {
 			if (currentPage < totalPages) {
 				currentPage++;
-				fetchOrders(currentPage);
+				fetchData(currentPage);
 			}
 		});
 		if (currentPage === totalPages) {
@@ -106,51 +157,59 @@ define([
 	function changeRowsPerPage() {
 		rowsPerPage = parseInt($('#rowsPerPage').val());
 		currentPage = 1; // Reset current page to 1 when rows per page is changed
-		fetchOrders(currentPage);
+		fetchData(currentPage);
 	}
 
 	function filterByApprovalStatus() {
 		approvalStatus = $('#approvalStatus').val();
 		currentPage = 1; // Reset current page to 1 when filter applied
-		fetchOrders(currentPage);
+		fetchData(currentPage);
 	}
 
 	function filterByOrderState() {
 		orderState = $('#orderState').val();
 		currentPage = 1; // Reset current page to 1 when filter applied
-		fetchOrders(currentPage);
+		fetchData(currentPage);
+	}
+
+	function filterByTransactionState() {
+		transactionState = $('#transactionStateFilter').val();
+		currentPage = 1; // Reset current page to 1 when filter applied
+		fetchData(currentPage);
 	}
 
 	function filterByDateRange() {
 		fromDate = $('#fromDate').val();
 		toDate = $('#toDate').val();
 		currentPage = 1; // Reset to first page
-		fetchOrders(currentPage);
+		fetchData(currentPage);
 	}
 
 	function resetFilter() {
 		$('#searchInput').val('');
 		$('#approvalStatus').val('');
 		$('#orderState').val('');
+		$('#transactionStateFilter').val('');
 		$('#fromDate').val('');
 		$('#toDate').val('');
 
 		searchFilter = '';
 		approvalStatus = '';
 		orderState = '';
+		transactionState = '';
 		fromDate = '';
 		toDate = '';
 
 		$(this).hide();
 
 		currentPage = 1;
-		fetchOrders(currentPage);
+		fetchData(currentPage);
 	}
 
 	function searchTable() {
 		searchFilter = $('#searchInput').val().toLowerCase();
 		currentPage = 1; // Reset current page to 1 when search is applied
-		fetchOrders(currentPage);
+		fetchData(currentPage);
 	}
 
 	$(document).ready(function () {
@@ -161,7 +220,6 @@ define([
 		});
 		$('#rowsPerPage').on('change', changeRowsPerPage);
 		$('#approvalStatus').on('change', filterByApprovalStatus);
-		$('#orderState').on('change', filterByOrderState);
 		$('#fromDate, #toDate').on('change', filterByDateRange);
 		$('#resetFilter').on('click', resetFilter);
 
@@ -175,5 +233,16 @@ define([
 		});
 
 		setupPagination($('#paginationControls').data('totalpage'));
+
+		if( $('.search-pagination-container.failed-transaction').length ) {
+			$('#transactionStateFilter').on('change', filterByTransactionState);
+		} else {
+			$('#orderState').on('change', filterByOrderState);
+		}
+
+		$('#toggleFilterBtn').on('click', function () {
+			$('#filterSection').toggleClass('open');
+			$(this).toggleClass('open');
+		});
 	});
 });

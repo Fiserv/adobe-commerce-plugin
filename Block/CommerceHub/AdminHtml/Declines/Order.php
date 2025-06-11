@@ -30,6 +30,11 @@ class Order extends Template
 		return $this->getData('transactions');
 	}
 
+	public function getTotalPages()
+	{
+		return $this->getData('totalPages');
+	}
+
 	public function getAppliedGiftCardAmount()
 	{
 		return $this->getData('giftAmount');

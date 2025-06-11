@@ -11,43 +11,61 @@ $allOrderState = $block->getAllOrderState();
 
 <?php if ($orders) : ?>
 	<div class="search-pagination-container">
-		<div class="filter-wrapper">
-			<input type="text" id="searchInput" placeholder="Search for keywords">
+        <div class="filter-wrapper">
+            <div class="filter-item">
+                <input type="text" id="searchInput" placeholder="Search for keywords">
+            </div>
+            <div class="actionContainer">
+                <button id="toggleFilterBtn" style="margin-left: 20px;">Filter</button>
+
+                <div class="paginationContainerTop" style="margin-left: auto; display: flex; align-items: center;">
+                    <label for="rowsPerPage">Limit:</label>
+                    <select id="rowsPerPage" style="margin: 0 0.5rem;">
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="15">15</option>
+                        <option value="20" selected="">20</option>
+                    </select>
+                    <span id="paginationInfoTop" class="pagination-info">1 of 2</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Animated Filter Section -->
+        <div id="filterSection">
 			<?php if($allApprovalStatus): ?>
-				<label for="approvalStatus">Cause of failure:</label>
-				<select id="approvalStatus">
-						<option value="">Select</option>
-					<?php foreach ($allApprovalStatus as $approvalStatus): ?>
-						<option value="<?php echo  $approvalStatus; ?>"><?php echo  $approvalStatus; ?></option>
-					<?php endforeach; ?>
-				</select>
-			<?php endif; ?>
-			<?php if($allOrderState): ?>
-				<label for="orderState">Order State:</label>
-				<select id="orderState">
-						<option value="">Select</option>
-					<?php foreach ($allOrderState as $orderState): ?>
-						<option value="<?php echo  $orderState; ?>"><?php echo  $orderState; ?></option>
-					<?php endforeach; ?>
-				</select>
-			<?php endif; ?>
-			<label for="fromDate">From:</label>
-			<input id="fromDate" type="date"/>
-			<label for="toDate">To:</label>
-			<input id="toDate" type="date"/>
-			<button id="resetFilter" style="display: none;font-size: 1rem;margin-left: 30px;background-color: #f1f1f1;padding: 5px 8px;">RESET</button>
-		</div>
-		<div class="paginationContainerTop">
-			<label for="rowsPerPage">Limit:</label>
-			<select id="rowsPerPage">
-				<option value="5">5</option>
-				<option value="10">10</option>
-				<option value="15">15</option>
-				<option value="20" selected>20</option>
-			</select>
-			<span id="paginationInfoTop" class="pagination-info"></span>
-		</div>
-	</div>
+	            <div class="filter-item">
+	                <label for="approvalStatus">Cause of failure:</label>
+					<select id="approvalStatus">
+							<option value="">Select</option>
+						<?php foreach ($allApprovalStatus as $approvalStatus): ?>
+							<option value="<?php echo  $approvalStatus; ?>"><?php echo  $approvalStatus; ?></option>
+						<?php endforeach; ?>
+					</select>
+	            </div>
+            <?php endif; ?>
+            <?php if($allOrderState): ?>
+	            <div class="filter-item">
+	                <label for="orderState">Order State:</label>
+					<select id="orderState">
+							<option value="">Select</option>
+						<?php foreach ($allOrderState as $orderState): ?>
+							<option value="<?php echo  $orderState; ?>"><?php echo  $orderState; ?></option>
+						<?php endforeach; ?>
+					</select>
+	            </div>
+	        <?php endif; ?>
+            <div class="filter-item">
+                <label for="fromDate">From:</label>
+                <input type="date" id="fromDate">
+            </div>
+            <div class="filter-item">
+                <label for="toDate">To:</label>
+                <input type="date" id="toDate">
+            </div>
+            <button id="resetFilter" style="font-size: 1rem; background-color: #f1f1f1; padding: 5px 15px;display: none;">RESET</button>
+        </div>
+    </div>
 
 	<table id="transactionsTable" class="data-table">
 		<thead>
