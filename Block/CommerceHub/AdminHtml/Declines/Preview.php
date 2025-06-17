@@ -5,10 +5,13 @@ use Magento\Framework\View\Element\Template;
 
 class Preview extends Template
 {
+	protected $urlBuilder;
+
 	public function __construct(
 		Template\Context $context,
 		array $data = []
 	) {
+		$this->urlBuilder = $context->getUrlBuilder();
 		parent::__construct($context, $data);
 	}
 
@@ -30,6 +33,11 @@ class Preview extends Template
 	public function getAllOrderState()
 	{
 		return $this->getData('order_state');
+	}
+	
+	public function getExportUrl()
+	{
+		return $this->urlBuilder->getUrl('fiserv/declines/export');
 	}
 }
 

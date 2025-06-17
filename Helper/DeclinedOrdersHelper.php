@@ -44,43 +44,54 @@ class DeclinedOrdersHelper
 		$this->pricingHelper = $pricingHelper;
 	}
 
-	public function getOrdersWithDeclines($page=1, $pageSize=20, $search='', $approvalStatus='', $orderState='', $fromDate = null, $toDate = null)
+	public function getOrdersWithDeclines($page = 1, $pageSize = 20, $search = '', $approvalStatus = '', $orderState = '', $fromDate = null, $toDate = null, $type = 'orders')
 	{
 		$orderIncrementData = $this->getOrderIncrementIdsFromFailedTxns($page, $pageSize, $search, $approvalStatus, $orderState, $fromDate, $toDate);
 		$orderIncrementIds = $orderIncrementData['ids'];
 
 		$allApprovalStatus = $this->failedTransactionRepo->getAllAprovalStatus();
 		$allOrderState = $this->failedOrderRepo->getAllOrderState();
-		
-		$failedOrders = $this->failedOrderRepo->getFailedOrdersWithDeclines($orderIncrementIds);
-		$realOrders = $this->declinedRealOrderHelper->getRealOrdersWithDeclines($orderIncrementIds);
-		$failedTransactionData = $this->failedTransactionRepo->getFailedTransactionData($orderIncrementIds);
 
 		$failedTransactionDataArray = [];
-		foreach ($failedTransactionData as $ft) {
-			$failedTransactionDataArray[$ft['order_increment_id']] = $ft;
-		}
-
 		$orderList = [];
 		$processedOrderIds = [];
 
-		foreach ($failedOrders as $fo) {
-			$orderArray = $this->convertFailedOrderToArray($fo);
-			$orderArray['remote_ip'] = $this->getRemoteIp($failedTransactionDataArray, $fo['order_increment_id'] ?? "");
-			$orderArray['approval_status'] = $failedTransactionDataArray[$orderArray['order_increment_id']]['approval_status'];
-			array_push($orderList, $orderArray);
-			$processedOrderIds[] = $orderArray['order_increment_id'];
+		if ($type === 'orders' || $type === 'all') {
+			$failedOrders = $this->failedOrderRepo->getFailedOrdersWithDeclines($orderIncrementIds);
+			$realOrders = $this->declinedRealOrderHelper->getRealOrdersWithDeclines($orderIncrementIds);
+
+			$failedTransactionData = $this->failedTransactionRepo->getFailedTransactionData($orderIncrementIds);
+			foreach ($failedTransactionData as $ft) {
+				$failedTransactionDataArray[$ft['order_increment_id']] = $ft;
+			}
+
+			foreach ($failedOrders as $fo) {
+				$orderArray = $this->convertFailedOrderToArray($fo);
+				$orderArray['remote_ip'] = $this->getRemoteIp($failedTransactionDataArray, $fo['order_increment_id'] ?? '');
+				$orderArray['approval_status'] = $failedTransactionDataArray[$orderArray['order_increment_id']]['approval_status'];
+				array_push($orderList, $orderArray);
+				$processedOrderIds[] = $orderArray['order_increment_id'];
+			}
+
+			foreach ($realOrders as $ro) {
+				if (in_array($ro['increment_id'], $processedOrderIds)) {
+					continue;
+				}
+				$orderArray = $this->convertRealOrderToArray($ro);
+				$orderArray['remote_ip'] = $this->getRemoteIp($failedTransactionDataArray, $ro['increment_id'] ?? '');
+				$orderArray['approval_status'] = $failedTransactionDataArray[$orderArray['order_increment_id']]['approval_status'];
+				array_push($allOrderState, $orderArray['order_state']);
+				array_push($orderList, $orderArray);
+			}
 		}
 
-		foreach ($realOrders as $ro) {
-			if (in_array($ro['increment_id'], $processedOrderIds)) {
-				continue;
+		if ($type === 'transactions' || $type === 'all') {
+			$failedTransactionData = $this->failedTransactionRepo->getFailedTransactionData($orderIncrementIds);
+			foreach ($failedTransactionData as $transaction) {
+				$transactionArray = $this->convertFailedTransactionToArray($transaction); // Implement this method to convert transaction data into desired format
+				array_push($orderList, $transactionArray);
+				$processedOrderIds[] = $transaction['order_increment_id'];
 			}
-			$orderArray = $this->convertRealOrderToArray($ro);
-			$orderArray['remote_ip'] = $this->getRemoteIp($failedTransactionDataArray, $ro['increment_id'] ?? "");
-			$orderArray['approval_status'] = $failedTransactionDataArray[$orderArray['order_increment_id']]['approval_status'];
-			array_push($allOrderState, $orderArray['order_state']);
-			array_push($orderList, $orderArray);
 		}
 
 		usort($orderList, function ($a, $b) {

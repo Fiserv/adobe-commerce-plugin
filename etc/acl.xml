@@ -7,8 +7,7 @@
 					<resource id="Fiserv_Payments::declines" title="Declines" sortOrder="20">
 						<resource id="Fiserv_Payments::transaction" title="Transaction" sortOrder="30"/>
 						<resource id="Fiserv_Payments::failed_orders" title="Failed Orders" sortOrder="40"/>
-						<resource id="Fiserv_Payments::preview" title="Preview" sortOrder="50"/>
-						<resource id="Fiserv_Payments::export" title="Export" sortOrder="60"/>
+						<resource id="Fiserv_Payments::preview" title="Preview" sortOrder="30"/>
 					</resource>
 				</resource>
 			</resource>
