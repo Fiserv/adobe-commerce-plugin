@@ -66,8 +66,13 @@ class Export extends Action implements HttpGetActionInterface
 
 			return $this->fileFactory->create(
 				$fileName,
-				$filePath,
-				\Magento\Framework\App\Filesystem\DirectoryList::VAR_DIR
+				[
+					'value' => $filePath,
+					'rm' => true, // delete local file
+					'type' => 'filename'
+				],
+				\Magento\Framework\App\Filesystem\DirectoryList::VAR_DIR,
+				$mimeType
 			);
 		
 		} catch (\Exception $e) {
