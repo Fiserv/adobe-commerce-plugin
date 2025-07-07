@@ -208,6 +208,7 @@
 				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
 				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
 				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
+				<item name="3ds_data" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\ThreeDSecureDataBuilder</item>
 			</argument>
 		</arguments>
 	</virtualType>
@@ -222,6 +223,7 @@
 				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
 				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
 				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
+				<item name="3ds_data" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\ThreeDSecureDataBuilder</item>
 			</argument>
 		</arguments>
 	</virtualType>
@@ -236,6 +238,7 @@
 				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
 				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
 				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
+				<item name="3ds_data" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\ThreeDSecureDataBuilder</item>
 			</argument>
 		</arguments>
 	</virtualType>
@@ -250,6 +253,7 @@
 				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
 				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
 				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
+				<item name="3ds_data" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\ThreeDSecureDataBuilder</item>
 			</argument>
 		</arguments>
 	</virtualType>

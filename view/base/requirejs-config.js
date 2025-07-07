@@ -14,7 +14,7 @@ var config = {
 		}
 	},
     paths : {
-		SDCv2Library : 'https://commercehub-secure-data-capture.fiservapps.com/3.1.21/checkout',
+		SDCv2Library : 'https://commercehub-secure-data-capture.fiservapps.com/3.2.7/checkout',
 		commercehubQaClient : 'https://qa.api.fiservapps.com/ch/sdk/v1/commercehub-client-sdk',
 		commercehubCertClient : 'https://cert.api.fiservapps.com/ch/sdk/v1/commercehub-client-sdk',
 		commercehubProdClient : 'https://prod.api.fiservapps.com/ch/sdk/v1/commercehub-client-sdk'
