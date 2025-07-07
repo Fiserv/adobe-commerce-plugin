@@ -8,7 +8,6 @@ use Magento\Framework\View\Result\PageFactory;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 use Magento\Framework\App\Action\HttpGetActionInterface;
 use Fiserv\Payments\Helper\DeclinedOrdersHelper;
-
 use Fiserv\Payments\Model\FailedOrder as OrderModel;
 
 class Preview extends Action implements HttpGetActionInterface
@@ -53,11 +52,13 @@ class Preview extends Action implements HttpGetActionInterface
 		$resultPage->setActiveMenu("Fiserv_Payments::failed_transaction_preview");
 		$resultPage->getConfig()->getTitle()->prepend(__('UNSUCCESSFUL ORDERS'));
 
-		$orders = $this->declinedOrdersHelper->getOrdersWithDeclines();
-		$resultPage->getLayout()->getBlock('failed_transaction_preview')->setData('orders', $orders['orders']);
-		$resultPage->getLayout()->getBlock('failed_transaction_preview')->setData('totalPages', $orders['totalPages']);
-		$resultPage->getLayout()->getBlock('failed_transaction_preview')->setData('approval_status', $orders['approval_status']);
-		$resultPage->getLayout()->getBlock('failed_transaction_preview')->setData('order_state', $orders['order_state']);
+		$ordersData = $this->declinedOrdersHelper->getOrdersWithDeclines();
+		$orders = $ordersData['orders'];
+
+		$resultPage->getLayout()->getBlock('failed_transaction_preview')->setData('orders', $orders);
+		$resultPage->getLayout()->getBlock('failed_transaction_preview')->setData('totalPages', $ordersData['totalPages']);
+		$resultPage->getLayout()->getBlock('failed_transaction_preview')->setData('approval_status', $ordersData['approval_status']);
+		$resultPage->getLayout()->getBlock('failed_transaction_preview')->setData('order_state', $ordersData['order_state']);
 
 		return $resultPage;
 	}

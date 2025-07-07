@@ -254,7 +254,7 @@ class ValuelinkTransactionManager
 				$this->logger->logError(1, "Transaction failure. Gift card response returned with unsuccessful transaction state", "Order ID: {$merchantOrderId}");
 				$this->logger->logError(1, "Transaction ID: " . $cancelTxn->getTransactionId(), "Order ID: {$merchantOrderId}");
 				$this->logger->logError(2, "Transaction state: " . $cancelTxn->getTransactionState(), "Order ID: {$merchantOrderId}");
-				$this->logger->logError(2, "Response message: " . $this->extractResponseMessage($response), "Order ID: {$merchantOrderId}");
+				$this->logger->logError(2, "Response message: " . $this->extractResponseMessage($chResponse), "Order ID: {$merchantOrderId}");
 				throw new \Exception(__("Gift Card response state not recognized as successful: " . $cancelTxn->getTransactionState()));
 			}
 	
@@ -332,7 +332,7 @@ class ValuelinkTransactionManager
 				$this->logger->logError(1, "Transaction failure. Gift card response returned with unsuccessful transaction state", "Order ID: {$merchantOrderId}");
 				$this->logger->logError(1, "Transaction ID: " . $captureTxn->getTransactionId(), "Order ID: {$merchantOrderId}");
 				$this->logger->logError(2, "Transaction state: " . $captureTxn->getTransactionState(), "Order ID: {$merchantOrderId}");
-				$this->logger->logError(2, "Response message: " . $this->extractResponseMessage($response), "Order ID: {$merchantOrderId}");
+				$this->logger->logError(2, "Response message: " . $this->extractResponseMessage($chResponse), "Order ID: {$merchantOrderId}");
 				throw new \Exception(__("Gift Card response state not recognized as successful: " . $captureTxn->getTransactionState()));
 			}
 	
