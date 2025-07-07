@@ -51,10 +51,10 @@ class DeclinedOrdersHelper
 
 		$allApprovalStatus = $this->failedTransactionRepo->getAllAprovalStatus();
 		$allOrderState = $this->failedOrderRepo->getAllOrderState();
-		
+
 		$failedOrders = $this->failedOrderRepo->getFailedOrdersWithDeclines($orderIncrementIds);
 		$realOrders = $this->declinedRealOrderHelper->getRealOrdersWithDeclines($orderIncrementIds);
-		$failedTransactionData = $this->failedTransactionRepo->getFailedTransactionData($orderIncrementIds);
+		$failedTransactionData = $this->failedTransactionRepo->getListByOrderIncrementId($orderIncrementIds);
 
 		$failedTransactionDataArray = [];
 		foreach ($failedTransactionData as $ft) {
@@ -63,28 +63,56 @@ class DeclinedOrdersHelper
 
 		$orderList = [];
 		$processedOrderIds = [];
+		$orderTransactionDates = [];
 
 		foreach ($failedOrders as $fo) {
 			$orderArray = $this->convertFailedOrderToArray($fo);
-			$orderArray['remote_ip'] = $this->getRemoteIp($failedTransactionDataArray, $fo['order_increment_id'] ?? "");
-			$orderArray['approval_status'] = $failedTransactionDataArray[$orderArray['order_increment_id']]['approval_status'];
+			$orderIncrementId = $fo[OrderModel::KEY_ORDER_INCREMENT_ID];
+			$orderArray['remote_ip'] = $this->getRemoteIp($failedTransactionDataArray, $orderIncrementId);
+			$orderArray['approval_status'] = $failedTransactionDataArray[$orderIncrementId]['approval_status'] ?? 'N/A';
 			array_push($orderList, $orderArray);
-			$processedOrderIds[] = $orderArray['order_increment_id'];
+			$processedOrderIds[] = $orderIncrementId;
+
+			// Fetch transactions and find latest date
+			$transactions = $this->failedTransactionRepo->getListByOrderIncrementId($orderIncrementId);
+			$latestTransactionDate = null;
+			foreach ($transactions as $transaction) {
+				$date = $transaction->getDateTime();
+				if ($latestTransactionDate === null || strtotime($date) > strtotime($latestTransactionDate)) {
+					$latestTransactionDate = $date;
+				}
+			}
+			$orderTransactionDates[$orderIncrementId] = $latestTransactionDate;
 		}
 
 		foreach ($realOrders as $ro) {
-			if (in_array($ro['increment_id'], $processedOrderIds)) {
+			$incrementId = $ro['increment_id'];
+			if (in_array($incrementId, $processedOrderIds)) {
 				continue;
 			}
 			$orderArray = $this->convertRealOrderToArray($ro);
-			$orderArray['remote_ip'] = $this->getRemoteIp($failedTransactionDataArray, $ro['increment_id'] ?? "");
-			$orderArray['approval_status'] = $failedTransactionDataArray[$orderArray['order_increment_id']]['approval_status'];
+			$orderArray['remote_ip'] = $this->getRemoteIp($failedTransactionDataArray, $incrementId);
+			$orderArray['approval_status'] = $failedTransactionDataArray[$incrementId]['approval_status'] ?? 'N/A';
 			array_push($allOrderState, $orderArray['order_state']);
 			array_push($orderList, $orderArray);
+
+			// Fetch transactions and find latest date
+			$transactions = $this->failedTransactionRepo->getListByOrderIncrementId($incrementId);
+			$latestTransactionDate = null;
+			foreach ($transactions as $transaction) {
+				$date = $transaction->getDateTime();
+				if ($latestTransactionDate === null || strtotime($date) > strtotime($latestTransactionDate)) {
+					$latestTransactionDate = $date;
+				}
+			}
+			$orderTransactionDates[$incrementId] = $latestTransactionDate;
 		}
 
-		usort($orderList, function ($a, $b) {
-			return strtotime($b['date_time']) <=> strtotime($a['date_time']);
+		// Sort orders by the date of their latest transaction
+		usort($orderList, function ($a, $b) use ($orderTransactionDates) {
+			$latestDateA = strtotime($orderTransactionDates[$a[OrderModel::KEY_ORDER_INCREMENT_ID]]);
+			$latestDateB = strtotime($orderTransactionDates[$b[OrderModel::KEY_ORDER_INCREMENT_ID]]);
+			return $latestDateB <=> $latestDateA;
 		});
 
 		$allOrderState = array_values(array_unique(array_map('strtoupper', $allOrderState)));
@@ -110,13 +138,13 @@ class DeclinedOrdersHelper
 		$offset = ($page - 1) * $pageSize;
 
 		$select = $connection->select()
-		       ->distinct(true)
-		       ->from(['ft' => 'failed_transaction'], ['order_increment_id'])
-		       ->joinLeft(['so' => 'sales_order'], 'ft.order_increment_id = so.increment_id', [])
-		       ->joinLeft(['fo' => 'failed_order'], 'ft.order_increment_id = fo.order_increment_id', [])
-		       ->where('ft.order_increment_id IS NOT NULL')
-		       ->order('ft.order_increment_id DESC')
-		       ->limit($pageSize, $offset);
+			->distinct(true)
+			->from(['ft' => 'failed_transaction'], ['order_increment_id'])
+			->joinLeft(['so' => 'sales_order'], 'ft.order_increment_id = so.increment_id', [])
+			->joinLeft(['fo' => 'failed_order'], 'ft.order_increment_id = fo.order_increment_id', [])
+			->where('ft.order_increment_id IS NOT NULL')
+			->order('ft.order_increment_id DESC')
+			->limit($pageSize, $offset);
 
 		if ($search) {
 			$search = '%' . trim($search) . '%';
@@ -163,10 +191,10 @@ class DeclinedOrdersHelper
 		$orderIncrementIds = $connection->fetchCol($select);
 
 		$countSelect = $connection->select()
-			    ->from(['ft' => 'failed_transaction'], ['total' => new \Zend_Db_Expr('COUNT(DISTINCT ft.order_increment_id)')])
-			    ->joinLeft(['so' => 'sales_order'], 'ft.order_increment_id = so.increment_id', [])
-			    ->joinLeft(['fo' => 'failed_order'], 'ft.order_increment_id = fo.order_increment_id', [])
-			    ->where('ft.order_increment_id IS NOT NULL');
+			->from(['ft' => 'failed_transaction'], ['total' => new \Zend_Db_Expr('COUNT(DISTINCT ft.order_increment_id)')])
+			->joinLeft(['so' => 'sales_order'], 'ft.order_increment_id = so.increment_id', [])
+			->joinLeft(['fo' => 'failed_order'], 'ft.order_increment_id = fo.order_increment_id', [])
+			->where('ft.order_increment_id IS NOT NULL');
 
 		if ($search) {
 			$conditions = [];
@@ -200,11 +228,10 @@ class DeclinedOrdersHelper
 		return ['ids' => $orderIncrementIds, 'count' => $totalCount];
 	}
 
-
-	private function convertFailedOrderToArray($failedOrder)
+	private function convertFailedOrderToArray($failedOrder): array
 	{
 		return [
-			OrderModel::KEY_DATE_TIME => $failedOrder[OrderModel::KEY_DATE_TIME],
+			OrderModel::KEY_DATE_TIME => $failedOrder[OrderModel::KEY_DATE_TIME] ?? 'N/A',
 			OrderModel::KEY_ORDER_INCREMENT_ID => $failedOrder[OrderModel::KEY_ORDER_INCREMENT_ID],
 			OrderModel::KEY_CUSTOMER_NAME => $failedOrder[OrderModel::KEY_CUSTOMER_NAME],
 			OrderModel::KEY_ORDER_STATE => strtoupper($failedOrder[OrderModel::KEY_ORDER_STATE]),
@@ -213,11 +240,11 @@ class DeclinedOrdersHelper
 		];
 	}
 
-	private function convertRealOrderToArray($realOrder)
+	private function convertRealOrderToArray($realOrder): array
 	{
 		$failedOrder = $this->failedOrderManager->createFailedOrder($realOrder);
 		$failedOrder->setDateTime($realOrder->getData('created_at'));
-		return $this->convertFailedOrderToArray($failedOrder);
+		return $this->convertFailedOrderToArray($failedOrder->getData());
 	}
 
 	public function formatPrice($amount)
