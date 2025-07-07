@@ -995,5 +995,21 @@
 				</group>
 			</group>
 		</section>
+		<section id="three_d_secure" translate="label" type="text" sortOrder="410" showInDefault="1" showInWebsite="1" showInStore="1">
+			<label>3D Secure</label>
+			<tab>sales</tab>
+			<resource>Magento_Sales::three_d_secure</resource>
+			<group id="fiserv_commercehub" type="text" sortOrder="13" showInDefault="1" showInWebsite="1">
+				<label>Fiserv Payments</label>
+				<group id="config" translate="label comment" sortOrder="15" showInDefault="1" showInWebsite="1">
+					<label>3D Secure Settings</label>
+					<field id="enable" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1">
+						<label>Enable</label>
+						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+						<config_path>payment/fiserv_commercehub/three_d_secure</config_path>
+					</field>
+				</group>
+			</group>
+		</section>
 	</system>
 </config>

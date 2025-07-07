@@ -52,6 +52,21 @@ define([
 			this.fieldFocusHandler = fieldFocusHandler;
 		},
 
+  		initSdk: async function(config, creds)
+		{
+			await window.fiserv.init({
+  				cspNonce: crypto.randomUUID(),
+				environment: config.environment,
+				accessToken: creds[this.accessTokenKey], 
+				apiKey: config.apiKey,
+				merchantId: config.merchantId,
+				publicKey: creds[this.publicTokenKey],
+				keyId: creds[this.keyIdKey],
+				terminalId: config[this.configTerminalIdKey],
+				sessionId: creds[this.sessionIdKey]
+			}); 
+		}, 
+
 		getChCredentials: function (storeUrl, successCb, errorCb) {
 			let validateCb = this.validateCredentialsResponse.bind(this);
 			let parseResponseCb = this.parseChCredentialsResponse.bind(this);
@@ -61,7 +76,7 @@ define([
 				url: storeUrl + this.credentialsUrl,
 				cache: false,
 				dataType: 'json',
-				type: "GET",
+				type: "POST",
 				success: function(response) {
 					if (!validateCb(response)) {
 						errorCb(errorMsg)
@@ -132,25 +147,37 @@ define([
 		submitCardForm: function (
 			storeUrl,
 			runSuccessCb, 
-			runErrorCb
+			runErrorCb,
+			creds
 		) {
 			if (typeof(this.sdcv2Form) !== "undefined") {
-				let promise = new Promise((resolve, reject) => {
-					this.getChCredentials(storeUrl, resolve, reject);	
-				});
+				if (typeof(creds) === "undefined") {
+					let promise = new Promise((resolve, reject) => {
+						this.getChCredentials(storeUrl, resolve, reject);	
+					});
 
-				promise.then((data) => {
-					let submitConfig = this.buildFormSubmitPayload(data);
+					promise.then((data) => {
+						let submitConfig = this.buildFormSubmitPayload(data);
+						this.sdcv2Form.submit(submitConfig)
+							.then((next) => { 
+								let sessionId = data[this.sessionIdKey];
+								runSuccessCb(sessionId); 
+							})
+							.catch((data) => { console.log(data); runErrorCb(); });
+					})
+					.catch((data) => {
+						runErrorCb(data);
+					});
+				}
+				else {
+					let submitConfig = this.buildFormSubmitPayload(creds);
 					this.sdcv2Form.submit(submitConfig)
 						.then((next) => { 
-							let sessionId = data[this.sessionIdKey];
+							let sessionId = creds[this.sessionIdKey];
 							runSuccessCb(sessionId); 
 						})
 						.catch((data) => { console.log(data); runErrorCb(); });
-				})
-				.catch((data) => {
-					runErrorCb(data);
-				});
+				}
 			};
 		},
 
@@ -195,10 +222,7 @@ define([
 
 			}; 
 			formConfig["data"]["environment"] =  this.config[this.environmentKey];
-			// formConfig["data"]["supportedCardBrands"] = [];
-
-			console.log(formConfig);
-
+			
 			return formConfig;
 		},
 

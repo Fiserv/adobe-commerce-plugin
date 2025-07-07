@@ -40,6 +40,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	const KEY_TOKENIZATION = "tokenization";
 	const KEY_STANDALONE_SPA = 'standalone_spa';
 	const KEY_LOGGING_LEVEL = 'logging_level';
+	const KEY_3DS = 'three_d_secure';
 
 	// Iframe Customization Fields
 	const KEY_SDC_CUSTOM = 'sdc_custom';
@@ -369,6 +370,17 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	public function getLoggingLevel($storeId = null)
 	{
 		return $this->getValue(self::KEY_LOGGING_LEVEL, $storeId);
+	}
+
+	/**
+	 * Returns 3D Secure Enabled.
+	 *
+	 * @param int|null $storeId
+	 * @return bool
+	 */
+	public function isThreeDSEnabled($storeId = null)
+	{
+		return $this->getValue(self::KEY_3DS, $storeId);
 	}
 
 	//////////////////////////
