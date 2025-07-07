@@ -7,6 +7,7 @@ use Fiserv\Payments\Model\Valuelink\ValuelinkQuoteRecord;
 use Fiserv\Payments\Model\Service\Valuelink\ValuelinkQuoteManager;
 use Fiserv\Payments\Model\Service\Valuelink\ValuelinkTransactionManager;
 use Fiserv\Payments\Model\Service\CommerceHub\FailedOrderManager;
+use Fiserv\Payments\Model\ResourceModel\ValuelinkTransaction as ValuelinkResource;
 
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\OrderFactory;
@@ -44,6 +45,8 @@ class ProcessOrderPlace implements ObserverInterface
 	
 	private $failedOrderManager;
 
+	private $valuelinkResource;
+
     /**
      * @param \Magento\GiftCardAccount\Helper\Data $giftCAHelper
      * @param \Fiserv\Payments\Model\Valuelink\ValuelinkTransactionFactory $valuelinkTxnFactory
@@ -57,6 +60,7 @@ class ProcessOrderPlace implements ObserverInterface
 		OrderFactory $orderFactory,
 		MultiLevelLogger $logger,
 		FailedOrderManager $failedOrderManager,
+		ValuelinkResource $valuelinkResource
 	) {
         $this->valuelinkHelper = $valuelinkHelper;
 		$this->quoteManager = $quoteManager;
@@ -66,6 +70,7 @@ class ProcessOrderPlace implements ObserverInterface
 		$this->orderFactory = $orderFactory;
 		$this->logger = $logger;
 		$this->failedOrderManager = $failedOrderManager;
+		$this->valuelinkResource = $valuelinkResource;
 	}
 
     /**
@@ -113,24 +118,27 @@ class ProcessOrderPlace implements ObserverInterface
 			}
 
 			// Should only have valid card captures at this point
-			$chargedCards = array();
+			$chargedTxns = array();
 			try
 			{
 				foreach($valuelinkCards as $card)
 				{
 					$this->valuelinkTxnManager->chargeValuelinkCard($order, ValuelinkQuoteRecord::createFromArray($card));
-				}	
-				
-				array_push($chargedCards, $card);	
+					$txns = $this->valuelinkResource->getByChRequestLike($card['sessionId']);
+					array_push($chargedTxns, $txns);
+				}
 			}
 			catch(\Exception $e)
 			{
 				$this->logger->logError(1, "Gift Card charge failed. Reverting...");
-				$this->logger->logError(2, $e);
-				foreach ($chargedCards as $card)
+
+				foreach ($chargedTxns as $txn)
 				{
-					// $this->logger->logCritical(2,"Valuelink card redeemed as a part of a failed order. Cancelling...");
-					// should reverse transaction here
+					try {
+						$this->valuelinkTxnManager->cancelValuelinkTransaction($order, $txn[0]);
+					} catch (\Exception $cancelEx) {
+						$this->logger->logError(2, "Failed to cancel gift card transaction: " . $cancelEx->getMessage());
+					}
 				}
 
 				// Valuelink Cards should all be invalidated.
