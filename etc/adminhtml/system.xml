@@ -156,6 +156,7 @@
 						<label>Charge Type</label>
 						<source_model>Fiserv\Payments\Model\Source\CommerceHub\TransactionType</source_model>
 						<config_path>payment/fiserv_valuelink/payment_action</config_path>
+						<frontend_model>Fiserv\Payments\Block\Adminhtml\System\Config\Form\Field\DisableValuelinkPaymentAction</frontend_model>
 					</field>
 					<field id="create_valuelink_invoice" translate="label" type="select" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Create Invoice on Sale</label>
