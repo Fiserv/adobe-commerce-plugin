@@ -166,11 +166,10 @@
 							<field id="payment_action">authorize_capture</field>
 						</depends>
 					</field>
-					<field id="card_amount_limit" translate="label" type="select" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="card_amount_limit" translate="label" type="select" sortOrder="5" showInDefault="10" showInWebsite="1" showInStore="0">
 						<label>Max Number of Gift Cards Allowed per Order</label>
 						<source_model>Fiserv\Payments\Model\Source\CommerceHub\ValuelinkCardAmount</source_model>
-						<frontend_model>Fiserv\Payments\Model\Source\CommerceHub\Disable</frontend_model>
-						<comment>Number of gift cards currently restricted to 1 per order</comment>
+						<!-- <comment>Number of gift cards currently restricted to 1 per order</comment> -->
 						<config_path>payment/fiserv_valuelink/card_amount_limit</config_path>
 					</field>
 					<field id="show_valuelink_privacy_statement" translate="label" type="select" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="0">

@@ -244,9 +244,9 @@ class ValuelinkTransactionManager
 				throw new \Exception('CommerceHub Gift Card Charges Request  HTTP error code: ' . $statusCode, 1);
 			};
 
-			$cancelTxn->setChResponse(json_encode($response));
-			$cancelTxn->setTransactionId($this->extractTransactionId($response));
-			$cancelTxn->setTransactionState($this->extractTransactionState($response));
+			$cancelTxn->setChResponse(json_encode($chResponse));
+			$cancelTxn->setTransactionId($this->extractTransactionId($chResponse));
+			$cancelTxn->setTransactionState($this->extractTransactionState($chResponse));
 		
 			$successStates = [ValuelinkTransaction::VOIDED_STATE];
 			if (!in_array($cancelTxn->getTransactionState(), $successStates))
