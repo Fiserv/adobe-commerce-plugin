@@ -38,7 +38,7 @@ define(
 
 		function getCustomer()
 		{
-			let email = customer.isLoggedIn() ? customer.customerData.email : quote.billingAddress().email;
+			let email = customer.isLoggedIn() ? customer.customerData.email : quote.guestEmail;
 			let firstName = customer.isLoggedIn() ? customer.customerData.firstname : quote.billingAddress().firstname;
 			let lastName = customer.isLoggedIn() ? customer.customerData.lastname : quote.billingAddress().lastname;
 			let id = customer.isLoggedIn() ? customer.customerData.id : "guest";
@@ -90,7 +90,11 @@ define(
 					body: JSON.stringify(payload),
 					credentials: 'same-origin'
 				});
-
+				
+				if (!response.ok)
+				{
+					throw new Error("Credentials request failure");
+				}
 				return await response.json();
 			} catch (error) {
 				throw new Error("An error occurred while beginning Commercehub payment session.");

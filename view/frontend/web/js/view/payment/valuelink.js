@@ -164,7 +164,14 @@ define([
 			this.getValuelinkBalance(
 				sessionId,
 				window.checkoutConfig.payment.fiserv_payments["storeUrl"],
-				(data) => { this.balanceInquirySuccess(data); this.setGiftCard(); },
+				(data) => { 
+					try {
+						this.balanceInquirySuccess(data); 
+						this.setGiftCard();
+					} catch (err) {
+						this.balanceInquiryFailure(err);
+					}
+				},
 				(err) => { this.balanceInquiryFailure(err.responseJSON.message); });
 		},
 

@@ -122,6 +122,8 @@ class CredentialsRequest
 		} else {
 			$this->logger->logError(1, "Credentials request failure");
 			$this->logger->logError(2, 'CommerceHub credentials request HTTP error code: ' . $statusCode);
+			$this->logger->logError(2, 'CommerceHub credentials request body: ' . json_encode($bodyArray));
+			
 			throw new \Exception('CommerceHub credentials request HTTP error code: ' . $statusCode, 1);
 		};
 
