@@ -54,6 +54,31 @@ define([
 			return idx;
 		},
 
+		initAdapter: async function(config)
+		{
+			let promise = new Promise((resolve, reject) => {
+				this.getChCredentials(config.storeUrl, resolve, reject);
+			});
+
+			promise.then((data) => {
+				initSdk(config, data[this.accessTokenKey]);
+			})
+			.catch((data) => {
+				console.log("WHOOPS something went wrong: ", data);
+			});
+
+		},
+
+		initSdk: async function(config, accessToken)
+		{
+			await window.fiserv.init({
+				environment: config.environment,
+				accessToken: accessToken, 
+				apiKey: config.apiKey,
+				merchantId: config.merchantId
+			});
+		},
+
 		getChCredentials: function (storeUrl, successCb, errorCb) {
 			let validateCb = this.validateCredentialsResponse.bind(this);
 			let parseResponseCb = this.parseChCredentialsResponse.bind(this);
@@ -63,7 +88,7 @@ define([
 				url: storeUrl + this.credentialsUrl,
 				cache: false,
 				dataType: 'json',
-				type: "GET",
+				type: "POST",
 				success: function(response) {
 					if (!validateCb(response)) {
 						errorCb(errorMsg)

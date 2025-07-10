@@ -23,7 +23,7 @@ define([
 	let valuelinkConfig = structuredClone(window.checkoutConfig.payment.fiserv_payments.fiserv_valuelink);
 
 	config.formConfig = valuelinkConfig.valuelinkConfig;
-		
+
 	return Component.extend({
 		defaults: {
 			template: 'Fiserv_Payments/payment/commercehub/valuelink_form',
@@ -33,6 +33,7 @@ define([
 		valuelinkBalanceUrl: "fiserv/valuelink/getvaluelinkbalance",
 		formKey: undefined,
 		isFormValid: false,
+		showClearButton: ko.observable(false), // Observable to control visibility of Clear button
 
 		/** @inheritdoc */
 		initObservable: function () {
@@ -44,7 +45,7 @@ define([
 		initialize: function ()
 		{
 			this._super();
-		
+
 			if (this.isValuelinkEnabled())
 			{
 				this.formKey = sdcv2.initializeForm(
@@ -68,7 +69,7 @@ define([
 		/**
 		 * Is Valuelink enabled
 		 */
-		isValuelinkEnabled: function() 
+		isValuelinkEnabled: function()
 		{
 			return (config.isActive && valuelinkConfig.isActive);
 		},
@@ -76,7 +77,7 @@ define([
 		/**
 		 * Get Valuelink title
 		 */
-		getValuelinkTitle: function() 
+		getValuelinkTitle: function()
 		{
 			return valuelinkConfig.valuelink_title;
 		},
@@ -84,7 +85,7 @@ define([
 		/**
 		 * Show Valuelink Privacy statement
 		 */
-		showValuelinkPrivacyStatement: function() 
+		showValuelinkPrivacyStatement: function()
 		{
 			return valuelinkConfig.show_valuelink_privacy_statement;
 		},
@@ -92,7 +93,7 @@ define([
 		/**
 		* Set gift card.
 		*/
-		setGiftCard: function () 
+		setGiftCard: function ()
 		{
 			if (!this.isFormValid)
 			{
@@ -102,7 +103,7 @@ define([
 
 			let balance = this.getBalanceInput().val();
 			let sessionId = this.getSessionIdInput().val();
-			
+
 			if (!sessionId)
 			{
 				this.captureCardForm((sessionId) => { this.checkBalanceAndSetCardCb(sessionId); });
@@ -117,13 +118,13 @@ define([
 
 			if (parseFloat(balance) === 0)
 			{
-				this.showErrorMessage("Gift card has no balance.");	
+				this.showErrorMessage("Gift card has no balance.");
 				return;
 			}
 
 			setGiftCardAction(sessionId, balance);
-			
-			sdcv2.resetIframe(this.formKey);	
+
+			sdcv2.resetIframe(this.formKey);
 		},
 
 		showErrorMessage: function(message)
@@ -135,24 +136,24 @@ define([
 		/**
 		* Check balance.
 		*/
-		checkBalance: function () 
+		checkBalance: function ()
 		{
 			//if (this.validate()) {
 			//    getGiftCardAction.check(this.giftCartCode());
 			//}
-		
+
 			this.captureCardForm((sessionId) => { this.checkBalanceCaptureCb(sessionId); });
-		
+
 		},
 
-		checkBalanceCaptureCb: function(sessionId) 
+		checkBalanceCaptureCb: function(sessionId)
 		{
 			this.cardCaptureSuccess(sessionId);
 			this.startIframeFlow();
 			this.getValuelinkBalance(
-				sessionId, 
-				window.checkoutConfig.payment.fiserv_payments["storeUrl"], 
-				(data) => { this.balanceInquirySuccess(data); }, 
+				sessionId,
+				window.checkoutConfig.payment.fiserv_payments["storeUrl"],
+				(data) => { this.balanceInquirySuccess(data); },
 				(err) => { this.balanceInquiryFailure(err.responseJSON.message); });
 		},
 
@@ -163,7 +164,14 @@ define([
 			this.getValuelinkBalance(
 				sessionId,
 				window.checkoutConfig.payment.fiserv_payments["storeUrl"],
-				(data) => { this.balanceInquirySuccess(data); this.setGiftCard(); },
+				(data) => { 
+					try {
+						this.balanceInquirySuccess(data); 
+						this.setGiftCard();
+					} catch (err) {
+						this.balanceInquiryFailure(err);
+					}
+				},
 				(err) => { this.balanceInquiryFailure(err.responseJSON.message); });
 		},
 
@@ -172,18 +180,18 @@ define([
 			this.endIframeFlow();
 
 			let balanceInquiryValidationResponse = this.validateBalanceInquiry(data);
-			if (!balanceInquiryValidationResponse["isValid"])
-			{
-				return this.balanceInquiryFailure(balanceInquiryValidationResponse["message"]);
+			if (!balanceInquiryValidationResponse.isValid) {
+				return this.balanceInquiryFailure(balanceInquiryValidationResponse.message);
 			}
 
 			if (parseFloat(data.valuelink_balance.endingBalance) <= 0)
 			{
 				this.getApplyButton().prop("disabled", true);
 			}
-		
+
 			this.getBalanceButton().prop("disabled", true);
 			this.showCardInfoPanel(data.valuelink_balance.endingBalance, data.valuelink_balance.currency);
+			this.showClearButton(true); // Show the Clear button when a valid balance is displayed
 		},
 
 		showCardInfoPanel: function(balance, currency)
@@ -206,6 +214,12 @@ define([
 			this.getSessionIdInput().val('');
 			this.getBalanceButton().prop('disabled', true);
 			this.getApplyButton().prop('disabled', true);
+			this.showClearButton(false); // Hide the Clear button when form is reset
+		},
+
+		clearFields: function() {
+			sdcv2.resetIframe(this.formKey); // Reset the entire iframe
+			this.resetFormPanel(); // Reset the form and hide the Clear button
 		},
 
 		formatBalanceAsCurrency: function(balance, currency)
@@ -228,7 +242,7 @@ define([
 		validateBalanceInquiry: function(response)
 		{
 			let valid =
-				typeof(response.valuelink_balance) !== "undefined" && 
+				typeof(response.valuelink_balance) !== "undefined" &&
 				typeof(response.valuelink_balance.currency) !== "undefined" &&
 				typeof(response.valuelink_balance.endingBalance) !== "undefined" &&
 				typeof(response.valuelink_balance.responseMessage) !== "undefined" &&
@@ -241,7 +255,7 @@ define([
 
 			// Remove this line one day with a propper message mapper...
 			message = message === "Invalid SKU/EAN/SCV" ? "Invalid security code provided" : this.balanceInquiryGeneralErrorMessage;
-		
+
 			return { "isValid": valid, "message": message };
 		},
 
@@ -249,7 +263,7 @@ define([
 		{
 			if (this.isFormValid === true)
 			{
-				this.startIframeFlow();	
+				this.startIframeFlow();
 				sdcv2.submitCardForm(
 					this.formKey,
 					window.checkoutConfig.payment.fiserv_payments['storeUrl'],
@@ -314,7 +328,7 @@ define([
 			iframePromise.then((data) => {
 
 			}).catch((error) =>{
-				this.iframeLoadFailure(error); 
+				this.iframeLoadFailure(error);
 			})
 		},
 
@@ -387,28 +401,28 @@ define([
 				this.getBalanceButton().prop('disabled', false);
 				this.getApplyButton().prop('disabled', false);
 			}
-			else 
+			else
 			{
 				this.resetFormPanel();
 			}
 		},
 
-		getValuelinkBalance: function (sessionId, storeUrl, successCb, errorCb) 
+		getValuelinkBalance: function (sessionId, storeUrl, successCb, errorCb)
 		{
 			$.ajax({
 				url: storeUrl + this.valuelinkBalanceUrl + "?sessionId=" + sessionId,
 				cache: false,
 				dataType: 'json',
 				type: "GET",
-				success: function(response) 
+				success: function(response)
 				{
 					successCb(response);
-				},      
-				error: function(err) 
+				},
+				error: function(err)
 				{
 					errorCb(err)
-				}       
-			});     
+				}
+			});
 		},
 
 		getSdcFieldFrame: function(name) {

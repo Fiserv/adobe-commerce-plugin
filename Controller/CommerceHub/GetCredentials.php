@@ -7,7 +7,7 @@ namespace Fiserv\Payments\Controller\CommerceHub;
 
 use Fiserv\Payments\Model\Adapter\CommerceHub\CredentialsRequest;
 use Magento\Framework\App\Action\Action;
-use Magento\Framework\App\Action\HttpGetActionInterface;
+use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
@@ -17,7 +17,7 @@ use Fiserv\Payments\Logger\MultiLevelLogger;
 /**
  * Class GetChCredentials
  */
-class GetCredentials extends Action implements HttpGetActionInterface
+class GetCredentials extends Action implements HttpPostActionInterface
 {
     const HTTP_UNAUTHORIZED = 401;
     const KEY_STORE_ID = "store_id";
@@ -52,12 +52,14 @@ class GetCredentials extends Action implements HttpGetActionInterface
      */
     public function execute()
     {
-        $response = $this->resultFactory->create(ResultFactory::TYPE_JSON);
+		$response = $this->resultFactory->create(ResultFactory::TYPE_JSON);
 
-	try {
-	    $response->setData(['ch_credentials' => $this->chAdapter->requestCredentials()]);
+		try {
+			$data = $this->getRequest()->getContent();
+			$sessionData = json_decode($data, true) ?? array();
+			$response->setData(['ch_credentials' => $this->chAdapter->requestCredentials($sessionData)]);
         } catch (\Exception $e) {
-		$this->logger->logCritical(1, "An error occured in the retrieval of credentials");
+			$this->logger->logCritical(1, "An error occured in the retrieval of credentials");
             $this->logger->logCritical(2, $e);
             return $this->processBadRequest($response);
         }
