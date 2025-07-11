@@ -8,7 +8,7 @@ class Order extends Template
 {
 	const KEY_SUCCESSFUL = 'successful';
 	const KEY_SUCCESSFUL_TXN = 'successful_txn';
-
+	protected $urlBuilder;
 	private $_pricingHelper;
 
 	public function __construct(
@@ -16,6 +16,7 @@ class Order extends Template
 		PricingHelper $pricingHelper,
 		array $data = []
 	) {
+		$this->urlBuilder = $context->getUrlBuilder();
 		parent::__construct($context, $data);
 		$this->_pricingHelper = $pricingHelper;
 	}
@@ -43,6 +44,11 @@ class Order extends Template
 	public function formatPrice($amount)
 	{
 		return $this->_pricingHelper->currency($amount, true, false);
+	}
+
+	public function getExportUrl()
+	{
+		return $this->urlBuilder->getUrl('fiserv/declines/export');
 	}
 }
 

@@ -203,6 +203,9 @@
 
 .dropdown-menu {
 	position: absolute;
+	top: 40px;
+	width: max-content;
+	padding: 15px;
 	display: none;
 	background-color: white;
 	border: 1px solid #ccc;
