@@ -125,6 +125,7 @@ define([
 			setGiftCardAction(sessionId, balance);
 
 			sdcv2.resetIframe(this.formKey);
+			this.resetFormPanel();
 		},
 
 		showErrorMessage: function(message)
