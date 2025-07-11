@@ -8,8 +8,8 @@ use Fiserv\Payments\Model\ResourceModel\FailedTransaction;
 use Fiserv\Payments\Helper\FailedTransactionHelper;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 use Magento\Framework\App\Filesystem\DirectoryList;
-use Magento\Sales\Api\OrderRepositoryInterface; // Added
-use Magento\Framework\Api\SearchCriteriaBuilder;  // Added
+use Magento\Sales\Api\OrderRepositoryInterface;
+use Magento\Framework\Api\SearchCriteriaBuilder;
 
 class Transactions
 {
@@ -19,8 +19,8 @@ class Transactions
 	protected $logger;
 	protected $varDirectory;
 	protected $failedTxn;
-	protected $orderRepository; // Added
-	protected $searchCriteriaBuilder; // Added
+	protected $orderRepository;
+	protected $searchCriteriaBuilder;
 
 	public function __construct(
 		Csv $csv,
@@ -28,8 +28,8 @@ class Transactions
 		FailedTransactionHelper $failedTransactionHelper,
 		MultiLevelLogger $logger,
 		FailedTransaction $failedTxn,
-		OrderRepositoryInterface $orderRepository, // Added
-		SearchCriteriaBuilder $searchCriteriaBuilder // Added
+		OrderRepositoryInterface $orderRepository,
+		SearchCriteriaBuilder $searchCriteriaBuilder
 	) {
 		$this->csv = $csv;
 		$this->filesystem = $filesystem;
@@ -37,8 +37,8 @@ class Transactions
 		$this->logger = $logger;
 		$this->varDirectory = $this->filesystem->getDirectoryWrite(DirectoryList::VAR_DIR);
 		$this->failedTxn = $failedTxn;
-		$this->orderRepository = $orderRepository; // Initialized
-		$this->searchCriteriaBuilder = $searchCriteriaBuilder; // Initialized
+		$this->orderRepository = $orderRepository;
+		$this->searchCriteriaBuilder = $searchCriteriaBuilder;
 	}
 
 	public function getCsvFile($fileName, array $filters = [], $type = 'transactions')
@@ -48,6 +48,12 @@ class Transactions
 		$rows = $this->prepareRows($data['transactions']);
 		$filePath = 'export/' . $fileName;
 		$absolutePath = $this->varDirectory->getAbsolutePath($filePath);
+
+		// Create folder if it doesn't exist
+		$directoryPath = $this->varDirectory->getAbsolutePath('export/');
+		if (!$this->varDirectory->isDirectory($directoryPath)) {
+			$this->varDirectory->create($directoryPath);
+		}
 
 		$this->csv->saveData($absolutePath, $rows);
 		return $filePath;
@@ -60,6 +66,12 @@ class Transactions
 		$rows = $this->prepareRows($data['transactions']);
 		$filePath = 'export/' . $fileName;
 		$absolutePath = $this->varDirectory->getAbsolutePath($filePath);
+
+		// Create folder if it doesn't exist
+		$directoryPath = $this->varDirectory->getAbsolutePath('export/');
+		if (!$this->varDirectory->isDirectory($directoryPath)) {
+			$this->varDirectory->create($directoryPath);
+		}
 
 		$file = fopen($absolutePath, 'w');
 		foreach ($rows as $row) {

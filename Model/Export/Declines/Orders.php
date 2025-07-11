@@ -37,6 +37,12 @@ class Orders
 		$filePath = 'export/' . $fileName;
 		$absolutePath = $this->varDirectory->getAbsolutePath($filePath);
 
+		// Create folder if it doesn't exist
+		$directoryPath = $this->varDirectory->getAbsolutePath('export/');
+		if (!$this->varDirectory->isDirectory($directoryPath)) {
+			$this->varDirectory->create($directoryPath);
+		}
+
 		$this->csv->saveData($absolutePath, $rows);
 		return $filePath;
 	}
@@ -48,6 +54,12 @@ class Orders
 		$rows = $this->prepareRows($data['orders']);
 		$filePath = 'export/' . $fileName;
 		$absolutePath = $this->varDirectory->getAbsolutePath($filePath);
+
+		// Create folder if it doesn't exist
+		$directoryPath = $this->varDirectory->getAbsolutePath('export/');
+		if (!$this->varDirectory->isDirectory($directoryPath)) {
+			$this->varDirectory->create($directoryPath);
+		}
 
 		$file = fopen($absolutePath, 'w');
 		foreach ($rows as $row) {
