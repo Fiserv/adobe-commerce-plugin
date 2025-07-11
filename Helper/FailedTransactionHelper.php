@@ -2,14 +2,15 @@
 
 namespace Fiserv\Payments\Helper;
 
-use Fiserv\Payments\Model\ResourceModel\FailedOrder; 
-use Fiserv\Payments\Model\ResourceModel\FailedTransaction; 
+use Fiserv\Payments\Model\ResourceModel\FailedOrder;
+use Fiserv\Payments\Model\ResourceModel\FailedTransaction;
 use Fiserv\Payments\Model\Valuelink\Helper\Order\ValuelinkOrderHelper;
 use Fiserv\Payments\Model\ValuelinkTransaction as GiftModel;
 use Fiserv\Payments\Model\FailedTransaction as TxnModel;
 use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use Fiserv\Payments\Gateway\Validator\CommerceHub\AuthorizeResponseValidator;
 use Fiserv\Payments\Gateway\Validator\CommerceHub\SaleResponseValidator;
+use Fiserv\Payments\Logger\MultiLevelLogger;
 use Magento\Framework\Pricing\Helper\Data as PricingHelper;
 use Magento\Sales\Api\TransactionRepositoryInterface;
 use Magento\Framework\Api\SearchCriteriaBuilder;
@@ -18,13 +19,15 @@ use Magento\Framework\UrlInterface;
 
 class FailedTransactionHelper
 {
+	protected $logger;
+
 	const KEY_FAILED_ORDERS = 'failed_orders';
 	const KEY_SUCCESSFUL = 'successful';
 	const KEY_SUCCESSFUL_TXN = 'successful_txn';
 	const KEY_TXN_URL = 'transaction_url';
 
 	const ADMIN_PANEL_LABEL = "Admin";
-	
+
 	private $_failedOrderResource;
 	private $_failedTxnResource;
 	private $_valuelinkOrderHelper;
@@ -40,7 +43,9 @@ class FailedTransactionHelper
 		PricingHelper $pricingHelper,
 		TransactionRepositoryInterface $txnRepo,
 		SearchCriteriaBuilder $search,
-		UrlInterface $urlBuilder
+		UrlInterface $urlBuilder,
+		MultiLevelLogger $logger
+
 	) {
 		$this->_failedOrderResource = $failedOrderResource;
 		$this->_failedTxnResource = $failedTxnResource;
@@ -49,6 +54,7 @@ class FailedTransactionHelper
 		$this->_txnRepo = $txnRepo;
 		$this->_search = $search;
 		$this->_urlBuilder = $urlBuilder;
+		$this->logger = $logger;
 	}
 
 	/**
@@ -64,14 +70,18 @@ class FailedTransactionHelper
 		{
 			$failedOrder[0][self::KEY_SUCCESSFUL] = true;
 		}
-
 		return $failedOrder[0];
 	}
 
 	public function getFailedTransactionsForOrder($order, $page = 1, $pageSize = 20, $search = '', $approvalStatus = '', $transactionState = '', $fromDate = '', $toDate = '')
 	{
 		$failedOrder = $this->getFailedOrder($order);
-		$failedTransactions = $this->_failedTxnResource->getFilteredTransactions($failedOrder["order_increment_id"], $page, $pageSize, $search, $approvalStatus, $transactionState, $fromDate, $toDate);
+		return $this->getFailedTransactionsByOrderIncrementId($failedOrder['order_increment_id'], $page, $pageSize, $search, $approvalStatus, $transactionState, $fromDate, $toDate);
+	}
+
+	public function getFailedTransactionsByOrderIncrementId($orderIncrementId, $page = 1, $pageSize = 20, $search = '', $approvalStatus = '', $transactionState = '', $fromDate = '', $toDate = '')
+	{
+		$failedTransactions = $this->_failedTxnResource->getFilteredTransactions($orderIncrementId, $page, $pageSize, $search, $approvalStatus, $transactionState, $fromDate, $toDate);
 
 		// Set IP Address to Admin for secondary transactions to match real transactions
 		foreach($failedTransactions['transactions'] as &$failedTransaction)
@@ -83,7 +93,7 @@ class FailedTransactionHelper
 			}
 		}
 		
-		$giftTxns = $this->_valuelinkOrderHelper->getValuelinkTransactionsByOrderIncrementId($failedOrder["order_increment_id"]);
+		$giftTxns = $this->_valuelinkOrderHelper->getValuelinkTransactionsByOrderIncrementId($orderIncrementId);
 
 		foreach ($giftTxns as $giftTxn) {
 			$successTxn = $this->convertGiftTxnToFailedTxnArray($giftTxn);
@@ -115,7 +125,7 @@ class FailedTransactionHelper
 
 			foreach($txns as $txn)
 			{
-				$successTxn = $this->convertSuccessfulTxnToFailedTxnArray($txn, $failedOrder["order_increment_id"]);
+				$successTxn = $this->convertSuccessfulTxnToFailedTxnArray($txn, $orderIncrementId);
 
 				$matchesApprovalStatus = !$approvalStatus || $successTxn['approval_status'] === $approvalStatus;
 				$matchesTransactionState = !$transactionState || $successTxn['transaction_state'] === $transactionState;
