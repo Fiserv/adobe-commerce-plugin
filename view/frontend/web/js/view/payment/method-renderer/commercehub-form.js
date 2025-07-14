@@ -139,7 +139,7 @@ define(
 			},
 
 			run3DSecure: async function () {
-				let runStates = ["ATUTHENTICATED", "WAITING"]; 
+				let runStates = ["AUTHENTICATED", "WAITING"]; 
 				const {transactionState, authenticationTransactionId} = await window.fiserv.components.threeDSecure();
 				if (!runStates.includes(transactionState.toUpperCase())) {
 					throw new Error("3D Secure payment authentication failure.");
