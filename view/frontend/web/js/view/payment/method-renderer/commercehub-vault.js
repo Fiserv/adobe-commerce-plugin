@@ -76,7 +76,10 @@ define([
 					self.placeOrder();
 				})
 				.fail((response) => {
-					this.placeOrderFail(response);	
+					this.placeOrderFail(response);
+				})
+				.always(() => {
+					fullScreenLoader.stopLoader(); // Ensure the loader always stops
 				});
 		},
 
