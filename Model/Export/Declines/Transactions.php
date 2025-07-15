@@ -126,7 +126,7 @@ class Transactions
 	{
 		$rows = [];
 		if (!empty($transactions)) {
-			$rows[] = ['Date/Time', 'Transaction ID', 'Transaction State', 'Approval Status', 'Total Amount', 'IP Address'];
+			$rows[] = ['Date/Time (UTC)', 'Transaction ID', 'Transaction State', 'Approval Status', 'Total Amount', 'IP Address'];
 			foreach ($transactions as $transaction) {
 				$rows[] = [
 					$transaction['date_time'] ?? '',

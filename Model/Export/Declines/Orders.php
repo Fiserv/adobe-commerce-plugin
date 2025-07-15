@@ -88,7 +88,7 @@ class Orders
 	{
 		$rows = [];
 		if (!empty($orders)) {
-			$rows[] = ['Date/Time', 'Order ID', 'Customer Name', 'Order State', 'Order Amount', 'Cause of Failure', 'IP Address'];
+			$rows[] = ['Date/Time (UTC)', 'Order ID', 'Customer Name', 'Order State', 'Order Amount', 'Cause of Failure', 'IP Address'];
 			foreach ($orders as $order) {
 				$rows[] = [
 					$order['date_time'] ?? '',
