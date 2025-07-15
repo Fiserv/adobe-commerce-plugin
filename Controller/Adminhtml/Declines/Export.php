@@ -6,7 +6,7 @@ use Magento\Backend\App\Action;
 use Magento\Framework\App\Response\Http\FileFactory;
 use Magento\Framework\Controller\ResultFactory;
 use Fiserv\Payments\Model\Export\Declines\Orders;
-use Fiserv\Payments\Model\Export\Declines\Transactions; // Added
+use Fiserv\Payments\Model\Export\Declines\Transactions;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 use Magento\Framework\App\Action\HttpGetActionInterface;
 use Magento\Backend\App\Action\Context;
@@ -18,7 +18,7 @@ class Export extends Action implements HttpGetActionInterface
 {
 	protected $fileFactory;
 	protected $ordersExport;
-	protected $transactionsExport; // Added
+	protected $transactionsExport;
 	protected $logger;
 	protected $resultJsonFactory;
 	protected $filesystem;
@@ -27,7 +27,7 @@ class Export extends Action implements HttpGetActionInterface
 		Context $context,
 		FileFactory $fileFactory,
 		Orders $ordersExport,
-		Transactions $transactionsExport, // Added
+		Transactions $transactionsExport,
 		MultiLevelLogger $logger,
 		JsonFactory $resultJsonFactory,
 		Filesystem $filesystem
@@ -35,7 +35,7 @@ class Export extends Action implements HttpGetActionInterface
 		parent::__construct($context);
 		$this->fileFactory = $fileFactory;
 		$this->ordersExport = $ordersExport;
-		$this->transactionsExport = $transactionsExport; // Added
+		$this->transactionsExport = $transactionsExport;
 		$this->logger = $logger;
 		$this->resultJsonFactory = $resultJsonFactory;
 		$this->filesystem = $filesystem;
@@ -53,14 +53,14 @@ class Export extends Action implements HttpGetActionInterface
 
 			$filters = $this->getFiltersByType($type);
 
-			if ($type === 'transactions') {
-				if (empty($filters['orderIncrementId'])) {
-					throw new \Exception('Order Increment ID is missing for transaction lookup.');
-				}
+			if ($type === 'transactions' && empty($filters['orderIncrementId'])) {
+				throw new \Exception('Order Increment ID is missing for transaction lookup.');
 			}
 
-			$fileType = $type === 'transactions' ? 'failed_transactions' : 'failed_orders';
-			$fileName = "{$fileType}.{$format}";
+			$fileType = $type === 'transactions' ? 'failed_transaction_orderId:' : 'failed_orders';
+			$fileName = $type === 'transactions'
+				? "{$fileType}{$filters['orderIncrementId']}.{$format}"
+				: "{$fileType}.{$format}";
 
 			$filePath = $this->getExportFile($fileName, $format, $type, $filters);
 

@@ -10,6 +10,7 @@ use Fiserv\Payments\Logger\MultiLevelLogger;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Framework\Api\SearchCriteriaBuilder;
+use Magento\Framework\Pricing\Helper\Data as PricingHelper;
 
 class Transactions
 {
@@ -21,6 +22,7 @@ class Transactions
 	protected $failedTxn;
 	protected $orderRepository;
 	protected $searchCriteriaBuilder;
+	protected $pricingHelper;
 
 	public function __construct(
 		Csv $csv,
@@ -29,7 +31,8 @@ class Transactions
 		MultiLevelLogger $logger,
 		FailedTransaction $failedTxn,
 		OrderRepositoryInterface $orderRepository,
-		SearchCriteriaBuilder $searchCriteriaBuilder
+		SearchCriteriaBuilder $searchCriteriaBuilder,
+		PricingHelper $pricingHelper
 	) {
 		$this->csv = $csv;
 		$this->filesystem = $filesystem;
@@ -39,12 +42,12 @@ class Transactions
 		$this->failedTxn = $failedTxn;
 		$this->orderRepository = $orderRepository;
 		$this->searchCriteriaBuilder = $searchCriteriaBuilder;
+		$this->pricingHelper = $pricingHelper;
 	}
 
 	public function getCsvFile($fileName, array $filters = [], $type = 'transactions')
 	{
 		$data = $this->getData($filters, $type);
-
 		$rows = $this->prepareRows($data['transactions']);
 		$filePath = 'export/' . $fileName;
 		$absolutePath = $this->varDirectory->getAbsolutePath($filePath);
@@ -62,7 +65,6 @@ class Transactions
 	public function getExcelFile($fileName, array $filters = [], $type = 'transactions')
 	{
 		$data = $this->getData($filters, $type);
-
 		$rows = $this->prepareRows($data['transactions']);
 		$filePath = 'export/' . $fileName;
 		$absolutePath = $this->varDirectory->getAbsolutePath($filePath);
@@ -85,7 +87,6 @@ class Transactions
 	private function getData(array $filters, $type)
 	{
 		try {
-
 			if (empty($filters['orderIncrementId'])) {
 				throw new \Exception('Order Increment ID is missing for transaction lookup.');
 			}
@@ -133,7 +134,7 @@ class Transactions
 					$transaction['transaction_id'] ?? '',
 					$transaction['transaction_state'] ?? '',
 					$transaction['approval_status'] ?? '',
-					$transaction['total_amount'] ?? '',
+					$this->pricingHelper->currency($transaction['total_amount'] ?? 0, true, false),
 					$transaction['remote_ip'] ?? ''
 				];
 			}
