@@ -74,11 +74,13 @@ define(
 					window.checkoutConfig.payment[self.code],
 					self.iframeLoadSuccess.bind(self),
 					self.iframeValidHandler.bind(self),
-					(brand) => { this.cardBrandChangeHandler(brand); },
-					(data) => { this.fieldValidityHandler(data); },
-					(data) => { this.fieldFocusHandler(data); }
+					self.cardBrandChangeHandler.bind(self),
+					self.fieldValidityHandler.bind(self),
+					self.fieldFocusHandler.bind(self)
 				);
-				
+				// Ensure the right context for event handler
+				self.watchPaymentMethods = self.watchPaymentMethods.bind(self);
+				self.watchPaymentMethods();
 
 				return self;
 			},
@@ -201,7 +203,7 @@ define(
 					if (selected === self.getCode()) {
 						self.loadIframe();	
 					} else {
-						this.cardBrandChangeHandler(null);
+						self.cardBrandChangeHandler(null);
 						chAdapter.destroyIframe();
 					}
 				});
