@@ -12,6 +12,8 @@ use Fiserv\Payments\Gateway\Request\CommerceHub\ReferenceTransactionDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\TransactionDetailsDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\TransactionInteractionDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder;
+use Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder;
+use Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder;
 use Magento\Framework\ObjectManager\TMapFactory;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 
@@ -58,6 +60,8 @@ class SettleComposite extends ChCompositeBase
 		$req->setTransactionDetails($result[TransactionDetailsDataBuilder::TXN_DETAILS_KEY]);
 		$req->setReferenceTransactionDetails($result[ReferenceTransactionDataBuilder::REF_TXN_KEY]);
 		$req->setMerchantDetails($result[MerchantDetailsDataBuilder::MERCHANT_DETAILS_KEY]);
+		$req->setBillingAddress($result[BillingAddressDataBuilder::BILLING_ADDRESS_KEY]);
+		$req->setCustomer($result[CustomerDataBuilder::CUSTOMER_KEY]);
 
 		return [ 
 			self::REQUEST_KEY => $req,

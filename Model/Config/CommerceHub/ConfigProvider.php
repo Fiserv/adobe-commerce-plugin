@@ -24,6 +24,7 @@ class ConfigProvider implements ConfigProviderInterface
 	const IS_ACTIVE_KEY = 'isActive';
 	const IS_PAYMENT_ACTIVE_KEY = 'isPaymentActive';
 	const MERCHANT_ID_KEY = 'merchantId';
+	const SHOW_PRIVACY_STATEMENT_KEY = "show_privacy_statement";
 	const API_KEY_KEY = 'apiKey';
 	const CC_MAPPER_KEY = 'ccTypesMapper';
 	const ENV_KEY = 'environment';
@@ -37,6 +38,7 @@ class ConfigProvider implements ConfigProviderInterface
 	const VAULT_CODE_KEY = 'vaultCode';
 	const CARD_FORM_CONFIG_KEY = 'formConfig';
 	const TERMINAL_ID_KEY = 'terminalId';
+	const THREE_D_SECURE_KEY = 'threeDSecure';
 
 	const INVALID_FIELDS_KEY = 'invalidFields';
 	const CARD_NUMBER_KEY = 'cardNumber';
@@ -80,6 +82,7 @@ class ConfigProvider implements ConfigProviderInterface
 		$config = [
 			self::IS_ACTIVE_KEY => $this->config->isActive($storeId),
 			self::IS_PAYMENT_ACTIVE_KEY => $this->config->isPaymentActive($storeId),
+			self::SHOW_PRIVACY_STATEMENT_KEY => $this->config->showPrivacyStatement($storeId),
 			self::MERCHANT_ID_KEY => $this->config->getMerchantId($storeId),
 			self::API_KEY_KEY => $this->config->getApiKey(),
 			self::CC_MAPPER_KEY => $this->config->getCcTypesMapper(),
@@ -94,7 +97,8 @@ class ConfigProvider implements ConfigProviderInterface
 			self::VAULT_CODE_KEY => self::VAULT_CODE,
 			self::CARD_FORM_CONFIG_KEY => $this->buildFormConfig(Config::KEY_SDC_CHECKOUT, $storeId),
 			self::TERMINAL_ID_KEY => $this->config->getTerminalId($storeId),
-			self::INVALID_FIELDS_KEY => $this->getInvalidFieldMessages(CONFIG::KEY_SDC_CHECKOUT, $storeId)
+			self::INVALID_FIELDS_KEY => $this->getInvalidFieldMessages(CONFIG::KEY_SDC_CHECKOUT, $storeId),
+			self::THREE_D_SECURE_KEY => $this->config->isThreeDSEnabled($storeId)
 		];
 
 		return [

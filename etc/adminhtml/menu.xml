@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="urn:magento:framework:Config/etc/menu.xsd">
+    <menu>
+		<add id="Fiserv_Payments::failed_transactions_preview"
+			title="Unsuccessful Orders"
+			module="Fiserv_Payments"
+			sortOrder="100"
+			parent="Magento_Sales::sales"
+			action="fiserv/declines/preview"
+			resource="Fiserv_Payments::preview"/>
+	</menu>
+</config>
+

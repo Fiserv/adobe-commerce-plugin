@@ -64,4 +64,14 @@ class ValuelinkTransaction extends AbstractDb
 
 		return $connection->fetchAll($select, ['invoice_id' => $invoiceId]);
 	}
+
+	public function getByChRequestLike($chRequestPart)
+	{
+		$connection = $this->getConnection();
+		$select = $connection->select()
+		       ->from($this->getMainTable())
+		       ->where('ch_request LIKE ?', '%' . $chRequestPart . '%');
+
+		return $connection->fetchAll($select);
+	}
 }

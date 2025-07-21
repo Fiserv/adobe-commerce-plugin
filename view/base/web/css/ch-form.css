@@ -151,6 +151,29 @@
 	border-width: 2px;
 }
 
+.privacyPolicy {
+	display: flex;
+	align-items: center;
+	font-size: 10px;
+	margin-bottom: 25px;
+}
+
+.privacyPolicy span {
+	background-image: url('../images/secure-checkout-02-gray-orange-icon-64x64.svg');
+	background-size: contain;
+	display: inline-block;
+	height: 15px;
+	width: 15px;
+	margin: 4px;
+	position: relative;
+	background-repeat: no-repeat;
+	cursor: pointer;
+}
+
+#fiserv_valuelink-placer .privacyPolicy {
+	margin-top: 20px;
+}
+
 @media screen and (max-width: 470px) {
 	.sdc-column {
 		max-width: none;

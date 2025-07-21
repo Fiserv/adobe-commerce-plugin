@@ -21,6 +21,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	const KEY_TERMINAL_ID = 'terminal_id';
 	const KEY_API_KEY = 'api_key';
 	const KEY_API_SECRET = 'api_secret';
+	const SHOW_PRIVACY_STATEMENT_KEY = "show_privacy_statement";
 	const KEY_MERCHANT_INTEGRATOR = 'merchant_integrator';
 	const KEY_ENVIRONMENT = 'api_environment';
 	const KEY_PAYMENT_TYPE = 'payment_type';
@@ -39,6 +40,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	const KEY_TOKENIZATION = "tokenization";
 	const KEY_STANDALONE_SPA = 'standalone_spa';
 	const KEY_LOGGING_LEVEL = 'logging_level';
+	const KEY_3DS = 'three_d_secure';
 
 	// Iframe Customization Fields
 	const KEY_SDC_CUSTOM = 'sdc_custom';
@@ -120,6 +122,17 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	public function isPaymentActive($storeId = null)
 	{
 		return (bool) $this->getValue(self::KEY_PAYMENT_ACTIVE, $storeId);
+	}
+
+	/**
+	 * Gets privacy statement configuration status.
+	 *
+	 * @param int|null $storeId
+	 * @return bool
+	 */
+	public function showPrivacyStatement($storeId = null)
+	{
+		return (bool) $this->getValue(self::SHOW_PRIVACY_STATEMENT_KEY, $storeId);
 	}
 
 	/**
@@ -357,6 +370,17 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	public function getLoggingLevel($storeId = null)
 	{
 		return $this->getValue(self::KEY_LOGGING_LEVEL, $storeId);
+	}
+
+	/**
+	 * Returns 3D Secure Enabled.
+	 *
+	 * @param int|null $storeId
+	 * @return bool
+	 */
+	public function isThreeDSEnabled($storeId = null)
+	{
+		return $this->getValue(self::KEY_3DS, $storeId);
 	}
 
 	//////////////////////////

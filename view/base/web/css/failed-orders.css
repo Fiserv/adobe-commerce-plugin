@@ -1,0 +1,440 @@
+.carat_img > .entry-edit-head {
+    background: url("../images/Carat_Endorsed_Horizontal_orange_RGB.png") no-repeat scroll 0 50% / 18rem auto;
+    padding-left: 20rem;
+}
+
+/* Main content layout */
+.main-content-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+/* Black banner styling */
+.black-banner {
+    background-color: #000;
+    padding: 1rem 2rem;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.banner-left, .banner-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.back-button {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: none;
+}
+
+.back-button:hover {
+    color: #777;
+}
+
+.order-id, .order-state {
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+/* Failed transaction container styling */
+#failed-order-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+    width: 100%;
+}
+
+#failed-order-container .three-col, .two-col {
+    display: flex;
+    flex-direction: column;
+}
+
+#failed-order-container .three-col {
+    flex: 3;
+    padding-right: 2.5rem;
+}
+
+#failed-order-container .two-col {
+    flex: 2;
+    padding-left: 2.5rem;
+}
+
+/* Failed transaction section body styling */
+.failed-transaction-section-body {
+    border: 1px solid #000;
+    padding: 2rem 3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    background-color: #f9f9f9;
+    flex: 1;
+    box-sizing: border-box;
+}
+
+.failed-transaction-section {
+    margin-bottom: 3rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.failed-transaction-section.header-margin,
+.failed-order-section.header-margin {
+    margin-top: 2rem;
+}
+
+.failed-transaction-section.wide {
+    width: 100%;
+}
+
+/* Detail header and row styling */
+.failed-transaction-detail-header, .failed-transaction-detail-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.failed-transaction-detail-column, .transaction-detail-column {
+    padding: 0.5rem;
+    box-sizing: border-box;
+}
+
+.failed-transaction-detail-column {
+    flex: 1;
+}
+
+/* Horizontal line styling */
+.failed-transaction-line, .order-account-line {
+    border-bottom: 2px solid #000;
+    margin: 1rem 0;
+}
+
+/* 2x2 block in Order and Account Details */
+.order-account-top .failed-transaction-detail-row,
+.order-account-bottom .failed-transaction-detail-row {
+    display: flex;
+    justify-content: space-between;
+}
+
+.failed-transaction-detail {
+    margin-bottom: 2rem;
+}
+
+.failed-transaction-detail-label {
+    font-weight: bold;
+    margin-right: 10px;
+    display: inline-block;
+    width: 200px;
+    color: #333;
+}
+
+.failed-transaction-detail-value {
+    color: #777;
+    display: inline-block;
+}
+
+.failed-transaction-section-header {
+    font-size: 16px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: .75rem;
+}
+
+/* Order Notes Section */
+.order-notes-section {
+    margin-top: 1.5rem;
+}
+
+.order-notes-header {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: .75rem;
+}
+
+.order-notes-box {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 1rem;
+    background-color: #fafafa;
+    width: calc(100% + 10px);
+    min-height: 75px;
+}
+
+.order-notes-list {
+    list-style-type: none;
+    padding-left: 0;
+    margin: 0;
+}
+
+.order-note {
+    padding: 0.5rem;
+    border-bottom: 1px solid #ddd;
+}
+
+.order-note:last-child {
+    border-bottom: none;
+}
+
+/* Table styling */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    background-color: #fff;
+}
+
+.table th, .table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+}
+
+.table th {
+    background-color: #f6f6f6;
+    font-weight: bold;
+    position: relative;
+    cursor: pointer; /* Add cursor pointer to make it clear they are clickable */
+}
+
+/* Dropdown menu styling */
+.filter-arrow {
+    cursor: pointer;
+    margin-left: 0.5rem;
+    position: relative;
+}
+
+.dropdown-arrow {
+    font-weight: bold;
+    margin-left: 0.25rem;
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    min-width: 120px;
+}
+
+.dropdown-menu div {
+    padding: 10px;
+    cursor: pointer;
+    color: #333;
+}
+
+.dropdown-menu div:hover {
+    background-color: #f6f6f6;
+}
+
+.selected-dropdown {
+    background-color: #e6e6e6;
+}
+
+.dropdown-menu.show {
+    display: block;
+}
+
+/* Search and Pagination Container */
+.search-pagination-container {
+   /* display: flex;*/
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    width: 100%;
+}
+
+/* Date filter section */
+.filter-by-date {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.date-picker {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* Pagination controls */
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.limit-dropdown-container {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    color: #333;
+    cursor: pointer;
+    position: relative;
+    text-decoration: underline;
+}
+
+.limit-dropdown {
+    border: none;
+    background: none;
+    color: #333;
+    font-size: 14px;
+    cursor: pointer;
+    outline: none;
+    appearance: none;
+    margin-left: 0.5rem;
+    position: relative;
+    padding-right: 1.5rem;
+}
+
+.limit-dropdown::after {
+    content: '▼';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #333;
+    font-size: 14px;
+}
+
+.pagination-info {
+    margin: 0 1rem;
+    font-weight: bold;
+}
+
+.search-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-bottom: 1px solid #333;
+    padding-bottom: 0.35rem;
+}
+
+.search-input {
+    border: none;
+    outline: none;
+    background: none;
+    padding: 0;
+    color: #333;
+    font-size: 14px;
+}
+
+.search-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+.search-button img {
+    width: 16px;
+    height: 16px;
+    display: block;
+}
+
+/* Transaction Details Table */
+.transaction-detail-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.transaction-detail-row-header {
+    background-color: #333;
+    color: #fff;
+    display: flex;
+    padding: 1rem;
+}
+
+.transaction-detail-row {
+    display: flex;
+    padding: 1rem;
+    background-color: #fff;
+    border-bottom: 1px solid #ddd;
+}
+
+.transaction-detail-column {
+    flex: 1;
+    padding: 0.5rem;
+    text-align: left;
+}
+
+.transaction-detail-row:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.transaction-detail-row:hover {
+    background-color: #efefef;
+}
+
+.transaction-detail-column a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.transaction-detail-column a:hover {
+    text-decoration: underline;
+}
+
+/* Pagination Controls */
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.pagination-button {
+    background: none;
+    border: none;
+    color: #333;
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: none;
+}
+
+.pagination-button:disabled {
+    color: #ccc;
+    cursor: not-allowed;
+}
+
+/* Additional styles for pagination placement */
+.pagination-controls .pagination-info {
+    margin: 0 0.5rem;
+}
+
+.failed-transaction-detail-header .failed-transaction-detail-column {
+    font-weight: bold;
+}
+
+.three-col .failed-transaction-detail-label {
+    width: 40%;
+}
+
+.two-col .failed-transaction-detail-label {
+    width: 33%;
+}
+
+.two-col .failed-transaction-detail {
+    width: 100%;
+}
+
+table#transactionsTable td {
+    word-wrap: break-word;
+    max-width: 250px;
+}

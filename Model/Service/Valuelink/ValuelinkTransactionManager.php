@@ -15,9 +15,9 @@ use Fiserv\Payments\Model\ValuelinkTransactionFactory;
 use Fiserv\Payments\Model\ValuelinkTransaction;
 use Fiserv\Payments\Api\Valuelink\ValuelinkTransactionRepositoryInterface;
 use Fiserv\Payments\Gateway\Config\Valuelink\Config as ValuelinkConfig;
-
+use Fiserv\Payments\Model\Service\CommerceHub\FailedTransactionManager;
 use Fiserv\Payments\Logger\MultiLevelLogger;
-
+use Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient;
 
 class ValuelinkTransactionManager
 {
@@ -50,10 +50,44 @@ class ValuelinkTransactionManager
 
 	private $_localeDate;
 
+	private $failedTxnManager;
+
 	/**
 	 * @var string
 	 */
 	private $merchantOrderId;
+
+	private $paths = [ 
+			'transactionId' => ['gatewayResponse', 'transactionProcessingDetails'],
+			'apiTraceId' => ['gatewayResponse', 'transactionProcessingDetails'],
+			'responseMessage' => ['paymentReceipt', 'processorResponseDetails'],
+			'sourceType' => ['source'],
+			'merchantOrderId' => ['transactionDetails'],
+			'transactionState' => ['gatewayResponse'],
+			'approvalStatus' => ['paymentReceipt', 'processorResponseDetails'],
+			'approvedAmount' => ['paymentReceipt', 'approvedAmount'],
+			'processor' => ['paymentReceipt', 'processorResponseDetails'],
+			'host' => ['paymentReceipt', 'processorResponseDetails'],
+			'merchantId' => ['merchantDetails'],
+			'expirationMonth' => ['source', 'card'],
+			'expirationYear' => ['source', 'card'],
+			'last4' => ['source', 'card'],
+			'scheme' => ['source', 'card'],
+			'bin' => ['source', 'card'],
+			'networkResponseCode' => ['networkDetails'],
+			'currency' => ['paymentReceipt', 'approvedAmount'],
+			'securityCodeMatch' => ['paymentReceipt', 'processorResponseDetails', 'bankAssociationDetails', 'avsSecurityCodeResponse'],
+			'bankAssociationDetails' => ['paymentReceipt', 'processorResponseDetails', 'bankAssociationDetails'],
+			'hostResponseMessage' => ['paymentReceipt', 'processorResponseDetails'],
+			'retrievalReferenceNumber' => ['transactionDetails'],
+			'countryCode' => [],
+			'responseCode' => ['paymentReceipt', 'processorResponseDetails'],
+			'merchantAdviceCode' => ['networkDetails'],
+			'amount' => [],
+			'errorCode' => ['error', 0],
+			'errorMessage' => ['error', 0],
+			HttpClient::STATUS_CODE_KEY => []
+	];
 
 	public function __construct(
 		Json $serializer,	
@@ -66,6 +100,7 @@ class ValuelinkTransactionManager
 		ValuelinkTransactionFactory $valuelinkTransactionFactory,
 		ValuelinkConfig $valuelinkConfig,
 		\Magento\Framework\Stdlib\DateTime\TimezoneInterface $localeDate,
+		FailedTransactionManager $failedTxnManager,
 		MultiLevelLogger $logger
 	) {
 		$this->serializer = $serializer;
@@ -78,11 +113,15 @@ class ValuelinkTransactionManager
 		$this->valuelinkTransactionFactory = $valuelinkTransactionFactory;
 		$this->valuelinkConfig = $valuelinkConfig;
 		$this->_localeDate = $localeDate;
+		$this->failedTxnManager = $failedTxnManager;
 		$this->logger = $logger;
 	}
 
 	public function chargeValuelinkCard($order, ValuelinkQuoteRecord $valuelinkRecord)
 	{
+		$chResponse = null;
+		$transactionType = null;
+
 		try
 		{
 			$valuelinkTransaction = $this->valuelinkTransactionFactory->create();
@@ -115,14 +154,18 @@ class ValuelinkTransactionManager
 			);
 
 			$valuelinkTransaction->setChRequest(json_encode($payload));
+			$this->logger->logInfo(1, "Initiating Gift Card " . $transactionType . " Transaction", "Order ID: {$merchantOrderId}");
 
-			if($payload->getTransactionDetails()->getCaptureFlag()) {
-				$this->logger->logInfo(1, "Initiating Gift Card Sale Transaction", "Order ID: {$merchantOrderId}");
-			} else {
-				$this->logger->logInfo(1, "Initiating Gift Card Auth Transaction", "Order ID: {$merchantOrderId}");
-			}
+			$parsedChResponse = $this->valuelinkChargesAdapter->chargeValuelinkCard($payload);	
+			$chResponse = $parsedChResponse[ValuelinkChargesRequest::KEY_RESPONSE];
 
-			$chResponse = $this->valuelinkChargesAdapter->chargeValuelinkCard($payload);	
+			$statusCode = $parsedChResponse[ValuelinkChargesRequest::KEY_STATUS_CODE];
+			if ($statusCode !== 201) {
+				$this->logger->logError(1, "Transaction failure. Gift card response returned with unsuccessful status", "Order ID: {$merchantOrderId}");
+				$this->logger->logError(2, "Status Code: " . $statusCode, "Order ID: {$merchantOrderId}");
+
+				throw new \Exception('CommerceHub Gift Card Charges Request  HTTP error code: ' . $statusCode, 1);
+			};
 
 			$valuelinkTransaction->setChResponse(json_encode($chResponse));
 			$valuelinkTransaction->setTransactionId($this->extractTransactionId($chResponse));
@@ -150,7 +193,12 @@ class ValuelinkTransactionManager
 	
 		} catch(\Exception $e)
 		{
-			$this->logger->logError(1, "An error occurred while redeeming Gift Card", "Order ID: {$merchantOrderId}");
+			if (!is_null($chResponse) && !is_null($transactionType))
+			{
+				$this->failedTxnManager->createFailedTransaction($merchantOrderId, $chResponse, $this->paths, $transactionType);
+			}
+
+			$this->logger->logError(1, "An error occurred while creating primary gift transaction", "Order ID: {$merchantOrderId}");
 			$this->logger->logError(2, $e, "Order ID: {$merchantOrderId}");
 			throw $e;
 		}
@@ -159,6 +207,8 @@ class ValuelinkTransactionManager
 
 	public function cancelValuelinkTransaction($order, array $primaryTxn)
 	{
+		$chResponse = null;
+		
 		try
 		{
 			$merchantOrderId = $order->getIncrementId();
@@ -183,11 +233,20 @@ class ValuelinkTransactionManager
 
 			$cancelTxn->setChRequest(json_encode($payload));
 
-			$response = $this->valuelinkCancelAdapter->cancelValuelinkRequest($payload);
+			$parsedChResponse = $this->valuelinkCancelAdapter->cancelValuelinkRequest($payload);
+			$chResponse = $parsedChResponse[ValuelinkCancelRequest::KEY_RESPONSE];
 
-			$cancelTxn->setChResponse(json_encode($response));
-			$cancelTxn->setTransactionId($this->extractTransactionId($response));
-			$cancelTxn->setTransactionState($this->extractTransactionState($response));
+			$statusCode = $parsedChResponse[ValuelinkCancelRequest::KEY_STATUS_CODE];
+			if ($statusCode !== 201) {
+				$this->logger->logError(1, "Transaction failure. Gift card response returned with unsuccessful status", "Order ID: {$merchantOrderId}");
+				$this->logger->logError(2, "Status Code: " . $statusCode, "Order ID: {$merchantOrderId}");
+
+				throw new \Exception('CommerceHub Gift Card Charges Request  HTTP error code: ' . $statusCode, 1);
+			};
+
+			$cancelTxn->setChResponse(json_encode($chResponse));
+			$cancelTxn->setTransactionId($this->extractTransactionId($chResponse));
+			$cancelTxn->setTransactionState($this->extractTransactionState($chResponse));
 		
 			$successStates = [ValuelinkTransaction::VOIDED_STATE];
 			if (!in_array($cancelTxn->getTransactionState(), $successStates))
@@ -195,7 +254,7 @@ class ValuelinkTransactionManager
 				$this->logger->logError(1, "Transaction failure. Gift card response returned with unsuccessful transaction state", "Order ID: {$merchantOrderId}");
 				$this->logger->logError(1, "Transaction ID: " . $cancelTxn->getTransactionId(), "Order ID: {$merchantOrderId}");
 				$this->logger->logError(2, "Transaction state: " . $cancelTxn->getTransactionState(), "Order ID: {$merchantOrderId}");
-				$this->logger->logError(2, "Response message: " . $this->extractResponseMessage($response), "Order ID: {$merchantOrderId}");
+				$this->logger->logError(2, "Response message: " . $this->extractResponseMessage($chResponse), "Order ID: {$merchantOrderId}");
 				throw new \Exception(__("Gift Card response state not recognized as successful: " . $cancelTxn->getTransactionState()));
 			}
 	
@@ -209,7 +268,12 @@ class ValuelinkTransactionManager
 		
 		} catch(\Exception $e)
 		{
-			$this->logger->logError(1, "An error occurred while Voiding Gift Card transaction", "Order ID: {$merchantOrderId}");
+			if (!is_null($chResponse))
+			{
+				$this->failedTxnManager->createFailedTransaction($merchantOrderId, $chResponse, $this->paths, "CANCEL");
+			}
+
+			$this->logger->logError(1, "An error occurred while voiding gift transaction", "Order ID: {$merchantOrderId}");
 			$this->logger->logError(2, $e, "Order ID: {$merchantOrderId}");
 			throw $e;
 		}
@@ -217,6 +281,8 @@ class ValuelinkTransactionManager
 
 	public function captureValuelinkTransaction($invoice, $authToCapture, $amtToCapture, $previousCaptures, $finalCapture)
 	{
+		$chResponse = null;
+
 		try
 		{
 			$order = $invoice->getOrder();
@@ -245,11 +311,20 @@ class ValuelinkTransactionManager
 
 			$captureTxn->setChRequest(json_encode($payload));
 
-			$response = $this->valuelinkCaptureAdapter->captureValuelinkRequest($payload);
+			$parsedChResponse = $this->valuelinkCaptureAdapter->captureValuelinkRequest($payload);
+			$chResponse = $parsedChResponse[ValuelinkCaptureRequest::KEY_RESPONSE];
 
-			$captureTxn->setChResponse(json_encode($response));
-			$captureTxn->setTransactionId($this->extractTransactionId($response));
-			$captureTxn->setTransactionState($this->extractTransactionState($response));	
+			$statusCode = $parsedChResponse[ValuelinkCaptureRequest::KEY_STATUS_CODE];
+			if ($statusCode !== 201) {
+				$this->logger->logError(1, "Transaction failure. Gift card response returned with unsuccessful status", "Order ID: {$merchantOrderId}");
+				$this->logger->logError(2, "Status Code: " . $statusCode, "Order ID: {$merchantOrderId}");
+
+				throw new \Exception('CommerceHub Gift Card Charges Request  HTTP error code: ' . $statusCode, 1);
+			};
+
+			$captureTxn->setChResponse(json_encode($chResponse));
+			$captureTxn->setTransactionId($this->extractTransactionId($chResponse));
+			$captureTxn->setTransactionState($this->extractTransactionState($chResponse));
 			
 			$successStates = [ValuelinkTransaction::CAPTURED_STATE];
 			if (!in_array($captureTxn->getTransactionState(), $successStates))
@@ -257,7 +332,7 @@ class ValuelinkTransactionManager
 				$this->logger->logError(1, "Transaction failure. Gift card response returned with unsuccessful transaction state", "Order ID: {$merchantOrderId}");
 				$this->logger->logError(1, "Transaction ID: " . $captureTxn->getTransactionId(), "Order ID: {$merchantOrderId}");
 				$this->logger->logError(2, "Transaction state: " . $captureTxn->getTransactionState(), "Order ID: {$merchantOrderId}");
-				$this->logger->logError(2, "Response message: " . $this->extractResponseMessage($response), "Order ID: {$merchantOrderId}");
+				$this->logger->logError(2, "Response message: " . $this->extractResponseMessage($chResponse), "Order ID: {$merchantOrderId}");
 				throw new \Exception(__("Gift Card response state not recognized as successful: " . $captureTxn->getTransactionState()));
 			}
 	
@@ -271,7 +346,12 @@ class ValuelinkTransactionManager
 		
 		} catch(\Exception $e)
 		{
-			$this->logger->logError(1, "An error occurred while capturing Gift Card  transaction", "Order ID: {$merchantOrderId}");
+			if (!is_null($chResponse))
+			{
+				$this->failedTxnManager->createFailedTransaction($merchantOrderId, $chResponse, $this->paths, "CAPTURE");
+			}
+	
+			$this->logger->logError(1, "An error occurred while capturing gift transaction", "Order ID: {$merchantOrderId}");
 			$this->logger->logError(2, $e, "Order ID: {$merchantOrderId}");
 			throw $e;
 		}

@@ -10,6 +10,7 @@ define(
 		'jquery',
 		'Magento_Payment/js/view/payment/cc-form',
 		'Fiserv_Payments/js/ch-adapter',
+		'Fiserv_Payments/js/action/create-commercehub-session',
 		'Magento_Checkout/js/model/quote',
 		'Magento_Checkout/js/checkout-data',
 		'Magento_Ui/js/model/messageList',
@@ -25,6 +26,7 @@ define(
 		$,
 		Component,
 		chAdapter,
+		chSession,
 		quote,
 		checkoutData,
 		globalMessageList,
@@ -44,18 +46,20 @@ define(
 				code: 'fiserv_commercehub',
 				paymentPayload: {
 					sessionId: null,
-					type: null
+					type: null,
+					threeDSecureId: undefined
 				},
 				additionalData: {},
 				paymentMethodName: '[name="payment[method]"',
-				isIframeValid: false
+				isIframeValid: false,
+				credentials: undefined
 			},
 
 			/**
 			 * @returns {exports.initialize}
 			 */
-			initialize: function () {
-	            		quote.billingAddress.subscribe(function (address) {
+			initialize: async function () {
+					quote.billingAddress.subscribe(function (address) {
 					this.isPlaceOrderActionAllowed(address !== null);
 					this.checkoutValidHandler();	
 				}, this);
@@ -65,7 +69,7 @@ define(
 				self._super();
 				self.vaultEnabler = new VaultEnabler();
 				self.vaultEnabler.setPaymentCode(self.getVaultCode());
-				
+			
 				chAdapter.initialize(
 					window.checkoutConfig.payment[self.code],
 					self.iframeLoadSuccess.bind(self),
@@ -74,7 +78,8 @@ define(
 					(data) => { this.fieldValidityHandler(data); },
 					(data) => { this.fieldFocusHandler(data); }
 				);
-							
+				
+
 				return self;
 			},
 
@@ -83,7 +88,15 @@ define(
 					this.loadIframe();
 				}
 			},
-			
+
+			initCheckoutSdk: async function(credentials)
+			{
+				await chAdapter.initSdk(
+					window.checkoutConfig.payment[this.code],
+					credentials
+				);
+			},
+
 			loadIframe: function () {
 				chAdapter.destroyIframe();
 				this.cardBrandChangeHandler(null);
@@ -109,10 +122,39 @@ define(
 				this.endIframeFlow();
 			},
 
-			iframeRunSuccess: function (sessionId) {
+			iframeRunSuccess: async function (sessionId) {
 				this.setPaymentPayload(sessionId);
+				
+				try {
+					if (this.is3DSecureEnabled()) {
+						await this.run3DSecure();
+					}
+				} catch (error) {
+					this.iframeRunFailure(error.message);
+					this.endIframeFlow();
+					return;
+				}
 				this.endIframeFlow();
 				this.placeOrderClick();
+			},
+
+			run3DSecure: async function () {
+				let runStates = ["AUTHENTICATED", "WAITING"]; 
+				const {transactionState, authenticationTransactionId} = await window.fiserv.components.threeDSecure();
+				if (!runStates.includes(transactionState.toUpperCase())) {
+					throw new Error("3D Secure payment authentication failure.");
+				}
+
+				this.handle3DSecureAuth(authenticationTransactionId);
+			},
+
+			handle3DSecureAuth: function (threeDSId) {
+				this.set3DSecurePayload(threeDSId);	
+			},
+
+			is3DSecureEnabled: function()
+			{
+				return window.checkoutConfig.payment[this.code]["threeDSecure"] === '1'
 			},
 
 			iframeLoadFailure: function (message) {
@@ -120,8 +162,8 @@ define(
 				this.showError(message);
 			},
 
-			iframeRunFailure: function () {
-				this.showError("Card capture failure. Please try again."); 
+			iframeRunFailure: function (message) {
+				this.showError(message ?? "Card capture failure. Please try again."); 
 				this.endIframeFlow();
 				this.cardBrandChangeHandler(null);
 				chAdapter.resetIframe();
@@ -189,6 +231,14 @@ define(
 			},
 
 			/**
+			 * Show Privacy statement
+			 */
+			showPrivacyStatement: function() 
+			{
+				return window.checkoutConfig.payment[this.getCode()].show_privacy_statement;
+			},
+
+			/**
 			 * Returns vault code.
 			 *
 			 * @returns {String}
@@ -248,6 +298,10 @@ define(
 						'payment_session': this.paymentPayload.sessionId
 					}
 				};
+
+				if (typeof(this.paymentPayload.threeDSecureId) !== "undefined") {
+					data['additional_data']['3DSecureId'] = this.paymentPayload.threeDSecureId;
+				}
 
 				data['additional_data'] = _.extend(data['additional_data'], this.additionalData);
 				this.vaultEnabler.visitAdditionalData(data);
@@ -323,6 +377,10 @@ define(
 				this.paymentPayload.sessionId = sessionId;
 			},
 
+			set3DSecurePayload: function (threeDSecureId) {
+				this.paymentPayload.threeDSecureId = threeDSecureId;
+			},
+
 			/**
 			 * Show error message
 			 *
@@ -347,18 +405,34 @@ define(
 				return $('button#fiserv-checkout-submit');
 			},
 
-			submitIframe: function() {
+			submitIframe: async function() {
 				if (this.isPlaceOrderActionAllowed() === true && additionalValidators.validate()) {
 					fullScreenLoader.startLoader();
+					let credsResponse = undefined;	
+					try {	
+						credsResponse = await chSession( { "threeDSecure" : this.is3DSecureEnabled() } );
+					} catch (error) {
+						console.log("An error occurred while starting Commercehub payment session: ".concat(error));
+						this.iframeRunFailure();
+						return;
+					}
+					let creds = credsResponse["ch_credentials"];
+					
+					// handle 3DS
+					if(this.is3DSecureEnabled())
+					{
+						await this.initCheckoutSdk(creds);
+					}
+						
 					chAdapter.submitCardForm(
 						window.checkoutConfig.payment.fiserv_payments['storeUrl'], 
 						(sessionId) => { this.iframeRunSuccess(sessionId); },
-						() => { this.iframeRunFailure(); }
+						() => { this.iframeRunFailure(); },
+						creds
 					);
 				}
 			},
 
-			
 			getNumberUnmaskButton: function() {
 				return $('button#sdc-unmask-number');
 			},

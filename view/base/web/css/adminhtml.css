@@ -1,9 +1,396 @@
-.carat_img > .entry-edit-head {
-	background: url("../images/Carat_Endorsed_Horizontal_orange_RGB.png") no-repeat scroll 0 50% / 18rem auto;
-	padding-left: 20rem;
+.mb-40 {
+	margin-bottom: 40px;
 }
-#fiserv-card-logos {
-	background: url("../images/cardlogos.png") no-repeat scroll 0 50% / 75rem auto;
-	height: 75px;
-	margin: 0.5rem 0 0;
+
+.carat_img > .entry-edit-head {
+	background: url("../images/fiserv_logo_orange_rgb.png") no-repeat scroll 0 50% / 12rem auto;
+	padding-left: 14rem;
+	margin-top: 12px;
+	margin-bottom: 12px;
+}
+
+.main-content-container {
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+}
+
+.black-banner {
+	background-color: #000;
+	padding: 1rem 2rem;
+	color: #fff;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.banner-left, .banner-right {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+
+.back-button {
+	background: none;
+	border: none;
+	color: #fff;
+	font-size: 1rem;
+	cursor: pointer;
+	padding: 0;
+	text-decoration: none;
+}
+
+.back-button:hover {
+	color: #777;
+	background: transparent;
+}
+
+.back-button a {
+	color: white;
+	font-size: 1.75rem;
+	text-decoration: none;
+}
+
+.transaction-details {
+	color: #fff;
+	font-size: 16px;
+	font-weight: 700;
+	text-transform: uppercase;
+}
+
+#failed-transaction-container,
+#failed-order-container,
+#failed-transaction-preview-container {
+	margin-top: 3rem;
+	display: flex;
+	justify-content: space-between;
+	align-items: stretch;
+	width: 100%;
+}
+
+#failed-transaction-container .three-col,
+#failed-transaction-container .two-col,
+#failed-order-container .three-col,
+#failed-order-container .two-col {
+	display: flex;
+	flex-direction: column;
+}
+
+#failed-transaction-container .three-col,
+#failed-order-container .three-col {
+	width: 60%;
+	padding-right: 2.5rem;
+}
+
+#failed-transaction-container .two-col,
+#failed-order-container .two-col {
+	width: 40%;
+	padding-left: 2.5rem;
+}
+
+.failed-transaction-section-body {
+	border: 1px solid black;
+	padding: 2rem 3rem;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1.5rem;
+	background-color: #f9f9f9;
+}
+
+.failed-transaction-section,
+.failed-order-section {
+	margin-bottom: 3rem;
+	padding-top: 1rem;
+	min-width: 20%;
+}
+
+.failed-transaction-detail {
+	margin-bottom: 2rem;
+	flex: 0 1 calc(100% / 3 - 2rem);
+	display: block;
+	width: fit-content;
+}
+
+.failed-transaction-detail-label {
+	font-weight: bold;
+}
+
+.failed-transaction-detail-value {
+	color: #777;
+	font-weight: normal;
+}
+
+.failed-transaction-section-header {
+	font-size: 16px;
+	font-weight: 700;
+	text-transform: uppercase;
+	margin-bottom: .75rem;
+}
+
+.failed-transaction-amount {
+	font-size: 26px;
+	width: 100%;
+}
+
+#transactionsTable, #transactionsTable tr {
+	width: 100%;
+	margin-top: 20px;
+	margin-bottom: 20px;
+	border: 1px solid #d3d3d3;
+}
+
+#transactionsTable thead {
+	background: #000000;
+	color: #ffffff;
+}
+
+#transactionsTable thead th {
+	font-weight: 400;
+	text-align: left;
+}
+
+#transactionsTable th, #transactionsTable td {
+	padding: 10px 15px;
+}
+
+#paginationControls {
+	float: right;
+}
+
+#paginationControls .pagination-button {
+	cursor: pointer;
+	margin: 0 5px;
+	color: #000000;
+}
+
+#paginationControls .pagination-button.disabled {
+	color: #cfcfcf;
+	cursor: default;
+	text-decoration: none;
+}
+
+#paginationControls .pagination-info {
+	margin: 0 5px;
+}
+
+.search-pagination-container {
+	/*display: flex;*/
+	justify-content: space-between;
+	align-items: center;
+	flex-wrap: wrap;
+	margin-bottom: 1rem;
+}
+
+.filter-wrapper {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 1rem;
+}
+
+.filter-item {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.fixed-width {
+	width: 200px; /* Set your desired fixed width */
+}
+
+.dropdown-menu {
+	position: absolute;
+	top: 40px;
+	width: max-content;
+	padding: 15px;
+	display: none;
+	background-color: white;
+	border: 1px solid #ccc;
+	box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+	z-index: 1000;
+}
+
+.dropdown-menu div {
+	padding: 0.5rem;
+	cursor: pointer;
+}
+
+.dropdown-menu div:hover {
+	background-color: #f0f0f0;
+}
+
+.dropdown-menu .selected-dropdown {
+	background-color: #d3d3d3; /* Darker background for selected option */
+}
+
+#resetFilters {
+	padding: 0.5rem 1rem;
+	background-color: #d3d3d3; /* Neutral gray */
+	color: #333; /* Dark gray text */
+	border: none;
+	border-radius: 5px;
+	cursor: pointer;
+	display: none; /* Initially hidden */
+}
+
+.paginationContainerTop label,
+.filter-wrapper label {
+	margin-left: 20px;
+	font-weight: bold;
+	text-transform: capitalize;
+}
+
+#paginationInfoTop {
+	margin-left: 0.5rem; /* Adds some space between the select dropdown and the pagination info */
+}
+
+#searchInput,
+#transactionStateFilter,
+#rowsPerPage,
+#approvalStatus,
+#orderState,
+#fromDate,
+#toDate {
+	padding: 0.5rem;
+	border-top: none;
+	border-right: none;
+	border-left: none;
+	border-bottom: 1px solid #cfcfcf;
+}
+
+#searchInput {
+	width: 340px;
+}
+
+#transactionStateFilter,
+#approvalStatus,
+#orderState,
+#fromDate,
+#toDate {
+	background: #f9f9f9;
+}
+
+.failed-transaction-detail-row {
+	display: flex;
+	justify-content: space-between;
+	width: 100%;
+}
+
+.failed-transaction-detail-row > .failed-transaction-detail {
+	flex: 0 1 calc(50% - 1rem);
+	margin-bottom: 2rem;
+}
+
+#toggleFilterBtn.open {
+	background: #f9f9f9;
+	border-color: #00000010;
+	border-bottom-color: transparent;
+}
+
+#toggleFilterBtn {
+	padding: 15px 20px;
+}
+
+#filterSection {
+	display: flex;
+	gap: 30px;
+	/*justify-content: space-evenly;*/
+	max-height: 0;
+	overflow: hidden;
+	transition: max-height 0.4s ease, padding 0.4s ease;
+	background-color: #f9f9f9;
+	/*border: 1px solid #ccc;*/
+	/*margin-top: 10px;*/
+	padding: 0px 20px;
+	margin-top: -2px;
+	flex-wrap: wrap;
+}
+
+#filterSection.open {
+	max-height: 500px;
+	border: 1px solid #00000010;
+	padding: 30px 20px;
+}
+
+#transactionStateFilter, #approvalStatus, #orderState, #fromDate, #toDate {
+	width: 150px;
+	max-width: unset;
+	background: #f9f9f9;
+}
+
+.actionContainer {
+	float: right;
+	margin-left: auto;
+	display: flex;
+}
+
+.external-link {
+	display: inline-block;
+	margin-left: 0.5rem;
+	cursor: pointer;
+	position: relative;
+}
+
+.external-link img {
+	width: 16px;
+	height: 16px;
+}
+
+.external-link:hover::after {
+	position: absolute;
+	background-color: #fff;
+	border: 1px solid #ccc;
+	padding: 0.5rem;
+	border-radius: 5px;
+	box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+	white-space: nowrap;
+	z-index: 1000;
+	margin-top: 1rem;
+	font-size: 12px;
+	color: #333;
+}
+
+.tooltip-icon {
+	position: relative;
+	display: inline-block;
+	color: #ffffff; /* White color for the icon */
+	margin-left: 5px;
+	cursor: pointer;
+}
+
+.tooltip-icon:hover .tooltip-text {
+	visibility: visible;
+	opacity: 1;
+	transition: opacity 0.4s;  /* Smooth transition effect */
+}
+
+.tooltip-text {
+	visibility: hidden;
+	width: 250px;
+	background-color: #fff;
+	color: #000;
+	text-align: left;
+	border-radius: 5px;
+	padding: 10px;
+	position: absolute;
+	z-index: 1;
+	top: 150%;  /* Position tooltip below the icon */
+	left: 50%;
+	transform: translateX(-50%);  /* Center the tooltip */
+	box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+	opacity: 0;  /* Start off transparent */
+}
+
+.tooltip-text::after {
+	content: "";
+	position: absolute;
+	top: -10px;  /* Position arrow at the top of the tooltip box */
+	left: 50%;
+	transform: translateX(-50%);
+	border-width: 5px;
+	border-style: solid;
+	border-color: transparent transparent #fff transparent;  /* Arrow color matches the tooltip */
 }

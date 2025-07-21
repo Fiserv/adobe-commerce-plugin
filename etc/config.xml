@@ -7,6 +7,7 @@
 		<payment>
 			<fiserv_commercehub>
 				<active>1</active>
+				<three_d_secure>0</three_d_secure>
 				<payment_active>1</payment_active>
 				<title>Credit/Debit Card</title>
 				<model>FiservCommerceHubFacade</model>
@@ -21,6 +22,7 @@
 				<cert_client_url><![CDATA[https://cert.api.fiservapps.com/ch/sdk/v1/commercehub-client-sdk.js]]></cert_client_url>
 				<qa_client_url><![CDATA[https://qa.api.fiservapps.com/ch/sdk/v1/commercehub-client-sdk.js]]></qa_client_url>
 				<api_environment>CERT</api_environment>
+				<show_privacy_statement>1</show_privacy_statement>
 				<payment_action>AUTH</payment_action>
 				<cc_types>AE,VI,MC,DI,JCB,DN</cc_types>
 				<tokenization_strategy>CUSTOMER</tokenization_strategy>
@@ -191,8 +193,10 @@
 			<fiserv_valuelink>
 				<active>1</active>
 				<payment_action>AUTH</payment_action>
+				<create_valuelink_invoice>yes</create_valuelink_invoice>
 				<valuelink_title>Gift Cards</valuelink_title>
 				<card_amount_limit>1</card_amount_limit>
+				<show_privacy_statement>1</show_privacy_statement>
 	
 				<sdc_custom_checkout_valuelink_card_number_parent_element>fiserv_giftcard-card-number</sdc_custom_checkout_valuelink_card_number_parent_element>
 				<sdc_custom_checkout_valuelink_card_number_placeholder>Gift Card Number</sdc_custom_checkout_valuelink_card_number_placeholder>

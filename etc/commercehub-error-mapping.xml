@@ -2,6 +2,6 @@
 
 <mapping xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Payment:etc/error_mapping.xsd">
 	<message_list>
-		<message code="XXXXX" translate="true">Error</message>
+		<message code="PIN-ONLY-AUTH-ERROR" translate="true">PIN-only debit cards are only allowed for card-present purchases.</message>
 	</message_list>
 </mapping>

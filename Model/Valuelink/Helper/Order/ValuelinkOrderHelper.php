@@ -30,13 +30,24 @@ class ValuelinkOrderHelper
 		return $this->valuelinkResource->getByOrderIncrementId($orderIncrementId);
 	}
 
+	public function getPrimaryValuelinkTransactionsByOrderIncrementId($orderIncrementId)
+	{
+		$rawTxns = $this->getValuelinkTransactionsByOrderIncrementId($orderIncrementId);
+		return $this->getPrimaryValuelinkTransactions($rawTxns); 
+	}	
+	
 	public function getPrimaryValuelinkTransactionsByOrder($order)
 	{
 		$rawTxns = $this->getValuelinkTransactions($order);
+		return $this->getPrimaryValuelinkTransactions($rawTxns); 
+	}
+
+	private function getPrimaryValuelinkTransactions($valuelinkTxns)
+	{
 		$primaryTxns = array();
 
 		$primaryTransactionTypes = [ValuelinkTransaction::AUTHORIZE_TYPE, ValuelinkTransaction::SALE_TYPE];
-		foreach($rawTxns as $txn)
+		foreach($valuelinkTxns as $txn)
 		{
 			if (in_array($txn[ValuelinkTransaction::KEY_TRANSACTION_TYPE], $primaryTransactionTypes))
 			{
@@ -45,7 +56,7 @@ class ValuelinkOrderHelper
 		}
 		
 		return $primaryTxns;
-	}	
+	}
 		
 	public function getRemainingGiftAuthAmount($order, $txns = null)
 	{

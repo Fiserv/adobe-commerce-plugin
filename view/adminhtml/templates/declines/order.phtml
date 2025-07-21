@@ -1,0 +1,290 @@
+<?php
+use Magento\Framework\Pricing\Helper\Data as PricingHelper;
+
+/** @var \Fiserv\Payments\Block\CommerceHub\AdminHtml\Declines\Order $block */
+$order = $block->getFailedOrder();
+$transactionsData = $block->getFailedTransactionsForOrder();
+$transactions = $transactionsData['transactions'];
+$giftAmount = $block->getAppliedGiftCardAmount();
+$isSuccessful = isset($order[$block::KEY_SUCCESSFUL]) && $order[$block::KEY_SUCCESSFUL] === true;
+$orderTotalFormatted = (isset($order["grandTotal"]) ? $block->formatPrice($order["grandTotal"]) : "N/A");
+$discountAmount = isset($order["discountAmount"]) ? abs($order["discountAmount"]) : 0;
+$storeCreditAmount = isset($order["storeCredit"]) ? $order["storeCredit"] : 0;
+$transactionStates = array_unique(array_column($transactions, 'transaction_state'));
+$approvalStatuses = array_unique(array_column($transactions, 'approval_status'));
+$totalPages = $block->getTotalPages();
+
+function createDropdownOptions($values) {
+	$options = '<div data-value="">All</div>';
+	foreach ($values as $value) {
+		if ($value !== null && $value !== '') {
+			$optionValue = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+			$options .= "<div data-value=\"{$optionValue}\">{$optionValue}</div>";
+		}
+	}
+	return $options;
+}
+?>
+
+<div class="admin__data-grid-wrap">
+    <!-- Black Banner -->
+    <div class="black-banner">
+        <div class="banner-left">
+            <button class="back-button"><a href="<?php echo $block->getUrl('fiserv/declines/preview'); ?>"><?php echo __('<'); ?></a></button>
+            <span class="order-id"><?php echo __('Order ID: '); ?><?= htmlspecialchars(isset($order["order_increment_id"]) ? $order["order_increment_id"] : "N/A", ENT_QUOTES, 'UTF-8'); ?></span>
+        </div>
+        <div class="banner-right">
+            <span class="order-state"><?php echo __('Order State: '); ?><?= htmlspecialchars(isset($order["order_state"]) ? strtoupper($order["order_state"]) : "N/A", ENT_QUOTES, 'UTF-8'); ?></span>
+        </div>
+    </div>
+
+    <!-- Set up a container to manage layout -->
+    <div class="main-content-container">
+        <div id="failed-order-container">
+            <div class="three-col">
+                <!-- Items Ordered Section -->
+                <div class="failed-transaction-section header-margin">
+                    <div class="failed-transaction-section-header"><?php echo __('Items Ordered'); ?></div>
+                    <div class="failed-transaction-section-body">
+                        <div class="failed-transaction-detail-header">
+                            <div class="failed-transaction-detail-column"><?php echo __('Product'); ?></div>
+                            <div class="failed-transaction-detail-column"><?php echo __('Quantity'); ?></div>
+                            <div class="failed-transaction-detail-column"><?php echo __('Price'); ?></div>
+                            <div class="failed-transaction-detail-column"><?php echo __('Subtotal'); ?></div>
+                        </div>
+                        <div class="failed-transaction-line"></div>
+						<?php foreach (isset($order["items"]) ? json_decode($order["items"], true) : [] as $item): ?>
+                            <div class="failed-transaction-detail-row">
+                                <div class="failed-transaction-detail-column"><?= htmlspecialchars(isset($item["name"]) ? $item["name"] : "N/A", ENT_QUOTES, 'UTF-8'); ?></div>
+                                <div class="failed-transaction-detail-column"><?= htmlspecialchars(isset($item["qty"]) ? floor($item["qty"]) : "N/A", ENT_QUOTES, 'UTF-8'); ?></div>
+                                <div class="failed-transaction-detail-column"><?= htmlspecialchars(isset($item["price"]) ? $block->formatPrice($item["price"]) : "N/A", ENT_QUOTES, 'UTF-8'); ?></div>
+                                <div class="failed-transaction-detail-column"><?= htmlspecialchars(isset($item["price"]) && isset($item["qty"]) ? $block->formatPrice($item["qty"] * $item["price"]) : "N/A", ENT_QUOTES, 'UTF-8'); ?></div>
+                            </div>
+						<?php endforeach; ?>
+                    </div>
+                </div>
+
+                <!-- Order and Account Details Section -->
+                <div class="failed-transaction-section">
+                    <div class="failed-transaction-section-header"><?php echo __('Order and Account Details'); ?></div>
+                    <div class="failed-transaction-section-body">
+                        <div class="order-account-top">
+                            <div class="failed-transaction-detail-row">
+                                <div class="failed-transaction-detail-column">
+                                    <div class="failed-transaction-detail-label"><?php echo __('Order Date (UTC)'); ?></div>
+                                    <div class="failed-transaction-detail-value"><?= htmlspecialchars(isset($order["date_time"]) ? $order["date_time"] : "N/A", ENT_QUOTES, 'UTF-8'); ?></div>
+                                </div>
+                                <div class="failed-transaction-detail-column">
+                                    <div class="failed-transaction-detail-label"><?php echo __('Order State'); ?></div>
+                                    <div class="failed-transaction-detail-value"><?= htmlspecialchars(isset($order["order_state"]) ? ucwords($order["order_state"]) : "N/A", ENT_QUOTES, 'UTF-8'); ?></div>
+                                </div>
+                            </div>
+                            <div class="failed-transaction-detail-row">
+                                <div class="failed-transaction-detail-column">
+                                    <div class="failed-transaction-detail-label"><?php echo __('Shipping Address'); ?></div>
+                                    <div class="failed-transaction-detail-value"><?= htmlspecialchars(isset($order["shipping_address"]) && !empty($order["shipping_address"]) ? $order["shipping_address"] : "N/A", ENT_QUOTES, 'UTF-8'); ?></div>
+                                </div>
+                                <div class="failed-transaction-detail-column">
+                                    <div class="failed-transaction-detail-label"><?php echo __('Billing Address'); ?></div>
+                                    <div class="failed-transaction-detail-value"><?= htmlspecialchars(isset($order["billing_address"]) ? $order["billing_address"] : "N/A", ENT_QUOTES, 'UTF-8'); ?></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="order-account-line"></div>
+                        <div class="order-account-bottom">
+                            <div class="failed-transaction-detail-row">
+                                <div class="failed-transaction-detail-column">
+                                    <div class="failed-transaction-detail-label"><?php echo __('Customer Name'); ?></div>
+                                    <div class="failed-transaction-detail-value"><?= htmlspecialchars(isset($order["customer_name"]) ? $order["customer_name"] : "N/A", ENT_QUOTES, 'UTF-8'); ?></div>
+                                </div>
+                                <div class="failed-transaction-detail-column">
+                                    <div class="failed-transaction-detail-label"><?php echo __('Email'); ?></div>
+                                    <div class="failed-transaction-detail-value"><?= htmlspecialchars(isset($order["customer_email"]) ? $order["customer_email"] : "N/A", ENT_QUOTES, 'UTF-8'); ?></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="two-col">
+                <!-- Order Totals Section -->
+                <div class="failed-order-section full-height header-margin">
+                    <div class="failed-transaction-section-header"><?php echo __('Order Totals'); ?></div>
+                    <div class="failed-transaction-section-body">
+                        <div class="failed-transaction-detail">
+                            <div class="failed-transaction-detail-label"><?php echo __('Subtotal'); ?></div>
+                            <div class="failed-transaction-detail-value"><?= htmlspecialchars(isset($order["subtotal"]) ? $block->formatPrice($order["subtotal"]) : "N/A", ENT_QUOTES, 'UTF-8'); ?></div>
+                        </div>
+
+						<?php if ($discountAmount > 0): ?>
+                            <div class="failed-transaction-detail">
+                                <div class="failed-transaction-detail-label"><?php echo __('Discount Total'); ?></div>
+                                <div class="failed-transaction-detail-value"><?= htmlspecialchars("-".$block->formatPrice($discountAmount), ENT_QUOTES, 'UTF-8'); ?></div>
+                            </div>
+						<?php endif; ?>
+
+						<?php if ($giftAmount > 0.00): ?>
+                            <div class="failed-transaction-detail">
+                                <div class="failed-transaction-detail-label"><?php echo __('Gift Cards'); ?></div>
+                                <div class="failed-transaction-detail-value">-<?= htmlspecialchars($block->formatPrice($giftAmount), ENT_QUOTES, 'UTF-8'); ?></div>
+                            </div>
+						<?php endif; ?>
+
+						<?php if ($storeCreditAmount > 0.00): ?>
+                            <div class="failed-transaction-detail">
+                                <div class="failed-transaction-detail-label"><?php echo __('Store Credit'); ?></div>
+                                <div class="failed-transaction-detail-value">-<?= htmlspecialchars($block->formatPrice($storeCreditAmount), ENT_QUOTES, 'UTF-8'); ?></div>
+                            </div>
+						<?php endif; ?>
+
+                        <div class="failed-transaction-detail">
+                            <div class="failed-transaction-detail-label"><?php echo __('Shipping & Handling'); ?></div>
+                            <div class="failed-transaction-detail-value"><?= htmlspecialchars(isset($order["shipping_handling"]) ? $block->formatPrice($order["shipping_handling"]) : "N/A", ENT_QUOTES, 'UTF-8'); ?></div>
+                        </div>
+                        <div class="failed-transaction-line"></div>
+                        <div class="failed-transaction-detail">
+                            <div class="failed-transaction-detail-label"><?php echo __('Order Total'); ?></div>
+                            <div class="failed-transaction-detail-value"><?= htmlspecialchars($orderTotalFormatted, ENT_QUOTES, 'UTF-8'); ?></div>
+                        </div>
+
+                        <!-- Order Notes Section -->
+                        <div class="order-notes-section">
+                            <div class="order-notes-header"><?php echo __('Order Notes'); ?></div>
+                            <div class="order-notes-box">
+                                <div class="order-notes-list">
+									<?= htmlspecialchars(isset($order['notes']) && !is_null($order['notes']) ? $order['notes'] : "", ENT_QUOTES, 'UTF-8'); ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr class="mb-40">
+
+    <div class="search-pagination-container failed-transaction">
+        <div class="filter-wrapper">
+            <div class="filter-item">
+                <input type="text" id="searchInput" placeholder="Search for keywords">
+            </div>
+            <div class="actionContainer">
+                <button id="toggleFilterBtn" style="margin-left: 20px;">Filter</button>
+
+                <!-- Export Button Implementation Start -->
+                <label for="exportOptions"></label>
+                <span style="display: flex;position: relative;">
+                     <button id="exportDropdownButton" class="exportButton" style="background-color: transparent; border: none;">
+                    <img style="width: 14px; height: 14px;" src="<?php echo htmlspecialchars($this->getViewFileUrl('Fiserv_Payments::images/Export_Button.svg'), ENT_QUOTES, 'UTF-8'); ?>" alt="Export">
+                    Export
+                    <span id="exportArrow" class="arrow-down">▼</span><span id="exportArrowUp" class="arrow-up" style="display: none;">▲</span>
+                </button>
+                <div id="exportDropdownMenu" class="dropdown-menu" style="display: none;">
+                    <input type="radio" id="exportCsvOption" name="exportFormat" value="csv">
+                    <label for="exportCsvOption"><?php echo htmlspecialchars(__('CSV'), ENT_QUOTES, 'UTF-8'); ?></label><br>
+                    <input type="radio" id="exportXlsxOption" name="exportFormat" value="xls">
+                    <label for="exportXlsxOption"><?php echo htmlspecialchars(__('Excel XML'), ENT_QUOTES, 'UTF-8'); ?></label><br>
+                    <button id="cancelButton" style="font-size: 1rem; margin-top: 10px; background-color: #f1f1f1; padding: 5px 8px; margin-right: 10px;"><?php echo htmlspecialchars(__('Cancel'), ENT_QUOTES, 'UTF-8'); ?></button>
+                    <button id="exportButton" style="font-size: 1rem; margin-top: 10px; background-color: #f1f1f1; padding: 5px 8px;"><?php echo htmlspecialchars(__('Export'), ENT_QUOTES, 'UTF-8'); ?></button>
+                </div>
+                </span>
+                <!-- Export Button Implementation End -->
+                <div class="paginationContainerTop" style="margin-left: auto; display: flex; align-items: center;">
+                    <label for="rowsPerPage">Limit:</label>
+                    <select id="rowsPerPage" style="margin: 0 0.5rem;">
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="15">15</option>
+                        <option value="20" selected="">20</option>
+                    </select>
+                    <span id="paginationInfoTop" class="pagination-info">1 of 2</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Animated Filter Section -->
+        <div id="filterSection">
+            <div class="filter-item">
+                <label for="approvalStatus">Approval Status:</label>
+                <select id="approvalStatus">
+                    <option value="">Select</option>
+					<?php foreach ($approvalStatuses as $approvalStatus): ?>
+                        <option value="<?php echo htmlspecialchars($approvalStatus, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($approvalStatus, ENT_QUOTES, 'UTF-8'); ?></option>
+					<?php endforeach; ?>
+                </select>
+            </div>
+            <div class="filter-item">
+                <label for="transactionStateFilter">Transaction State:</label>
+                <select id="transactionStateFilter">
+                    <option value="">Select</option>
+					<?php foreach ($transactionStates as $transactionState): ?>
+                        <option value="<?= htmlspecialchars($transactionState ?? 'N/A', ENT_QUOTES, 'UTF-8'); ?>"><?= htmlspecialchars($transactionState ?? 'N/A', ENT_QUOTES, 'UTF-8'); ?></option>
+					<?php endforeach; ?>
+                </select>
+            </div>
+            <div class="filter-item">
+                <label for="fromDate">From:</label>
+                <input type="date" id="fromDate">
+            </div>
+            <div class="filter-item">
+                <label for="toDate">To:</label>
+                <input type="date" id="toDate">
+            </div>
+            <button id="resetFilter" style="font-size: 1rem; background-color: #f1f1f1; padding: 5px 15px;display: none;">RESET</button>
+        </div>
+    </div>
+
+    <table id="transactionsTable" class="data-table">
+        <thead>
+        <tr>
+            <th data-sortable="true" data-index="0">Date/Time (UTC)</th>
+            <th data-sortable="true" data-index="1">Transaction ID</th>
+            <th data-sortable="true" data-index="2">Transaction State</th>
+            <th data-sortable="true" data-index="3">Approval Status</th>
+            <th data-sortable="true" data-index="4">Total Amount</th>
+            <th data-sortable="true" data-index="5">IP Address</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody id="tableBody">
+		<?php foreach ($transactions as $transaction): ?>
+            <tr>
+                <td><?= htmlspecialchars($transaction['date_time'] ?? "N/A", ENT_QUOTES, 'UTF-8'); ?></td>
+                <td><?= htmlspecialchars($transaction['transaction_id'] ?? "N/A", ENT_QUOTES, 'UTF-8'); ?></td>
+                <td><?= htmlspecialchars(strtoupper($transaction['transaction_state'] ?? "N/A"), ENT_QUOTES, 'UTF-8'); ?></td>
+                <td><?= htmlspecialchars(ucfirst($transaction['approval_status'] ?? "N/A"), ENT_QUOTES, 'UTF-8'); ?></td>
+                <td><?= htmlspecialchars(isset($transaction["total_amount"]) ? $block->formatPrice($transaction["total_amount"]) : "N/A", ENT_QUOTES, 'UTF-8'); ?></td>
+                <td><?= htmlspecialchars($transaction['remote_ip'] ?? "N/A", ENT_QUOTES, 'UTF-8'); ?></td>
+                <td>
+					<?php if (isset($transaction[$block::KEY_SUCCESSFUL]) && $transaction[$block::KEY_SUCCESSFUL] === true): ?>
+                        <a href="<?= $block->getUrl('sales/transactions/view', ['txn_id' => $transaction[$block::KEY_SUCCESSFUL_TXN]]); ?>">View</a>
+					<?php elseif ($transaction['transaction_id'] !== "N/A"): ?>
+                        <a href="<?= $block->getUrl('fiserv/declines/transaction', ['transaction_id' => $transaction['transaction_id']]); ?>">View</a>
+					<?php endif; ?>
+                </td>
+            </tr>
+		<?php endforeach; ?>
+        </tbody>
+    </table>
+    <input type="hidden" id="transactionStateFilterValue" value="">
+    <input type="hidden" id="approvalStatusFilterValue" value="">
+    <div id="paginationControls" data-totalPage="<?php echo $totalPages; ?>"></div>
+    <div id="noRecordsMessage" style="display:none;"><?= __('No records found'); ?></div>
+
+    <script type="text/x-magento-init">
+        {
+            "*": {
+                "Magento_Ui/js/core/app": {
+                    "components": {
+                        "failed-transaction": {
+                            "component": "Fiserv_Payments/js/view/declines/failed-transaction",
+                            "exportUrl" : "<?= $block->escapeUrl($block->getExportUrl()) ?>"
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</div>
