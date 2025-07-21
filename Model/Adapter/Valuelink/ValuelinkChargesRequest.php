@@ -30,7 +30,11 @@ class ValuelinkChargesRequest
 	const KEY_ORIGIN = "ECOM";
 	const KEY_POS_CODE = "CARD_NOT_PRESENT_ECOM";
 	const KEY_ECI_INDICATOR = "CHANNEL_ENCRYPTED";
-	
+
+	// CommerceHub Transaction Result Keys
+	const KEY_RESPONSE = "response";
+	const KEY_STATUS_CODE = "statusCode";
+
 	/**
 	 * @var Config
 	 */
@@ -74,25 +78,26 @@ class ValuelinkChargesRequest
 	* 
 	* @return array
 	*/
-	public function chargeValuelinkCard(ChargesRequest $payload)
+	public function chargeValuelinkCard(ChargesRequest $payload) : Array
 	{
 		$merchantOrderId = $payload->getTransactionDetails()->getMerchantOrderId();
 		$this->logger->logInfo(1, "Sending gift card request...", "Order ID: {$merchantOrderId}");
-		$this->logger->logDebug(3, "TXN REQUEST INFO", "Order ID: {$merchantOrderId}");
+		$this->logger->logDebug(3, "Gift chargest request info", "Order ID: {$merchantOrderId}");
 		$this->logger->logDebug(3, "Payload:\n" . print_r($payload, true), "Order ID: {$merchantOrderId}");
 
 		$chResponse = $this->httpAdapter->sendRequest($payload, self::CHARGES_ENDPOINT);
 		return $this->parseChargesResponse($chResponse, $merchantOrderId);
 	}
 
-	private function parseChargesResponse($chResponse, $merchantOrderId) {
+	private function parseChargesResponse($chResponse, $merchantOrderId) : Array 
+	{
 		$statusCode = $chResponse->getStatusCode();
 		$response = $chResponse->getResponse();
 		$headerLength = $chResponse->getHeaderLength();
 		$body = $chResponse->getBody();
 
 		$this->logger->logInfo(1, "Response received for gift card request", "Order ID: {$merchantOrderId}");
-		$this->logger->logDebug(3, "TXN INQUIRY RESPONSE INFO", "Order ID: {$merchantOrderId}");
+		$this->logger->logDebug(3, "Gift charges request response info", "Order ID: {$merchantOrderId}");
 		$this->logger->logDebug(3, "Response Headers:\n" . print_r($chResponse->getHeaders(), true), "Order ID: {$merchantOrderId}");
 		$this->logger->logError(2, "Response Body:\n" . json_encode(json_decode($body), JSON_PRETTY_PRINT), "Order ID: {$merchantOrderId}");
 
@@ -104,16 +109,10 @@ class ValuelinkChargesRequest
 			}
 		}
 
-		$bodyArray = json_decode($body, true);
-
-		if ($statusCode !== 201) {
-			$this->logger->logError(1, "Transaction failure. Gift card response returned with unsuccessful status", "Order ID: {$merchantOrderId}");
-			$this->logger->logError(2, "Status Code: " . $statusCode, "Order ID: {$merchantOrderId}");
-			
-			throw new \Exception('CommerceHub Gift Card Charges Request  HTTP error code: ' . $statusCode, 1);
-		};
-
-		return $bodyArray;
+		return array(
+			self::KEY_RESPONSE => $bodyArray = json_decode($body, true),
+			self::KEY_STATUS_CODE => $statusCode
+		);
 	}
 
 	public function getValuelinkChargesPayload($sessionId, $total, $currency, $merchantOrderId) : ChargesRequest

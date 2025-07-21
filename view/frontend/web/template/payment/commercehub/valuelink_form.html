@@ -50,8 +50,14 @@
 			<button class="action action-check" type="button" disabled data-bind="attr: { 'id': getCode() + '-get-gift-card-balance'}, click: checkBalance">
 				<span>See Balance</span>
 			</button>
+			<span class="action-clear" data-bind="visible: showClearButton, click: clearFields, text: 'Clear'" style="color:orange; cursor:pointer; margin-left:10px;"></span>
 		</div>
-	</div>    
+	</div>
+	<!-- ko if: showValuelinkPrivacyStatement() -->
+	<div class="privacyPolicy">
+		<span></span>Payments Powered by Fiserv.&nbsp; <a target="_blank" href="http://www.fiserv.com/privacy">Privacy Notice</a>.
+	</div>
+	<!-- /ko -->
     </div>
 </div>
 <!-- /ko -->

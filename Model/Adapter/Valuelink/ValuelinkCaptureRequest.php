@@ -19,6 +19,10 @@ class ValuelinkCaptureRequest
 {
 	const CAPTURE_ENDPOINT = 'payments/v1/charges';
 
+	// CommerceHub Transaction Result Keys
+	const KEY_RESPONSE = "response";
+	const KEY_STATUS_CODE = "statusCode";
+ 
 	/**
 	 * @var Config
 	 */
@@ -94,16 +98,11 @@ class ValuelinkCaptureRequest
 			}
 		}
 
-		$bodyArray = json_decode($body, true);
+		return array(
+			self::KEY_RESPONSE => $bodyArray = json_decode($body, true),
+			self::KEY_STATUS_CODE => $statusCode
+		);
 
-		if ($statusCode !== 201) {
-			$this->logger->logError(2, "Transaction failure. Gift card response returned with unsuccessful status", "Order ID: {$merchantOrderId}");
-			$this->logger->logError(2, "Status Code: " . $statusCode, "Order ID: {$merchantOrderId}");
-
-			throw new \Exception('CommerceHub Gift Card Capture Request HTTP error code: ' . $statusCode, 1);
-		};
-
-		return $bodyArray;
 	}
 
 	public function getValuelinkCapturePayload($txnId, $total, $previousCaptures, $finalCapture, $currency, $merchantOrderId) : ChargesRequest

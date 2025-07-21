@@ -20,7 +20,8 @@ class DataAssignObserver extends AbstractDataAssignObserver
 	const TOKEN_SOURCE_KEY = 'token_source';
 	const EXP_MONTH_KEY = 'expiration_month';
 	const EXP_YEAR_KEY = 'expiration_year';
-
+	const NAME_ON_CARD_KEY = 'nameOnCard';
+	const THREE_D_SECURE_KEY = '3DSecureId';
 	
 	/**
 	 * @var array
@@ -31,7 +32,8 @@ class DataAssignObserver extends AbstractDataAssignObserver
 		self::PAYMENT_TOKEN_KEY,
 		self::TOKEN_SOURCE_KEY,
 		self::EXP_MONTH_KEY,
-		self::EXP_YEAR_KEY
+		self::EXP_YEAR_KEY,
+		self::THREE_D_SECURE_KEY
 	];
 
 	/**

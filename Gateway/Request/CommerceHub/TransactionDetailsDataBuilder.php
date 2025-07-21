@@ -63,7 +63,7 @@ abstract class TransactionDetailsDataBuilder implements BuilderInterface
 		$txnDetails = new TransactionDetails();
 
 		$data = $payment->getAdditionalInformation();
-
+		
 		$tokenStrat = $this->chConfig->getTokenStrategy();
 		$createToken = !empty($data[VaultConfigProvider::IS_ACTIVE_CODE]) || $tokenStrat === TokenizationStrategy::ALWAYS;
 		$txnDetails->setCreateToken($createToken);

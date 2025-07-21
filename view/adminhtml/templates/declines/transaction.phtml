@@ -1,0 +1,165 @@
+<?php
+/**
+ * @var \Fiserv\Payments\Block\Adminhtml\Declines\Transaction $block
+ */
+$transaction = $block->getTransactionDetails();
+?>
+
+<div class="admin__data-grid-wrap">
+    <!-- Black Navigation Bar -->
+    <div class="black-banner">
+        <div class="banner-left">
+            <button class="back-button">
+                <a href="<?php echo $block->getUrl('fiserv/declines/order', ['id' => $transaction['order_increment_id']]); ?>">
+                    <?php echo __('<'); ?>
+                </a>
+            </button>
+            <span class="transaction-details"><?php echo strtoupper(__('Transaction Details')); ?></span>
+        </div>
+    </div>
+
+    <div id="failed-transaction-container">
+        <div class="three-col">
+            <div class="failed-transaction-section">
+                <div class="failed-transaction-section-header"><?php echo __('Card Information'); ?></div>
+                <div class="failed-transaction-section-body">
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label"><?php echo __('Card Type'); ?></div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["scheme"]) ? $transaction["scheme"] : "N/A"; ?></div>
+                    </div>
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label"><?php echo __('Card Last 4 Digits'); ?></div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["last4"]) ? $transaction["last4"] : "N/A"; ?></div>
+                    </div>
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label"><?php echo __('Expiration Month'); ?></div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["expiration_month"]) ? $transaction["expiration_month"] : "N/A"; ?></div>
+                    </div>
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label"><?php echo __('Expiration Year'); ?></div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["expiration_year"]) ? $transaction["expiration_year"] : "N/A"; ?></div>
+                    </div>
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label"><?php echo __('BIN (Bank Identification Number)'); ?></div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["bin"]) ? $transaction["bin"] : "N/A"; ?></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="failed-transaction-section">
+                <div class="failed-transaction-section-header"><?php echo __('Transaction Identifiers'); ?></div>
+                <div class="failed-transaction-section-body">
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label"><?php echo __('Transaction ID'); ?></div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["transaction_id"]) ? $transaction["transaction_id"] : "N/A"; ?></div>
+                    </div>
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label"><?php echo __('API Trace ID'); ?></div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["api_trace_id"]) ? $transaction["api_trace_id"] : "N/A"; ?></div>
+                    </div>
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label"><?php echo __('Order ID'); ?></div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["order_increment_id"]) ? $transaction["order_increment_id"] : "N/A"; ?></div>
+                    </div>
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label"><?php echo __('Date/Time (UTC)'); ?></div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["date_time"]) ? $transaction["date_time"] . " UTC" : "N/A"; ?></div>
+                    </div>
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label"><?php echo __('Retrieval Reference Number'); ?></div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["retrieval_reference_number"]) ? $transaction["retrieval_reference_number"] : "N/A"; ?></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="failed-transaction-section">
+                <div class="failed-transaction-section-header"><?php echo __('Response Codes'); ?></div>
+                <div class="failed-transaction-section-body">
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label">
+                            <?php echo __('Response Code'); ?>
+                            <a href="https://developer.fiserv.com/product/CommerceHub/docs/?path=docs/Resources/Guides/Response-Codes/Response-Code.md&branch=main" target="_blank" title="Link to possible responseCode values" class="external-link">
+                                <img src="<?= $block->getViewFileUrl('Fiserv_Payments::images/External_Link_Icon.png') ?>" alt="link">
+                            </a>
+                        </div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["responseCode"]) ? $transaction["responseCode"] : "N/A"; ?></div>
+                    </div>
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label">
+                            <?php echo __('Response Message'); ?>
+                            <a href="https://developer.fiserv.com/product/CommerceHub/docs/?path=docs/Resources/Guides/Response-Codes/Response-Code.md&branch=main" target="_blank" title="Link to possible responseMessage values" class="external-link">
+                                <img src="<?= $block->getViewFileUrl('Fiserv_Payments::images/External_Link_Icon.png') ?>" alt="link">
+                            </a>
+                        </div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["responseMessage"]) ? $transaction["responseMessage"] : "N/A"; ?></div>
+                    </div>
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label">
+                            <?php echo __('Merchant Advice Code'); ?>
+                            <a href="https://developer.fiserv.com/product/CommerceHub/docs/?path=docs/Resources/Master-Data/Network-Details.md&branch=main#merchant-advice-code" target="_blank" title="Link to possible merchantAdviceCode values" class="external-link">
+                                <img src="<?= $block->getViewFileUrl('Fiserv_Payments::images/External_Link_Icon.png') ?>" alt="link">
+                            </a>
+                        </div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["merchantAdviceCode"]) ? $transaction["merchantAdviceCode"] : "N/A"; ?></div>
+                    </div>
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label"><?php echo __('Bank Association Response Code'); ?></div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["bank_association_details"]) ? $transaction["bank_association_details"] : "N/A"; ?></div>
+                    </div>
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label"><?php echo __('Security Code Match'); ?></div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["securityCodeMatch"]) ? $transaction["securityCodeMatch"] : "N/A"; ?></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="two-col">
+            <div class="failed-transaction-section">
+                <div class="failed-transaction-section-header"><?php echo __('Transaction Outcome'); ?></div>
+                <div class="failed-transaction-section-body">
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label"><?php echo __('Transaction State'); ?></div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["transaction_state"]) ? $transaction["transaction_state"] : "N/A"; ?></div>
+                    </div>
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label"><?php echo __('Approval Status'); ?></div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["approval_status"]) ? $transaction["approval_status"] : "N/A"; ?></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="failed-transaction-section">
+                <div class="failed-transaction-section-header"><?php echo __('Financial Information'); ?></div>
+                <div class="failed-transaction-section-body">
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label"><?php echo __('Total Amount'); ?></div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["total_amount"]) ? $transaction["total_amount"] : "N/A"; ?></div>
+                    </div>
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label"><?php echo __('Currency'); ?></div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["currency"]) ? $transaction["currency"] : "N/A"; ?></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="failed-transaction-section">
+                <div class="failed-transaction-section-header"><?php echo __('Processor Information'); ?></div>
+                <div class="failed-transaction-section-body">
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label"><?php echo __('Processor'); ?></div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["processor"]) ? $transaction["processor"] : "N/A"; ?></div>
+                    </div>
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label"><?php echo __('Host'); ?></div>
+                        <div class="failed-transaction-detail-value"><?= isset($transaction["host"]) ? $transaction["host"] : "N/A"; ?></div>
+                    </div>
+                    <div class="failed-transaction-detail">
+			<div class="failed-transaction-detail-label"><?php echo __('Host Response Message'); ?></div>
+			<div class="failed-transaction-detail-value"><?= isset($transaction["host_response_message"]) ? $transaction["host_response_message"] : "N/A"; ?></div>
+		    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

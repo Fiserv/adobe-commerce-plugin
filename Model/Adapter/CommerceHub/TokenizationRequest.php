@@ -74,8 +74,8 @@ class TokenizationRequest
 			return $bodyArray;
 		}
 		$this->logger->logError(1, "Tokenization reqeest failure");
-		$this->logger->logError(2, 'CommerceHub credentials request HTTP error code: ' . $statusCode);
-		throw new \Exception('CommerceHub credentials request HTTP error code: ' . $statusCode, 1);
+		$this->logger->logError(2, 'CommerceHub tokenization request HTTP error code: ' . $statusCode);
+		throw new \Exception('CommerceHub tokenization request HTTP error code: ' . $statusCode, 1);
 	}
 
 	private function isTokenizeSuccessful($bodyArray) {

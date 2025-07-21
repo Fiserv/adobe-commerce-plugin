@@ -78,7 +78,7 @@ class HttpClient implements ClientInterface
 
 		$this->logger->logInfo(1, "Sending request to Commerce Hub", "Order ID: $orderIncrementId");
 		$this->logger->logDebug(3, "TXN REQUEST INFO", "Order ID: $orderIncrementId");
-		$this->logger->logDebug(3, "Payload:\n" . print_r($payload, true), "Order ID: $orderIncrementId");
+		$this->logger->logDebug(3, "Payload:\n" . json_encode($payload, JSON_PRETTY_PRINT), "Order ID: $orderIncrementId");
 
 		try {
 			$chResponse = $this->httpAdapter->sendRequest($payload, $endpoint);
@@ -86,7 +86,7 @@ class HttpClient implements ClientInterface
 
 			$this->logger->logInfo(1, "Response received from Commerce Hub", "Order ID: $orderIncrementId");
 			$this->logger->logDebug(3, "TXN RESPONSE INFO", "Order ID: $orderIncrementId");
-			$this->logger->logDebug(3, "Response Headers:\n" . print_r($chResponse->getHeaders(), true), "Order ID: $orderIncrementId");
+			$this->logger->logDebug(3, "Response Headers:\n" . json_encode($chResponse->getHeaders()), "Order ID: $orderIncrementId");
 			$this->logger->logDebug(3, "Response Body:\n" . json_encode(json_decode($chResponse->getBody()), JSON_PRETTY_PRINT), "Order ID: $orderIncrementId");
 
 			$log['response'] = $chResponse->getResponse();

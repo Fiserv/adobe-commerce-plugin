@@ -60,7 +60,19 @@ class TokenSourceDataBuilder implements BuilderInterface
 		$tokenSource = $payment->getAdditionalInformation(DataAssignObserver::TOKEN_SOURCE_KEY);
 		$expMonth = $payment->getAdditionalInformation(DataAssignObserver::EXP_MONTH_KEY);
 		$expYear = $payment->getAdditionalInformation(DataAssignObserver::EXP_YEAR_KEY);
-		
+
+		$nameOnCard = '';
+		$vaultPaymentToken = $payment->getExtensionAttributes()->getVaultPaymentToken();
+		if ($vaultPaymentToken instanceof \Magento\Vault\Api\Data\PaymentTokenInterface) {
+			$details = $vaultPaymentToken->getTokenDetails();
+			if (!empty($details)) {
+				$detailsArray = json_decode($details, true);
+				if (isset($detailsArray['nameOnCard'])) {
+					$nameOnCard = $detailsArray['nameOnCard'];
+				}
+			}
+		}
+
 		$source = new PaymentToken();
 		$source->setSourceType(self::PAYMENT_TOKEN_SOURCE_TYPE);
 		$source->setTokenData($tokenData);
@@ -70,6 +82,9 @@ class TokenSourceDataBuilder implements BuilderInterface
 		$card = new Card();
 		$card->setExpirationMonth($expMonth);
 		$card->setExpirationYear($expYear);
+		if($nameOnCard) {
+			$card->setNameOnCard($nameOnCard);
+		}
 
 		$source->setCard($card);	
 

@@ -2,12 +2,16 @@ define([
 	'jquery',
 	'Magento_Vault/js/view/payment/method-renderer/vault',
 	'Magento_Ui/js/model/messageList',
-	'Magento_Checkout/js/model/full-screen-loader'
+	'Magento_Checkout/js/model/full-screen-loader',
+	'Fiserv_Payments/js/ch-adapter',
+	'Fiserv_Payments/js/action/create-commercehub-session'
 ], function(
 	$,
 	VaultComponent,
 	globalMessageList,
-	fullScreenLoader
+	fullScreenLoader,
+	chAdapter,
+	chSession
 ){
 	'use_strict';
 
@@ -43,32 +47,75 @@ define([
 		/**
 		 * Place order
 		 */
-		placeOrderClick: function () {
-			this.getPaymentMethodToken();
+		placeOrderClick: async function () {
+			await this.getPaymentMethodToken();
 		},
 
 		/**
 		 * Send request to get payment method token
 		 */
-		getPaymentMethodToken: function () {
+		getPaymentMethodToken: async function () {
 			var self = this;
-			fullScreenLoader.startLoader();
 			$.getJSON(self.tokenUrl, {
 				'public_hash': self.publicHash
 			})
-				.done(function (response) {
-					fullScreenLoader.stopLoader();
-					self.additionalData['payment_token'] = response.paymentToken;
+				.done(async (response) => {
+					let paymentToken = response.paymentToken;
+					if (this.is3DSecureEnabled() && false)
+					{
+						try {
+							fullScreenLoader.startLoader();
+							await this.initChSdk(response.paymentToken);
+							await this.run3DSecure();
+						} catch (error) {
+							this.placeOrderFail(error);
+							return;
+						}
+					}
+					self.additionalData['payment_token'] = paymentToken;
 					self.placeOrder();
 				})
-				.fail(function (response) {
-					var error = JSON.parse(response.responseText);
-
-					fullScreenLoader.stopLoader();
-					globalMessageList.addErrorMessage({
-						message: error.message
-					});
+				.fail((response) => {
+					this.placeOrderFail(response);	
 				});
+		},
+
+		placeOrderFail: function (errorResponse) {
+			let error = undefined;
+			try {
+				error = JSON.parse(errorResponse.responseText);
+			} catch (err) {
+				error = errorResponse;
+			}
+			globalMessageList.addErrorMessage({
+				message: error.message
+			});
+		},
+
+		is3DSecureEnabled: function () {
+			return window.checkoutConfig.payment[this.getCode()]["threeDSecure"] === '1'
+		},
+
+		initChSdk: async function(paymentToken) {
+			let credsResponse = await chSession({
+				"paymentToken" : paymentToken,
+				"threeDSecure" : this.is3DSecureEnabled() 
+			});
+			let creds = credsResponse["ch_credentials"];
+			await chAdapter.initSdk(window.checkoutConfig.payment[this.getCode()],creds);	
+		},
+
+		run3DSecure: async function() {
+			const {transactionState, authenticationTransactionId} = await window.fiserv.components.threeDSecure();
+			if (transactionState !== "AUTHENTICATED") {
+				throw new Error("3DS authentication failed");
+			}
+
+			this.handle3DSecureAuth(authenticationTransactionId);
+		},
+
+		handle3DSecureAuth: function (threeDSId) {
+			this.additionalData["threeDSecureId"] = threeDSId;
 		},
 
 		/**
@@ -89,7 +136,23 @@ define([
 			data['additional_data'] = _.extend(data['additional_data'], this.additionalData);
 
 			return data;
-		}
+		},
 
+		/**
+		 * Show Privacy statement
+		 */
+		showPrivacyStatement: function() 
+		{
+			return window.checkoutConfig.payment[this.getCode()].show_privacy_statement;
+		},
+
+		/**
+		 * Get payment name
+		 *
+		 * @returns {String}
+		 */
+		getCode: function () {
+			return this.commercehubCode;
+		}
 	});
 });

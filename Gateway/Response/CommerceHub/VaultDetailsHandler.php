@@ -170,7 +170,8 @@ class VaultDetailsHandler implements HandlerInterface
 			"expirationDate" => $cardArray["expirationMonth"] . "/" . $cardArray["expirationYear"],
 			"tokenSource" => $tokenArray["tokenSource"],
 			"tokenResponseCode" => $tokenArray["tokenResponseCode"],
-			"tokenResponseDescription" => $tokenArray["tokenResponseDescription"]
+			"tokenResponseDescription" => $tokenArray["tokenResponseDescription"],
+			"nameOnCard" => $cardArray["nameOnCard"] ?? ''
 		]);
 		$paymentToken->setGatewayToken(PaymentTokenUtil::formatTokenDataForPersistence($tokenArray["tokenData"]));
 		$paymentToken->setExpiresAt($this->getExpirationDate($cardArray));

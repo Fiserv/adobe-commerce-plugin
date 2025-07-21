@@ -206,6 +206,9 @@
 				<item name="auth_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AuthDetailsDataBuilder</item>
 				<item name="txn_interaction" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\TransactionInteractionDataBuilder</item>
 				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
+				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
+				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
+				<item name="3ds_data" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\ThreeDSecureDataBuilder</item>
 			</argument>
 		</arguments>
 	</virtualType>
@@ -218,6 +221,9 @@
 				<item name="auth_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AuthDetailsDataBuilder</item>
 				<item name="txn_interaction" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\TransactionInteractionDataBuilder</item>
 				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
+				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
+				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
+				<item name="3ds_data" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\ThreeDSecureDataBuilder</item>
 			</argument>
 		</arguments>
 	</virtualType>
@@ -230,6 +236,9 @@
 				<item name="sale_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\SaleDetailsDataBuilder</item>
 				<item name="txn_interaction" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\TransactionInteractionDataBuilder</item>
 				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
+				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
+				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
+				<item name="3ds_data" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\ThreeDSecureDataBuilder</item>
 			</argument>
 		</arguments>
 	</virtualType>
@@ -242,6 +251,9 @@
 				<item name="auth_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\SaleDetailsDataBuilder</item>
 				<item name="txn_interaction" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\TransactionInteractionDataBuilder</item>
 				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
+				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
+				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
+				<item name="3ds_data" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\ThreeDSecureDataBuilder</item>
 			</argument>
 		</arguments>
 	</virtualType>
@@ -253,6 +265,8 @@
 				<item name="settle_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\SettleDetailsDataBuilder</item>
 				<item name="ref_txn" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\ReferenceTransactionDataBuilder</item>
 				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
+				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
+				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
 			</argument>
 		</arguments>
 	</virtualType>
@@ -264,6 +278,7 @@
 				<item name="refund_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\RefundRefTxnDataBuilder</item>
 				<item name="refund_txn_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\SaleDetailsDataBuilder</item>
 				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
+				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
 			</argument>
 		</arguments>
 	</virtualType>
@@ -274,6 +289,7 @@
 				<item name="cancel_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CancelRefTxnDataBuilder</item>
 				<item name="cancel_txn_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AuthDetailsDataBuilder</item>
 				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
+				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
 			</argument>
 		</arguments>
 	</virtualType>
@@ -371,6 +387,13 @@
 		<plugin name="paymentCardCreditmemoRefund" type="Fiserv\Payments\Model\Plugin\CommerceHub\CreditMemoRefund" sortOrder="100"/>
 	</type>
 
+	<type name = "Magento\Sales\Model\Order">
+		<plugin name = "commercehubFailedOrder" type="Fiserv\Payments\Model\Plugin\CommerceHub\OrderPlace" />
+	</type>
+	<type name = "Magento\Sales\Model\Service\CreditmemoService">
+		<plugin name = "refundFailedTransactionHandler" type="Fiserv\Payments\Model\Plugin\CommerceHub\CreditMemoServicePlugin" />
+	</type>
+
 	<!-- Valuelink Plugins -->
    	<type name="Magento\Quote\Model\Quote\TotalsCollector">
 		<plugin name="quoteValuelinkAmountUpdater" type="Fiserv\Payments\Model\Plugin\Valuelink\TotalsCollector" />
@@ -388,7 +411,17 @@
 	<type name = "Magento\Quote\Model\Quote\TotalsReader">
 		<plugin name = "valueLinkTotalsReader" type="Fiserv\Payments\Model\Plugin\Valuelink\TotalsReader" />
 	</type>
+
+	<virtualType name="Fiserv\Model\ResourceModel\FailedTransaction\Collection" type="Magento\Framework\View\Element\UiComponent\DataProvider\SearchResult">
+		<arguments>
+			<argument name="mainTable" xsi:type="string">failed_transaction_table</argument>
+			<argument name="resourceModel" xsi:type="string">Fiserv\Model\ResourceModel\FailedTransaction</argument>
+		</arguments>
+	</virtualType>
 	 
-	 <preference for="Fiserv\Payments\Api\Valuelink\ValuelinkTransactionRepositoryInterface" type="Fiserv\Payments\Model\ValuelinkTransactionRepository"/>
+	<preference for="Fiserv\Payments\Api\Valuelink\ValuelinkTransactionRepositoryInterface" type="Fiserv\Payments\Model\ValuelinkTransactionRepository"/>
+	<preference for="Fiserv\Payments\Api\FailedTransaction\FailedTransactionRepositoryInterface" type="Fiserv\Payments\Model\FailedTransactionRepository"/>
+	<preference for="Fiserv\Payments\Api\FailedOrder\FailedOrderRepositoryInterface" type="Fiserv\Payments\Model\FailedOrderRepository"/>
+	<preference for="Fiserv\Payments\Api\Data\FailedOrder\FailedOrderSearchResultInterface" type="Fiserv\Payments\Model\FailedOrder\FailedOrderSearchResult"/>
 
 </config>

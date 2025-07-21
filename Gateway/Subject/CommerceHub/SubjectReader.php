@@ -70,7 +70,7 @@ class SubjectReader extends FiservSubjectReader
 	 * @param array $path The path array containing keys to traverse the nested array.
 	 * @return mixed The value found at the nested key or null.
 	 */
-	public function getValueSafely(array $haystack, string $needle, array $path)
+	public static function getValueSafely(array $haystack, string $needle, array $path)
 	{
 		foreach ($path as $key) {
 			if (isset($haystack[$key])) {
