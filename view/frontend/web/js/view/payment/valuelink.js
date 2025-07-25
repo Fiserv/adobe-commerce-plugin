@@ -17,7 +17,7 @@ define([
 	'Magento_Checkout/js/model/error-processor',
 	'mage/validation'
 ], function ($, ko, Component, setGiftCardAction, totals, messageList, sdcv2, quote, priceUtils, fullScreenLoader, errorProcessor) {
-    'use strict';
+	'use strict';
 
 	let config = structuredClone(window.checkoutConfig.payment.fiserv_commercehub);
 	let valuelinkConfig = structuredClone(window.checkoutConfig.payment.fiserv_payments.fiserv_valuelink);
@@ -91,12 +91,10 @@ define([
 		},
 
 		/**
-		* Set gift card.
-		*/
-		setGiftCard: async function ()
-		{
-			if (!this.isFormValid)
-			{
+		 * Set gift card.
+		 */
+		setGiftCard: async function () {
+			if (!this.isFormValid) {
 				this.formValidHandler(false);
 				return;
 			}
@@ -104,40 +102,50 @@ define([
 			let balance = this.getBalanceInput().val();
 			let sessionId = this.getSessionIdInput().val();
 
-			if (!sessionId)
-			{
-				sessionId = await this.captureCardFormAsync();
-			}
+			try {
+				if (!sessionId) {
+					sessionId = await this.captureCardFormAsync();
+				}
 
-			if (!balance)
-			{
-				await this.checkBalanceAndSetCardAsync(sessionId);
-				return;
-			}
+				if (!balance) {
+					await this.checkBalanceAndSetCardAsync(sessionId);
+					return;
+				}
 
-			if (parseFloat(balance) === 0)
-			{
-				this.showErrorMessage("Gift card has no balance.");
-				return;
-			}
+				if (parseFloat(balance) === 0) {
+					this.showErrorMessage("Gift card has no balance.");
+					return;
+				}
 
-			setGiftCardAction(sessionId, balance);
-			sdcv2.resetIframe(this.formKey);
-			this.resetFormPanel();
+				setGiftCardAction(sessionId, balance);
+				sdcv2.resetIframe(this.formKey);
+				this.resetFormPanel();
+			} catch (error) {
+				console.error("Error setting gift card:", error);
+				this.showErrorMessage("An error occurred while processing the gift card.");
+			}
 		},
 
 		captureCardFormAsync: function () {
-			return new Promise((resolve) => {
+			return new Promise((resolve, reject) => {
 				this.captureCardForm((sessionId) => {
-					resolve(sessionId);
+					if (sessionId) {
+						resolve(sessionId);
+					} else {
+						reject(new Error("Failed to capture card form."));
+					}
 				});
 			});
 		},
 
 		checkBalanceAndSetCardAsync: function (sessionId) {
-			return new Promise((resolve) => {
-				this.checkBalanceAndSetCardCb(sessionId);
-				resolve();
+			return new Promise((resolve, reject) => {
+				try {
+					this.checkBalanceAndSetCardCb(sessionId);
+					resolve();
+				} catch (error) {
+					reject(error);
+				}
 			});
 		},
 
