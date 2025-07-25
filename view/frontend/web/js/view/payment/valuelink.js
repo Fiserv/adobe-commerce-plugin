@@ -93,7 +93,7 @@ define([
 		/**
 		* Set gift card.
 		*/
-		setGiftCard: function ()
+		setGiftCard: async function ()
 		{
 			if (!this.isFormValid)
 			{
@@ -106,13 +106,12 @@ define([
 
 			if (!sessionId)
 			{
-				this.captureCardForm((sessionId) => { this.checkBalanceAndSetCardCb(sessionId); });
-				return;
+				sessionId = await this.captureCardFormAsync();
 			}
 
 			if (!balance)
 			{
-				this.checkBalanceAndSetCardCb(sessionId);
+				await this.checkBalanceAndSetCardAsync(sessionId);
 				return;
 			}
 
@@ -123,9 +122,23 @@ define([
 			}
 
 			setGiftCardAction(sessionId, balance);
-
 			sdcv2.resetIframe(this.formKey);
 			this.resetFormPanel();
+		},
+
+		captureCardFormAsync: function () {
+			return new Promise((resolve) => {
+				this.captureCardForm((sessionId) => {
+					resolve(sessionId);
+				});
+			});
+		},
+
+		checkBalanceAndSetCardAsync: function (sessionId) {
+			return new Promise((resolve) => {
+				this.checkBalanceAndSetCardCb(sessionId);
+				resolve();
+			});
 		},
 
 		showErrorMessage: function(message)
