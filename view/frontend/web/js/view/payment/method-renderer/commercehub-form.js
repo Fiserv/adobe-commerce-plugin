@@ -11,6 +11,7 @@ define(
 		'Magento_Payment/js/view/payment/cc-form',
 		'Fiserv_Payments/js/ch-adapter',
 		'Fiserv_Payments/js/action/create-commercehub-session',
+		'Fiserv_Payments/js/action/fix-require',
 		'Magento_Checkout/js/model/quote',
 		'Magento_Checkout/js/checkout-data',
 		'Magento_Ui/js/model/messageList',
@@ -27,6 +28,7 @@ define(
 		Component,
 		chAdapter,
 		chSession,
+		fixRequire,
 		quote,
 		checkoutData,
 		globalMessageList,
@@ -423,7 +425,10 @@ define(
 					{
 						await this.initCheckoutSdk(creds);
 					}
-						
+			
+					fixRequire();
+					fullScreenLoader.stopLoader();
+					return;
 					chAdapter.submitCardForm(
 						window.checkoutConfig.payment.fiserv_payments['storeUrl'], 
 						(sessionId) => { this.iframeRunSuccess(sessionId); },

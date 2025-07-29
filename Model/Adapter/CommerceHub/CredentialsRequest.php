@@ -165,11 +165,11 @@ class CredentialsRequest
 			$payload[self::KEY_SOURCE] = $this->buildPaymentTokenSource($sessionData[self::KEY_PAYMENT_TOKEN], $sessionData[self::KEY_CUSTOMER][self::KEY_CUSTOMER_ID]);	
 		}	
 		
-		if (isset($sessionData[self::KEY_3DS]) && $sessionData[self::KEY_3DS] === true) {
+		/* if (isset($sessionData[self::KEY_3DS]) && $sessionData[self::KEY_3DS] === true) {
 			$payload[self::KEY_TRANSACTION_DETAILS] = array(	
 				self::KEY_AUTHENTICATION_3DS => true
 			);
-		}
+		}*/
 
 		$payload[self::KEY_ADDITIONAL_DATA_COMMON] = array(
 			self::KEY_ADDITIONAL_DATA => array(
