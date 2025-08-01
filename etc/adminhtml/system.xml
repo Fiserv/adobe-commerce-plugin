@@ -182,7 +182,7 @@
 						<config_path>payment/fiserv_valuelink/show_privacy_statement</config_path>
 					</field>
 				</group>
-				<group id="sdc_custom" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="17">
+				<group id="sdc_custom" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="7">
 					<label>Payment Form Customization</label>
 					<comment><![CDATA[<a href="https://developer.fiserv.com/product/CommerceHub/docs/?path=docs/Online-Mobile-Digital/Checkout/Hosted-Fields/Hosted-Fields-Customization.md&branch=main">Payment Form Customization Documentation.</a>]]></comment>
 					<attribute type="expanded">0</attribute>
