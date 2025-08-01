@@ -247,6 +247,9 @@
 				<title>Stored Accounts (Fiserv)</title>
 				<active>1</active>
 			</fiserv_commercehub_vault>
+			<ch_paypal>
+				<ch_paypal_fastlane>1</ch_paypal_fastlane>
+			</ch_paypal>
 		</payment>
 	</default>
 </config>
