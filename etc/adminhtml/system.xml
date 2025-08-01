@@ -986,6 +986,16 @@
 						</group>
 					</group>
 				</group>
+				<group id="ch_paypal" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="8">
+					<label>PayPal</label>
+					<attribute type="expanded">0</attribute>
+					<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+					<field id="ch_paypal_fastlane" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Enable PayPal Fastlane</label>
+						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+						<config_path>payment/ch_paypal/ch_paypal_fastlane</config_path>
+					</field>
+				</group>
 			</group>
 		</section>
 		<section id="three_d_secure" translate="label" type="text" sortOrder="410" showInDefault="1" showInWebsite="1" showInStore="1">
