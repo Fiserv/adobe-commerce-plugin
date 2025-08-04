@@ -31,6 +31,18 @@
 																		</item>
 																	</item>
 																</item>
+																<item name="paypal_fastlane" xsi:type="array">
+																	<item name="component" xsi:type="string">Fiserv_Payments/js/view/payment/paypal/fastlane</item>
+																	<item name="config" xsi:type="array">
+																		<item name="title" translate="true" xsi:type="string">PayPal Fastlane</item>
+																		<item name="sortOrder" xsi:type="string">10</item>
+																	</item>
+																	<item name="methods" xsi:type="array">
+																		<item name="paypal_fastlane_method" xsi:type="array">
+																			<item name="isBillingAddressRequired" xsi:type="boolean">false</item>
+																		</item>
+																	</item>
+																</item>
 															</item>
 														</item>
 														<item name="afterMethods" xsi:type="array">
