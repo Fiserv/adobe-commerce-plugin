@@ -29,7 +29,7 @@
 																		<item name="fiserv_commercehub_vault" xsi:type="array">
 																			<item name="isBillingAddressRequired" xsi:type="boolean">true</item>
 																		</item>
-																		<item name="paypal_fastlane_method" xsi:type="array">
+																		<item name="fiserv_paypal_fastlane" xsi:type="array">
 																			<item name="isBillingAddressRequired" xsi:type="boolean">true</item>
 																		</item>
 																	</item>

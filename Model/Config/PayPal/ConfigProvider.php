@@ -18,7 +18,7 @@ use Fiserv\Payments\Logger\MultiLevelLogger;
  */
 class ConfigProvider implements ConfigProviderInterface
 {
-	const CODE = 'ch_paypal';
+	const CODE = 'fiserv_paypal_fastlane';
 	const IS_FASTLANE_ACTIVE_KEY = 'isFastlaneActive';
 	const MERCHANT_ID_KEY = 'merchantId';
 	const API_KEY_KEY = 'apiKey';

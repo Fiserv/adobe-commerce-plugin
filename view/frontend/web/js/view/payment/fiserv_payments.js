@@ -21,7 +21,7 @@ define(
                 }
             );
         }
-	if( config['ch_paypal'].isFastlaneActive ) {
+	if( config['fiserv_paypal_fastlane'].isFastlaneActive ) {
 	   rendererList.push(
 		{
 		   type: paypal_fastlane,

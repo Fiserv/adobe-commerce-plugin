@@ -10,7 +10,7 @@
 		<method name="fiserv_commercehub">
 			<allow_multiple_address>1</allow_multiple_address>
 		</method>
-		<method name="ch_paypal">
+		<method name="fiserv_paypal_fastlane">
 			<allow_multiple_address>1</allow_multiple_address>
 		</method>
 	</methods>

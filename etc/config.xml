@@ -247,7 +247,7 @@
 				<title>Stored Accounts (Fiserv)</title>
 				<active>1</active>
 			</fiserv_commercehub_vault>
-			<ch_paypal>
+			<fiserv_paypal_fastlane>
 				<ch_paypal_fastlane>1</ch_paypal_fastlane>
 				<can_use_internal>1</can_use_internal>
 				<can_use_checkout>1</can_use_checkout>
@@ -257,7 +257,7 @@
 				<can_refund>1</can_refund>
 				<can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
 				<can_void>1</can_void>
-			</ch_paypal>
+			</fiserv_paypal_fastlane>
 		</payment>
 	</default>
 </config>
