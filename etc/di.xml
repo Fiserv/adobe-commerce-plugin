@@ -424,4 +424,23 @@
 	<preference for="Fiserv\Payments\Api\FailedOrder\FailedOrderRepositoryInterface" type="Fiserv\Payments\Model\FailedOrderRepository"/>
 	<preference for="Fiserv\Payments\Api\Data\FailedOrder\FailedOrderSearchResultInterface" type="Fiserv\Payments\Model\FailedOrder\FailedOrderSearchResult"/>
 
+
+	<!-- PayPal Facade configuration -->
+	<virtualType name="FiservPayPalFacade" type="Magento\Payment\Model\Method\Adapter">
+		<arguments>
+			<argument name="code" xsi:type="const">Fiserv\Payments\Model\Config\PayPal\ConfigProvider::CODE</argument>
+			<argument name="formBlockType" xsi:type="string">Fiserv\Payments\Block\CommerceHub\Form</argument>
+			<argument name="infoBlockType" xsi:type="string">Fiserv\Payments\Block\CommerceHub\Info</argument>
+			<argument name="valueHandlerPool" xsi:type="object">FiservCommerceHubValueHandlerPool</argument>
+			<argument name="validatorPool" xsi:type="object">FiservCommerceHubValidatorPool</argument>
+			<argument name="commandPool" xsi:type="object">FiservCommerceHubCommandPool</argument>
+		</arguments>
+	</virtualType>
+
+	<type name="Fiserv\Payments\Gateway\Config\PayPal\Config">
+		<arguments>
+			<argument name="methodCode" xsi:type="const">Fiserv\Payments\Model\Config\PayPal\ConfigProvider::CODE</argument>
+		</arguments>
+	</type>
+
 </config>

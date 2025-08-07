@@ -7,7 +7,8 @@ namespace Fiserv\Payments\Model\Config\PayPal;
 
 use Fiserv\Payments\Gateway\Config\PayPal\Config;
 use Magento\Checkout\Model\ConfigProviderInterface;
-use Magento\Framework\Session\SessionManagerInterface;
+use Magento\Store\Model\StoreManagerInterface;
+use Fiserv\Payments\Logger\MultiLevelLogger;
 
 /**
  * Class ConfigProvider
@@ -33,22 +34,25 @@ class ConfigProvider implements ConfigProviderInterface
 	private $config;
 
 	/**
-	 * @var SessionManagerInterface
+	 * @var StoreManagerInterface
 	 */
-	private $session;
+	private $storeManager;
+	private $logger;
 
 	/**
 	 * Constructor
 	 *
 	 * @param Config $config
-	 * @param SessionManagerInterface $session
+	 * @param StoreManagerInterface $storeManager
 	 */
 	public function __construct(
 		Config $config,
-		SessionManagerInterface $session
+		StoreManagerInterface $storeManager,
+		MultiLevelLogger $logger
 	) {
 		$this->config = $config;
-		$this->session = $session;
+		$this->storeManager = $storeManager;
+		$this->logger = $logger;
 	}
 
 	/**
@@ -58,7 +62,8 @@ class ConfigProvider implements ConfigProviderInterface
 	 */
 	public function getConfig()
 	{
-		$storeId = $this->session->getStoreId();
+		$storeId = $this->storeManager->getStore()->getId();
+
 		$config = [
 			self::IS_FASTLANE_ACTIVE_KEY => $this->config->isFastlaneActive($storeId),
 			self::MERCHANT_ID_KEY => $this->config->getMerchantId($storeId),

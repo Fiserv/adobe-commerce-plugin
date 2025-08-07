@@ -8,6 +8,7 @@ namespace Fiserv\Payments\Gateway\Config\PayPal;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Framework\Serialize\Serializer\Json;
+use Fiserv\Payments\Logger\MultiLevelLogger;
 
 /**
  * Class Config
@@ -40,6 +41,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 
 	private $scopeConfig;
 
+	private $logger;
+
 	/**
 	 * Fiserv PayPal config constructor
 	 *
@@ -50,6 +53,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	 */
 	public function __construct(
 		ScopeConfigInterface $scopeConfig,
+		MultiLevelLogger $logger,
 		$methodCode = null,
 		$pathPattern = self::DEFAULT_PATH_PATTERN,
 		Json $serializer = null
@@ -57,6 +61,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 		parent::__construct($scopeConfig, $methodCode, $pathPattern);
 		$this->serializer = $serializer ?: \Magento\Framework\App\ObjectManager::getInstance()->get(Json::class);
 		$this->scopeConfig = $scopeConfig;
+		$this->logger = $logger;
 	}
 
 	/**
@@ -67,6 +72,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	 */
 	public function isFastlaneActive($storeId = null)
 	{
+		$this->logger->logInfo(1, $this->getValue(self::KEY_FASTLANE_ACTIVE, $storeId) . " check this");
 		return (bool) $this->getValue(self::KEY_FASTLANE_ACTIVE, $storeId);
 	}
 
