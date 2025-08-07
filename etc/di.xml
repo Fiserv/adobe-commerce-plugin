@@ -411,6 +411,9 @@
 	<type name = "Magento\Quote\Model\Quote\TotalsReader">
 		<plugin name = "valueLinkTotalsReader" type="Fiserv\Payments\Model\Plugin\Valuelink\TotalsReader" />
 	</type>
+	<type name = "Magento\Multishipping\Block\Checkout\Billing">
+		<plugin name = "filterMultishipping" type="Fiserv\Payments\Model\Plugin\CommerceHub\FilterMultishipping" />
+	</type>
 
 	<virtualType name="Fiserv\Model\ResourceModel\FailedTransaction\Collection" type="Magento\Framework\View\Element\UiComponent\DataProvider\SearchResult">
 		<arguments>
