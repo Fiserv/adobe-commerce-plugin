@@ -5,7 +5,8 @@
  */
 namespace Fiserv\Payments\Model\Config\PayPal;
 
-use Fiserv\Payments\Gateway\Config\PayPal\Config;
+use Fiserv\Payments\Gateway\Config\PayPal\Config as PayPalConfig;
+use Fiserv\Payments\Gateway\Config\CommerceHub\Config as PaymentConfig;
 use Magento\Checkout\Model\ConfigProviderInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Fiserv\Payments\Logger\MultiLevelLogger;
@@ -29,9 +30,14 @@ class ConfigProvider implements ConfigProviderInterface
 	const TERMINAL_ID_KEY = 'terminalId';
 
 	/**
-	 * @var Config
+	 * @var PayPalConfig
 	 */
-	private $config;
+	private $payPalConfig;
+
+	/**
+	 * @var PaymentConfig
+	 */
+	private $paymentConfig;
 
 	/**
 	 * @var StoreManagerInterface
@@ -46,11 +52,13 @@ class ConfigProvider implements ConfigProviderInterface
 	 * @param StoreManagerInterface $storeManager
 	 */
 	public function __construct(
-		Config $config,
+		PayPalConfig $payPalConfig,
+		PaymentConfig $paymentConfig,
 		StoreManagerInterface $storeManager,
 		MultiLevelLogger $logger
 	) {
-		$this->config = $config;
+		$this->payPalConfig = $payPalConfig;
+		$this->paymentConfig = $paymentConfig;
 		$this->storeManager = $storeManager;
 		$this->logger = $logger;
 	}
@@ -65,15 +73,15 @@ class ConfigProvider implements ConfigProviderInterface
 		$storeId = $this->storeManager->getStore()->getId();
 
 		$config = [
-			self::IS_FASTLANE_ACTIVE_KEY => $this->config->isFastlaneActive($storeId),
-			self::MERCHANT_ID_KEY => $this->config->getMerchantId($storeId),
-			self::API_KEY_KEY => $this->config->getApiKey(),
-			self::LOGGING_LEVEL_KEY => $this->config->getLoggingLevel($storeId),
-			self::ENV_KEY => $this->config->getApiEnvironment($storeId),
-			self::CURRENCY_KEY => $this->config->getCurrency($storeId),
-			self::PROD_CLIENT_KEY => $this->config->getProdClientUrl(),
-			self::CERT_CLIENT_KEY => $this->config->getCertClientUrl(),
-			self::TERMINAL_ID_KEY => $this->config->getTerminalId($storeId),
+			self::IS_FASTLANE_ACTIVE_KEY => $this->payPalConfig->isFastlaneActive($storeId),
+			self::MERCHANT_ID_KEY => $this->paymentConfig->getMerchantId($storeId),
+			self::API_KEY_KEY => $this->paymentConfig->getApiKey(),
+			self::LOGGING_LEVEL_KEY => $this->paymentConfig->getLoggingLevel($storeId),
+			self::ENV_KEY => $this->paymentConfig->getApiEnvironment($storeId),
+			self::CURRENCY_KEY => $this->paymentConfig->getCurrency($storeId),
+			self::PROD_CLIENT_KEY => $this->paymentConfig->getProdClientUrl(),
+			self::CERT_CLIENT_KEY => $this->paymentConfig->getCertClientUrl(),
+			self::TERMINAL_ID_KEY => $this->paymentConfig->getTerminalId($storeId),
 		];
 
 		return [

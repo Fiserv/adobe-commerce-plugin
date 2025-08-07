@@ -79,7 +79,6 @@ class ConfigProvider implements ConfigProviderInterface
 	public function getConfig()
 	{
 		$storeId = $this->session->getStoreId();
-		//print_r( $this->session);die;
 		$config = [
 			self::IS_ACTIVE_KEY => $this->config->isActive($storeId),
 			self::IS_PAYMENT_ACTIVE_KEY => $this->config->isPaymentActive($storeId),
