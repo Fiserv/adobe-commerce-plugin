@@ -143,7 +143,7 @@ define([
 		 */
 		showPrivacyStatement: function() 
 		{
-			return window.checkoutConfig.payment[this.getCode()].show_privacy_statement;
+			return true;
 		},
 
 		/**
