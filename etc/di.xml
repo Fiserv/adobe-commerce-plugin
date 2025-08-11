@@ -414,6 +414,9 @@
 	<type name = "Magento\Multishipping\Block\Checkout\Billing">
 		<plugin name = "filterMultishipping" type="Fiserv\Payments\Model\Plugin\CommerceHub\FilterMultishipping" />
 	</type>
+	<type name = 'PayPal\Braintree\Gateway\Data\Order\OrderAdapter'>
+        <plugin name = "fiservorderadapter" type="Fiserv\Payments\Model\CustomOrderAdapter" />
+    </type>
 
 	<virtualType name="Fiserv\Model\ResourceModel\FailedTransaction\Collection" type="Magento\Framework\View\Element\UiComponent\DataProvider\SearchResult">
 		<arguments>
