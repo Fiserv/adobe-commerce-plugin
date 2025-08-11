@@ -197,6 +197,7 @@
 				<valuelink_title>Gift Cards</valuelink_title>
 				<card_amount_limit>1</card_amount_limit>
 				<show_privacy_statement>1</show_privacy_statement>
+                <gift_card_tier>basic</gift_card_tier>
 	
 				<sdc_custom_checkout_valuelink_card_number_parent_element>fiserv_giftcard-card-number</sdc_custom_checkout_valuelink_card_number_parent_element>
 				<sdc_custom_checkout_valuelink_card_number_placeholder>Gift Card Number</sdc_custom_checkout_valuelink_card_number_placeholder>
