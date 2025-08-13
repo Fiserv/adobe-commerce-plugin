@@ -248,6 +248,26 @@
 				<title>Stored Accounts (Fiserv)</title>
 				<active>1</active>
 			</fiserv_commercehub_vault>
-		</payment>
+            <!--Alternate Payment Methods-->
+
+            <fiserv_paypal> <!--Paypal-->
+                <active>1</active>
+                <paypal_active>AUTH</paypal_active>
+                <paypal_title>Paypal</paypal_title>
+                <paypal_vault_active>1</paypal_vault_active>
+            </fiserv_paypal>
+
+            <fiserv_paypalfastlane>  <!--Paypal Fastlane-->
+                <paypalfastlane_active>1</paypalfastlane_active>
+                <paypalfastlane_payment_action>AUTH</paypalfastlane_payment_action>
+                <paypalfastlane_title>Paypal Fastlane</paypalfastlane_title>
+            </fiserv_paypalfastlane>
+
+            <applepay>  <!--ApplePay-->
+                <applepay_isPaymentActive>1</applepay_isPaymentActive>
+                <applepay_payment_action>AUTH</applepay_payment_action>
+                <applepay_title>Apple Pay</applepay_title>
+            </applepay>
+        </payment>
 	</default>
 </config>

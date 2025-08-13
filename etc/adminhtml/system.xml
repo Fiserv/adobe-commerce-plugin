@@ -191,7 +191,73 @@
                         <tooltip><![CDATA[Basic tier does not allow for multiple partial captures of gift card transactions]]></tooltip>
                     </field>
 				</group>
-				<group id="sdc_custom" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="17">
+                <group id="paypal" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="6">
+                    <label>PayPal</label>
+                    <attribute type="expanded">0</attribute>
+                    <frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+                    <field id="paypal_active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Enable PayPal</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <config_path>payment/fiserv_paypal/active</config_path>
+                        <comment>Choose Yes to enable PayPal as a payment method via Fiserv or leave No to disable.</comment>
+                    </field>
+                    <field id="paypal_title" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Payment Method Title</label>
+                        <config_path>payment/fiserv_paypal/title</config_path>
+                    </field>
+                    <field id="paypal_payment_action" translate="label" type="select" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Charge Type</label>
+                        <source_model>Fiserv\Payments\Model\Source\CommerceHub\TransactionType</source_model>
+                        <config_path>payment/fiserv_paypal/payment_action</config_path>
+                    </field>
+                    <field id="paypal_vault_active" translate="label" type="select" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Enable Vaulting</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <config_path>payment/fiserv_paypal/vault_active</config_path>
+                        <comment>Choose Yes to enable PayPal Vaulting or leave No to disable.</comment>
+                    </field>
+                </group>
+                <group id="paypalfastlane" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="7">
+                    <label>PayPal Fastlane</label>
+                    <attribute type="expanded">0</attribute>
+                    <frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+                    <field id="paypalfastlane_active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Enable PayPal Fastlane</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <config_path>payment/fiserv_paypalfastlane/active</config_path>
+                        <comment>Choose Yes to enable PayPal Fastlane as a payment method via Fiserv or leave No to disable.</comment>
+                    </field>
+                    <field id="paypalfastlane_title" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Payment Method Title</label>
+                        <config_path>payment/fiserv_paypalfastlane/title</config_path>
+                    </field>
+                    <field id="paypalfastlane_payment_action" translate="label" type="select" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Charge Type</label>
+                        <source_model>Fiserv\Payments\Model\Source\CommerceHub\TransactionType</source_model>
+                        <config_path>payment/fiserv_paypalfastlane/payment_action</config_path>
+                    </field>
+                </group>
+                <group id="applepay" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="8">
+                    <label>Apple Pay</label>
+                    <attribute type="expanded">0</attribute>
+                    <frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+                    <field id="applepay_isPaymentActive" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Enable Apple Pay</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <config_path>payment/applepay/isPaymentActive</config_path>
+                        <comment>Choose Yes to enable Apple Pay as a payment method. No to disable.</comment>
+                    </field>
+                    <field id="applepay_title" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Payment Method Title</label>
+                        <config_path>payment/applepay/title</config_path>
+                    </field>
+                    <field id="applepay_payment_action" translate="label" type="select" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Charge Type</label>
+                        <source_model>Fiserv\Payments\Model\Source\CommerceHub\TransactionType</source_model>
+                        <config_path>payment/applepay/payment_action</config_path>
+                    </field>
+                </group>
+                <group id="sdc_custom" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="17">
 					<label>Payment Form Customization</label>
 					<comment><![CDATA[<a href="https://developer.fiserv.com/product/CommerceHub/docs/?path=docs/Online-Mobile-Digital/Checkout/Hosted-Fields/Hosted-Fields-Customization.md&branch=main">Payment Form Customization Documentation.</a>]]></comment>
 					<attribute type="expanded">0</attribute>
