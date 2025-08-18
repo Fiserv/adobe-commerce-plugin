@@ -23,7 +23,7 @@ class ChHttpAdapter
 	 * @var MultiLevelLogger
 	 */
 	private $logger;
-	
+
 	/**
 	 * @var Config
 	 */
@@ -69,7 +69,7 @@ class ChHttpAdapter
 	public function sendRequest($data, $endpoint)
 	{
 		$this->timestamp = $this->getTimestamp();
-		$this->nonce = $this->getnonce($this->timestamp);
+		$this->nonce = $this->getNonce($this->timestamp);
 
 		$url = $this->getServiceUrl() . '/' . $endpoint;
 		$payload = json_encode($data);
@@ -79,6 +79,7 @@ class ChHttpAdapter
 
 	private function execHttpRequest($payload, $url, $endpoint)
 	{
+		$this->logger->logInfo(1, "Executing HTTP request to URL: $url");
 		$curl = $this->generateBaseCurl(22);
 		$curl->write('POST', $url, '1.1', $this->getHeaders($payload), $payload);
 		$curlResponse = $curl->read();
@@ -117,7 +118,7 @@ class ChHttpAdapter
 	{
 		// Step 2: Transaction Inquiry
 		$this->timestamp = $this->getTimestamp();
-		$this->nonce = $this->getnonce($this->timestamp);
+		$this->nonce = $this->getNonce($this->timestamp);
 		$transactionID = $data["transactionDetails"]["merchantTransactionId"];
 		$this->logger->logCritical(1, "Initiating transaction inquiry for referenceMerchantTransactionId " . $transactionID);
 		$payload = json_encode(
@@ -128,8 +129,8 @@ class ChHttpAdapter
 				]
 			]
 		);
-		
-		$inquiryUrl = $this->getServiceUrl() . '/' . self::INQUIRY_ENDPOINT;
+
+		$inquiryUrl = $this->logger->logInfo(1, "Inquiry URL: " . $this->getServiceUrl() . '/' . self::INQUIRY_ENDPOINT);
 		$inquiryCurl = $this->generateNakedBaseCurl($inquiryUrl, $payload, 2);
 		$inquiryResponseFull = curl_exec($inquiryCurl);
 		$inquiryHeaderLength = curl_getinfo($inquiryCurl, CURLINFO_HEADER_SIZE);
@@ -161,9 +162,8 @@ class ChHttpAdapter
 			// Attempt cancel transaction of initial Auth
 			$this->logger->logCritical(1, "Auth detected. Attempting to Cancel initial transaction...");
 			$this->timestamp = $this->getTimestamp();
-			$this->nonce = $this->getnonce($this->timestamp);
-			
-			$cancelUrl = $this->getServiceUrl() . '/' . self::CANCELS_ENDPOINT;
+			$this->nonce = $this->getNonce($this->timestamp);
+			$cancelUrl = $this->logger->logInfo(1, "Cancel URL: " . $this->getServiceUrl() . '/' . self::CANCELS_ENDPOINT);
 			$cancelCurl = $this->generateBaseCurl(2);
 			$cancelCurl->write('POST', $cancelUrl, '1.1', $this->getHeaders($payload), $payload);
 			$cancelResponse = $cancelCurl->read();
@@ -223,23 +223,23 @@ class ChHttpAdapter
 	{
 		$curl = curl_init();
 		curl_setopt_array($curl,
-						  [
-							  CURLOPT_URL => $url,
-							  CURLOPT_RETURNTRANSFER => true,
-							  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-							  CURLOPT_HTTPHEADER => $this->getHeaders($payload),
-							  CURLOPT_HEADER => true,
-							  CURLOPT_POSTFIELDS => $payload,
-							  CURLOPT_POST => true,
-							  CURLOPT_TIMEOUT => $timeout,
-							  CURLOPT_USERAGENT => $this->getUserAgent(),
-							  CURLOPT_SSL_VERIFYHOST => 0
-						  ]
+			[
+				CURLOPT_URL => $url,
+				CURLOPT_RETURNTRANSFER => true,
+				CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+				CURLOPT_HTTPHEADER => $this->getHeaders($payload),
+				CURLOPT_HEADER => true,
+				CURLOPT_POSTFIELDS => $payload,
+				CURLOPT_POST => true,
+				CURLOPT_TIMEOUT => $timeout,
+				CURLOPT_USERAGENT => $this->getUserAgent(),
+				CURLOPT_SSL_VERIFYHOST => 0
+			]
 		);
 		return $curl;
 	}
 
-	private function getUserAgent() 
+	private function getUserAgent()
 	{
 		return self::USER_AGENT_PREFIX . Version::getVersionString();
 	}
@@ -257,7 +257,7 @@ class ChHttpAdapter
 			'Authorization: ' . $this->createSignature($payload),
 			'Client-Request-Id: ' . $this->nonce,
 			'Timestamp: ' . $this->timestamp,
-			'Auth-Token-Type: HMAC' 
+			'Auth-Token-Type: HMAC'
 		];
 	}
 
@@ -306,21 +306,28 @@ class ChHttpAdapter
 		return 0;
 	}
 
-	/** 
-	* Returns CommerceHub service url
-	* based on gateway's environment
-	* 
-	* @param string $storeId
-	* @return string
-	*/ 
+	/**
+	 * Returns CommerceHub service url
+	 * based on gateway's environment
+	 *
+	 * @param string $storeId
+	 * @return string
+	 */
 	private function getServiceUrl() {
 		$env = $this->chConfig->getApiEnvironment();
-		if ($env == ApiEnvironment::ENVIRONMENT_PROD) {
-			return $this->chConfig->getProdApiService();
-		} else if ($env == ApiEnvironment::ENVIRONMENT_CERT) {
-			return $this->chConfig->getCertApiService();
-		} else if ($env == ApiEnvironment::ENVIRONMENT_QA) {
-			return $this->chConfig->getQaApiService();
+		$this->logger->logInfo(1, "Selected API Environment: " . $env);
+		switch ($env) {
+			case ApiEnvironment::ENVIRONMENT_PROD:
+				return $this->chConfig->getProdApiService();
+			case ApiEnvironment::ENVIRONMENT_CERT:
+				return $this->chConfig->getCertApiService();
+			case ApiEnvironment::ENVIRONMENT_QA:
+				return $this->chConfig->getQaApiService();
+			case ApiEnvironment::ENVIRONMENT_DEV:
+				return $this->chConfig->getDevApiService();
+			default:
+				$this->logger->logError(3,"Unknown API Environment: " . $env);
+				throw new \Exception("Unknown API Environment: " . $env);
 		}
 	}
 

@@ -35,6 +35,8 @@ class ConfigProvider implements ConfigProviderInterface
 	const CURRENCY_KEY = 'currency';
 	const PROD_CLIENT_KEY = 'prodClientUrl';
 	const CERT_CLIENT_KEY = 'certClientUrl';
+	const QA_CLIENT_KEY = 'qaClientUrl';
+	const DEV_CLIENT_KEY = 'devClientUrl';
 	const VAULT_CODE_KEY = 'vaultCode';
 	const CARD_FORM_CONFIG_KEY = 'formConfig';
 	const TERMINAL_ID_KEY = 'terminalId';
@@ -94,6 +96,8 @@ class ConfigProvider implements ConfigProviderInterface
 			self::CURRENCY_KEY => $this->config->getCurrency($storeId),
 			self::PROD_CLIENT_KEY => $this->config->getProdClientUrl(),
 			self::CERT_CLIENT_KEY => $this->config->getCertClientUrl(),
+			self::QA_CLIENT_KEY => $this->config->getQaClientUrl(),
+			self::DEV_CLIENT_KEY => $this->config->getDevClientUrl(),
 			self::VAULT_CODE_KEY => self::VAULT_CODE,
 			self::CARD_FORM_CONFIG_KEY => $this->buildFormConfig(Config::KEY_SDC_CHECKOUT, $storeId),
 			self::TERMINAL_ID_KEY => $this->config->getTerminalId($storeId),

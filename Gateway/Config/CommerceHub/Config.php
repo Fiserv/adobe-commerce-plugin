@@ -33,9 +33,11 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	const KEY_PROD_API_SERVICE = 'prod_api_service';
 	const KEY_CERT_API_SERVICE = 'cert_api_service';
 	const KEY_QA_API_SERVICE = 'qa_api_service';
+	const KEY_DEV_API_SERVICE = 'dev_api_service';
 	const KEY_PROD_CLIENT_URL = 'prod_client_url';
 	const KEY_CERT_CLIENT_URL = 'cert_client_url';
 	const KEY_QA_CLIENT_URL = 'qa_client_url';
+	const KEY_DEV_CLIENT_URL = 'dev_client_url';
 	const KEY_TOKEN_STRATEGY = 'tokenization_strategy';
 	const KEY_TOKENIZATION = "tokenization";
 	const KEY_STANDALONE_SPA = 'standalone_spa';
@@ -283,6 +285,16 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	}
 
 	/**
+	 * Returns URL of CommerceHub API qa service.
+	 *
+	 * @return string
+	 */
+	public function getDevApiService()
+	{
+		return $this->getValue(self::KEY_DEV_API_SERVICE);
+	}
+
+	/**
 	 * Returns URL of CommerceHub API production SDK.
 	 *
 	 * @return string
@@ -290,6 +302,16 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	public function getProdClientUrl()
 	{
 		return $this->getValue(self::KEY_PROD_CLIENT_URL);
+	}
+
+	/**
+	 * Returns URL of CommerceHub API qa SDK.
+	 *
+	 * @return string
+	 */
+	public function getDevClientUrl()
+	{
+		return $this->getValue(self::KEY_DEV_CLIENT_URL);
 	}
 
 	/**

@@ -28,12 +28,29 @@
 namespace Fiserv\Payments\Model\Source\CommerceHub;
 
 use Magento\Framework\Option\ArrayInterface;
+use Fiserv\Payments\Helper\DevMode;
 
 class ApiEnvironment implements ArrayInterface
 {
+	const ENVIRONMENT_DEV = 'DEV';
 	const ENVIRONMENT_QA = 'QA';
 	const ENVIRONMENT_CERT = 'CERT';
 	const ENVIRONMENT_PROD = 'PROD';
+
+	/**
+	 * @var DevMode
+	 */
+	protected $devMode;
+
+	/**
+	 * Constructor
+	 *
+	 * @param DevMode $devMode
+	 */
+	public function __construct(DevMode $devMode)
+	{
+		$this->devMode = $devMode;
+	}
 
 	/**
 	 * Possible CommerceHub API environments
@@ -42,15 +59,26 @@ class ApiEnvironment implements ArrayInterface
 	 */
 	public function toOptionArray()
 	{
-		return [
+		$options = [];
+		if ($this->devMode->isDeveloperModeActive()) {
+			$options[] = [
+				'value' => self::ENVIRONMENT_DEV,
+				'label' => __(self::ENVIRONMENT_DEV)
+			];
+			$options[] = [
+				'value' => self::ENVIRONMENT_QA,
+				'label' => __(self::ENVIRONMENT_QA)
+			];
+		}
+		$options[] =
 			[
 				'value' => self::ENVIRONMENT_CERT,
 				'label' => __(self::ENVIRONMENT_CERT)
-			],
-			[
-				'value' => self::ENVIRONMENT_PROD,
-				'label' => __(self::ENVIRONMENT_PROD)
-			],
+			];
+		$options[] = [
+			'value' => self::ENVIRONMENT_PROD,
+			'label' => __(self::ENVIRONMENT_PROD)
 		];
+		return $options;
 	}
 }

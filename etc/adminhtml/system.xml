@@ -18,7 +18,11 @@
 						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 						<config_path>payment/fiserv_commercehub/active</config_path>
 					</field>
-					<field id="merchant_id" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <field id="developer_mode_active" translate="label" type="select" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <config_path>payment/fiserv_commercehub/developer_mode_active</config_path>
+                    </field>
+                    <field id="merchant_id" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Merchant ID</label>
 						<backend_model>Fiserv\Payments\Model\System\Config\Backend\CommerceHub\Encrypted</backend_model>
 						<config_path>payment/fiserv_commercehub/merchant_id</config_path>

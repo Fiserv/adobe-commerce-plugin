@@ -7,6 +7,7 @@
 		<payment>
 			<fiserv_commercehub>
 				<active>1</active>
+                <developer_mode_active>1</developer_mode_active> <!-- Enable Developer Mode to include QA -->
 				<three_d_secure>0</three_d_secure>
 				<payment_active>1</payment_active>
 				<title>Credit/Debit Card</title>
@@ -18,10 +19,12 @@
 				<prod_api_service><![CDATA[https://connect.fiservapis.com/ch/]]></prod_api_service>
 				<cert_api_service><![CDATA[https://connect-cert.fiservapis.com/ch/]]></cert_api_service>
 				<qa_api_service><![CDATA[https://connect-qa.fiservapis.com/ch/]]></qa_api_service>
-				<prod_client_url><![CDATA[https://prod.api.fiservapps.com/ch/sdk/v1/commercehub-client-sdk.js]]></prod_client_url>
+                <dev_api_service><![CDATA[https://connect-dev.fiservapis.com/ch/]]></dev_api_service>
+                <prod_client_url><![CDATA[https://prod.api.fiservapps.com/ch/sdk/v1/commercehub-client-sdk.js]]></prod_client_url>
 				<cert_client_url><![CDATA[https://cert.api.fiservapps.com/ch/sdk/v1/commercehub-client-sdk.js]]></cert_client_url>
 				<qa_client_url><![CDATA[https://qa.api.fiservapps.com/ch/sdk/v1/commercehub-client-sdk.js]]></qa_client_url>
-				<api_environment>CERT</api_environment>
+                <dev_client_url><![CDATA[https://dev.api.fiservapps.com/ch/sdk/v1/commercehub-client-sdk.js]]></dev_client_url>
+                <api_environment>CERT</api_environment>
 				<show_privacy_statement>1</show_privacy_statement>
 				<payment_action>AUTH</payment_action>
 				<cc_types>AE,VI,MC,DI,JCB,DN</cc_types>

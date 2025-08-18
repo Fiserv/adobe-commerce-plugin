@@ -9,4 +9,10 @@
 			</argument>
 		</arguments>
 	</type>
+
+    <type name="Fiserv\Payments\Model\Source\CommerceHub\ApiEnvironment">
+        <arguments>
+            <argument name="devMode" xsi:type="object">Fiserv\Payments\Helper\DevMode</argument>
+        </arguments>
+    </type>
 </config>
