@@ -139,14 +139,6 @@ define([
 		},
 
 		/**
-		 * Show Privacy statement
-		 */
-		showPrivacyStatement: function() 
-		{
-			return window.checkoutConfig.payment[this.getCode()].show_privacy_statement;
-		},
-
-		/**
 		 * Get payment name
 		 *
 		 * @returns {String}
