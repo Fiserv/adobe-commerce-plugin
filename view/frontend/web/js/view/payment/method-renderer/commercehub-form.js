@@ -201,7 +201,7 @@ define(
 					if (selected === self.getCode()) {
 						self.loadIframe();	
 					} else {
-						this.cardBrandChangeHandler(null);
+						//this.cardBrandChangeHandler(null);
 						chAdapter.destroyIframe();
 					}
 				});

@@ -14,7 +14,7 @@ define(
         priceUtils,
     ) {
         'use strict';
-		
+
 		function getBillingAddress()
 		{
 			let addr = {
@@ -50,26 +50,44 @@ define(
 			};
 		}
 
-		function getAmount()
-		{
-			let grandTotal = quote.totals() ? quote.totals().grand_total : 0;
-			let currency = quote.totals() ? quote.totals().quote_currency_code : "USD";
-			return {
-				"total" : grandTotal,
-				"currency" : currency
-			};
-		}
+        function getOrderData() {
+            const items = quote.getItems().map(item => {
+                console.log('[ApplePay] Quote Item:', item); //  Logs full item object
+
+                console.log('[ApplePay] Item Fields:');
+                console.log('  Name:', item.name);
+                console.log('  SKU:', item.sku);
+                console.log('  Quantity:', item.qty);
+                console.log('  Base Price:', item.base_price);
+                console.log('  Base Tax Amount:', item.base_tax_amount);
+
+
+                return {
+                    name: item.name,
+                    sku: item.sku,
+                    quantity: item.qty,
+                    amountComponents: {
+                        unitPrice: parseFloat(item.base_price),
+                        shippingAmount: 5.00,
+                        taxAmounts: [
+                            {
+                                taxAmount: parseFloat(item.base_tax_amount)
+                            }
+                        ]
+                    }
+                };
+            });
+            return {itemDetails: items};
+        }
 
 		function buildPayload()
 		{
-			let amount = getAmount();
-			let customer = getCustomer();
-			let billingAddress = getBillingAddress();
 			return {
-				"amount" : amount,
-				"customer" : customer,
-				"billingAddress" : billingAddress
-			};
+                customer: getCustomer(),
+                billingAddress: getBillingAddress(),
+                orderData: getOrderData()
+            }
+
 		}
 
         return async function (params) {

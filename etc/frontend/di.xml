@@ -5,6 +5,7 @@
 			<argument name="configProviders" xsi:type="array">
 				<item name="fiserv_payments_config_provider" xsi:type="object">Fiserv\Payments\Model\Config\ConfigProvider</item>
 				<item name="fiserv_commercehub_config_provider" xsi:type="object">Fiserv\Payments\Model\Config\CommerceHub\ConfigProvider</item>
+                <item name="fiserv_applepay" xsi:type="object">Fiserv\Payments\Model\Config\ApplePay\ConfigProvider</item>
 			</argument>
 		</arguments>
 	</type>

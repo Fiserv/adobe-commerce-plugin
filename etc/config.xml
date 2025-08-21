@@ -266,11 +266,45 @@
                 <paypalfastlane_title>Paypal Fastlane</paypalfastlane_title>
             </fiserv_paypalfastlane>
 
-            <applepay>  <!--ApplePay-->
-                <applepay_isPaymentActive>1</applepay_isPaymentActive>
-                <applepay_payment_action>AUTH</applepay_payment_action>
-                <applepay_title>Apple Pay</applepay_title>
-            </applepay>
+            <fiserv_applepay>
+                <active>1</active>
+                <payment_active>1</payment_active>
+                <title>Apple Pay</title>
+                <model>Fiserv\Payments\Model\Payment\ApplePay</model>
+                <!-- Encrypted backend models for sensitive information -->
+                <merchant_id backend_model="Fiserv\Payments\Model\System\Config\Backend\CommerceHub\Encrypted"/>
+                <terminal_id backend_model="Fiserv\Payments\Model\System\Config\Backend\CommerceHub\Encrypted"/>
+                <api_key backend_model="Fiserv\Payments\Model\System\Config\Backend\CommerceHub\Encrypted"/>
+                <api_secret backend_model="Fiserv\Payments\Model\System\Config\Backend\CommerceHub\Encrypted"/>
+                <!-- API Services URLs -->
+                <prod_api_service><![CDATA[https://connect.fiservapis.com/ch/]]></prod_api_service>
+                <cert_api_service><![CDATA[https://connect-cert.fiservapis.com/ch/]]></cert_api_service>
+                <qa_api_service><![CDATA[https://connect-qa.fiservapis.com/ch/]]></qa_api_service>
+                <!-- Client URL -->
+                <prod_client_url><![CDATA[https://prod.api.fiservapps.com/ch/sdk/v1/commercehub-client-sdk.js]]></prod_client_url>
+                <cert_client_url><![CDATA[https://cert.api.fiservapps.com/ch/sdk/v1/commercehub-client-sdk.js]]></cert_client_url>
+                <qa_client_url><![CDATA[https://qa.api.fiservapis.com/ch/sdk/v1/commercehub-client-sdk.js]]></qa_client_url>
+                <api_environment>CERT</api_environment>
+                <show_privacy_statement>1</show_privacy_statement>
+                <payment_action>AUTH</payment_action>
+                <debug>1</debug>
+                <logging_level>2</logging_level>
+                <currency>USD</currency>
+                <allowspecific>1</allowspecific>
+                <specificcountry>US</specificcountry>
+                <is_gateway>1</is_gateway>
+                <can_use_internal>1</can_use_internal>
+                <can_use_checkout>1</can_use_checkout>
+                <can_authorize>1</can_authorize>
+                <can_capture>1</can_capture>
+                <can_capture_partial>1</can_capture_partial>
+                <can_refund>1</can_refund>
+                <can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
+                <can_void>1</can_void>
+                <order_status>pending</order_status>
+                <group>fiserv_group</group>
+                <merchant_integrator></merchant_integrator>
+            </fiserv_applepay>
         </payment>
 	</default>
 </config>

@@ -241,24 +241,24 @@
                         <config_path>payment/fiserv_paypalfastlane/payment_action</config_path>
                     </field>
                 </group>
-                <group id="applepay" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="8">
+                <group id="fiserv_applepay" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="8">
                     <label>Apple Pay</label>
                     <attribute type="expanded">0</attribute>
                     <frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
-                    <field id="applepay_isPaymentActive" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <field id="active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
                         <label>Enable Apple Pay</label>
                         <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                        <config_path>payment/applepay/isPaymentActive</config_path>
+                        <config_path>payment/fiserv_applepay/active</config_path>
                         <comment>Choose Yes to enable Apple Pay as a payment method. No to disable.</comment>
                     </field>
                     <field id="applepay_title" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
                         <label>Payment Method Title</label>
-                        <config_path>payment/applepay/title</config_path>
+                        <config_path>payment/fiserv_applepay/title</config_path>
                     </field>
                     <field id="applepay_payment_action" translate="label" type="select" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
                         <label>Charge Type</label>
                         <source_model>Fiserv\Payments\Model\Source\CommerceHub\TransactionType</source_model>
-                        <config_path>payment/applepay/payment_action</config_path>
+                        <config_path>payment/fiserv_applepay/payment_action</config_path>
                     </field>
                 </group>
                 <group id="sdc_custom" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="17">

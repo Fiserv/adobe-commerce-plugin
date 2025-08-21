@@ -57,7 +57,7 @@ class ConfigProvider implements ConfigProviderInterface
 	/**
 	 * @var SessionManagerInterface
 	 */
-	private $session;
+	protected $session;
 
 	/**
 	 * Constructor

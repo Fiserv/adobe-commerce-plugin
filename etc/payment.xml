@@ -10,5 +10,8 @@
 		<method name="fiserv_commercehub">
 			<allow_multiple_address>1</allow_multiple_address>
 		</method>
-	</methods>
+        <method name="fiserv_applepay">
+            <allow_multiple_address>1</allow_multiple_address>
+        </method>
+    </methods>
 </payment>

@@ -1,75 +1,73 @@
 <?php
-
 namespace Fiserv\Payments\Gateway\Config\ApplePay;
 
-use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Framework\Serialize\Serializer\Json;
+use Fiserv\Payments\Gateway\Config\CommerceHub\Config as CommerceHubConfig;
 
 /**
- * Class Config
+ * Apple Pay Config class extending CommerceHub config
  */
-class Config extends \Magento\Payment\Gateway\Config\Config
+class Config extends CommerceHubConfig
 {
-	// Constants for Apple Pay configuration keys
-	const KEY_ACTIVE = 'applepay_active';
-	const KEY_PAYMENT_ACTION = 'applepay_payment_action';
+	const CODE = 'fiserv_commercehub';
+
+	const KEY_ACTIVE = 'active';
 	const KEY_TITLE = 'applepay_title';
+	const KEY_PAYMENT_ACTION = 'applepay_payment_action';
 
 	/**
-	 * @var \Magento\Framework\Serialize\Serializer\Json
-	 */
-	private $serializer;
-
-	/**
-	 * ApplePay Config constructor
+	 * Constructor
 	 *
-	 * @param ScopeConfigInterface $scopeConfig
-	 * @param null|string $methodCode
-	 * @param string $pathPattern
-	 * @param Json|null $serializer
+	 * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
+	 * @param \Magento\Framework\Serialize\Serializer\Json|null $serializer
 	 */
 	public function __construct(
-		ScopeConfigInterface $scopeConfig,
-		$methodCode = null,
-		$pathPattern = self::DEFAULT_PATH_PATTERN,
-		Json $serializer = null
+		\Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
+		\Magento\Framework\Serialize\Serializer\Json $serializer = null
 	) {
-		parent::__construct($scopeConfig, $methodCode, $pathPattern);
-		$this->serializer = $serializer ?: \Magento\Framework\App\ObjectManager::getInstance()->get(Json::class);
+		parent::__construct($scopeConfig, self::CODE, self::DEFAULT_PATH_PATTERN);
 	}
 
 	/**
-	 * Gets Apple Pay configuration status.
+	 * Is Apple Pay active
 	 *
 	 * @param int|null $storeId
 	 * @return bool
 	 */
-	public function isApplePayActive($storeId = null)
+	public function isActive($storeId = null): bool
 	{
 		return (bool) $this->getValue(self::KEY_ACTIVE, $storeId);
 	}
 
 	/**
-	 * Gets value of Apple Pay payment action.
-	 *
-	 * Possible values: Sale or Authorize.
+	 * Get Apple Pay title
 	 *
 	 * @param int|null $storeId
 	 * @return string
 	 */
-	public function getApplePayPaymentAction($storeId = null)
+	public function getTitle($storeId = null): string
 	{
-		return $this->getValue(self::KEY_PAYMENT_ACTION, $storeId);
+		return (string) $this->getValue(self::KEY_TITLE, $storeId);
 	}
 
 	/**
-	 * Retrieve title for Apple Pay section
+	 * Get Apple Pay payment action
 	 *
 	 * @param int|null $storeId
-	 * @return array
+	 * @return string
 	 */
-	public function getApplePayTitle($storeId = null)
+	public function getPaymentAction($storeId = null): string
 	{
-		return $this->getValue(self::KEY_TITLE, $storeId);
+		return (string) $this->getValue(self::KEY_PAYMENT_ACTION, $storeId);
+	}
+
+	/**
+	 * Get API environment (delegated to CommerceHub)
+	 *
+	 * @param int|null $storeId
+	 * @return string
+	 */
+	public function getEnvironment($storeId = null): string
+	{
+		return $this->getApiEnvironment($storeId);
 	}
 }
