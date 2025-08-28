@@ -4,23 +4,31 @@ namespace Fiserv\Payments\Logger;
 use Monolog\Formatter\LineFormatter;
 use DateTime;
 use DateTimeZone;
+use Monolog\LogRecord;
+use Monolog\Formatter\NormalizerFormatter;
 
 class CustomDateTimeFormatter extends LineFormatter
 {
-	protected $logFormat = "[%datetime% %extra.timezone%] %channel%.%level_name%: %message% %context% %extra%\n";
-
-	protected $dateFormat = "Y-m-d\TH:i:s.uP";
+	protected ?string $logFormat = "[%datetime% %extra.timezone%] %channel%.%level_name%: %message% %context% %extra%\n";
 
 	public function __construct()
 	{
-		parent::__construct($this->logFormat, $this->dateFormat, true, true, true);
+		parent::__construct($this->logFormat, NormalizerFormatter::SIMPLE_DATE, true, true, true);
 	}
 
-	public function format(array $record): string
+	public function format(array|LogRecord $record): string
 	{
-		$datetime = $record['datetime'];
-		$timezone = $datetime->getTimezone()->getName();
-		$record['extra']['timezone'] = $timezone;
+		if (is_array($record))
+		{
+			$datetime = $record['datetime'];
+			$timezone = $datetime->getTimezone()->getName();
+			$record['extra']['timezone'] = $timezone;
+		} else
+		{
+			$datetime = $record->datetime;
+			$timezone = $datetime->getTimezone()->getName();
+			$record->extra['timezone'] = $timezone;
+		}
 
 		return parent::format($record);
 	}
