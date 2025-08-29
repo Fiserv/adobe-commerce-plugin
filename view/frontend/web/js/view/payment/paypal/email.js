@@ -43,7 +43,7 @@ define([
 
 			const paypal = await window.fiserv.components.paypal();
 
-			const fastlane = await paypal.fastlane({metadata: { geoLocOverride: "US" }});
+			const fastlane = await paypal.fastlane();
 
 			return this;
 		}
