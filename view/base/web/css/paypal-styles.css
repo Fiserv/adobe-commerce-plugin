@@ -1,0 +1,39 @@
+.payment-method {
+    margin: 10px 0;
+    padding: 15px;
+    border: 1px solid #e0e0e0;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.payment-method-title {
+    font-size: 1em;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.payment-method-content {
+    padding: 10px;
+}
+
+#paypal-button-container {
+    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+}
+#venmo-button-container {
+    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+}
+
+.privacyPolicy {
+    font-size: 0.9em;
+    color: #555;
+    margin-top: 10px;
+    text-align: center;
+}
+
+.checkout-payment-method .payment-method + .payment-method .payment-method-title{
+    border-top: 0px;
+}

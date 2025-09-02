@@ -98,7 +98,7 @@
 						<config_path>payment/fiserv_commercehub/isPaymentActive</config_path>
 						<comment>Choose Yes to enable Credit and Debit as a payment method via Fiserv or leave No to disable.</comment>
 					</field>
-					<field id="payment_action" translate="label" type="select" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="payment_action" translate="label" type="select" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Charge Type</label>
 						<source_model>Fiserv\Payments\Model\Source\CommerceHub\TransactionType</source_model>
 						<config_path>payment/fiserv_commercehub/payment_action</config_path>
@@ -986,14 +986,77 @@
 						</group>
 					</group>
 				</group>
-				<group id="ch_paypal" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="8">
+				<group id="fiserv_paypal" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="8">
 					<label>PayPal</label>
 					<attribute type="expanded">0</attribute>
 					<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
-					<field id="ch_paypal_fastlane" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
-						<label>Enable PayPal Fastlane</label>
+					<field id="enabled" translate="label" type="select" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Enable PayPal</label>
 						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-						<config_path>payment/ch_paypal/ch_paypal_fastlane</config_path>
+						<config_path>payment/fiserv_paypal/active</config_path>
+					</field>
+					<field id="paypal_enable_vaulting" translate="label" type="select" sortOrder="99" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Enable PayPal Vaulting</label>
+						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+						<config_path>payment/fiserv_commercehub/paypal_enable_vaulting</config_path>
+						<comment>Allow customers to save PayPal payment method for future use.</comment>
+					</field>
+					<field id="fiserv_paypal_venmo" translate="label" type="select" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Enable PayPal Venmo</label>
+						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+						<config_path>payment/fiserv_paypal/fiserv_paypal_venmo</config_path>
+					</field>
+					<field id="fiserv_paypal_fastlane" translate="label" type="select" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Enable PayPal FastLane</label>
+						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+						<config_path>payment/fiserv_paypal/fiserv_paypal_fastlane</config_path>
+					</field>
+					<field id="show_privacy_statement" translate="label" type="select" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Show Privacy Statement</label>
+						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+						<config_path>payment/fiserv_paypal/show_privacy_statement</config_path>
+					</field>
+					<field id="api_environment" translate="label" type="select" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>API Environment</label>
+						<source_model>Fiserv\Payments\Model\Source\CommerceHub\ApiEnvironment</source_model>
+						<config_path>payment/fiserv_paypal/api_environment</config_path>
+					</field>
+					<field id="payment_action" translate="label" type="select" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Charge Type</label>
+						<source_model>Fiserv\Payments\Model\Source\PayPal\TransactionType</source_model>
+						<config_path>payment/fiserv_paypal/payment_action</config_path>
+					</field>
+
+					<!-- PayPal Button Style Fields -->
+					<field id="paypal_button_color" translate="label" type="select" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>PayPal Button Color</label>
+						<comment>Set the color for the PayPal button (e.g., gold, blue, silver, black).</comment>
+						<source_model>Fiserv\Payments\Model\Source\ButtonColor</source_model>
+						<config_path>payment/fiserv_paypal/paypal_button_color</config_path>
+					</field>
+					<field id="paypal_button_shape" translate="label" type="select" sortOrder="101" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>PayPal Button Shape</label>
+						<comment>Set the shape for the PayPal button (e.g., rect, pill).</comment>
+						<source_model>Fiserv\Payments\Model\Source\ButtonShape</source_model>
+						<config_path>payment/fiserv_paypal/paypal_button_shape</config_path>
+					</field>
+					<field id="paypal_button_label" translate="label" type="select" sortOrder="102" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>PayPal Button Label</label>
+						<comment>Set the label for the PayPal button (e.g., paypal, checkout, pay, buynow).</comment>
+						<source_model>Fiserv\Payments\Model\Source\ButtonLabel</source_model>
+						<config_path>payment/fiserv_paypal/paypal_button_label</config_path>
+					</field>
+
+					<!-- Venmo Button Style Fields -->
+					<field id="venmo_button_color" translate="label" type="select" sortOrder="120" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Venmo Button Color</label>
+						<source_model>Fiserv\Payments\Model\Source\ButtonColor</source_model>
+						<config_path>payment/fiserv_paypal/venmo_button_color</config_path>
+					</field>
+					<field id="venmo_button_shape" translate="label" type="select" sortOrder="121" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Venmo Button Shape</label>
+						<source_model>Fiserv\Payments\Model\Source\ButtonShape</source_model>
+						<config_path>payment/fiserv_paypal/venmo_button_shape</config_path>
 					</field>
 				</group>
 			</group>

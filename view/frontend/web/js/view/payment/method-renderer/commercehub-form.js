@@ -201,9 +201,10 @@ define(
 				$(self.paymentMethodName).on("click", function() {
 					let selected = $(this).attr("id");
 					if (selected === self.getCode()) {
-						self.loadIframe();	
+						self.loadIframe();  
 					} else {
-						this.cardBrandChangeHandler(null);
+						self.cardBrandChangeHandler(null);
+						// this.cardBrandChangeHandler(null);
 						chAdapter.destroyIframe();
 					}
 				});

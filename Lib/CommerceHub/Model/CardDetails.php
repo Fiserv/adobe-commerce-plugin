@@ -102,7 +102,7 @@ class CardDetails implements ModelInterface, ArrayAccess, \JsonSerializable
         'account_fund_source_subtype' => 'string',
         'b2b_program_id' => 'string',
         'money_send_indicator' => 'string',
-        'client_id' => 'string',
+        
         'debit_pinless_indicator' => '\Fiserv\Payments\Lib\CommerceHub\Model\DebitNetworkPinlessDetails[]'
     ];
 
@@ -158,7 +158,7 @@ class CardDetails implements ModelInterface, ArrayAccess, \JsonSerializable
         'account_fund_source_subtype' => null,
         'b2b_program_id' => null,
         'money_send_indicator' => null,
-        'client_id' => null,
+        
         'debit_pinless_indicator' => null
     ];
 
@@ -212,7 +212,7 @@ class CardDetails implements ModelInterface, ArrayAccess, \JsonSerializable
         'account_fund_source_subtype' => false,
         'b2b_program_id' => false,
         'money_send_indicator' => false,
-        'client_id' => false,
+        
         'debit_pinless_indicator' => false
     ];
 
@@ -346,7 +346,7 @@ class CardDetails implements ModelInterface, ArrayAccess, \JsonSerializable
         'account_fund_source_subtype' => 'accountFundSourceSubtype',
         'b2b_program_id' => 'b2bProgramId',
         'money_send_indicator' => 'moneySendIndicator',
-        'client_id' => 'clientId',
+        
         'debit_pinless_indicator' => 'debitPinlessIndicator'
     ];
 
@@ -400,7 +400,7 @@ class CardDetails implements ModelInterface, ArrayAccess, \JsonSerializable
         'account_fund_source_subtype' => 'setAccountFundSourceSubtype',
         'b2b_program_id' => 'setB2bProgramId',
         'money_send_indicator' => 'setMoneySendIndicator',
-        'client_id' => 'setClientId',
+        
         'debit_pinless_indicator' => 'setDebitPinlessIndicator'
     ];
 
@@ -454,7 +454,7 @@ class CardDetails implements ModelInterface, ArrayAccess, \JsonSerializable
         'account_fund_source_subtype' => 'getAccountFundSourceSubtype',
         'b2b_program_id' => 'getB2bProgramId',
         'money_send_indicator' => 'getMoneySendIndicator',
-        'client_id' => 'getClientId',
+        
         'debit_pinless_indicator' => 'getDebitPinlessIndicator'
     ];
 
@@ -559,7 +559,7 @@ class CardDetails implements ModelInterface, ArrayAccess, \JsonSerializable
         $this->setIfExists('account_fund_source_subtype', $data ?? [], null);
         $this->setIfExists('b2b_program_id', $data ?? [], null);
         $this->setIfExists('money_send_indicator', $data ?? [], null);
-        $this->setIfExists('client_id', $data ?? [], null);
+        
         $this->setIfExists('debit_pinless_indicator', $data ?? [], null);
     }
 
@@ -764,10 +764,6 @@ class CardDetails implements ModelInterface, ArrayAccess, \JsonSerializable
 
         if (!is_null($this->container['money_send_indicator']) && (mb_strlen($this->container['money_send_indicator']) > 25)) {
             $invalidProperties[] = "invalid value for 'money_send_indicator', the character length must be smaller than or equal to 25.";
-        }
-
-        if (!is_null($this->container['client_id']) && (mb_strlen($this->container['client_id']) > 64)) {
-            $invalidProperties[] = "invalid value for 'client_id', the character length must be smaller than or equal to 64.";
         }
 
         return $invalidProperties;
@@ -2149,36 +2145,7 @@ class CardDetails implements ModelInterface, ArrayAccess, \JsonSerializable
         return $this;
     }
 
-    /**
-     * Gets client_id
-     *
-     * @return string|null
-     */
-    public function getClientId()
-    {
-        return $this->container['client_id'];
-    }
-
-    /**
-     * Sets client_id
-     *
-     * @param string|null $client_id Intermediate field which categorizes BIN records as client ownership, with restricted availability to that client like PLCC private label.
-     *
-     * @return self
-     */
-    public function setClientId($client_id)
-    {
-        if (is_null($client_id)) {
-            throw new \InvalidArgumentException('non-nullable client_id cannot be null');
-        }
-        if ((mb_strlen($client_id) > 64)) {
-            throw new \InvalidArgumentException('invalid length for $client_id when calling CardDetails., must be smaller than or equal to 64.');
-        }
-
-        $this->container['client_id'] = $client_id;
-
-        return $this;
-    }
+    
 
     /**
      * Gets debit_pinless_indicator

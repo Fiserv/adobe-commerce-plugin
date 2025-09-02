@@ -9,4 +9,11 @@
 			</argument>
 		</arguments>
 	</type>
+	<type name="Magento\Payment\Model\CompositeConfigProvider">
+		<arguments>
+			<argument name="configProviders" xsi:type="array">
+				<item name="fiserv_paypal" xsi:type="const">Fiserv\Payments\Model\Config\PayPal\ConfigProvider::CODE</item>
+			</argument>
+		</arguments>
+	</type>
 </config>

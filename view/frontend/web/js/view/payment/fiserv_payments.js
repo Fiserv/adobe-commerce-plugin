@@ -12,7 +12,7 @@ define(
         let config = window.checkoutConfig.payment;
         let ch = 'fiserv_commercehub';
         
-        if (config[ch].isActive) {
+        if (config[ch] && config[ch].isActive) {
             rendererList.push(
                 {
                     type: ch,
