@@ -5,15 +5,11 @@ namespace Fiserv\Payments\Model;
 use PayPal\Braintree\Gateway\Data\Order\OrderAdapter;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 use Magento\Sales\Model\Order;
-<<<<<<< HEAD
 use Magento\Sales\Api\OrderRepositoryInterface;
-=======
->>>>>>> 4a2fffb (MCH-18620 - 2.4.8-p1 invoice creation bug)
  
-class CustomOrderAdapter
+class OrderAdapterFix
 {
     protected $logger;
-<<<<<<< HEAD
     private OrderRepositoryInterface $orderRepository;
 
     public function __construct(
@@ -22,20 +18,6 @@ class CustomOrderAdapter
     ) {
         $this->logger = $logger;
         $this->orderRepository = $orderRepository;
-=======
-     /**
-     * @var Order
-     */
-    private Order $order;
-
-
-    public function __construct(
-        MultiLevelLogger $logger,
-        Order $order
-    ) {
-        $this->logger = $logger;
-        $this->order = $order;
->>>>>>> 4a2fffb (MCH-18620 - 2.4.8-p1 invoice creation bug)
     }
 
     /**
@@ -45,12 +27,11 @@ class CustomOrderAdapter
      * @param callable $proceed
      * @return float
      */
-<<<<<<< HEAD
     public function aroundGetGrandTotalAmount(OrderAdapter $subject, callable $proceed):?float
     {
         try {
-            $result = $proceed();
-                return $result;
+			$result = $proceed();
+			return $result;
 
         } catch (\TypeError $e) {
             $order = $this->getOrderFromSubject($subject);
@@ -94,21 +75,3 @@ class CustomOrderAdapter
         return null;
     }
 }
-=======
-    public function aroundGetGrandTotalAmount(OrderAdapter $subject, callable $proceed): float
-    {
-        try {
-            $result = $proceed();
-
-            // Ensure the result is a float
-            return is_numeric($result) ? (float)$result : 0.0;
-        } catch (\Throwable $e) {
-            // Only log in development environment
-            $orderId = $this->order->getId();
-            return floatval($this->order->getBaseGrandTotal()); // Fallback value
-                $this->logger->logDebug(3, "Error retrieving order grand total amount in OrderAdapter.", "Order ID: $orderId");
-        }
-    }
-}
- 
->>>>>>> 4a2fffb (MCH-18620 - 2.4.8-p1 invoice creation bug)
