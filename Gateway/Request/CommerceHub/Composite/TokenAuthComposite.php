@@ -16,6 +16,8 @@ use Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder;
 use Magento\Framework\ObjectManager\TMapFactory;
 use Fiserv\Payments\Logger\MultiLevelLogger;
+use Fiserv\Payments\Gateway\Config\CommerceHub\Config;
+use Fiserv\Payments\Gateway\Request\CommerceHub\ThreeDSecureDataBuilder;
 
 /**
  * Class TokenAuthComposite
@@ -28,16 +30,23 @@ class TokenAuthComposite extends ChCompositeBase
 	 * @var MultiLevelLogger
 	 */
 	private $logger;
-
+	
+	private $chConfig;
+	
 	/**
 	 * @param MultiLevelLogger $logger
 	 * @param TMapFactory $tmapFactory
 	 * @param array $builders
 	 */
-	public function __construct(MultiLevelLogger $logger, TMapFactory $tmapFactory, array $builders = [])
+	public function __construct(
+		MultiLevelLogger $logger, 
+		TMapFactory $tmapFactory, 
+		Config $chConfig,
+		array $builders = [])
 	{
 		parent::__construct($tmapFactory, $builders);
 		$this->logger = $logger;
+		$this->chConfig = $chConfig;
 	}
 
 	/**
@@ -62,6 +71,12 @@ class TokenAuthComposite extends ChCompositeBase
 		$req->setMerchantDetails($result[MerchantDetailsDataBuilder::MERCHANT_DETAILS_KEY]);
 		$req->setBillingAddress($result[BillingAddressDataBuilder::BILLING_ADDRESS_KEY]);
 		$req->setCustomer($result[CustomerDataBuilder::CUSTOMER_KEY]);
+
+		// 3D Secure can be enabled but not run (e.g. admin panel order creation)
+		if ($this->chConfig->isThreeDSEnabled() && isset($result[ThreeDSecureDataBuilder::KEY_3DS_DATA]))
+		{
+			$req->setAdditionalData3Ds($result[ThreeDSecureDataBuilder::KEY_3DS_DATA]);
+		}
 
 		return [ 
 			self::REQUEST_KEY => $req,

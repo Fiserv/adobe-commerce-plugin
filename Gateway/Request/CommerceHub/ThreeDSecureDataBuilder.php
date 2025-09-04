@@ -61,7 +61,7 @@ class ThreeDSecureDataBuilder implements BuilderInterface
 
 		$threeDSecureData = new AdditionalData3DS();
 		$threeDSId = isset($data[DataAssignObserver::THREE_D_SECURE_KEY]) ? $data[DataAssignObserver::THREE_D_SECURE_KEY] : "";
-
+		
 		// 3D Secure data may not be available if transaction was run outside of customer flow (e.g. admin panel)
 		if ($threeDSId === "")
 		{
