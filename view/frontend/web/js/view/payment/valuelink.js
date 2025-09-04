@@ -83,14 +83,6 @@ define([
 		},
 
 		/**
-		 * Show Valuelink Privacy statement
-		 */
-		showValuelinkPrivacyStatement: function()
-		{
-			return valuelinkConfig.show_valuelink_privacy_statement;
-		},
-
-		/**
 		* Set gift card.
 		*/
 		setGiftCard: async function () {
