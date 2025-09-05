@@ -33,7 +33,7 @@
 				<currency>USD</currency>
 				<allowspecific>1</allowspecific>
 				<specificcountry>US</specificcountry>
-				<cc_types_ch_mapper><![CDATA[{"AMEX":"AE","DISCOVER":"DI","JCB":"JCB","MASTERCARD":"MC","VISA":"VI","DINERS":"DN"}]]></cc_types_ch_mapper>
+				<cc_types_ch_mapper><![CDATA[{"AMEX":"AE","DISCOVER":"DI","JCB":"JCB","MASTERCARD":"MC","VISA":"VI","DINERS":"DN","CUP":"UN"}]]></cc_types_ch_mapper>
 				<is_gateway>1</is_gateway>
 				<can_use_internal>1</can_use_internal>
 				<can_use_checkout>1</can_use_checkout>
