@@ -1,57 +1,22 @@
-<form class="visible MuiBox-root css-59we88" id="paypal-payment-form">
+<!-- ko if: (!isCustomerLoggedIn())-->
+
+<form id="paypal-payment-form">
 	<h1>Fiserv-PayPal Fastlane</h1>
-	<div class="rows MuiBox-root css-0">
+	<div class="rows">
 		<section id="customer" class="paypal-section">
 			<div class="header">
 				<h2> Customer</h2></div>
 			<div class="summary"></div>
-			<div class="columns MuiBox-root css-0">
-				<div class="rows MuiBox-root css-0">
-					<div class="field field-text MuiBox-root css-0" id="fiserv-email-input">
+			<div class="columns">
+				<div>
+					<div id="fiserv-email-input">
 						<input id="email-input" class="paypal-input" name="email" type="email" placeholder="Email" autocomplete="email" value="">
 					</div>
-					<div class="MuiBox-root css-0" id="fiserv-paypal-watermark-container"></div>
+					<div id="fiserv-paypal-watermark-container"></div>
 				</div>
-				<button class="MuiButtonBase-root MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeMedium MuiButton-containedSizeMedium MuiButton-colorPrimary Mui-disabled MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeMedium MuiButton-containedSizeMedium MuiButton-colorPrimary css-arq6o"
-					tabindex="-1" type="button" disabled="" id="email-submit-button">Continue</button>
-			</div>
-		</section>
-		<section id="consent" class="paypal-section">
-			<div class="header">
-				<h2> Consent Component</h2></div>
-			<div class="MuiBox-root css-0" id="consent-container"></div>
-		</section>
-		<section id="billing" class="paypal-section">
-			<div class="header">
-				<h2> Billing Address</h2></div>
-			<div class="summary"></div>
-			<div class="rows MuiBox-root css-0">
-				<div class="field field-text MuiBox-root css-0">
-					<input id="billing-first-name" class="paypal-input" name="billingFirstName" placeholder="First name">
-				</div>
-				<div class="field field-text MuiBox-root css-0">
-					<input id="billing-last-name" class="paypal-input" name="billingLastName" placeholder="Last name">
-				</div>
-				<div class="field field-text MuiBox-root css-0">
-					<input id="billing-street" class="paypal-input" name="billingStreet" placeholder="Street">
-				</div>
-				<div class="field field-text MuiBox-root css-0">
-					<input id="billing-house-number-or-name" class="paypal-input" name="billingHouseNumberOrName" placeholder="House Number or Name">
-				</div>
-				<div class="field field-text MuiBox-root css-0">
-					<input id="billing-city" class="paypal-input" name="billingCity" placeholder="City">
-				</div>
-				<div class="field field-text MuiBox-root css-0">
-					<input id="billing-state-or-province" class="paypal-input" name="billingStateOrProvince" placeholder="State/Province">
-				</div>
-				<div class="field field-text MuiBox-root css-0">
-					<input id="billing-postal-code" class="paypal-input" name="billingPostalCode" placeholder="Postal Code">
-				</div>
-				<div class="field field-text MuiBox-root css-0">
-					<select class="field field-text" id="billing-country"></select>
-				</div>
-				<div id="billing-watermark-container"></div>
+				<button type="button" id="email-submit-button">Continue</button>
 			</div>
 		</section>
 	</div>
 </form>
+<!--/ko-->
