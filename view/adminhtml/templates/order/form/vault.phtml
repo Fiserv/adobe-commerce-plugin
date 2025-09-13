@@ -15,14 +15,14 @@ $expYear = substr($details['expirationDate'], $expDelim + 1);
         "Fiserv_Payments/js/view/order/form/vault": {
             "container": "payment_<?= /* @noEscape */ $id ?>",
             "publicHash": "<?= $block->escapeHtml($block->getData(TokenUiComponentProviderInterface::COMPONENT_PUBLIC_HASH)) ?>",
-            "code": "<?= $code ?>",
+            "code": "<?= $block->escapeHtml($code) ?>",
 			"tokenUrl": "<?= $block->escapeUrl($block->getData('tokenUrl')) ?>"
         }
     }' id="payment_<?= /* @noEscape */ $id ?>" class="admin__field">
     <div class="admin__field-control control">
-		<input type="hidden" id="<?= /* @noEscape */ $code ?>_token_source" name="payment[token_source]" value="<?= $details["tokenSource"] ?>" />
-		<input type="hidden" id="<?= /* @noEscape */ $code ?>_expiration_month" name="payment[expiration_month]" value="<?= $expMonth ?>" />
-        <input type="hidden" id="<?= /* @noEscape */ $code ?>_expiration_year" name="payment[expiration_year]" value="<?= $expYear ?>" />
+		<input type="hidden" id="<?= /* @noEscape */ $code ?>_token_source" name="payment[token_source]" value="<?= $block->escapeHtml($details["tokenSource"]) ?>" />
+		<input type="hidden" id="<?= /* @noEscape */ $code ?>_expiration_month" name="payment[expiration_month]" value="<?= $block->escapeHtml($expMonth) ?>" />
+        <input type="hidden" id="<?= /* @noEscape */ $code ?>_expiration_year" name="payment[expiration_year]" value="<?= $block->escapeHtml($expYear) ?>" />
 		<input type="radio" id="token_switcher_<?= /* @noEscape */ $id ?>" name="payment[token_switcher]"/>
         <span><?= $block->escapeHtml(__('ending')) ?></span>
         <span><?= $block->escapeHtml(strtolower($details['maskedCC'])) ?></span>

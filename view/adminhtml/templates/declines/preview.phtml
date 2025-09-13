@@ -22,17 +22,17 @@ $allOrderState = $block->getAllOrderState();
                 <label for="exportOptions"></label>
                 <span style="display: flex;position: relative;">
                     <button id="exportDropdownButton" class="exportButton" style="background-color: transparent; border: none;">
-                    <img style="width: 14px; height: 14px;" src="<?php echo htmlspecialchars($this->getViewFileUrl('Fiserv_Payments::images/Export_Button.svg'), ENT_QUOTES, 'UTF-8'); ?>" alt="Export">
+                    <img style="width: 14px; height: 14px;" src="<?= $block->escapeHtml(htmlspecialchars($this->getViewFileUrl('Fiserv_Payments::images/Export_Button.svg'), ENT_QUOTES, 'UTF-8')); ?>" alt="Export">
                     Export
                     <span id="exportArrow" class="arrow-down">▼</span><span id="exportArrowUp" class="arrow-up" style="display: none;">▲</span>
                 </button>
                 <div id="exportDropdownMenu" class="dropdown-menu" style="display: none;">
                     <input type="radio" id="exportCsvOption" name="exportFormat" value="csv">
-                    <label for="exportCsvOption"><?php echo htmlspecialchars(__('CSV'), ENT_QUOTES, 'UTF-8'); ?></label><br>
+                    <label for="exportCsvOption"><?= $block->escapeHtml(htmlspecialchars(__('CSV'), ENT_QUOTES, 'UTF-8')); ?></label><br>
                     <input type="radio" id="exportXlsxOption" name="exportFormat" value="xls">
-                    <label for="exportXlsxOption"><?php echo htmlspecialchars(__('Excel XML'), ENT_QUOTES, 'UTF-8'); ?></label><br>
-                    <button id="cancelButton" style="font-size: 1rem; margin-top: 10px; background-color: #f1f1f1; padding: 5px 8px; margin-right: 10px;"><?php echo htmlspecialchars(__('Cancel'), ENT_QUOTES, 'UTF-8'); ?></button>
-                    <button id="exportButton" style="font-size: 1rem; margin-top: 10px; background-color: #f1f1f1; padding: 5px 8px;"><?php echo htmlspecialchars(__('Export'), ENT_QUOTES, 'UTF-8'); ?></button>
+                    <label for="exportXlsxOption"><?= $block->escapeHtml(htmlspecialchars(__('Excel XML'), ENT_QUOTES, 'UTF-8')); ?></label><br>
+                    <button id="cancelButton" style="font-size: 1rem; margin-top: 10px; background-color: #f1f1f1; padding: 5px 8px; margin-right: 10px;"><?= $block->escapeHtml(htmlspecialchars(__('Cancel'), ENT_QUOTES, 'UTF-8')); ?></button>
+                    <button id="exportButton" style="font-size: 1rem; margin-top: 10px; background-color: #f1f1f1; padding: 5px 8px;"><?= $block->escapeHtml(htmlspecialchars(__('Export'), ENT_QUOTES, 'UTF-8')); ?></button>
                 </div>
                 </span>
                 <!-- Export Button Implementation End -->
@@ -57,7 +57,7 @@ $allOrderState = $block->getAllOrderState();
 					<select id="approvalStatus">
 							<option value="">Select</option>
 						<?php foreach ($allApprovalStatus as $approvalStatus): ?>
-							<option value="<?php echo  $approvalStatus; ?>"><?php echo  $approvalStatus; ?></option>
+							<option value="<?= $block->escapeHtml($approvalStatus); ?>"><?= $block->escapeHtml($approvalStatus); ?></option>
 						<?php endforeach; ?>
 					</select>
 	            </div>
@@ -68,7 +68,7 @@ $allOrderState = $block->getAllOrderState();
 					<select id="orderState">
 							<option value="">Select</option>
 						<?php foreach ($allOrderState as $orderState): ?>
-							<option value="<?php echo  $orderState; ?>"><?php echo  $orderState; ?></option>
+							<option value="<?= $block->escapeHtml($orderState); ?>"><?= $block->escapeHtml($orderState); ?></option>
 						<?php endforeach; ?>
 					</select>
 	            </div>
@@ -88,44 +88,44 @@ $allOrderState = $block->getAllOrderState();
 	<table id="transactionsTable" class="data-table">
 		<thead>
 			<tr>
-				<th><?php echo __('Date/Time (UTC)'); ?></th>
-				<th><?php echo __('Order ID'); ?></th>
-				<th><?php echo __('Customer Name'); ?></th>
-                <th><?php echo __('Order State'); ?>
+				<th><?= $block->escapeHtml(__('Date/Time (UTC)')); ?></th>
+				<th><?= $block->escapeHtml(__('Order ID')); ?></th>
+				<th><?= $block->escapeHtml(__('Customer Name')); ?></th>
+                <th><?= $block->escapeHtml(__('Order State')); ?>
                     <span class="tooltip-icon">&#9432;<span class="tooltip-text">
                             <strong>PROCESSING</strong>: This order is in a non-complete state. See "Cause of Failure".<br><br>
                             <strong>FAILED</strong>: This order has failed to complete. See "Cause of Failure".</span>
                     </span>
                 </th>
-				<th><?php echo __('Order Amount'); ?></th>
-				<th><?php echo __('Cause of Failure'); ?></th>
-				<th><?php echo __('IP Address'); ?></th>
-				<th><?php echo __('Action'); ?></th>
+				<th><?= $block->escapeHtml(__('Order Amount')); ?></th>
+				<th><?= $block->escapeHtml(__('Cause of Failure')); ?></th>
+				<th><?= $block->escapeHtml(__('IP Address')); ?></th>
+				<th><?= $block->escapeHtml(__('Action')); ?></th>
 			</tr>
 		</thead>
 		<tbody id="tableBody">
 			<?php foreach ($orders as $order): ?>
 				<tr>
-					<td><?php echo isset($order['date_time']) ? $order['date_time'] : "N/A"; ?></td>
-					<td><?php echo isset($order['order_increment_id']) ? $order['order_increment_id'] : "N/A"; ?></td>
-					<td><?php echo isset($order['customer_name']) ? $order['customer_name'] : "N/A"; ?></td>
-					<td><?php echo isset($order['order_state']) ? strtoupper($order['order_state']) : "N/A"; ?></td>
-					<td><?php echo isset($order['grandTotal']) ? $order['grandTotal'] : "N/A"; ?></td>
-					<td><?php echo isset($order['approval_status']) ? $order['approval_status'] : "N/A"; ?></td>
-					<td><?php echo isset($order['remote_ip']) ? $order['remote_ip'] : "N/A"; ?></td>
+					<td><?= $block->escapeHtml(isset($order['date_time']) ? $order['date_time'] : "N/A"); ?></td>
+					<td><?= $block->escapeHtml(isset($order['order_increment_id']) ? $order['order_increment_id'] : "N/A"); ?></td>
+					<td><?= $block->escapeHtml(isset($order['customer_name']) ? $order['customer_name'] : "N/A"); ?></td>
+					<td><?= $block->escapeHtml(isset($order['order_state']) ? strtoupper($order['order_state']) : "N/A"); ?></td>
+					<td><?= $block->escapeHtml(isset($order['grandTotal']) ? $order['grandTotal'] : "N/A"); ?></td>
+					<td><?= $block->escapeHtml(isset($order['approval_status']) ? $order['approval_status'] : "N/A"); ?></td>
+					<td><?= $block->escapeHtml(isset($order['remote_ip']) ? $order['remote_ip'] : "N/A"); ?></td>
 					<td>
-						<a href="<?php echo isset($order['orderViewUrl']) ? $order['orderViewUrl'] : "`"; ?>">View</a>
+						<a href="<?= $block->escapeUrl(isset($order['orderViewUrl']) ? $order['orderViewUrl'] : "`"); ?>">View</a>
 					</td>
 				</tr>
 			<?php endforeach; ?>
 		</tbody>
 	</table>
 
-	<div id="noRecordsMessage" style="display: none;margin-bottom: 20%;"><?php echo __('No failed orders found!'); ?></div>
+	<div id="noRecordsMessage" style="display: none;margin-bottom: 20%;"><?= $block->escapeHtml(__('No failed orders found!')); ?></div>
 
-	<div id="paginationControls" data-totalPage="<?php echo $totalPages; ?>"></div>
+	<div id="paginationControls" data-totalPage="<?= $block->escapeHtml($totalPages); ?>"></div>
 <?php else: ?>
-	<div style="margin-bottom: 20%"><?php echo __('No failed orders found!'); ?></div>
+	<div style="margin-bottom: 20%"><?= $block->escapeHtml(__('No failed orders found!')); ?></div>
 <?php endif; ?>
 
 <script type="text/x-magento-init">

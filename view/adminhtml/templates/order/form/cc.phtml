@@ -2,7 +2,7 @@
 	/** @var \Fiserv\Payments\Block\CommerceHub\Form $block */
 	$code = $block->escapeHtml($block->getMethodCode());
 ?>
-<link rel="stylesheet" type="text/css" href="<?php echo $block->getViewFileUrl('Fiserv_Payments/css/ch-form-admin.css')?>">
+<link rel="stylesheet" type="text/css" href="<?= $block->escapeUrl($block->getViewFileUrl('Fiserv_Payments/css/ch-form-admin.css')); ?>">
 
 <fieldset class="admin__fieldset payment-method" id="payment_form_<?= /* @noEscape */ $code ?>"
 		style="display:none">
