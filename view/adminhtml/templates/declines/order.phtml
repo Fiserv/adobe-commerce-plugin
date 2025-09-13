@@ -270,7 +270,7 @@ function createDropdownOptions($values) {
     </table>
     <input type="hidden" id="transactionStateFilterValue" value="">
     <input type="hidden" id="approvalStatusFilterValue" value="">
-    <div id="paginationControls" data-totalPage="<?$block->escapeHtml($totalPages); ?>"></div>
+    <div id="paginationControls" data-totalPage="<?= $block->escapeHtml($totalPages); ?>"></div>
     <div id="noRecordsMessage" style="display:none;"><?= $block->escapeHtml(__('No records found')); ?></div>
 
     <script type="text/x-magento-init">
