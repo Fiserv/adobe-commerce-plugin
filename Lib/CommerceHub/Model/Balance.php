@@ -261,7 +261,7 @@ class Balance implements ModelInterface, ArrayAccess, \JsonSerializable
      * @param mixed[] $data Associated array of property values
      *                      initializing the model
      */
-    public function __construct(array $data = null)
+    public function __construct(?array $data = null)
     {
         $this->setIfExists('beginning_balance', $data ?? [], null);
         $this->setIfExists('ending_balance', $data ?? [], null);

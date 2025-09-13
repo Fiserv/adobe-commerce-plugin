@@ -284,7 +284,7 @@ class EmvDataKey implements ModelInterface, ArrayAccess, \JsonSerializable
      * @param mixed[] $data Associated array of property values
      *                      initializing the model
      */
-    public function __construct(array $data = null)
+    public function __construct(?array $data = null)
     {
         $this->setIfExists('expiry_date', $data ?? [], null);
         $this->setIfExists('certificate_authority_hash_algorithm_indicator', $data ?? [], null);

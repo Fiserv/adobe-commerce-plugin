@@ -248,7 +248,7 @@ class SecurityCredentialsRequest implements ModelInterface, ArrayAccess, \JsonSe
      * @param mixed[] $data Associated array of property values
      *                      initializing the model
      */
-    public function __construct(array $data = null)
+    public function __construct(?array $data = null)
     {
         $this->setIfExists('domains', $data ?? [], null);
         $this->setIfExists('merchant_details', $data ?? [], null);
