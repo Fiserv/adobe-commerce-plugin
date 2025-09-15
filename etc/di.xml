@@ -405,11 +405,17 @@
 		<plugin name="paymentCardInvoiceRegister" type="Fiserv\Payments\Model\Plugin\CommerceHub\InvoiceRegister" sortOrder="100"/>
 		<plugin name="valuelinkInvoiceRegister" type="Fiserv\Payments\Model\Plugin\Valuelink\InvoiceRegister" sortOrder="200"/>
 	</type>
-	<type name = "Magento\Sales\Model\Order\Payment">
-		<plugin name = "valueLinkPaymentPlace" type="Fiserv\Payments\Model\Plugin\Valuelink\PaymentPlace" />
+	<type name="Magento\Sales\Model\Order\Payment">
+		<plugin name="valueLinkPaymentPlace" type="Fiserv\Payments\Model\Plugin\Valuelink\PaymentPlace" />
 	</type>
-	<type name = "Magento\Quote\Model\Quote\TotalsReader">
-		<plugin name = "valueLinkTotalsReader" type="Fiserv\Payments\Model\Plugin\Valuelink\TotalsReader" />
+	<type name="Magento\Quote\Model\Quote\TotalsReader">
+		<plugin name="valueLinkTotalsReader" type="Fiserv\Payments\Model\Plugin\Valuelink\TotalsReader" />
+	</type>
+	<type name="Magento\Multishipping\Block\Checkout\Billing">
+		<plugin name="filterMultishipping" type="Fiserv\Payments\Model\Plugin\CommerceHub\FilterMultishipping" />
+	</type>
+	<type name='PayPal\Braintree\Gateway\Data\Order\OrderAdapter'>
+		<plugin name="fiservorderadapter" type="Fiserv\Payments\Model\OrderAdapterFix" />
 	</type>
 	<type name = "Magento\Multishipping\Block\Checkout\Billing">
 		<plugin name = "filterMultishipping" type="Fiserv\Payments\Model\Plugin\CommerceHub\FilterMultishipping" />

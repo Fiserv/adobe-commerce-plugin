@@ -61,14 +61,15 @@ define([
 			})
 				.done(async (response) => {
 					let paymentToken = response.paymentToken;
-					if (this.is3DSecureEnabled() && false)
+					if (this.is3DSecureEnabled())
 					{
 						try {
 							fullScreenLoader.startLoader();
 							await this.initChSdk(response.paymentToken);
 							await this.run3DSecure();
+							fullScreenLoader.stopLoader();
 						} catch (error) {
-							this.placeOrderFail(error);
+							this.threeDSecureFail(error);
 							return;
 						}
 					}
@@ -78,6 +79,11 @@ define([
 				.fail((response) => {
 					this.placeOrderFail(response);	
 				});
+		},
+
+		threeDSecureFail: function(error) {
+			fullScreenLoader.stopLoader();
+			this.placeOrderFail(error);
 		},
 
 		placeOrderFail: function (errorResponse) {
@@ -102,12 +108,16 @@ define([
 				"threeDSecure" : this.is3DSecureEnabled() 
 			});
 			let creds = credsResponse["ch_credentials"];
+			if (typeof(creds) === "undefined")
+			{
+				throw new Error("Failed to create payment session.");
+			}
 			await chAdapter.initSdk(window.checkoutConfig.payment[this.getCode()],creds);	
 		},
 
 		run3DSecure: async function() {
 			const {transactionState, authenticationTransactionId} = await window.fiserv.components.threeDSecure();
-			if (transactionState !== "AUTHENTICATED") {
+			if (transactionState.toUpperCase() === "DECLINED") {
 				throw new Error("3DS authentication failed");
 			}
 
@@ -115,7 +125,7 @@ define([
 		},
 
 		handle3DSecureAuth: function (threeDSId) {
-			this.additionalData["threeDSecureId"] = threeDSId;
+			this.additionalData["3DSecureId"] = threeDSId;
 		},
 
 		/**
@@ -136,14 +146,6 @@ define([
 			data['additional_data'] = _.extend(data['additional_data'], this.additionalData);
 
 			return data;
-		},
-
-		/**
-		 * Show Privacy statement
-		 */
-		showPrivacyStatement: function() 
-		{
-			return window.checkoutConfig.payment[this.getCode()].show_privacy_statement;
 		},
 
 		/**

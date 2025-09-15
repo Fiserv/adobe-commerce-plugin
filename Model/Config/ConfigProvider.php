@@ -28,7 +28,6 @@ class ConfigProvider implements ConfigProviderInterface
 	const FISERV_VALUELINK_KEY = "fiserv_valuelink";
 	const VALUELINK_TITLE_KEY = "valuelink_title";
 	const VALUELINK_FORM_CONFIG_KEY = "valuelinkConfig";
-	const VALUELINK_PRIVACY_STATEMENT_KEY = "show_valuelink_privacy_statement";
 
 	/**
 	 * @var Config
@@ -84,7 +83,6 @@ class ConfigProvider implements ConfigProviderInterface
 		if ($valuelinkData[self::IS_ACTIVE_KEY])
 		{
 			$valuelinkData[self::VALUELINK_FORM_CONFIG_KEY] = $this->buildValuelinkFormConfig(ValuelinkConfig::KEY_SDC_CHECKOUT, $storeId);
-			$valuelinkData[self::VALUELINK_PRIVACY_STATEMENT_KEY] = $this->valuelinkConfig->showPrivacyStatement($storeId);
 		}
 
 		return [

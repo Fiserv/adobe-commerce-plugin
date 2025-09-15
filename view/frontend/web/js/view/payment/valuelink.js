@@ -17,7 +17,7 @@ define([
 	'Magento_Checkout/js/model/error-processor',
 	'mage/validation'
 ], function ($, ko, Component, setGiftCardAction, totals, messageList, sdcv2, quote, priceUtils, fullScreenLoader, errorProcessor) {
-    'use strict';
+	'use strict';
 
 	let config = structuredClone(window.checkoutConfig.payment.fiserv_commercehub);
 	let valuelinkConfig = structuredClone(window.checkoutConfig.payment.fiserv_payments.fiserv_valuelink);
@@ -83,20 +83,10 @@ define([
 		},
 
 		/**
-		 * Show Valuelink Privacy statement
-		 */
-		showValuelinkPrivacyStatement: function()
-		{
-			return valuelinkConfig.show_valuelink_privacy_statement;
-		},
-
-		/**
 		* Set gift card.
 		*/
-		setGiftCard: function ()
-		{
-			if (!this.isFormValid)
-			{
+		setGiftCard: async function () {
+			if (!this.isFormValid) {
 				this.formValidHandler(false);
 				return;
 			}
@@ -104,28 +94,43 @@ define([
 			let balance = this.getBalanceInput().val();
 			let sessionId = this.getSessionIdInput().val();
 
-			if (!sessionId)
-			{
-				this.captureCardForm((sessionId) => { this.checkBalanceAndSetCardCb(sessionId); });
-				return;
+			try {
+				if (!sessionId) {
+					sessionId = await this.captureCardFormAsync();
+				}
+
+				if (!balance) {
+					balance = await this.checkBalanceCaptureCb(sessionId);
+					if (!balance) {
+						return;
+					}
+					this.getBalanceInput().val(balance); // Ensure input is updated
+				}
+
+				if (parseFloat(balance) === 0) {
+					this.showErrorMessage("Gift card has no balance.");
+					return;
+				}
+
+				setGiftCardAction(sessionId, balance);
+
+				sdcv2.resetIframe(this.formKey);
+				this.resetFormPanel();
+			} catch (error) {
+				console.error("Error setting gift card:", error);
+				this.showErrorMessage("An error occurred while processing the gift card.");
 			}
-
-			if (!balance)
-			{
-				this.checkBalanceAndSetCardCb(sessionId);
-				return;
-			}
-
-			if (parseFloat(balance) === 0)
-			{
-				this.showErrorMessage("Gift card has no balance.");
-				return;
-			}
-
-			setGiftCardAction(sessionId, balance);
-
-			sdcv2.resetIframe(this.formKey);
-			this.resetFormPanel();
+		},
+		captureCardFormAsync: function () {
+			return new Promise((resolve, reject) => {
+				this.captureCardForm((sessionId) => {
+					if (sessionId) {
+						resolve(sessionId);
+					} else {
+						reject(new Error("Failed to capture card form."));
+					}
+				});
+			});
 		},
 
 		showErrorMessage: function(message)
@@ -133,53 +138,47 @@ define([
 			messageList.clear();
 			messageList.addErrorMessage({ "message" : message });
 		},
-
+		
 		/**
 		* Check balance.
 		*/
-		checkBalance: function ()
+		checkBalance: async function ()
 		{
-			//if (this.validate()) {
-			//    getGiftCardAction.check(this.giftCartCode());
-			//}
-
-			this.captureCardForm((sessionId) => { this.checkBalanceCaptureCb(sessionId); });
-
+			this.captureCardForm(async (sessionId) => { await this.checkBalanceCaptureCb(sessionId); });
 		},
 
-		checkBalanceCaptureCb: function(sessionId)
-		{
-			this.cardCaptureSuccess(sessionId);
-			this.startIframeFlow();
-			this.getValuelinkBalance(
-				sessionId,
-				window.checkoutConfig.payment.fiserv_payments["storeUrl"],
-				(data) => { 
-					try {
-						this.balanceInquirySuccess(data);
-					} catch (err)
-					{
-						this.balanceInquiryFailure(err.message);
-					}},
-				(err) => { this.balanceInquiryFailure(err.responseJSON.message); });
+		/**
+		 * Check balance only (no recursive call to setGiftCard).
+		 * Returns the balance value if successful, otherwise null.
+		 */
+		async checkBalanceCaptureCb(sessionId) {
+			try {
+				this.cardCaptureSuccess(sessionId);
+				this.startIframeFlow();
+
+				const data = await this.getValuelinkBalanceAsync(sessionId, window.checkoutConfig.payment.fiserv_payments["storeUrl"]);
+
+				this.balanceInquirySuccess(data);
+				// Return the balance value
+				return data.valuelink_balance.endingBalance;
+			} catch (err) {
+				this.balanceInquiryFailure(err.responseJSON?.message || err.message);
+				return null;
+			}
 		},
 
-		checkBalanceAndSetCardCb: function(sessionId)
-		{
-			this.cardCaptureSuccess(sessionId);
-			this.startIframeFlow();
-			this.getValuelinkBalance(
-				sessionId,
-				window.checkoutConfig.payment.fiserv_payments["storeUrl"],
-				(data) => { 
-					try {
-						this.balanceInquirySuccess(data); 
-						this.setGiftCard();
-					} catch (err) {
-						this.balanceInquiryFailure(err);
-					}
-				},
-				(err) => { this.balanceInquiryFailure(err.responseJSON.message); });
+		/**
+		 * Get Valuelink balance asynchronously.
+		 */
+		getValuelinkBalanceAsync(sessionId, storeUrl) {
+			return new Promise((resolve, reject) => {
+				this.getValuelinkBalance(
+					sessionId,
+					storeUrl,
+					(data) => resolve(data),
+					(err) => reject(err)
+				);
+			});
 		},
 
 		balanceInquirySuccess: function(data)
@@ -507,5 +506,5 @@ define([
 			}
 		}
 
-    });
+	});
 });

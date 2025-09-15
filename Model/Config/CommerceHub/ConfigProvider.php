@@ -24,7 +24,6 @@ class ConfigProvider implements ConfigProviderInterface
 	const IS_ACTIVE_KEY = 'isActive';
 	const IS_PAYMENT_ACTIVE_KEY = 'isPaymentActive';
 	const MERCHANT_ID_KEY = 'merchantId';
-	const SHOW_PRIVACY_STATEMENT_KEY = "show_privacy_statement";
 	const API_KEY_KEY = 'apiKey';
 	const CC_MAPPER_KEY = 'ccTypesMapper';
 	const ENV_KEY = 'environment';
@@ -84,7 +83,6 @@ class ConfigProvider implements ConfigProviderInterface
 		$config = [
 			self::IS_ACTIVE_KEY => $this->config->isActive($storeId),
 			self::IS_PAYMENT_ACTIVE_KEY => $this->config->isPaymentActive($storeId),
-			self::SHOW_PRIVACY_STATEMENT_KEY => $this->config->showPrivacyStatement($storeId),
 			self::MERCHANT_ID_KEY => $this->config->getMerchantId($storeId),
 			self::API_KEY_KEY => $this->config->getApiKey(),
 			self::CC_MAPPER_KEY => $this->config->getCcTypesMapper(),

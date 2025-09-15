@@ -231,14 +231,6 @@ define(
 			},
 
 			/**
-			 * Show Privacy statement
-			 */
-			showPrivacyStatement: function() 
-			{
-				return window.checkoutConfig.payment[this.getCode()].show_privacy_statement;
-			},
-
-			/**
 			 * Returns vault code.
 			 *
 			 * @returns {String}
