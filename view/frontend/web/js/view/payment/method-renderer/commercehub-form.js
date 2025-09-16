@@ -112,7 +112,7 @@ define(
 					)
 				});
 				iframePromise.then((data) => {
-					
+					console.log(data);
 				}).catch((error) =>{
 					failureCb(error);
 				})
