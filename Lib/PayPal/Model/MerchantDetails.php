@@ -29,7 +29,8 @@
 namespace Fiserv\Payments\Lib\PayPal\Model;
 
 use \ArrayAccess;
-use \Fiserv\Payments\Lib\CommerceHub\ObjectSerializer;
+use \Fiserv\Payments\Lib\PayPal\ObjectSerializer;
+use Fiserv\Payments\Lib\CommerceHub\Model\ModelInterface;
 
 /**
  * MerchantDetails Class Doc Comment
@@ -41,7 +42,7 @@ use \Fiserv\Payments\Lib\CommerceHub\ObjectSerializer;
  * @link     https://openapi-generator.tech
  * @implements \ArrayAccess<string, mixed>
  */
-class MerchantDetails implements \ArrayAccess, \JsonSerializable
+class MerchantDetails implements ModelInterface, ArrayAccess, \JsonSerializable
 {
     public const DISCRIMINATOR = null;
 
@@ -58,9 +59,15 @@ class MerchantDetails implements \ArrayAccess, \JsonSerializable
       * @var string[]
       */
     protected static $openAPITypes = [
-        'merchant_id' => 'string',
+        'token_type' => 'string',
+        'store_id' => 'string',
         'terminal_id' => 'string',
-        // Add more PayPal-specific fields as needed
+        'merchant_partner' => '\Fiserv\Payments\Lib\CommerceHub\Model\MerchantPartner',
+        'merchant_id' => 'string',
+        'site_type_indicator' => 'string',
+        'dba_name' => 'string',
+        'promotion_code' => 'string',
+        'terminal_lane_number' => 'string'
     ];
 
     /**
@@ -71,8 +78,15 @@ class MerchantDetails implements \ArrayAccess, \JsonSerializable
       * @psalm-var array<string, string|null>
       */
     protected static $openAPIFormats = [
-        'merchant_id' => null,
+        'token_type' => null,
+        'store_id' => null,
         'terminal_id' => null,
+        'merchant_partner' => null,
+        'merchant_id' => null,
+        'site_type_indicator' => null,
+        'dba_name' => null,
+        'promotion_code' => null,
+        'terminal_lane_number' => null
     ];
 
     /**
@@ -81,8 +95,15 @@ class MerchantDetails implements \ArrayAccess, \JsonSerializable
       * @var boolean[]
       */
     protected static array $openAPINullables = [
-        'merchant_id' => false,
+        'token_type' => false,
+        'store_id' => false,
         'terminal_id' => false,
+        'merchant_partner' => false,
+        'merchant_id' => false,
+        'site_type_indicator' => false,
+        'dba_name' => false,
+        'promotion_code' => false,
+        'terminal_lane_number' => false
     ];
 
     /**
@@ -171,8 +192,15 @@ class MerchantDetails implements \ArrayAccess, \JsonSerializable
      * @var string[]
      */
     protected static $attributeMap = [
-        'merchant_id' => 'merchantId',
+        'token_type' => 'tokenType',
+        'store_id' => 'storeId',
         'terminal_id' => 'terminalId',
+        'merchant_partner' => 'merchantPartner',
+        'merchant_id' => 'merchantId',
+        'site_type_indicator' => 'siteTypeIndicator',
+        'dba_name' => 'dbaName',
+        'promotion_code' => 'promotionCode',
+        'terminal_lane_number' => 'terminalLaneNumber'
     ];
 
     /**
@@ -181,8 +209,15 @@ class MerchantDetails implements \ArrayAccess, \JsonSerializable
      * @var string[]
      */
     protected static $setters = [
-        'merchant_id' => 'setMerchantId',
+        'token_type' => 'setTokenType',
+        'store_id' => 'setStoreId',
         'terminal_id' => 'setTerminalId',
+        'merchant_partner' => 'setMerchantPartner',
+        'merchant_id' => 'setMerchantId',
+        'site_type_indicator' => 'setSiteTypeIndicator',
+        'dba_name' => 'setDbaName',
+        'promotion_code' => 'setPromotionCode',
+        'terminal_lane_number' => 'setTerminalLaneNumber'
     ];
 
     /**
@@ -191,8 +226,15 @@ class MerchantDetails implements \ArrayAccess, \JsonSerializable
      * @var string[]
      */
     protected static $getters = [
-        'merchant_id' => 'getMerchantId',
+        'token_type' => 'getTokenType',
+        'store_id' => 'getStoreId',
         'terminal_id' => 'getTerminalId',
+        'merchant_partner' => 'getMerchantPartner',
+        'merchant_id' => 'getMerchantId',
+        'site_type_indicator' => 'getSiteTypeIndicator',
+        'dba_name' => 'getDbaName',
+        'promotion_code' => 'getPromotionCode',
+        'terminal_lane_number' => 'getTerminalLaneNumber'
     ];
 
     /**
@@ -252,8 +294,15 @@ class MerchantDetails implements \ArrayAccess, \JsonSerializable
      */
     public function __construct(array $data = null)
     {
-        $this->setIfExists('merchant_id', $data ?? [], null);
+        $this->setIfExists('token_type', $data ?? [], null);
+        $this->setIfExists('store_id', $data ?? [], null);
         $this->setIfExists('terminal_id', $data ?? [], null);
+        $this->setIfExists('merchant_partner', $data ?? [], null);
+        $this->setIfExists('merchant_id', $data ?? [], null);
+        $this->setIfExists('site_type_indicator', $data ?? [], null);
+        $this->setIfExists('dba_name', $data ?? [], null);
+        $this->setIfExists('promotion_code', $data ?? [], null);
+        $this->setIfExists('terminal_lane_number', $data ?? [], null);
     }
 
     /**
@@ -694,5 +743,3 @@ class MerchantDetails implements \ArrayAccess, \JsonSerializable
         return json_encode(ObjectSerializer::sanitizeForSerialization($this));
     }
 }
-
-

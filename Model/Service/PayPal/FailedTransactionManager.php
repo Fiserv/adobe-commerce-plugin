@@ -8,6 +8,7 @@ use Fiserv\Payments\Api\FailedTransaction\FailedTransactionRepositoryInterface;
 use Fiserv\Payments\Model\FailedTransactionFactory;
 use Fiserv\Payments\Model\ResourceModel\FailedTransaction;
 use Fiserv\Payments\Gateway\Subject\PayPal\SubjectReader;
+use Fiserv\Payments\Logger\MultiLevelLogger;
 
 class FailedTransactionManager
 {
@@ -15,12 +16,16 @@ class FailedTransactionManager
 
 	private $failedTxnFactory;
 
+	private $logger;
+
 	public function __construct(
 		FailedTransactionRepositoryInterface $failedTxnRepo,
-		FailedTransactionFactory $failedTxnFactory
+		FailedTransactionFactory $failedTxnFactory,
+		MultiLevelLogger $logger
 	) {
 		$this->failedTxnRepo = $failedTxnRepo;
 		$this->failedTxnFactory = $failedTxnFactory;
+		$this->logger = $logger;
 	}
 
 	public function createFailedTransaction($merchantOrderId, $txnResponse, $paths, $paymentAction)
@@ -99,6 +104,23 @@ class FailedTransactionManager
 		$failedTxn->setMerchantAdviceCode($merchantAdviceCode);
 		$failedTxn->setSecurityCodeMatch($securityCodeMatch);
 		$failedTxn->setPaymentAction($paymentAction);
+
+		// Enhanced logging for declined transactions
+		if ($transactionState === 'DECLINED') {
+			$this->logger->logError(3, "PayPal transaction declined", [
+				'transactionId' => $transactionId,
+				'apiTraceId' => $apiTraceId,
+				'responseMessage' => $responseMessage,
+				'errorMessage' => $errorMessage,
+				'networkResponseCode' => $networkResponseCode,
+				'processor' => $processor,
+				'host' => $host,
+				'merchantAdviceCode' => $merchantAdviceCode,
+				'paymentAction' => $paymentAction,
+				'totalAmount' => $totalAmount,
+				'currency' => $currency
+			]);
+		}
 
 		return $failedTxn;
 	}

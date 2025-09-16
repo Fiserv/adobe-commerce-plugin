@@ -417,6 +417,12 @@
 	<type name='PayPal\Braintree\Gateway\Data\Order\OrderAdapter'>
 		<plugin name="fiservorderadapter" type="Fiserv\Payments\Model\OrderAdapterFix" />
 	</type>
+	<type name = "Magento\Multishipping\Block\Checkout\Billing">
+		<plugin name = "filterMultishipping" type="Fiserv\Payments\Model\Plugin\CommerceHub\FilterMultishipping" />
+	</type>
+	<type name = 'PayPal\Braintree\Gateway\Data\Order\OrderAdapter'>
+		<plugin name = "fiservorderadapter" type="Fiserv\Payments\Model\CustomOrderAdapter" />
+	</type>
 
 	<virtualType name="Fiserv\Model\ResourceModel\FailedTransaction\Collection" type="Magento\Framework\View\Element\UiComponent\DataProvider\SearchResult">
 		<arguments>
@@ -429,7 +435,6 @@
 	<preference for="Fiserv\Payments\Api\FailedTransaction\FailedTransactionRepositoryInterface" type="Fiserv\Payments\Model\FailedTransactionRepository"/>
 	<preference for="Fiserv\Payments\Api\FailedOrder\FailedOrderRepositoryInterface" type="Fiserv\Payments\Model\FailedOrderRepository"/>
 	<preference for="Fiserv\Payments\Api\Data\FailedOrder\FailedOrderSearchResultInterface" type="Fiserv\Payments\Model\FailedOrder\FailedOrderSearchResult"/>
-
 
 	<!-- PayPal payment method DI configuration -->
 	<type name="Magento\Payment\Model\Method\Factory">
@@ -453,7 +458,6 @@
 	<virtualType name="FiservPayPalFacade" type="Magento\Payment\Model\Method\Adapter">
 		<arguments>
 			<argument name="code" xsi:type="const">Fiserv\Payments\Model\Config\PayPal\ConfigProvider::CODE</argument>
-			<argument name="formBlockType" xsi:type="string">Fiserv\Payments\Block\PayPal\Form</argument>
 			<argument name="infoBlockType" xsi:type="string">Fiserv\Payments\Block\PayPal\Info</argument>
 			<argument name="valueHandlerPool" xsi:type="object">FiservPayPalValueHandlerPool</argument>
 			<argument name="validatorPool" xsi:type="object">FiservPayPalValidatorPool</argument>
@@ -496,14 +500,16 @@
 				<item name="authorize" xsi:type="string">FiservPayPalAuthorizeCommand</item>
 				<item name="capture" xsi:type="string">FiservPayPalCaptureCommand</item>
 				<item name="sale" xsi:type="string">FiservPayPalSaleCommand</item>
+				<item name="settle" xsi:type="string">FiservPayPalSettleCommand</item>
+				<item name="vault_authorize" xsi:type="string">FiservPayPalVaultAuthorizeCommand</item>
+				<item name="vault_sale" xsi:type="string">FiservPayPalVaultSaleCommand</item>
 				<item name="refund" xsi:type="string">FiservPayPalRefundCommand</item>
-				<item name="void" xsi:type="string">FiservPayPalVoidCommand</item>
-				<item name="cancel" xsi:type="string">FiservPayPalVoidCommand</item>
+				<item name="void" xsi:type="string">FiservPayPalCancelCommand</item>
+				<item name="cancel" xsi:type="string">FiservPayPalCancelCommand</item>
 			</argument>
 		</arguments>
 	</virtualType>
 
-	<!-- Command Manager for PayPal -->
 	<virtualType name="FiservPayPalCommandManager" type="Magento\Payment\Gateway\Command\CommandManager">
 		<arguments>
 			<argument name="commandPool" xsi:type="object">FiservPayPalCommandPool</argument>
@@ -518,87 +524,220 @@
 		</arguments>
 	</type>
 
-	<!-- PayPal Request Builders -->
-	<virtualType name="FiservPayPalAuthorizeRequest" type="Fiserv\Payments\Gateway\Request\PayPal\Composite\AuthorizeComposite">
-		<arguments>
-			<argument name="builders" xsi:type="array">
-				<item name="source" xsi:type="string">Fiserv\Payments\Gateway\Request\PayPal\SessionSourceDataBuilder</item>
-			</argument>
-		</arguments>
-	</virtualType>
-	<virtualType name="FiservPayPalCaptureRequest" type="Fiserv\Payments\Gateway\Request\PayPal\Composite\CaptureComposite">
-		<arguments>
-			<argument name="builders" xsi:type="array">
-				<item name="source" xsi:type="string">Fiserv\Payments\Gateway\Request\PayPal\SessionSourceDataBuilder</item>
-			</argument>
-		</arguments>
-	</virtualType>
-	<virtualType name="FiservPayPalSaleRequest" type="Fiserv\Payments\Gateway\Request\PayPal\Composite\SaleComposite">
-		<arguments>
-			<argument name="builders" xsi:type="array">
-				<item name="source" xsi:type="string">Fiserv\Payments\Gateway\Request\PayPal\SessionSourceDataBuilder</item>
-			</argument>
-		</arguments>
-	</virtualType>
-	<virtualType name="FiservPayPalRefundRequest" type="Fiserv\Payments\Gateway\Request\PayPal\Composite\RefundComposite">
-		<arguments>
-			<argument name="builders" xsi:type="array">
-				<item name="source" xsi:type="string">Fiserv\Payments\Gateway\Request\PayPal\SessionSourceDataBuilder</item>
-			</argument>
-		</arguments>
-	</virtualType>
-	<virtualType name="FiservPayPalVoidRequest" type="Fiserv\Payments\Gateway\Request\PayPal\Composite\VoidComposite">
-		<arguments>
-			<argument name="builders" xsi:type="array">
-				<item name="source" xsi:type="string">Fiserv\Payments\Gateway\Request\PayPal\SessionSourceDataBuilder</item>
-			</argument>
-		</arguments>
-	</virtualType>
-
-	<!-- PayPal Command VirtualTypes -->
 	<virtualType name="FiservPayPalAuthorizeCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
 		<arguments>
 			<argument name="requestBuilder" xsi:type="object">FiservPayPalAuthorizeRequest</argument>
 			<argument name="transferFactory" xsi:type="object">Fiserv\Payments\Gateway\Http\PayPal\TransferFactory</argument>
 			<argument name="client" xsi:type="object">Fiserv\Payments\Gateway\Http\PayPal\Client\HttpClient</argument>
-			<argument name="handler" xsi:type="object">Fiserv\Payments\Gateway\Response\PayPal\AuthorizeHandler</argument>
+			<argument name="handler" xsi:type="object">FiservPayPalAuthorizeHandler</argument>
 			<argument name="validator" xsi:type="object">Fiserv\Payments\Gateway\Validator\PayPal\AuthorizeResponseValidator</argument>
+			<argument name="errorMessageMapper" xsi:type="object">Fiserv\Payments\Gateway\ErrorMapper\CommerceHub\VirtualErrorMessageMapper</argument>
 		</arguments>
 	</virtualType>
-	<virtualType name="FiservPayPalCaptureCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+
+	<virtualType name="FiservPayPalCaptureCommand" type="Fiserv\Payments\Gateway\Command\PayPal\CaptureStrategyCommand">
 		<arguments>
-			<argument name="requestBuilder" xsi:type="object">FiservPayPalCaptureRequest</argument>
-			<argument name="transferFactory" xsi:type="object">Fiserv\Payments\Gateway\Http\PayPal\TransferFactory</argument>
-			<argument name="client" xsi:type="object">Fiserv\Payments\Gateway\Http\PayPal\Client\HttpClient</argument>
-			<argument name="handler" xsi:type="object">Fiserv\Payments\Gateway\Response\PayPal\CaptureHandler</argument>
-			<argument name="validator" xsi:type="object">Fiserv\Payments\Gateway\Validator\PayPal\CaptureResponseValidator</argument>
+			<argument name="commandPool" xsi:type="object">FiservPayPalCommandPool</argument>
+			<argument name="subjectReader" xsi:type="object">Fiserv\Payments\Gateway\Subject\PayPal\SubjectReader</argument>
 		</arguments>
 	</virtualType>
+
 	<virtualType name="FiservPayPalSaleCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
 		<arguments>
 			<argument name="requestBuilder" xsi:type="object">FiservPayPalSaleRequest</argument>
 			<argument name="transferFactory" xsi:type="object">Fiserv\Payments\Gateway\Http\PayPal\TransferFactory</argument>
 			<argument name="client" xsi:type="object">Fiserv\Payments\Gateway\Http\PayPal\Client\HttpClient</argument>
-			<argument name="handler" xsi:type="object">Fiserv\Payments\Gateway\Response\PayPal\SaleHandler</argument>
+			<argument name="handler" xsi:type="object">FiservPayPalAuthorizeHandler</argument>
 			<argument name="validator" xsi:type="object">Fiserv\Payments\Gateway\Validator\PayPal\SaleResponseValidator</argument>
+			<argument name="errorMessageMapper" xsi:type="object">Fiserv\Payments\Gateway\ErrorMapper\CommerceHub\VirtualErrorMessageMapper</argument>
 		</arguments>
 	</virtualType>
+
+	<virtualType name="FiservPayPalSettleCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+		<arguments>
+			<argument name="requestBuilder" xsi:type="object">FiservPayPalSettleRequest</argument>
+			<argument name="transferFactory" xsi:type="object">Fiserv\Payments\Gateway\Http\PayPal\TransferFactory</argument>
+			<argument name="client" xsi:type="object">Fiserv\Payments\Gateway\Http\PayPal\Client\HttpClient</argument>
+			<argument name="handler" xsi:type="object">FiservPayPalSettleHandler</argument>
+			<argument name="validator" xsi:type="object">Fiserv\Payments\Gateway\Validator\PayPal\CaptureResponseValidator</argument>
+			<argument name="errorMessageMapper" xsi:type="object">Fiserv\Payments\Gateway\ErrorMapper\CommerceHub\VirtualErrorMessageMapper</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservPayPalVaultAuthorizeCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+		<arguments>
+			<argument name="requestBuilder" xsi:type="object">FiservPayPalVaultAuthorizeRequest</argument>
+			<argument name="transferFactory" xsi:type="object">Fiserv\Payments\Gateway\Http\PayPal\TransferFactory</argument>
+			<argument name="client" xsi:type="object">Fiserv\Payments\Gateway\Http\PayPal\Client\HttpClient</argument>
+			<argument name="handler" xsi:type="object">FiservPayPalAuthorizeHandler</argument>
+			<argument name="validator" xsi:type="object">Fiserv\Payments\Gateway\Validator\PayPal\AuthorizeResponseValidator</argument>
+			<argument name="errorMessageMapper" xsi:type="object">Fiserv\Payments\Gateway\ErrorMapper\CommerceHub\VirtualErrorMessageMapper</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservPayPalVaultSaleCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+		<arguments>
+			<argument name="requestBuilder" xsi:type="object">FiservPayPalVaultSaleRequest</argument>
+			<argument name="transferFactory" xsi:type="object">Fiserv\Payments\Gateway\Http\PayPal\TransferFactory</argument>
+			<argument name="client" xsi:type="object">Fiserv\Payments\Gateway\Http\PayPal\Client\HttpClient</argument>
+			<argument name="handler" xsi:type="object">FiservPayPalAuthorizeHandler</argument>
+			<argument name="validator" xsi:type="object">Fiserv\Payments\Gateway\Validator\PayPal\SaleResponseValidator</argument>
+			<argument name="errorMessageMapper" xsi:type="object">Fiserv\Payments\Gateway\ErrorMapper\CommerceHub\VirtualErrorMessageMapper</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservPayPalCancelCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+		<arguments>
+			<argument name="requestBuilder" xsi:type="object">FiservPayPalCancelRequest</argument>
+			<argument name="transferFactory" xsi:type="object">Fiserv\Payments\Gateway\Http\PayPal\TransferFactory</argument>
+			<argument name="client" xsi:type="object">Fiserv\Payments\Gateway\Http\PayPal\Client\HttpClient</argument>
+			<argument name="handler" xsi:type="object">FiservPayPalCancelHandler</argument>
+			<argument name="validator" xsi:type="object">Fiserv\Payments\Gateway\Validator\PayPal\CancelResponseValidator</argument>
+			<argument name="errorMessageMapper" xsi:type="object">Fiserv\Payments\Gateway\ErrorMapper\CommerceHub\VirtualErrorMessageMapper</argument>
+		</arguments>
+	</virtualType>
+
 	<virtualType name="FiservPayPalRefundCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
 		<arguments>
 			<argument name="requestBuilder" xsi:type="object">FiservPayPalRefundRequest</argument>
 			<argument name="transferFactory" xsi:type="object">Fiserv\Payments\Gateway\Http\PayPal\TransferFactory</argument>
 			<argument name="client" xsi:type="object">Fiserv\Payments\Gateway\Http\PayPal\Client\HttpClient</argument>
-			<argument name="handler" xsi:type="object">Fiserv\Payments\Gateway\Response\PayPal\RefundHandler</argument>
+			<argument name="handler" xsi:type="object">FiservPayPalRefundHandler</argument>
 			<argument name="validator" xsi:type="object">Fiserv\Payments\Gateway\Validator\PayPal\RefundResponseValidator</argument>
 		</arguments>
 	</virtualType>
-	<virtualType name="FiservPayPalVoidCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+
+	<!-- Request Builders -->
+	<virtualType name="FiservPayPalAuthorizeRequest" type="Fiserv\Payments\Gateway\Request\PayPal\Composite\SessionAuthComposite">
 		<arguments>
-			<argument name="requestBuilder" xsi:type="object">FiservPayPalVoidRequest</argument>
-			<argument name="transferFactory" xsi:type="object">Fiserv\Payments\Gateway\Http\PayPal\TransferFactory</argument>
-			<argument name="client" xsi:type="object">Fiserv\Payments\Gateway\Http\PayPal\Client\HttpClient</argument>
-			<argument name="handler" xsi:type="object">Fiserv\Payments\Gateway\Response\PayPal\VoidHandler</argument>
-			<argument name="validator" xsi:type="object">Fiserv\Payments\Gateway\Validator\PayPal\VoidResponseValidator</argument>
+			<argument name="paypalConfig" xsi:type="object">Fiserv\Payments\Gateway\Config\PayPal\Config</argument>
+			<argument name="subjectReader" xsi:type="object">Fiserv\Payments\Gateway\Subject\PayPal\SubjectReader</argument>
+			<argument name="builders" xsi:type="array">
+				<item name="amount" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder</item>
+				<item name="source" xsi:type="string">Fiserv\Payments\Gateway\Request\PayPal\ReferenceTransactionDataBuilder</item>
+				<item name="auth_details" xsi:type="string">Fiserv\Payments\Gateway\Request\PayPal\AuthDetailsDataBuilder</item>
+				<item name="txn_interaction" xsi:type="string">Fiserv\Payments\Gateway\Request\PayPal\PayPalTransactionInteractionDataBuilder</item>
+				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\PayPal\MerchantDetailsDataBuilder</item>
+				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
+				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\PayPal\CustomerDataBuilder</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservPayPalVaultAuthorizeRequest" type="Fiserv\Payments\Gateway\Request\PayPal\Composite\TokenAuthComposite">
+		<arguments>
+			<argument name="builders" xsi:type="array">
+				<item name="amount" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder</item>
+				<item name="source" xsi:type="string">Fiserv\Payments\Gateway\Request\PayPal\ReferenceTransactionDataBuilder</item>
+				<item name="auth_details" xsi:type="string">Fiserv\Payments\Gateway\Request\PayPal\AuthDetailsDataBuilder</item>
+				<item name="txn_interaction" xsi:type="string">Fiserv\Payments\Gateway\Request\PayPal\PayPalTransactionInteractionDataBuilder</item>
+				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\PayPal\MerchantDetailsDataBuilder</item>
+				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
+				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservPayPalSaleRequest" type="Fiserv\Payments\Gateway\Request\PayPal\Composite\SessionSaleComposite">
+		<arguments>
+			<argument name="paypalConfig" xsi:type="object">Fiserv\Payments\Gateway\Config\PayPal\Config</argument>
+			<argument name="subjectReader" xsi:type="object">Fiserv\Payments\Gateway\Subject\PayPal\SubjectReader</argument>
+			<argument name="builders" xsi:type="array">
+				<item name="amount" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder</item>
+				<item name="source" xsi:type="string">Fiserv\Payments\Gateway\Request\PayPal\ReferenceTransactionDataBuilder</item>
+				<item name="sale_details" xsi:type="string">Fiserv\Payments\Gateway\Request\PayPal\SaleDetailsDataBuilder</item>
+				<item name="txn_interaction" xsi:type="string">Fiserv\Payments\Gateway\Request\PayPal\PayPalTransactionInteractionDataBuilder</item>
+				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\PayPal\MerchantDetailsDataBuilder</item>
+				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
+				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservPayPalVaultSaleRequest" type="Fiserv\Payments\Gateway\Request\PayPal\Composite\TokenSaleComposite">
+		<arguments>
+			<argument name="builders" xsi:type="array">
+				<item name="amount" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder</item>
+				<item name="source" xsi:type="string">Fiserv\Payments\Gateway\Request\PayPal\ReferenceTransactionDataBuilder</item>
+				<item name="sale_details" xsi:type="string">Fiserv\Payments\Gateway\Request\PayPal\SaleDetailsDataBuilder</item>
+				<item name="txn_interaction" xsi:type="string">Fiserv\Payments\Gateway\Request\PayPal\PayPalTransactionInteractionDataBuilder</item>
+				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\PayPal\MerchantDetailsDataBuilder</item>
+				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
+				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservPayPalSettleRequest" type="Fiserv\Payments\Gateway\Request\PayPal\Composite\SettleComposite">
+		<arguments>
+			<argument name="paypalConfig" xsi:type="object">Fiserv\Payments\Gateway\Config\PayPal\Config</argument>
+			<argument name="subjectReader" xsi:type="object">Fiserv\Payments\Gateway\Subject\PayPal\SubjectReader</argument>
+			<argument name="builders" xsi:type="array">
+				<item name="amount" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder</item>
+				<item name="settle_details" xsi:type="string">Fiserv\Payments\Gateway\Request\PayPal\SettleDetailsDataBuilder</item>
+				<item name="txn_interaction" xsi:type="string">Fiserv\Payments\Gateway\Request\PayPal\PayPalTransactionInteractionDataBuilder</item>
+				<item name="ref_txn" xsi:type="string">Fiserv\Payments\Gateway\Request\PayPal\ReferenceTransactionDataBuilder</item>
+				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\PayPal\MerchantDetailsDataBuilder</item>
+				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
+				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservPayPalRefundRequest" type="Fiserv\Payments\Gateway\Request\PayPal\Composite\RefundComposite">
+		<arguments>
+			<argument name="builders" xsi:type="array">
+				<item name="amount" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder</item>
+				<item name="refund_details" xsi:type="string">Fiserv\Payments\Gateway\Request\PayPal\RefundRefTxnDataBuilder</item>
+				<item name="refund_txn_details" xsi:type="string">Fiserv\Payments\Gateway\Request\PayPal\SaleDetailsDataBuilder</item>
+				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\PayPal\MerchantDetailsDataBuilder</item>
+				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservPayPalCancelRequest" type="Fiserv\Payments\Gateway\Request\PayPal\Composite\CancelComposite">
+		<arguments>
+			<argument name="builders" xsi:type="array">
+				<item name="cancel_details" xsi:type="string">Fiserv\Payments\Gateway\Request\PayPal\CancelRefTxnDataBuilder</item>
+				<item name="cancel_txn_details" xsi:type="string">Fiserv\Payments\Gateway\Request\PayPal\AuthDetailsDataBuilder</item>
+				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\PayPal\MerchantDetailsDataBuilder</item>
+				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<!-- Response Handlers -->
+	<virtualType name="FiservPayPalAuthorizeHandler" type="Magento\Payment\Gateway\Response\HandlerChain">
+		<arguments>
+			<argument name="handlers" xsi:type="array">
+				<item name="payment_details" xsi:type="string">Fiserv\Payments\Gateway\Response\PayPal\PayPalPaymentDetailsHandler</item>
+				<item name="vault_details" xsi:type="string">Fiserv\Payments\Gateway\Response\PayPal\PayPalVaultDetailsHandler</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservPayPalSettleHandler" type="Magento\Payment\Gateway\Response\HandlerChain">
+		<arguments>
+			<argument name="handlers" xsi:type="array">
+				<item name="payment_details" xsi:type="string">Fiserv\Payments\Gateway\Response\PayPal\PayPalPaymentDetailsHandler</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservPayPalCancelHandler" type="Magento\Payment\Gateway\Response\HandlerChain">
+		<arguments>
+			<argument name="handlers" xsi:type="array">
+				<item name="payment_details" xsi:type="string">Fiserv\Payments\Gateway\Response\PayPal\PayPalCancelHandler</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservPayPalRefundHandler" type="Magento\Payment\Gateway\Response\HandlerChain">
+		<arguments>
+			<argument name="handlers" xsi:type="array">
+				<item name="payment_details" xsi:type="string">Fiserv\Payments\Gateway\Response\PayPal\PayPalRefundHandler</item>
+			</argument>
 		</arguments>
 	</virtualType>
 
@@ -633,6 +772,16 @@
 	<type name="Fiserv\Payments\Controller\PayPal\Validate">
 		<arguments>
 			<argument name="payPalHttpAdapter" xsi:type="object">Fiserv\Payments\Model\Adapter\PayPal\PayPalHttpAdapter</argument>
+			<argument name="commandPool" xsi:type="object">FiservPayPalCommandPool</argument>
+			<argument name="payPalConfig" xsi:type="object">Fiserv\Payments\Gateway\Config\PayPal\Config</argument>
+			<argument name="commerceHubConfig" xsi:type="object">Fiserv\Payments\Gateway\Config\CommerceHub\Config</argument>
+		</arguments>
+	</type>
+
+	<!-- Inject Config into PayPal Handlers -->
+	<type name="Fiserv\Payments\Gateway\Response\PayPal\PayPalPaymentDetailsHandler">
+		<arguments>
+			<argument name="config" xsi:type="object">Fiserv\Payments\Gateway\Config\PayPal\Config</argument>
 		</arguments>
 	</type>
 
@@ -642,6 +791,17 @@
 			<argument name="logger" xsi:type="object">Fiserv\Payments\Logger\MultiLevelLogger</argument>
 			<argument name="payPalConfig" xsi:type="object">Fiserv\Payments\Gateway\Config\PayPal\Config</argument>
 			<argument name="commerceHubConfig" xsi:type="object">Fiserv\Payments\Gateway\Config\CommerceHub\Config</argument>
+			<argument name="storeManager" xsi:type="object">Magento\Store\Model\StoreManagerInterface</argument>
+		</arguments>
+	</type>
+
+	<!-- PayPalHttpAdapter -->
+	<type name="Fiserv\Payments\Model\Adapter\PayPal\PayPalHttpAdapter">
+		<arguments>
+			<argument name="config" xsi:type="object">Fiserv\Payments\Gateway\Config\PayPal\Config</argument>
+			<argument name="commerceHubConfig" xsi:type="object">Fiserv\Payments\Gateway\Config\CommerceHub\Config</argument>
+			<argument name="curlFactory" xsi:type="object">Magento\Framework\HTTP\Adapter\CurlFactory</argument>
+			<argument name="logger" xsi:type="object">Fiserv\Payments\Logger\MultiLevelLogger</argument>
 			<argument name="storeManager" xsi:type="object">Magento\Store\Model\StoreManagerInterface</argument>
 		</arguments>
 	</type>
@@ -658,5 +818,5 @@
 		</arguments>
 	</type>
 
-	<preference for="Fiserv\Payments\Api\CheckoutOrderInterface" type="Fiserv\Payments\Model\CheckoutOrder" />
+	<!-- <preference for="Fiserv\Payments\Api\PayPalOrderInterface" type="Fiserv\Payments\Model\PayPalOrder" /> -->
 </config>

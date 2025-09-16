@@ -24,7 +24,6 @@ class PayPalCredentialsRequest
     const KEY_BILLING_ADDRESS = "billingAddress";
     const KEY_PAYMENT_TOKEN = "paymentToken";
     const KEY_SOURCE = "source";
-    const KEY_3DS = "threeDSecure";
     const KEY_TRANSACTION_DETAILS = "transactionDetails";
     const KEY_AUTHENTICATION_3DS = "authentication3DS";
     const KEY_ADDITIONAL_DATA_COMMON = "additionalDataCommon";
@@ -138,13 +137,15 @@ class PayPalCredentialsRequest
         }
 
         $bodyArray = json_decode($body, true);
+        $this->logger->logInfo(2, "Parsed PayPal credentials response body: " . var_export($bodyArray, true));
         $data = [];
         if ($statusCode === 201) {
-            $data[self::KEY_SYMMETRIC_ENCRYPTION_ALGO] = $bodyArray[self::KEY_SYMMETRIC_ENCRYPTION_ALGO];
-            $data[self::KEY_ACCESS_TOKEN] = $bodyArray[self::KEY_ACCESS_TOKEN];
-            $data[self::KEY_SESSION_ID] = $bodyArray[self::KEY_SESSION_ID];
-            $data[self::KEY_PUBLIC_KEY] = $bodyArray[self::KEY_PUBLIC_KEY];
-            $data[self::KEY_KEY_ID] = $bodyArray[self::KEY_KEY_ID];
+            $data[self::KEY_SYMMETRIC_ENCRYPTION_ALGO] = $bodyArray[self::KEY_SYMMETRIC_ENCRYPTION_ALGO] ?? null;
+            $data[self::KEY_ACCESS_TOKEN] = $bodyArray[self::KEY_ACCESS_TOKEN] ?? null;
+            $data[self::KEY_SESSION_ID] = $bodyArray[self::KEY_SESSION_ID] ?? null;
+            $data[self::KEY_PUBLIC_KEY] = $bodyArray[self::KEY_PUBLIC_KEY] ?? null;
+            $data[self::KEY_KEY_ID] = $bodyArray[self::KEY_KEY_ID] ?? null;
+            
             // Add customerId if available in sessionData, else fallback to sessionId or a placeholder
             if (isset($sessionData[self::KEY_CUSTOMER][self::KEY_CUSTOMER_ID])) {
                 $data['customerId'] = $sessionData[self::KEY_CUSTOMER][self::KEY_CUSTOMER_ID];

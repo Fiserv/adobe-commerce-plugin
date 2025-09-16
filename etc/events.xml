@@ -3,6 +3,9 @@
 	<event name="payment_method_assign_data_fiserv_commercehub">
 		<observer name="fiserv_commercehub_data_assign" instance="Fiserv\Payments\Observer\CommerceHub\DataAssignObserver" />
 	</event>
+	<event name="payment_method_assign_data_fiserv_paypal">
+		<observer name="fiserv_paypal_data_assign" instance="Fiserv\Payments\Observer\PayPal\DataAssignObserver" />
+	</event>
 	<event name="adminhtml_sales_order_create_process_data">
         <observer name="fiserv_valuelink" instance="Fiserv\Payments\Observer\Valuelink\ProcessOrderCreationData" />
     </event>
@@ -22,6 +25,8 @@
  	<event name="sales_order_invoice_save_after">
         <observer name="fiserv_valuelink" instance="Fiserv\Payments\Observer\Valuelink\EnrichValuelinkTransactionsWithInvoiceId" />
     </event>
+	<!-- Removed PayPal observers to make Model/Plugin/PayPal primary -->
+	<!--
 	<event name="sales_order_place_after">
 		<observer name="fiserv_paypal" instance="Fiserv\Payments\Observer\PayPal\OrderPlace" />
 	</event>
@@ -31,7 +36,11 @@
 	<event name="sales_order_creditmemo_refund">
 		<observer name="fiserv_paypal" instance="Fiserv\Payments\Observer\PayPal\CreditmemoRefund" />
 	</event>
+	-->
+	<!-- Removed PayPal cancel observer to make Model/Plugin/PayPal primary -->
+	<!--
 	<event name="order_cancel_after">
 		<observer name="fiserv_paypal" instance="Fiserv\Payments\Observer\PayPal\CancelObserver" />
 	</event>
+	-->
 </config>

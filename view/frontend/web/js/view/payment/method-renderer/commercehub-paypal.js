@@ -44,6 +44,7 @@ define([
             additionalData: {},
             paymentMethodName: '[name="payment[method]"]',
             credentials: undefined,
+            cachedCredentials: null,
             isChecked: ko.observable()
         },
 
@@ -97,11 +98,6 @@ define([
             return true;
         },
 
-        getTitle: function () {
-            var config = (window.checkoutConfig && window.checkoutConfig.payment) ? window.checkoutConfig.payment[this.getCode()] : {};
-            return config && config.title ? config.title : 'PayPal';
-        },
-
         isPlaceOrderActionAllowed: ko.observable(quote.billingAddress() != null),
 
         loadPayPalForm: function () {
@@ -122,20 +118,38 @@ define([
                     return;
                 }
 
-                paypalAdapter.initialize(config); 
-                var credsResponse = await paypalSession({});
-                var creds = credsResponse && credsResponse[paypalAdapter.credentialsKey];
-                if (!creds) {
-                    throw new Error('No credentials returned from PayPal session');
+                paypalAdapter.initialize(config);
+                var credsResponse, creds;
+
+                if (self.cachedCredentials) {
+                    credsResponse = { paypal_button_config: self.cachedCredentials.buttonConfig };
+                    creds = self.cachedCredentials.creds;
+                    console.log('[PayPal] Using cached credentials');
+                } else {
+                    credsResponse = await paypalSession({});
+                    creds = credsResponse && credsResponse[paypalAdapter.credentialsKey];
+                    if (!creds) {
+                        throw new Error('No credentials returned from PayPal session');
+                    }
+                    // Cache the credentials
+                    self.cachedCredentials = {
+                        creds: creds,
+                        buttonConfig: credsResponse.paypal_button_config
+                    };
+                    console.log('[PayPal] Credentials cached');
                 }
+
                 self.paymentPayload.sessionId = creds[paypalAdapter.sessionIdKey];
                 await paypalAdapter.initSdk(config, creds);
+                var intent = 'authorize';
+                if (config.payment_action && config.payment_action.toLowerCase() === 'sale') {
+                    intent = 'capture';
+                }
                 const paypalComponent = await paypalAdapter.loadPayPalComponent({
                     customerId: creds[paypalAdapter.customerIdKey],
-                    intent: config[paypalAdapter.intentKey] || 'authorize'
+                    intent: intent
                 });
-                const buttonsConfig = credsResponse && credsResponse.paypal_button_config ? credsResponse.paypal_button_config : {
-            };
+                const buttonsConfig = credsResponse && credsResponse.paypal_button_config ? credsResponse.paypal_button_config : {};
                 await paypalAdapter.renderPayPalButtons(buttonsConfig);
             } catch (error) {
                 globalMessageList.addErrorMessage({ message: $t('PayPal credentials error: ') + (error.message || error) });
@@ -143,10 +157,6 @@ define([
             }
         },
 
-        validatePayment: function() {
-            var result = true;
-            return result;
-        },
 
         getData: function () {
             var data = {
@@ -163,22 +173,15 @@ define([
             return this.vaultEnabler && this.vaultEnabler.isVaultEnabled();
         },
 
-        /**
-         * Get billing address
-         *
-         * @returns {String}
-         */
-        getBillingAddress: function () {
-            let billingAddress = checkoutData.getBillingAddressFromData();
-            if (!billingAddress) {
-                billingAddress = quote.billingAddress();
-            }
-            return billingAddress;
-        },
 
         showPrivacyStatement: function () {
             var config = (window.checkoutConfig && window.checkoutConfig.payment) ? window.checkoutConfig.payment[this.getCode()] : {};
             return config && config.show_privacy_statement;
+        },
+
+        isVenmoEnabled: function () {
+            var config = (window.checkoutConfig && window.checkoutConfig.payment) ? window.checkoutConfig.payment[this.getCode()] : {};
+            return config && config.venmoConfig && config.venmoConfig.enableVenmo;
         },
 
         /**
@@ -202,6 +205,8 @@ define([
                     // Clear PayPal and Venmo button containers when switching away
                     $('#paypal-button-container').empty();
                     $('#venmo-button-container').empty();
+                    // Clear cached credentials
+                    this.cachedCredentials = null;
                 }
             }.bind(this));
         }

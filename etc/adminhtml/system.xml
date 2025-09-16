@@ -998,7 +998,7 @@
 					<field id="paypal_enable_vaulting" translate="label" type="select" sortOrder="99" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Enable PayPal Vaulting</label>
 						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-						<config_path>payment/fiserv_commercehub/paypal_enable_vaulting</config_path>
+						<config_path>payment/fiserv_paypal/paypal_enable_vaulting</config_path>
 						<comment>Allow customers to save PayPal payment method for future use.</comment>
 					</field>
 					<field id="fiserv_paypal_venmo" translate="label" type="select" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">

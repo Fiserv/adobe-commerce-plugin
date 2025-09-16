@@ -136,14 +136,13 @@ define([
          * @returns {Promise}
          */
         async renderPayPalButtons(buttonsConfig) {
-            // Try to get the renderer instance to call clearMagentoCart after success
             var rendererInstance = null;
             try {
-                // This is a best-effort approach; adjust selector/module as needed
                 rendererInstance = require('Fiserv_Payments/js/view/payment/method-renderer/commercehub-paypal');
             } catch (e) {
                 // If not found, fallback to null
                 rendererInstance = null;
+                console.error('Renderer instance not found:', e);
             }
             const containerId ='#paypal-button-container';
             const venmoContainerId = '#venmo-button-container';
@@ -161,23 +160,28 @@ define([
                     console.log('Removed child from Venmo button container');
                 }
             }
+            
+            const config = this.config || {};
+            const buttons = {
+                paypal: {
+                    parentElementId: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.paypal.parentElementId || 'paypal-button-container',
+                    color: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.paypal.color || 'gold',
+                    shape: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.paypal.shape || 'rect',
+                    label: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.paypal.label || 'paypal'
+                }
+            };
+            if (config.venmoConfig && config.venmoConfig.enableVenmo) {
+                buttons.venmo = {
+                    parentElementId: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.venmo.parentElementId || 'venmo-button-container',
+                    color: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.venmo.color || 'gold',
+                    shape: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.venmo.shape || 'rect'
+                };
+            }
             return this.paypalComponent.buttons({
                 data: {
                     enableVaulting: buttonsConfig.data && buttonsConfig.data.enableVaulting !== undefined ? buttonsConfig.data.enableVaulting : false,
                     customerConfirmation: buttonsConfig.data && typeof buttonsConfig.data.customerConfirmation === 'string' ? buttonsConfig.data.customerConfirmation : 'PAY_NOW',
-                    buttons: {
-                        paypal: {
-                                parentElementId: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.paypal.parentElementId || 'paypal-button-container',
-                                color: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.paypal.color || 'gold',
-                                shape: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.paypal.shape || 'rect',
-                                label: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.paypal.label || 'paypal'
-                        },
-                        venmo: {
-                            parentElementId: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.venmo.parentElementId || 'venmo-button-container',
-                            color: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.venmo.color || 'gold',
-                            shape: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.venmo.shape || 'rect'
-                        }
-                    },
+                    buttons: buttons
                 },
                 hooks:{
                     onApprove: async (data, actions) => {
@@ -189,7 +193,9 @@ define([
                             },
                             body: JSON.stringify({
                                 orderId: data.orderId,
-                                email: this.getGuestEmail()
+                                email: this.getGuestEmail(),
+                                merchantId: config.merchantId,
+                                terminalId: config.terminalId
                             })
                         })
                         .then(res => {
@@ -204,12 +210,14 @@ define([
                         .then(res => {
                             if (res.success) {
                                 // Clear Magento cart after successful payment
-                                if (rendererInstance && typeof rendererInstance.clearMagentoCart === 'function') {
-                                    rendererInstance.clearMagentoCart();
-                                }
-                                window.location.href = '/checkout/onepage/success/';
+                                require(['Magento_Customer/js/customer-data'], function (customerData) {
+                                        customerData.invalidate(['cart']);
+                                        customerData.reload(['cart'], true);
+                                    });
+                                     window.location.href = '/checkout/onepage/success/';
                             } else {
-                                throw new Error(res.message || 'Payment validation failed');
+                                // throw new Error(res.message || 'Payment validation failed');
+                                console.error('Payment validation failed:', res.message);
                             }
                         });
                     },

@@ -7,6 +7,7 @@ namespace Fiserv\Payments\Gateway\Subject\PayPal;
 
 use Magento\Checkout\Model\Session;
 use Magento\Payment\Gateway\Helper;
+use Fiserv\Payments\Gateway\Http\PayPal\Client\HttpClient;
 use Fiserv\Payments\Gateway\Subject\SubjectReader as FiservSubjectReader;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 
@@ -24,6 +25,24 @@ class SubjectReader extends FiservSubjectReader
 	{
 		parent::__construct($checkoutSession);
 		$this->logger = $logger;
+	}
+
+	/**
+	 * Reads payment from subject with logging for debugging
+	 *
+	 * @param array $subject
+	 * @return \Magento\Payment\Gateway\Data\PaymentDataObjectInterface
+	 */
+	public function readPayment(array $subject)
+	{
+		if (!isset($subject['payment']) || !$subject['payment'] instanceof \Magento\Payment\Gateway\Data\PaymentDataObjectInterface) {
+			$this->logger->error('PayPal SubjectReader: Payment data object not provided in subject', [
+				'subject_keys' => array_keys($subject),
+				'subject' => $subject
+			]);
+			throw new \InvalidArgumentException('Payment data object should be provided');
+		}
+		return parent::readPayment($subject);
 	}
 	
 	/**

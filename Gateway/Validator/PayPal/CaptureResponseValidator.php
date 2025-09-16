@@ -41,7 +41,7 @@ class CaptureResponseValidator extends TransactionResponseValidator
         // Verify Status Code
         $statusCode = $this->subjectReader->getValueSafely($paypalResponse, HttpClient::STATUS_CODE_KEY, $this->paths[HttpClient::STATUS_CODE_KEY]);
         if (!$this->isStatusSuccessful($statusCode)) {
-            array_push($errorMessages, "Something went wrong while processing PayPal transaction.");
+            array_push($errorMessages, "PayPal capture failed: Invalid HTTP status code " . $statusCode);
             array_push($errorCodes, $statusCode);
             $this->logger->logError(2, "Transaction failure. PayPal response returned with unsuccessful status", "Status Code: " . $statusCode);
             return $this->createResult(false, $errorMessages, $errorCodes);
@@ -50,7 +50,7 @@ class CaptureResponseValidator extends TransactionResponseValidator
         // Extract transaction state
         $transactionState = $this->subjectReader->getValueSafely($paypalResponse, 'transactionState', $this->paths['transactionState']);
         if (!$this->isStateSuccessful($transactionState)) {
-            array_push($errorMessages, "Transaction state failure: " . ($transactionState ?? "Transaction state not found"));
+            array_push($errorMessages, "PayPal capture failed: Transaction state is " . ($transactionState ?? "unknown"));
             array_push($errorCodes, $transactionState);
             $this->logger->logError(2, "Transaction failure. PayPal response returned with unsuccessful transaction state: " . $transactionState);
             return $this->createResult(false, $errorMessages, $errorCodes);

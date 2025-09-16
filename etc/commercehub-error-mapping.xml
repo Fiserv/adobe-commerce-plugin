@@ -3,5 +3,8 @@
 <mapping xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Payment:etc/error_mapping.xsd">
 	<message_list>
 		<message code="PIN-ONLY-AUTH-ERROR" translate="true">PIN-only debit cards are only allowed for card-present purchases.</message>
+		<message code="DECLINED" translate="true">Transaction has been declined. Please try again later or contact your payment provider.</message>
+		<message code="GATEWAY_ERROR" translate="true">Payment gateway error occurred. Please try again later.</message>
+		<message code="TIMEOUT" translate="true">Payment request timed out. Please try again.</message>
 	</message_list>
 </mapping>

@@ -48,6 +48,10 @@ class ConfigProvider implements ConfigProviderInterface
 	public function getConfig()
 	{
 		$storeId = $this->storeManager->getStore()->getId();
+		$allowedFunding = ['paypal'];
+		if (method_exists($this->paypalConfig, 'isVenmoActive') && $this->paypalConfig->isVenmoActive($storeId)) {
+			$allowedFunding[] = 'venmo';
+		}
 		$buttonConfig = [
 			'style' => [
 				'layout' => 'vertical',
@@ -60,7 +64,7 @@ class ConfigProvider implements ConfigProviderInterface
 				'shape' => $this->paypalConfig->getVenmoButtonShape($storeId) ?: 'rect',
 			],
 			'funding' => [
-				'allowed' => ['paypal', 'venmo'],
+				'allowed' => $allowedFunding,
 				'disallowed' => [],
 			],
 		];

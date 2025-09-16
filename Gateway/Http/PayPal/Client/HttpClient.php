@@ -71,8 +71,8 @@ class HttpClient implements ClientInterface
         ];
 
         $orderIncrementId = "";
-        if (isset($payload['transaction_details']) && isset($payload['transaction_details']['merchant_order_id'])) {
-            $orderIncrementId = $payload['transaction_details']['merchant_order_id'];
+        if (isset($payload['transactionDetails']) && isset($payload['transactionDetails']['merchant_order_id'])) {
+            $orderIncrementId = $payload['transactionDetails']['merchant_order_id'] ?? "";
         }
 
         $this->logger->logInfo(1, "Sending request to PayPal API", "Order ID: $orderIncrementId");

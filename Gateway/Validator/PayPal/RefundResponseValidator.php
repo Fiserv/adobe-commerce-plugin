@@ -41,7 +41,7 @@ class RefundResponseValidator extends TransactionResponseValidator
         // Verify Status Code
         $statusCode = $this->subjectReader->getValueSafely($paypalResponse, HttpClient::STATUS_CODE_KEY, $this->paths[HttpClient::STATUS_CODE_KEY]);
         if (!$this->isStatusSuccessful($statusCode)) {
-            array_push($errorMessages, "Something went wrong while processing PayPal transaction.");
+            array_push($errorMessages, "PayPal refund failed: Invalid HTTP status code " . $statusCode);
             array_push($errorCodes, $statusCode);
             $this->logger->logError(2, "Transaction failure. PayPal response returned with unsuccessful status", "Status Code: " . $statusCode);
             return $this->createResult(false, $errorMessages, $errorCodes);

@@ -74,23 +74,27 @@ class GetCredentials extends Action implements HttpPostActionInterface
 
             // Fetch PayPal button config from admin config
             $enableVaulting = $this->scopeConfig->isSetFlag('payment/fiserv_paypal/paypal_enable_vaulting', ScopeInterface::SCOPE_STORE);
+            $enableVenmo = $this->scopeConfig->isSetFlag('payment/fiserv_paypal/fiserv_paypal_venmo', ScopeInterface::SCOPE_STORE);
+            $buttons = [
+                'paypal' => [
+                    'parentElementId' => 'paypal-button-container',
+                    'color' => $this->scopeConfig->getValue('payment/fiserv_paypal/paypal_button_color', ScopeInterface::SCOPE_STORE) ?: 'gold',
+                    'shape' => $this->scopeConfig->getValue('payment/fiserv_paypal/paypal_button_shape', ScopeInterface::SCOPE_STORE) ?: 'rect',
+                    'label' => $this->scopeConfig->getValue('payment/fiserv_paypal/paypal_button_label', ScopeInterface::SCOPE_STORE) ?: 'paypal',
+                ]
+            ];
+            if ($enableVenmo) {
+                $buttons['venmo'] = [
+                    'parentElementId' => 'venmo-button-container',
+                    'color' => $this->scopeConfig->getValue('payment/fiserv_paypal/venmo_button_color', ScopeInterface::SCOPE_STORE) ?: 'gold',
+                    'shape' => $this->scopeConfig->getValue('payment/fiserv_paypal/venmo_button_shape', ScopeInterface::SCOPE_STORE) ?: 'rect',
+                ];
+            }
             $paypalButtonConfig = [
                 'data' => [
                     'enableVaulting' => $enableVaulting,
                     'customerConfirmation' => 'PAY_NOW',
-                    'buttons' => [
-                        'paypal' => [
-                            'parentElementId' => 'paypal-button-container',
-                            'color' => $this->scopeConfig->getValue('payment/fiserv_paypal/paypal_button_color', ScopeInterface::SCOPE_STORE) ?: 'gold',
-                            'shape' => $this->scopeConfig->getValue('payment/fiserv_paypal/paypal_button_shape', ScopeInterface::SCOPE_STORE) ?: 'rect',
-                            'label' => $this->scopeConfig->getValue('payment/fiserv_paypal/paypal_button_label', ScopeInterface::SCOPE_STORE) ?: 'paypal',
-                        ],
-                        'venmo' => [
-                            'parentElementId' => 'venmo-button-container',
-                            'color' => $this->scopeConfig->getValue('payment/fiserv_paypal/venmo_button_color', ScopeInterface::SCOPE_STORE) ?: 'gold',
-                            'shape' => $this->scopeConfig->getValue('payment/fiserv_paypal/venmo_button_shape', ScopeInterface::SCOPE_STORE) ?: 'rect',
-                        ]
-                    ]
+                    'buttons' => $buttons
                 ]
             ];
 

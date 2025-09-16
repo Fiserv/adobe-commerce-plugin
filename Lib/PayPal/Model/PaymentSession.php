@@ -27,7 +27,7 @@
  */
 
 namespace Fiserv\Payments\Lib\PayPal\Model;
-use \Fiserv\Payments\Lib\CommerceHub\ObjectSerializer;
+use \Fiserv\Payments\Lib\PayPal\ObjectSerializer;
 
 /**
  * PaymentSession Class Doc Comment
@@ -43,6 +43,11 @@ class PaymentSession
     public const DISCRIMINATOR = null;
 
     /**
+     * @var array
+     */
+    protected $container = [];
+
+    /**
       * The original name of the model.
       *
       * @var string
@@ -55,7 +60,8 @@ class PaymentSession
       * @var string[]
       */
     protected static $openAPITypes = [
-        'session_id' => 'string'
+        'session_id' => 'string',
+        'source_type' => 'string'
     ];
 
     /**
@@ -66,7 +72,8 @@ class PaymentSession
       * @psalm-var array<string, string|null>
       */
     protected static $openAPIFormats = [
-        'session_id' => null
+        'session_id' => null,
+        'source_type' => null
     ];
 
     /**
@@ -75,7 +82,8 @@ class PaymentSession
       * @var boolean[]
       */
     protected static array $openAPINullables = [
-        'session_id' => false
+        'session_id' => true,
+        'source_type' => false
     ];
 
     /**
@@ -164,7 +172,8 @@ class PaymentSession
      * @var string[]
      */
     protected static $attributeMap = [
-        'session_id' => 'sessionId'
+        'session_id' => 'sessionId',
+        'source_type' => 'sourceType'
     ];
 
     /**
@@ -173,7 +182,8 @@ class PaymentSession
      * @var string[]
      */
     protected static $setters = [
-        'session_id' => 'setSessionId'
+        'session_id' => 'setSessionId',
+        'source_type' => 'setSourceType'
     ];
 
     /**
@@ -182,7 +192,8 @@ class PaymentSession
      * @var string[]
      */
     protected static $getters = [
-        'session_id' => 'getSessionId'
+        'session_id' => 'getSessionId',
+        'source_type' => 'getSourceType'
     ];
 
     /**
@@ -236,8 +247,8 @@ class PaymentSession
      */
     public function __construct(array $data = null)
     {
-        $this->setIfExists('session_id', $data ?? [], null);
-        $this->setIfExists('source_type', $data ?? [], null);
+        $this->container['session_id'] = $data['session_id'] ?? null;
+        $this->container['source_type'] = $data['source_type'] ?? null;
     }
 
     /**
@@ -315,7 +326,7 @@ class PaymentSession
      */
     public function getSessionId()
     {
-        return $this->container['session_id'];
+        return $this->container['session_id'] ?? null;
     }
 
     /**
@@ -327,10 +338,7 @@ class PaymentSession
      */
     public function setSessionId($session_id)
     {
-        if (is_null($session_id)) {
-            throw new \InvalidArgumentException('non-nullable session_id cannot be null');
-        }
-        if ((mb_strlen($session_id) > 64)) {
+        if (!is_null($session_id) && (mb_strlen($session_id) > 64)) {
             throw new \InvalidArgumentException('invalid length for $session_id when calling PaymentSession., must be smaller than or equal to 64.');
         }
 

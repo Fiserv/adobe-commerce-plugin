@@ -14,11 +14,19 @@ use Psr\Log\LoggerInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order\InvoiceFactory;
 use Magento\Sales\Model\Order\Payment\Transaction\ManagerInterface as TransactionManager;
-use Magento\Framework\DB\Transaction;
+use Magento\Framework\DB\Transaction as DBTransaction;
 use GuzzleHttp\Client;
 use Magento\Framework\App\CsrfAwareActionInterface;
 use Magento\Framework\App\Request\InvalidRequestException;
+use Fiserv\Payments\Gateway\Config\PayPal\Config as PayPalConfig;
 use Fiserv\Payments\Gateway\Config\CommerceHub\Config as CommerceHubConfig;
+use Fiserv\Payments\Observer\PayPal\DataAssignObserver;
+use Magento\Sales\Model\Order\Payment\Transaction\BuilderInterface as TransactionBuilder;
+use Magento\Sales\Api\TransactionRepositoryInterface;
+use Magento\Sales\Model\Order\Payment\Transaction;
+use Magento\Sales\Model\Order\Payment\Transaction as PaymentTransaction;
+use Magento\Payment\Gateway\Command\CommandPoolInterface;
+use Magento\Payment\Gateway\Data\PaymentDataObjectFactory;
 
 class Validate extends Action implements CsrfAwareActionInterface
 {
@@ -80,11 +88,24 @@ class Validate extends Action implements CsrfAwareActionInterface
     protected $orderRepository;
     /** @var InvoiceFactory */
     protected $invoiceFactory;
-    /** @var Transaction */
+    /** @var DBTransaction */
     protected $dbTransaction;
 
+    /** @var PayPalConfig */
+    private $payPalConfig;
+
     /** @var CommerceHubConfig */
-    protected $commerceHubConfig;
+    private $commerceHubConfig;
+
+    /** @var TransactionBuilder */
+    protected $transactionBuilder;
+
+    /** @var TransactionRepositoryInterface */
+    protected $transactionRepository;
+
+    protected $commandPool;
+
+    protected $paymentDataObjectFactory;
 
     public function __construct(
         Context $context,
@@ -96,8 +117,13 @@ class Validate extends Action implements CsrfAwareActionInterface
         LoggerInterface $logger,
         OrderRepositoryInterface $orderRepository,
         InvoiceFactory $invoiceFactory,
-        Transaction $dbTransaction,
-        CommerceHubConfig $commerceHubConfig
+        DBTransaction $dbTransaction,
+        PayPalConfig $payPalConfig,
+        CommerceHubConfig $commerceHubConfig,
+        TransactionBuilder $transactionBuilder,
+        TransactionRepositoryInterface $transactionRepository,
+        CommandPoolInterface $commandPool,
+        PaymentDataObjectFactory $paymentDataObjectFactory
     ) {
         parent::__construct($context);
         $this->checkoutSession = $checkoutSession;
@@ -109,7 +135,12 @@ class Validate extends Action implements CsrfAwareActionInterface
         $this->orderRepository = $orderRepository;
         $this->invoiceFactory = $invoiceFactory;
         $this->dbTransaction = $dbTransaction;
+        $this->payPalConfig = $payPalConfig;
         $this->commerceHubConfig = $commerceHubConfig;
+        $this->transactionBuilder = $transactionBuilder;
+        $this->transactionRepository = $transactionRepository;
+        $this->commandPool = $commandPool;
+        $this->paymentDataObjectFactory = $paymentDataObjectFactory;
     }
 
     /**
@@ -124,6 +155,9 @@ class Validate extends Action implements CsrfAwareActionInterface
             $data = json_decode($this->getRequest()->getContent(), true);
             $this->logger->debug('Received PayPal validation request', ['data' => $data]);
             $orderId = $data['orderId'] ?? null;
+            $merchentId = $data['merchantId'] ?? null;
+            $terminalId = $data['terminalId'] ?? null;
+            $action = strtolower($data['action'] ?? $this->payPalConfig->getPaymentAction());
             if (!$orderId) {
                 $this->logger->debug('Order ID is missing in request', ['data' => $data]);
                 return $result->setData(['success' => false, 'message' => 'Order ID is missing']);
@@ -148,8 +182,70 @@ class Validate extends Action implements CsrfAwareActionInterface
             }
             
             $order = $this->placeMagentoOrder();
-            $this->checkoutSession->clearQuote();
-            $this->cartRepository->delete($quote);
+            $merchentId = $merchentId ?? $this->commerceHubConfig->getMerchantId();
+            $terminalId = $terminalId ?? $this->commerceHubConfig->getTerminalId();
+            $this->logger->debug('Placing order', ['order_id' => $order->getIncrementId(), 'merchant_id' => $merchentId, 'terminal_id' => $terminalId]);
+            $payment = $order->getPayment();
+            $payment->setMethod('fiserv_paypal');
+            $payment->setAdditionalInformation(DataAssignObserver::ORDER_ID, $orderId);
+            $payment->save();
+            $payment->load($payment->getId());
+            $order->save();
+            $paypalTxnId = $orderId;
+
+            $paymentDataObject = $this->paymentDataObjectFactory->create($payment, [
+                'order' => $order
+            ]);
+            $commandSubject = [
+                'payment' => $paymentDataObject,
+                'amount' => $order->getGrandTotal(),
+                'action' => $action,
+            ];
+
+            try {
+                $this->logger->info('PayPal Command Start', [
+                    'order_id' => $orderId,
+                    'paypal_order_id' => $payment->getAdditionalInformation('paypal_order_id'),
+                    'action' => $action,
+                    'subject' => $commandSubject
+                ]);
+                $commandName = ($action === 'capture' || $action === 'sale' || $action === 'authorize_capture') ? 'sale' : 'authorize';
+                $commandResult = $this->commandPool->get($commandName)->execute($commandSubject);
+                $this->logger->info('PayPal Command Finish', [
+                    'order_id' => $orderId,
+                    'result' => $commandResult
+                ]);
+            } catch (\Exception $e) {
+                $this->logger->error('Paypal Command Error', [
+                    'order_id' => $orderId,
+                    'exception' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+            }
+            // Get the transaction added by the handler (either auth or capture)
+            $transaction = $payment->getAuthorizationTransaction() ?: $payment->getCaptureTransaction();
+            if ($transaction) {
+                $transaction->setTxnId($paypalTxnId);
+                $transaction->setAdditionalInformation(
+                    [TransactionManager::RAW_DETAILS => ['paypal_txn_id' => $paypalTxnId]]
+                );
+                $isCapture = $transaction->getTxnType() === PaymentTransaction::TYPE_CAPTURE;
+                $message = $isCapture ? 'PayPal payment captured with Transaction ID: ' . $paypalTxnId : 'PayPal payment authorized with Transaction ID: ' . $paypalTxnId;
+                $payment->addTransactionCommentsToOrder($transaction, $message);
+                $transaction->setIsClosed($isCapture ? 1 : 0);
+                $this->transactionRepository->save($transaction);
+                $transactionSave = $this->transactionBuilder->setPayment($payment)
+                    ->setOrder($order)
+                    ->setTransactionId($paypalTxnId)
+                    ->setAdditionalInformation([TransactionManager::RAW_DETAILS => ['paypal_txn_id' => $paypalTxnId]])
+                    ->build($transaction->getTxnType());
+                $this->transactionRepository->save($transactionSave);
+                $payment->setParentTransactionId(null);
+                $payment->save();
+                $order->save();
+            } else {
+                $this->logger->error('Transaction not found for order', ['order_id' => $order->getIncrementId(), 'action' => $action]);
+            }
             $this->logger->debug('Order placed successfully', ['order_id' => $order->getIncrementId()]);
             $result->setData(['success' => true, 'order_id' => $order->getIncrementId()]);
         } catch (\Throwable $e) {
@@ -168,8 +264,12 @@ class Validate extends Action implements CsrfAwareActionInterface
         $quote->getPayment()->setMethod('fiserv_paypal');
         $quote->collectTotals()->save();
         $order = $this->quoteManagement->submit($quote);
+        $payment = $order->getPayment();
+        $payment->save();
         $quote->setIsActive(false);
         $this->cartRepository->save($quote);
+        $this->checkoutSession->clearQuote();
+        $this->cartRepository->delete($quote);
         $this->checkoutSession->setQuoteId(null);
         $this->checkoutSession->setLastQuoteId($quote->getId());
         $this->checkoutSession->setLastSuccessQuoteId($quote->getId());
