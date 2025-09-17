@@ -64,7 +64,6 @@ class ConfigProvider extends CommerceHubConfigProvider
 			self::CARD_FORM_CONFIG_KEY => $this->buildFormConfig(ApplePayConfig::KEY_SDC_CHECKOUT, $storeId),
 			self::INVALID_FIELDS_KEY => $this->getInvalidFieldMessages(ApplePayConfig::KEY_SDC_CHECKOUT, $storeId),
 		];
-		$this->logger->logInfo(1, "FART FART" . json_encode($config));
 		return ['payment' => [self::CODE => $config]];
 	}
 }

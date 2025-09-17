@@ -3,6 +3,7 @@ namespace Fiserv\Payments\Model\Adapter\CommerceHub;
 
 use Fiserv\Payments\Gateway\Config\ApplePay\Config as ApplePayConfig;
 use Fiserv\Payments\Gateway\Config\CommerceHub\Config as CommerceHubConfig;
+use Fiserv\Payments\Model\Source\CommerceHub\ApiEnvironment;
 use Fiserv\Payments\Model\Adapter\CommerceHub\ChHttpAdapter;
 use Magento\Store\Model\StoreManagerInterface;
 use Fiserv\Payments\Logger\MultiLevelLogger;
@@ -18,19 +19,20 @@ class CredentialsRequest
 	const KEY_MERCHANT_DETAILS = 'merchantDetails';
 	const KEY_MERCHANT_ID = 'merchantId';
 	const KEY_KEY_ID = 'keyId';
-	const KEY_CUSTOMER = 'customer';
-	const KEY_CUSTOMER_ID = 'id';
-	const KEY_AMOUNT = 'amount';
-	const KEY_BILLING_ADDRESS = 'billingAddress';
-	const KEY_PAYMENT_TOKEN = 'paymentToken';
-	const KEY_SOURCE = 'source';
-	const KEY_3DS = 'threeDSecure';
-	const KEY_TRANSACTION_DETAILS = 'transactionDetails';
-	const KEY_AUTHENTICATION_3DS = 'authentication3DS';
-	const KEY_ADDITIONAL_DATA_COMMON = 'additionalDataCommon';
-	const KEY_ADDITIONAL_DATA = 'additionalData';
-	const KEY_ECOM_URL = 'ecomUrl';
-	const KEY_ORDER_DATA = 'orderData';
+	const KEY_CUSTOMER = "customer";
+	const KEY_CUSTOMER_ID = "id";
+	const KEY_AMOUNT = "amount";
+	const KEY_BILLING_ADDRESS = "billingAddress";
+	const KEY_PAYMENT_TOKEN = "paymentToken";
+	const KEY_SOURCE = "source";
+	const KEY_3DS = "threeDSecure";
+	const KEY_TRANSACTION_DETAILS = "transactionDetails";
+	const KEY_AUTHENTICATION_3DS = "authentication3DS";
+	const KEY_ADDITIONAL_DATA_COMMON = "additionalDataCommon";
+	const KEY_DYNAMIC_DESCRIPTORS = "dynamicDescriptors";
+	const KEY_ADDITIONAL_DATA = "additionalData";
+	const KEY_ECOM_URL = "ecomUrl";
+	const KEY_ORDER_DATA = "orderData";
 
 	// Response Keys
 	const KEY_SYMMETRIC_ENCRYPTION_ALGO = 'symmetricEncryptionAlgorithm';
@@ -38,12 +40,25 @@ class CredentialsRequest
 	const KEY_SESSION_ID = 'sessionId';
 	const KEY_PUBLIC_KEY = 'publicKey';
 
+	/** @var ApplePayConfig */
 	private ApplePayConfig $applePayConfig;
+
+	/** @var CommerceHubConfig */
 	private CommerceHubConfig $commerceHubConfig;
+
+	/** @var ChHttpAdapter */
 	private ChHttpAdapter $httpAdapter;
+
+	/** @var StoreManagerInterface */
 	private StoreManagerInterface $storeManager;
+
+	/** @var MultiLevelLogger */
 	private MultiLevelLogger $logger;
+
+	/** @var VaultPaymentTokenUtils */
 	private VaultPaymentTokenUtils $vaultUtils;
+
+	/** @var string */
 	private string $paymentMethodCode;
 
 	public function __construct(
@@ -53,7 +68,7 @@ class CredentialsRequest
 		StoreManagerInterface $storeManager,
 		MultiLevelLogger $logger,
 		VaultPaymentTokenUtils $vaultUtils,
-		string $paymentMethodCode = 'fiserv_commercehub'
+		$paymentMethodCode = 'fiserv_commercehub'
 	) {
 		$this->applePayConfig = $applePayConfig;
 		$this->commerceHubConfig = $commerceHubConfig;
@@ -160,9 +175,12 @@ class CredentialsRequest
 			]
 		];
 
-		// ✅ Hardcoded test amount retained
-		$payload["amount"] = ["total" => 21.00, "currency" => "USD"];
-
+		$payload[self::KEY_DYNAMIC_DESCRIPTORS] = [
+			'merchantName' => 'VirtualShop',
+			'address' => [
+				'country' => 'US'
+				]
+			];
 		return $payload;
 	}
 
@@ -198,12 +216,13 @@ class CredentialsRequest
 		return $this->storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_WEB);
 	}
 
-	private function getMerchantId(array $sessionData): string {
+	private function getMerchantId(array $sessionData): string
+	{
 		return $this->getActiveConfig($sessionData)->getMerchantId();
 	}
 
-
-	private function getActiveConfig(array $sessionData): ApplePayConfig|CommerceHubConfig {
+	private function getActiveConfig(array $sessionData): ApplePayConfig|CommerceHubConfig
+	{
 		$type = $sessionData['type'] ?? 'commercehub';
 		return $type === 'applepay' ? $this->applePayConfig : $this->commerceHubConfig;
 	}

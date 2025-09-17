@@ -14,10 +14,9 @@ var config = {
 		}
 	},
     paths : {
-		SDCv2Library : 'https://cdn-nonprod.fiservapps.com/ch/secure-data-capture/3.4.0/checkout',
+		SDCv2Library : 'https://cdn-nonprod.fiservapps.com/ch/secure-data-capture/3.5.4/checkout',
 		commercehubQaClient : 'https://qa.api.fiservapps.com/ch/sdk/v1/commercehub-client-sdk',
 		commercehubCertClient : 'https://cert.api.fiservapps.com/ch/sdk/v1/commercehub-client-sdk',
 		commercehubProdClient : 'https://prod.api.fiservapps.com/ch/sdk/v1/commercehub-client-sdk'
     },
-    deps: ['Fiserv_Payments/js/view/payment/method-renderer/commercehub-applepay']
 };

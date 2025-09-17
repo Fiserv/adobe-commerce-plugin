@@ -25,7 +25,6 @@
 				<qa_client_url><![CDATA[https://qa.api.fiservapps.com/ch/sdk/v1/commercehub-client-sdk.js]]></qa_client_url>
                 <dev_client_url><![CDATA[https://dev.api.fiservapps.com/ch/sdk/v1/commercehub-client-sdk.js]]></dev_client_url>
                 <api_environment>CERT</api_environment>
-				<show_privacy_statement>1</show_privacy_statement>
 				<payment_action>AUTH</payment_action>
 				<cc_types>AE,VI,MC,DI,JCB,DN</cc_types>
 				<tokenization_strategy>CUSTOMER</tokenization_strategy>
@@ -199,7 +198,6 @@
 				<create_valuelink_invoice>yes</create_valuelink_invoice>
 				<valuelink_title>Gift Cards</valuelink_title>
 				<card_amount_limit>1</card_amount_limit>
-				<show_privacy_statement>1</show_privacy_statement>
                 <gift_card_tier>basic</gift_card_tier>
 	
 				<sdc_custom_checkout_valuelink_card_number_parent_element>fiserv_giftcard-card-number</sdc_custom_checkout_valuelink_card_number_parent_element>
@@ -252,20 +250,6 @@
 				<active>1</active>
 			</fiserv_commercehub_vault>
             <!--Alternate Payment Methods-->
-
-            <fiserv_paypal> <!--Paypal-->
-                <active>1</active>
-                <paypal_active>AUTH</paypal_active>
-                <paypal_title>Paypal</paypal_title>
-                <paypal_vault_active>1</paypal_vault_active>
-            </fiserv_paypal>
-
-            <fiserv_paypalfastlane>  <!--Paypal Fastlane-->
-                <paypalfastlane_active>1</paypalfastlane_active>
-                <paypalfastlane_payment_action>AUTH</paypalfastlane_payment_action>
-                <paypalfastlane_title>Paypal Fastlane</paypalfastlane_title>
-            </fiserv_paypalfastlane>
-
             <fiserv_applepay>
                 <active>1</active>
                 <payment_active>1</payment_active>
@@ -285,7 +269,6 @@
                 <cert_client_url><![CDATA[https://cert.api.fiservapps.com/ch/sdk/v1/commercehub-client-sdk.js]]></cert_client_url>
                 <qa_client_url><![CDATA[https://qa.api.fiservapis.com/ch/sdk/v1/commercehub-client-sdk.js]]></qa_client_url>
                 <api_environment>CERT</api_environment>
-                <show_privacy_statement>1</show_privacy_statement>
                 <payment_action>AUTH</payment_action>
                 <debug>1</debug>
                 <logging_level>2</logging_level>

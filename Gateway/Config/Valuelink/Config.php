@@ -16,7 +16,6 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	const KEY_CREATE_VALUELINK_INVOICE = 'create_valuelink_invoice';
 	const KEY_VALUELINK_TITLE = 'valuelink_title';
 	const KEY_CARD_AMOUNT_LIMIT = 'card_amount_limit';
-	const KEY_PRIVACY_STATEMENT = 'show_privacy_statement';
 	const KEY_GIFT_CARD_TIER = 'gift_card_tier'; // New constant for gift card tier
 
 	// Iframe Customization Fields
@@ -120,17 +119,6 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	public function getValuelinkTitle($storeId = null)
 	{
 		return $this->getValue(self::KEY_VALUELINK_TITLE, $storeId);
-	}
-
-	/**
-	 * Gets privacy statement configuration status for Valuelink.
-	 *
-	 * @param int|null $storeId
-	 * @return bool
-	 */
-	public function showPrivacyStatement($storeId = null)
-	{
-		return (bool) $this->getValue(self::KEY_PRIVACY_STATEMENT, $storeId);
 	}
 
 	/**
