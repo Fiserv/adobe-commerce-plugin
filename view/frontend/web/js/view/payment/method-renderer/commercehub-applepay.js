@@ -66,35 +66,33 @@ define([
         loadApplePayForm: async function () {
             console.log('[ApplePay] Starting Apple Pay form load.');
             const config = window.checkoutConfig.payment[this.getCode()];
-            console.log("LOOK AT ME THIS IS A LOG MSG" . config);
+            console.log('[ApplePay] Checkout config:', config);
 
             try {
                 fullScreenLoader.startLoader();
                 console.log('[ApplePay] Requesting credentials from backend.');
 
                 const sessionData = {
-                    customer: {
-                        id: window.checkoutConfig.customerData?.id || 'guest'
-                    },
+                    customer: { id: window.checkoutConfig.customerData?.id || 'guest' },
                     billingAddress: quote.billingAddress(),
                     orderData: this.buildOrderData()
                 };
 
-                console.log('[ApplePay] Requesting credentials from backend with sessionData:', sessionData);
+                console.log('[ApplePay] Session data being sent:', sessionData);
                 const creds = await chSession(sessionData);
+                console.log('[ApplePay] Credentials response:', creds);
 
                 if (!creds || !creds.ch_credentials) {
                     throw new Error('No credentials returned from Apple Pay session');
                 }
 
                 this.paymentPayload.sessionId = creds.ch_credentials.sessionId;
+                console.log('[ApplePay] Session ID set:', this.paymentPayload.sessionId);
 
-                console.log('[ApplePay] Received credentials:', creds.ch_credentials);
-                console.log('[ApplePay] Initializing Fiserv SDK.');
+                console.log('[ApplePay] Initializing Fiserv SDK...');
                 await chAdapter.initSdk(config, creds.ch_credentials);
 
-                console.log('[ApplePay] Rendering Apple Pay button.');
-                //THIS WILL LOAD THE APPLEPAY button
+                console.log('[ApplePay] Rendering Apple Pay button...');
                 await window.fiserv.components.applePay({
                     data: {
                         button: {
@@ -105,14 +103,15 @@ define([
                         }
                     },
                     hooks: {
-                        onApprove: A => {
-                            console.log("[ApplePay] onApprove data:", A);
+                        onApprove: (data) => {
+                            console.log('[ApplePay] onApprove triggered with data:', data);
+                            this.onApplePaySuccess(data.details, data);
                         },
                         onCancel: () => {
-                            console.log("[ApplePay] onCancel called");
+                            console.log('[ApplePay] onCancel triggered');
                         },
-                        onError: A => {
-                            console.log("[ApplePay] onError called", A);
+                        onError: (error) => {
+                            console.error('[ApplePay] onError triggered:', error);
                         }
                     }
                 });
@@ -151,6 +150,7 @@ define([
                 applepay_details: details
             };
 
+            console.log('[ApplePay] Additional data set:', this.additionalData);
             this.placeOrder();
         },
 
@@ -169,6 +169,23 @@ define([
 
             console.log('[ApplePay] Final payment data:', data);
             return data;
+        },
+
+        placeOrder: function () {
+            console.log('[ApplePay] placeOrder() called.');
+
+            if (!this.isPlaceOrderActionAllowed()) {
+                console.warn('[ApplePay] Place order not allowed. Billing address may be missing.');
+                globalMessageList.addErrorMessage({
+                    message: $t('Please enter a valid billing address before placing the order.')
+                });
+                return;
+            }
+
+            const data = this.getData();
+            console.log('[ApplePay] Data being submitted to Magento:', data);
+
+            return this._super();
         },
 
         getCode: function () {

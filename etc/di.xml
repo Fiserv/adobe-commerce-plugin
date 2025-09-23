@@ -436,4 +436,289 @@
 	<preference for="Fiserv\Payments\Api\FailedOrder\FailedOrderRepositoryInterface" type="Fiserv\Payments\Model\FailedOrderRepository"/>
 	<preference for="Fiserv\Payments\Api\Data\FailedOrder\FailedOrderSearchResultInterface" type="Fiserv\Payments\Model\FailedOrder\FailedOrderSearchResult"/>
 
+    <!-- Apple Pay payment method DI configuration -->
+    <type name="Magento\Payment\Model\Method\Factory">
+        <arguments>
+            <argument name="methods" xsi:type="array">
+                <item name="fiserv_applepay" xsi:type="string">Fiserv\Payments\Model\Payment\ApplePay</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <!-- Config provider for Apple Pay -->
+    <type name="Magento\Checkout\Model\CompositeConfigProvider">
+        <arguments>
+            <argument name="configProviders" xsi:type="array">
+                <item name="fiserv_applepay" xsi:type="object">Fiserv\Payments\Model\Config\ApplePay\ConfigProvider</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <!-- Apple Pay Payment Method Facade configuration -->
+    <virtualType name="FiservApplePayFacade" type="Magento\Payment\Model\Method\Adapter">
+        <arguments>
+            <argument name="code" xsi:type="const">Fiserv\Payments\Model\Config\ApplePay\ConfigProvider::CODE</argument>
+            <argument name="infoBlockType" xsi:type="string">Fiserv\Payments\Block\ApplePay\ApplePayInfo</argument>
+            <argument name="valueHandlerPool" xsi:type="object">FiservApplePayValueHandlerPool</argument>
+            <argument name="validatorPool" xsi:type="object">FiservApplePayValidatorPool</argument>
+            <argument name="commandPool" xsi:type="object">FiservApplePayCommandPool</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- ValueHandlerPool for Apple Pay -->
+    <virtualType name="FiservApplePayValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="default" xsi:type="string">FiservApplePayValueHandler</item>
+                <item name="can_void" xsi:type="string">Fiserv\Payments\Gateway\Config\CanVoidHandler</item>
+                <item name="can_refund" xsi:type="string">Fiserv\Payments\Gateway\Config\CanRefundHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="FiservApplePayValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+        <arguments>
+            <argument name="configInterface" xsi:type="object">Fiserv\Payments\Gateway\Config\ApplePay\Config</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- ValidatorPool for Apple Pay -->
+    <virtualType name="FiservApplePayCountryValidator" type="Magento\Payment\Gateway\Validator\CountryValidator">
+        <arguments>
+            <argument name="config" xsi:type="object">Fiserv\Payments\Gateway\Config\ApplePay\Config</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="FiservApplePayValidatorPool" type="Magento\Payment\Gateway\Validator\ValidatorPool">
+        <arguments>
+            <argument name="validators" xsi:type="array">
+                <item name="country" xsi:type="string">FiservApplePayCountryValidator</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <!-- CommandPool for Apple Pay -->
+    <virtualType name="FiservApplePayCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="authorize" xsi:type="string">FiservApplePayAuthorizeCommand</item>
+                <item name="capture" xsi:type="string">FiservApplePayCaptureCommand</item>
+                <item name="sale" xsi:type="string">FiservApplePaySaleCommand</item>
+                <item name="settle" xsi:type="string">FiservApplePaySettleCommand</item>
+                <item name="refund" xsi:type="string">FiservApplePayRefundCommand</item>
+                <item name="void" xsi:type="string">FiservApplePayCancelCommand</item>
+                <item name="cancel" xsi:type="string">FiservApplePayCancelCommand</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="FiservApplePayCommandManager" type="Magento\Payment\Gateway\Command\CommandManager">
+        <arguments>
+            <argument name="commandPool" xsi:type="object">FiservApplePayCommandPool</argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Magento\Payment\Gateway\Command\CommandManagerPool">
+        <arguments>
+            <argument name="executors" xsi:type="array">
+                <item name="fiserv_applepay" xsi:type="string">FiservApplePayCommandManager</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <virtualType name="FiservApplePayAuthorizeCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">FiservApplePayAuthorizeRequest</argument>
+            <argument name="transferFactory" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\TransferFactory</argument>
+            <argument name="client" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient</argument>
+            <argument name="handler" xsi:type="object">FiservApplePayAuthorizeHandler</argument>
+            <argument name="validator" xsi:type="object">Fiserv\Payments\Gateway\Validator\CommerceHub\AuthorizeResponseValidator</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="FiservApplePayCaptureCommand" type="Fiserv\Payments\Gateway\Command\CommerceHub\CaptureStrategyCommand">
+        <arguments>
+            <argument name="commandPool" xsi:type="object">FiservApplePayCommandPool</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="FiservApplePaySaleCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">FiservApplePaySaleRequest</argument>
+            <argument name="transferFactory" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\TransferFactory</argument>
+            <argument name="client" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient</argument>
+            <argument name="handler" xsi:type="object">FiservApplePayAuthorizeHandler</argument>
+            <argument name="validator" xsi:type="object">Fiserv\Payments\Gateway\Validator\CommerceHub\SaleResponseValidator</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="FiservApplePaySettleCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">FiservApplePaySettleRequest</argument>
+            <argument name="transferFactory" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\TransferFactory</argument>
+            <argument name="client" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient</argument>
+            <argument name="handler" xsi:type="object">FiservApplePaySettleHandler</argument>
+            <argument name="validator" xsi:type="object">Fiserv\Payments\Gateway\Validator\CommerceHub\CaptureResponseValidator</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="FiservApplePayCancelCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">FiservApplePayCancelRequest</argument>
+            <argument name="transferFactory" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\TransferFactory</argument>
+            <argument name="client" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient</argument>
+            <argument name="handler" xsi:type="object">FiservApplePayCancelHandler</argument>
+            <argument name="validator" xsi:type="object">Fiserv\Payments\Gateway\Validator\CommerceHub\CancelResponseValidator</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="FiservApplePayRefundCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">FiservApplePayRefundRequest</argument>
+            <argument name="transferFactory" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\TransferFactory</argument>
+            <argument name="client" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient</argument>
+            <argument name="handler" xsi:type="object">FiservApplePayRefundHandler</argument>
+            <argument name="validator" xsi:type="object">Fiserv\Payments\Gateway\Validator\CommerceHub\RefundResponseValidator</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Request Builders -->
+    <virtualType name="FiservApplePayAuthorizeRequest" type="Fiserv\Payments\Gateway\Request\CommerceHub\Composite\SessionAuthComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="amount" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder</item>
+                <item name="source" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\SessionSourceDataBuilder</item>
+                <item name="auth_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AuthDetailsDataBuilder</item>
+                <item name="txn_interaction" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\TransactionInteractionDataBuilder</item>
+                <item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
+                <item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
+                <item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="FiservApplePaySaleRequest" type="Fiserv\Payments\Gateway\Request\CommerceHub\Composite\SessionSaleComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="amount" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder</item>
+                <item name="source" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\SessionSourceDataBuilder</item>
+                <item name="sale_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\SaleDetailsDataBuilder</item>
+                <item name="txn_interaction" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\TransactionInteractionDataBuilder</item>
+                <item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
+                <item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
+                <item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
+                <item name="3ds_data" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\ThreeDSecureDataBuilder</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="FiservApplePaySettleRequest" type="Fiserv\Payments\Gateway\Request\CommerceHub\Composite\SettleComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="amount" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder</item>
+                <item name="settle_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\SettleDetailsDataBuilder</item>
+                <item name="txn_interaction" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\TransactionInteractionDataBuilder</item>
+                <item name="ref_txn" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\ReferenceTransactionDataBuilder</item>
+                <item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
+                <item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
+                <item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="FiservApplePayRefundRequest" type="Fiserv\Payments\Gateway\Request\CommerceHub\Composite\RefundComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="amount" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder</item>
+                <item name="refund_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\RefundRefTxnDataBuilder</item>
+                <item name="refund_txn_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\SaleDetailsDataBuilder</item>
+                <item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
+                <item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="FiservApplePayCancelRequest" type="Fiserv\Payments\Gateway\Request\CommerceHub\Composite\CancelComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="cancel_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CancelRefTxnDataBuilder</item>
+                <item name="cancel_txn_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AuthDetailsDataBuilder</item>
+                <item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
+                <item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Response Handlers -->
+    <virtualType name="FiservApplePayAuthorizeHandler" type="Magento\Payment\Gateway\Response\HandlerChain">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="payment_details" xsi:type="string">Fiserv\Payments\Gateway\Response\CommerceHub\PaymentDetailsHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="FiservApplePaySettleHandler" type="Magento\Payment\Gateway\Response\HandlerChain">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="payment_details" xsi:type="string">Fiserv\Payments\Gateway\Response\CommerceHub\PaymentDetailsHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="FiservApplePayCancelHandler" type="Magento\Payment\Gateway\Response\HandlerChain">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="payment_details" xsi:type="string">Fiserv\Payments\Gateway\Response\CommerceHub\PaymentDetailsHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="FiservApplePayRefundHandler" type="Magento\Payment\Gateway\Response\HandlerChain">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="payment_details" xsi:type="string">Fiserv\Payments\Gateway\Response\CommerceHub\PaymentDetailsHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Validate Controller Injection for Apple Pay -->
+    <type name="Fiserv\Payments\Controller\ApplePay\Validate">
+        <arguments>
+            <argument name="applePayHttpAdapter" xsi:type="object">Fiserv\Payments\Model\Adapter\ApplePay\ApplePayHttpAdapter</argument>
+            <argument name="commandPool" xsi:type="object">FiservApplePayCommandPool</argument>
+            <argument name="applePayConfig" xsi:type="object">Fiserv\Payments\Gateway\Config\ApplePay\Config</argument>
+            <argument name="commerceHubConfig" xsi:type="object">Fiserv\Payments\Gateway\Config\CommerceHub\Config</argument>
+        </arguments>
+    </type>
+
+    <type name="Fiserv\Payments\Gateway\Config\ApplePay\Config">
+        <arguments>
+            <argument name="methodCode" xsi:type="const">Fiserv\Payments\Model\Config\ApplePay\ConfigProvider::CODE</argument>
+        </arguments>
+    </type>
+
+    <!-- Plugins for Apple Pay -->
+    <type name="Magento\Payment\Model\Method\Adapter">
+        <plugin name="fiservApplePayAvailability" type="Fiserv\Payments\Model\Plugin\CommerceHub\PaymentMethodAvailable" />
+    </type>
+
+    <type name="Magento\Sales\Model\Order\RefundAdapter">
+        <plugin name="applePayCreditmemoRefund" type="Fiserv\Payments\Model\Plugin\CommerceHub\CreditMemoRefund" sortOrder="100"/>
+    </type>
+
+    <type name="Magento\Sales\Model\Order">
+        <plugin name="applePayFailedOrder" type="Fiserv\Payments\Model\Plugin\CommerceHub\OrderPlace" />
+    </type>
+
+    <type name="Magento\Sales\Model\Service\CreditmemoService">
+        <plugin name="refundApplePayFailedTransactionHandler" type="Fiserv\Payments\Model\Plugin\CommerceHub\CreditMemoServicePlugin" />
+    </type>
+
+    <type name="Magento\Multishipping\Block\Checkout\Billing">
+        <plugin name="filterApplePayMultishipping" type="Fiserv\Payments\Model\Plugin\CommerceHub\FilterMultishipping" />
+    </type>
+
+    <type name="Magento\Sales\Model\Order\Invoice">
+        <plugin name="applePayInvoiceRegister" type="Fiserv\Payments\Model\Plugin\CommerceHub\InvoiceRegister" sortOrder="100"/>
+    </type>
 </config>
