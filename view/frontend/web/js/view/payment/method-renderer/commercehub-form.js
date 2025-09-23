@@ -11,7 +11,6 @@ define(
 		'Magento_Payment/js/view/payment/cc-form',
 		'Fiserv_Payments/js/ch-adapter',
 		'Fiserv_Payments/js/action/create-commercehub-session',
-		'Fiserv_Payments/js/action/modify-requirejs',
 		'Magento_Checkout/js/model/quote',
 		'Magento_Checkout/js/checkout-data',
 		'Magento_Ui/js/model/messageList',
@@ -28,7 +27,6 @@ define(
 		Component,
 		chAdapter,
 		chSession,
-		modifyRequirejs,
 		quote,
 		checkoutData,
 		globalMessageList,
@@ -201,9 +199,9 @@ define(
 				$(self.paymentMethodName).on("click", function() {
 					let selected = $(this).attr("id");
 					if (selected === self.getCode()) {
-						self.loadIframe();  
+						self.loadIframe();	
 					} else {
-						self.cardBrandChangeHandler(null);
+						this.cardBrandChangeHandler(null);
 						chAdapter.destroyIframe();
 					}
 				});
@@ -417,7 +415,7 @@ define(
 					{
 						await this.initCheckoutSdk(creds);
 					}
-
+						
 					chAdapter.submitCardForm(
 						window.checkoutConfig.payment.fiserv_payments['storeUrl'], 
 						(sessionId) => { this.iframeRunSuccess(sessionId); },
