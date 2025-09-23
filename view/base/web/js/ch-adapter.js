@@ -3,9 +3,11 @@
 define([
 	'jquery',
 	'SDCv2Library',
+	'Fiserv_Payments/js/view/payment/paypal/fastlane'
 ], function (
 	$,
 	sdcv2,
+	fastlaneHelper
 ) {
 	'use strict';
 
@@ -127,9 +129,26 @@ define([
 		 */
 		instantiateIframe: function (
 			loadSuccessCb, 
-			loadErrorCb
+			loadErrorCb,
+			fastlaneHelper = undefined
 		) {
 			let formConfig = this.buildFormConfig();
+
+			if(fastlaneHelper.fastlane) {
+				formConfig.paypalFastlane = {
+					component: fastlaneHelper.fastlane,
+					watermark: {
+						parentElementId: fastlaneHelper.watermarkElementID
+					},
+					consent: {
+						parentElementId: fastlaneHelper.consentElementID
+					}
+				}
+			}
+
+			if(fastlaneHelper.addressComponent) {
+				formConfig.billingAddress = fastlaneHelper.addressComponent;
+			}
 						
 			window.fiserv.components.paymentFields(formConfig)
 				.then((next) => { 

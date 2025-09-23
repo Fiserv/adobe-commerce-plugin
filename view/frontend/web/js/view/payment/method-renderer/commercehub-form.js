@@ -17,6 +17,7 @@ define(
 		'Magento_Vault/js/view/payment/vault-enabler',
 		'Magento_Checkout/js/model/full-screen-loader',
 		'Magento_Checkout/js/model/payment/additional-validators',
+		'Fiserv_Payments/js/view/payment/paypal/fastlane',
 		'ko',
 		'mage/translate',
 		'domReady!'
@@ -33,6 +34,7 @@ define(
 		VaultEnabler,
 		fullScreenLoader,
 		additionalValidators,
+		fastlaneHelper,
 		ko,
 		$t
 	) {
@@ -104,15 +106,17 @@ define(
 				var self = this;
 				let failureCb = this.iframeLoadFailure.bind(this);
 
+				console.log(fastlaneHelper);
+
 				let iframePromise = new Promise((resolve, reject) => {
 					this.beginIframeFlow();
 					chAdapter.instantiateIframe(
 						resolve, 
-						reject
+						reject,
+						fastlaneHelper
 					)
 				});
 				iframePromise.then((data) => {
-					console.log(data);
 				}).catch((error) =>{
 					failureCb(error);
 				})
@@ -120,6 +124,7 @@ define(
 
 			iframeLoadSuccess: function (data) {
 				this.endIframeFlow();
+				console.log('here2');
 			},
 
 			iframeRunSuccess: async function (sessionId) {

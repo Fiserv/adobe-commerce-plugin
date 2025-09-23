@@ -20,6 +20,14 @@ define([
 	return {
 		fastlane: undefined,
 
+		authenticateResult: undefined,
+
+		addressComponent: undefined,
+
+		watermarkElementID: 'fiserv-paypal-watermark-container',
+
+		consentElementID: 'fiserv-paypal-consent-container',
+
 		fastlaneInit: async function() {
 
 			let credsResponse = undefined;
@@ -46,6 +54,7 @@ define([
 			window.braintree.hostedFields = chBraintreeHostedFields;
 
 			this.fastlane = await paypal.fastlane();
+			this.addressComponent = await this.getAddressComponent();
 
 			return this.fastlane;
 		},
@@ -58,20 +67,80 @@ define([
 			}
 		},
 
+		getAddressComponent: async function() {
+			const inputNames = [
+				"firstname",
+				"lastname",
+				"street[0]",
+				"street[1]",
+				"country_id",
+				"region_id",
+				"city",
+				"postcode",
+				"telephone"
+			];
+
+			const fields = [];
+
+			$.each(inputNames, function(_, name) {
+				const $input = $('input[name="' + name + '"]');
+				const id = $input.attr('id');
+
+				if (id) {
+					switch (name) {
+						case "firstname":
+							fields.firstName = { elementId: id };
+							break;
+						case "lastname":
+							fields.lastName = { elementId: id };
+							break;
+						case "street[0]":
+							fields.houseNumberOrName = { elementId: id };
+							break;
+						case "street[1]":
+							fields.street = { elementId: id };
+							break;
+						case "city":
+							fields.city = { elementId: id };
+							break;
+						case "region_id":
+							fields.stateOrProvince = { elementId: id };
+							break;
+						case "postcode":
+							fields.postalCode = { elementId: id };
+							break;
+						case "country_id":
+							fields.country = { elementId: id };
+							break;
+					}
+				}
+			});
+
+			return await window.fiserv.components.address({
+				fields: fields,
+				paypalFastlane: {
+					watermark: {
+						parentElementId: 'fiserv-paypal-watermark-container'
+					}
+				},
+				hooks: {}
+			});
+		},
+
 		authenticateEmailForFastlane: async function () {
 
 			const emailInputValue = $("#email-input").val();
 
 			try {
-				const authenticateResult = await this.fastlane.authenticate({
+				this.authenticateResult = await this.fastlane.authenticate({
 					email: emailInputValue
 				});
 
-				if( ! authenticateResult.isGuestCheckout) {
-					const symbolKey = Object.getOwnPropertySymbols(authenticateResult)[0];
-					const symbolData = authenticateResult[symbolKey];
+				if( ! this.authenticateResult.isGuestCheckout) {
+					const symbolKey = Object.getOwnPropertySymbols(this.authenticateResult)[0];
+					const symbolData = this.authenticateResult[symbolKey];
 					console.log(symbolData.customerContextId)
-					console.log(authenticateResult);
+					console.log(this.authenticateResult);
 
 					const profileData = symbolData.profile;
 
