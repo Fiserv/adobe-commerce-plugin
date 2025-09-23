@@ -5,18 +5,21 @@ use Magento\Framework\Phrase;
 use Magento\Payment\Block\ConfigurableInfo;
 use Magento\Framework\View\Element\Template\Context;
 use Magento\Payment\Gateway\ConfigInterface;
+use Fiserv\Payments\Logger\MultiLevelLogger;
 
 /**
  * Class Info
  */
-class Info extends ConfigurableInfo
+class PayPalInfo extends ConfigurableInfo
 {
     public function __construct(
         Context $context,
         ConfigInterface $config,
+        MultiLevelLogger $logger,
         array $data = []
     ) {
         parent::__construct($context, $config, $data);
+        $this->logger = $logger;
     }
 
     /**

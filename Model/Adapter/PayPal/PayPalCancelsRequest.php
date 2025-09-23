@@ -2,7 +2,7 @@
 namespace Fiserv\Payments\Model\Adapter\PayPal;
 
 use Fiserv\Payments\Gateway\Config\PayPal\Config;
-use Fiserv\Payments\Model\Source\PayPal\ApiEnvironment;
+use Fiserv\Payments\Model\Source\CommerceHub\ApiEnvironment;
 use Fiserv\Payments\Model\Adapter\PayPal\PayPalHttpAdapter;
 use Magento\Store\Model\StoreManagerInterface;
 use Fiserv\Payments\Logger\MultiLevelLogger;
@@ -10,7 +10,7 @@ use Fiserv\Payments\Logger\MultiLevelLogger;
 class PayPalCancelsRequest
 {
 	const CANCELS_ENDPOINT = 'checkouts/v1/orders';
-	
+	// TODO: Confirm if this is the file exictly needed or not.
 	// PayPal Cancels Request Keys
 	const KEY_MERCHANT_DETAILS = 'merchantDetails';
 	const KEY_MERCHANT_ID = 'merchantId';

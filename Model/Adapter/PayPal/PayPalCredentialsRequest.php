@@ -11,6 +11,7 @@ use Fiserv\Payments\Model\System\Utils\PayPal\VaultPaymentTokenUtils;
 class PayPalCredentialsRequest
 {
     const CREDENTIALS_ENDPOINT = 'payments-vas/v1/security/credentials';
+    // TODO: Confirm if this is the file exictly needed or not.
 
     // PayPal Credentials Request Keys
     const KEY_DOMAINS = 'domains';

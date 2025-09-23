@@ -10,6 +10,7 @@ class ButtonShape implements OptionSourceInterface
         return [
             ['value' => 'rect', 'label' => __('Rectangle')],
             ['value' => 'pill', 'label' => __('Pill')],
+            ['value' => 'sharp', 'label' => __('Sharp')],
         ];
     }
 }

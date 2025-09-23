@@ -176,8 +176,26 @@ class Validate extends Action implements CsrfAwareActionInterface
             
             // If the email is still not set or invalid, return an error
             if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                $this->logger->error('Invalid email address in quote', ['email' => $email]);
-                $result->setData(['success' => false, 'message' => 'Invalid email address']);
+                $this->logger->error('Invalid email address in PayPal validation', [
+                    'email' => $email,
+                    'is_empty' => empty($email),
+                    'is_valid_email' => filter_var($email, FILTER_VALIDATE_EMAIL),
+                    'quote_id' => $quote->getId(),
+                    'customer_id' => $quote->getCustomerId(),
+                    'is_guest' => $quote->getCustomerIsGuest(),
+                    'billing_address_email' => $quote->getBillingAddress() ? $quote->getBillingAddress()->getEmail() : null,
+                    'customer_email' => $quote->getCustomerEmail(),
+                    'data_email' => $data['email'] ?? null
+                ]);
+                $result->setData([
+                    'success' => false,
+                    'message' => 'Invalid email address. Please ensure you have a valid email address in your account or billing address.',
+                    'debug_info' => [
+                        'user_type' => $quote->getCustomerIsGuest() ? 'guest' : 'logged_in',
+                        'quote_email' => $quote->getCustomerEmail(),
+                        'billing_email' => $quote->getBillingAddress() ? $quote->getBillingAddress()->getEmail() : null
+                    ]
+                ]);
                 return $result;
             }
             
@@ -185,17 +203,26 @@ class Validate extends Action implements CsrfAwareActionInterface
             $merchentId = $merchentId ?? $this->commerceHubConfig->getMerchantId();
             $terminalId = $terminalId ?? $this->commerceHubConfig->getTerminalId();
             $this->logger->debug('Placing order', ['order_id' => $order->getIncrementId(), 'merchant_id' => $merchentId, 'terminal_id' => $terminalId]);
+            $this->logger->debug('Order payment method before update', ['payment_method' => get_class_methods($order)]);
             $payment = $order->getPayment();
             $payment->setMethod('fiserv_paypal');
             $payment->setAdditionalInformation(DataAssignObserver::ORDER_ID, $orderId);
             $payment->save();
             $payment->load($payment->getId());
+            $this->logger->debug('Order payment method after update', ['payment_method' => $payment->getId()]);
             $order->save();
             $paypalTxnId = $orderId;
 
             $paymentDataObject = $this->paymentDataObjectFactory->create($payment, [
                 'order' => $order
             ]);
+            $this->logger->debug('Payment data object created', [
+                'payment_id' => $payment->getId(),
+                'payment_method' => $payment->getMethod(),
+                'additional_info' => $payment->getAdditionalInformation(),
+                'amount' => $payment->getAmountPaid()
+            ]);
+
             $commandSubject = [
                 'payment' => $paymentDataObject,
                 'amount' => $order->getGrandTotal(),
@@ -207,13 +234,20 @@ class Validate extends Action implements CsrfAwareActionInterface
                     'order_id' => $orderId,
                     'paypal_order_id' => $payment->getAdditionalInformation('paypal_order_id'),
                     'action' => $action,
-                    'subject' => $commandSubject
+                    'payment_id' => $payment->getId(),
+                    'amount' => $order->getGrandTotal()
                 ]);
-                $commandName = ($action === 'capture' || $action === 'sale' || $action === 'authorize_capture') ? 'sale' : 'authorize';
+                 if ($action === 'authorize_capture') {
+                        $commandName = 'sale';
+                 } elseif ($action === 'authorize') {
+                         $commandName = 'authorize';
+                 } else {
+                         throw new \Exception('Invalid action: ' . $action);
+                 }
                 $commandResult = $this->commandPool->get($commandName)->execute($commandSubject);
                 $this->logger->info('PayPal Command Finish', [
                     'order_id' => $orderId,
-                    'result' => $commandResult
+                    'command_result' => $commandResult
                 ]);
             } catch (\Exception $e) {
                 $this->logger->error('Paypal Command Error', [
@@ -222,32 +256,28 @@ class Validate extends Action implements CsrfAwareActionInterface
                     'trace' => $e->getTraceAsString()
                 ]);
             }
-            // Get the transaction added by the handler (either auth or capture)
-            $transaction = $payment->getAuthorizationTransaction() ?: $payment->getCaptureTransaction();
-            if ($transaction) {
-                $transaction->setTxnId($paypalTxnId);
-                $transaction->setAdditionalInformation(
-                    [TransactionManager::RAW_DETAILS => ['paypal_txn_id' => $paypalTxnId]]
-                );
-                $isCapture = $transaction->getTxnType() === PaymentTransaction::TYPE_CAPTURE;
-                $message = $isCapture ? 'PayPal payment captured with Transaction ID: ' . $paypalTxnId : 'PayPal payment authorized with Transaction ID: ' . $paypalTxnId;
-                $payment->addTransactionCommentsToOrder($transaction, $message);
-                $transaction->setIsClosed($isCapture ? 1 : 0);
-                $this->transactionRepository->save($transaction);
-                $transactionSave = $this->transactionBuilder->setPayment($payment)
-                    ->setOrder($order)
-                    ->setTransactionId($paypalTxnId)
-                    ->setAdditionalInformation([TransactionManager::RAW_DETAILS => ['paypal_txn_id' => $paypalTxnId]])
-                    ->build($transaction->getTxnType());
-                $this->transactionRepository->save($transactionSave);
-                $payment->setParentTransactionId(null);
-                $payment->save();
-                $order->save();
-            } else {
-                $this->logger->error('Transaction not found for order', ['order_id' => $order->getIncrementId(), 'action' => $action]);
-            }
+            // Ensure the order and payment are saved after command execution
+            $payment->save();
+            $order->save();
             $this->logger->debug('Order placed successfully', ['order_id' => $order->getIncrementId()]);
-            $result->setData(['success' => true, 'order_id' => $order->getIncrementId()]);
+            $paypalTxnId = $payment->getLastTransId() ?: $paypalTxnId;
+            $this->logger->debug('PayPal transaction ID', ['paypal_txn_id' => $paypalTxnId]);
+            $this->transactionBuilder->setPayment($payment)
+                ->setOrder($order)
+                ->setTransactionId($paypalTxnId)
+                ->setAdditionalInformation([
+                    Transaction::RAW_DETAILS => ['order_id' => $orderId]
+                ])
+                ->setFailSafe(true);
+            $transaction = $this->transactionBuilder->build(Transaction::TYPE_CAPTURE);
+            $this->transactionRepository->save($transaction);
+            $order->addStatusHistoryComment('transaction ID: ' . $paypalTxnId)
+                ->setIsCustomerNotified(false)
+                ->setIsVisibleOnFront(false);
+            $order->save();
+            $this->logger->debug('Payment transaction saved', ['transaction_id' => $transaction->getTransactionId()]);
+            $this->logger->debug('PayPal transaction ID', ['paypal_txn_id' => $paypalTxnId]);
+            return $result->setData(['success' => true, 'order_id' => $order->getIncrementId(), 'last_transaction_id' => $payment->getLastTransId()]);
         } catch (\Throwable $e) {
             // Always return JSON, even on fatal errors
             if (isset($this->logger)) {
@@ -274,6 +304,8 @@ class Validate extends Action implements CsrfAwareActionInterface
         $this->checkoutSession->setLastQuoteId($quote->getId());
         $this->checkoutSession->setLastSuccessQuoteId($quote->getId());
         $this->checkoutSession->setLastOrderId($order->getId());
+        $this->checkoutSession->setLastRealOrderId($order->getIncrementId());
+
         return $order;
     }
 }

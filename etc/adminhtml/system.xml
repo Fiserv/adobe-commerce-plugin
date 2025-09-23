@@ -165,15 +165,15 @@
 						<!-- <comment>Number of gift cards currently restricted to 1 per order</comment> -->
 						<config_path>payment/fiserv_valuelink/card_amount_limit</config_path>
 					</field>
-                    <field id="gift_card_tier" translate="label" type="select" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="0">
-                        <label>Gift Solutions Tier</label>
-                        <depends>
-                            <field id="valuelink">1</field>
-                        </depends>
-                        <source_model>Fiserv\Payments\Model\Source\CommerceHub\GiftSolutionsTier</source_model>
-                        <config_path>payment/fiserv_valuelink/gift_card_tier</config_path>
-                        <tooltip><![CDATA[Basic tier does not allow for multiple partial captures of gift card transactions]]></tooltip>
-                    </field>
+					<field id="gift_card_tier" translate="label" type="select" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="0">
+					  <label>Gift Solutions Tier</label>
+					  <depends>
+					    <field id="valuelink">1</field>
+					  </depends>
+					  <source_model>Fiserv\Payments\Model\Source\CommerceHub\GiftSolutionsTier</source_model>
+					  <config_path>payment/fiserv_valuelink/gift_card_tier</config_path>
+					  <tooltip><![CDATA[Basic tier does not allow for multiple partial captures of gift card transactions]]></tooltip>
+					</field>
 				</group>
 				<group id="sdc_custom" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="7">
 					<label>Payment Form Customization</label>
@@ -1001,29 +1001,15 @@
 						<config_path>payment/fiserv_paypal/paypal_enable_vaulting</config_path>
 						<comment>Allow customers to save PayPal payment method for future use.</comment>
 					</field>
-					<field id="fiserv_paypal_venmo" translate="label" type="select" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+
+					<!-- VENMO DISABLED: <field id="fiserv_paypal_venmo" translate="label" type="select" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Enable PayPal Venmo</label>
 						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 						<config_path>payment/fiserv_paypal/fiserv_paypal_venmo</config_path>
-					</field>
-					<field id="fiserv_paypal_fastlane" translate="label" type="select" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
-						<label>Enable PayPal FastLane</label>
-						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-						<config_path>payment/fiserv_paypal/fiserv_paypal_fastlane</config_path>
-					</field>
-					<field id="show_privacy_statement" translate="label" type="select" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="0">
-						<label>Show Privacy Statement</label>
-						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-						<config_path>payment/fiserv_paypal/show_privacy_statement</config_path>
-					</field>
-					<field id="api_environment" translate="label" type="select" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="0">
-						<label>API Environment</label>
-						<source_model>Fiserv\Payments\Model\Source\CommerceHub\ApiEnvironment</source_model>
-						<config_path>payment/fiserv_paypal/api_environment</config_path>
-					</field>
-					<field id="payment_action" translate="label" type="select" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="0">
+					</field> -->
+					<field id="payment_action" translate="label" type="select" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="1">
 						<label>Charge Type</label>
-						<source_model>Fiserv\Payments\Model\Source\PayPal\TransactionType</source_model>
+						<source_model>Fiserv\Payments\Model\Source\CommerceHub\TransactionType</source_model>
 						<config_path>payment/fiserv_paypal/payment_action</config_path>
 					</field>
 
@@ -1047,17 +1033,17 @@
 						<config_path>payment/fiserv_paypal/paypal_button_label</config_path>
 					</field>
 
-					<!-- Venmo Button Style Fields -->
-					<field id="venmo_button_color" translate="label" type="select" sortOrder="120" showInDefault="1" showInWebsite="1" showInStore="0">
+					<!-- VENMO DISABLED: Venmo Button Style Fields -->
+					<!-- VENMO DISABLED: <field id="venmo_button_color" translate="label" type="select" sortOrder="120" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Venmo Button Color</label>
 						<source_model>Fiserv\Payments\Model\Source\ButtonColor</source_model>
 						<config_path>payment/fiserv_paypal/venmo_button_color</config_path>
-					</field>
-					<field id="venmo_button_shape" translate="label" type="select" sortOrder="121" showInDefault="1" showInWebsite="1" showInStore="0">
+					</field> -->
+					<!-- VENMO DISABLED: <field id="venmo_button_shape" translate="label" type="select" sortOrder="121" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Venmo Button Shape</label>
 						<source_model>Fiserv\Payments\Model\Source\ButtonShape</source_model>
 						<config_path>payment/fiserv_paypal/venmo_button_shape</config_path>
-					</field>
+					</field> -->
 				</group>
 			</group>
 		</section>

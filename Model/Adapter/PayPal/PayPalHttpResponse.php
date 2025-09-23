@@ -4,6 +4,7 @@ namespace Fiserv\Payments\Model\Adapter\PayPal;
 
 class PayPalHttpResponse
 {
+	// TODO: Confirm if this is the file exictly needed or not.
 	/**
 	 * @var int
 	 */

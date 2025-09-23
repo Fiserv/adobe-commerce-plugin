@@ -16,6 +16,7 @@ use Fiserv\Payments\Logger\MultiLevelLogger;
  */
 class SubjectReader extends FiservSubjectReader
 {
+	// TODO: Confirm if this is the file exictly needed or not.
 	/**
 	 * @var MultiLevelLogger
 	 */
@@ -26,27 +27,9 @@ class SubjectReader extends FiservSubjectReader
 		parent::__construct($checkoutSession);
 		$this->logger = $logger;
 	}
-
-	/**
-	 * Reads payment from subject with logging for debugging
-	 *
-	 * @param array $subject
-	 * @return \Magento\Payment\Gateway\Data\PaymentDataObjectInterface
-	 */
-	public function readPayment(array $subject)
-	{
-		if (!isset($subject['payment']) || !$subject['payment'] instanceof \Magento\Payment\Gateway\Data\PaymentDataObjectInterface) {
-			$this->logger->error('PayPal SubjectReader: Payment data object not provided in subject', [
-				'subject_keys' => array_keys($subject),
-				'subject' => $subject
-			]);
-			throw new \InvalidArgumentException('Payment data object should be provided');
-		}
-		return parent::readPayment($subject);
-	}
 	
 	/**
-	 * Reads PayPal response from the subject.
+	 * Reads response from the subject.
 	 * Used in Handlers
 	 *
 	 * @param array $subject
@@ -55,11 +38,15 @@ class SubjectReader extends FiservSubjectReader
 	 */
 	public function readPayPalResponse(array $subject)
 	{
-		if (!isset($subject['response'])) {
-			throw new \InvalidArgumentException('PayPal response object does not exist.');
+		if (!isset($subject[HttpClient::RESPONSE_KEY])) {
+			throw new \InvalidArgumentException('CommerceHub response object does not exist.');
 		}
 
-		return $subject['response'];
+		if (!isset($subject[HttpClient::STATUS_CODE_KEY])) {
+			throw new \InvalidArgumentException('CommerceHub response status code does not exist.');
+		}
+
+		return $subject;
 	}
 
 	/**

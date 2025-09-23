@@ -6,13 +6,13 @@
 namespace Fiserv\Payments\Gateway\Request\PayPal\Composite;
 
 use Fiserv\Payments\Gateway\Request\PayPal\Composite\PayPalCompositeBase;
-use Fiserv\Payments\Lib\PayPal\Model\RefundRequest;
-use Fiserv\Payments\Gateway\Request\PayPal\AmountDataBuilder;
-use Fiserv\Payments\Gateway\Request\PayPal\ReferenceTransactionDataBuilder;
+use Fiserv\Payments\Lib\CommerceHub\Model\RefundRequest;
+use Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder;
+use Fiserv\Payments\Gateway\Request\CommerceHub\ReferenceTransactionDataBuilder;
 use Fiserv\Payments\Gateway\Request\PayPal\PayPalTransactionDetailsDataBuilder;
-use Fiserv\Payments\Gateway\Request\PayPal\PayPalTransactionInteractionDataBuilder;
-use Fiserv\Payments\Gateway\Request\PayPal\MerchantDetailsDataBuilder;
-use Fiserv\Payments\Gateway\Request\PayPal\CustomerDataBuilder;
+use Fiserv\Payments\Gateway\Request\CommerceHub\TransactionInteractionDataBuilder;
+use Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder;
+use Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder;
 use Magento\Framework\ObjectManager\TMapFactory;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 
@@ -57,7 +57,6 @@ class RefundComposite extends PayPalCompositeBase
 		$req->setTransactionDetails($result[PayPalTransactionDetailsDataBuilder::TXN_DETAILS_KEY]);
 		$req->setReferenceTransactionDetails($result[ReferenceTransactionDataBuilder::REF_TXN_KEY]);
 		$req->setMerchantDetails($result[MerchantDetailsDataBuilder::MERCHANT_DETAILS_KEY]);
-
 		return [ 
 			self::REQUEST_KEY => $req,
 			self::ENDPOINT_KEY => self::ENDPOINT

@@ -25,7 +25,7 @@ class ConfigProvider implements ConfigProviderInterface
 	const SHOW_PRIVACY_STATEMENT_KEY = 'show_privacy_statement';
 	const API_KEY_KEY = 'apiKey';
 	const ENV_KEY = 'environment';
-	const PAYMENT_ACTION_KEY = 'paymentAction';
+	const PAYMENT_ACTION_KEY = 'payment_action';
 	const LOGGING_LEVEL_KEY = 'loggingLevel';
 	const CURRENCY_KEY = 'currency';
 	const PROD_CLIENT_KEY = 'prodClientUrl';
@@ -59,10 +59,10 @@ class ConfigProvider implements ConfigProviderInterface
 				'shape' => $this->paypalConfig->getPaypalButtonShape($storeId) ?: 'rect',
 				'label' => $this->paypalConfig->getPaypalButtonLabel($storeId) ?: 'paypal',
 			],
-			'venmo_style' => [
-				'color' => $this->paypalConfig->getVenmoButtonColor($storeId) ?: 'gold',
-				'shape' => $this->paypalConfig->getVenmoButtonShape($storeId) ?: 'rect',
-			],
+			// 'venmo_style' => [
+			// 	'color' => $this->paypalConfig->getVenmoButtonColor($storeId) ?: 'gold',
+			// 	'shape' => $this->paypalConfig->getVenmoButtonShape($storeId) ?: 'rect',
+			// ],
 			'funding' => [
 				'allowed' => $allowedFunding,
 				'disallowed' => [],
@@ -72,21 +72,20 @@ class ConfigProvider implements ConfigProviderInterface
 			'enableVault' => method_exists($this->paypalConfig, 'isVaultActive') ? $this->paypalConfig->isVaultActive($storeId) : false,
 			'vaultLabel' => __('Save PayPal for future use'),
 		];
-		$venmoConfig = [
-			'enableVenmo' => method_exists($this->paypalConfig, 'isVenmoActive') ? $this->paypalConfig->isVenmoActive($storeId) : false,
-			'venmoLabel' => __('Pay with Venmo'),
-		];
+		// $venmoConfig = [
+		// 	'enableVenmo' => method_exists($this->paypalConfig, 'isVenmoActive') ? $this->paypalConfig->isVenmoActive($storeId) : false,
+		// 	'venmoLabel' => __('Pay with Venmo'),
+		// ];
 		$config = [
 			'buttonConfig' => $buttonConfig,
 			'vaultConfig' => $vaultConfig,
-			'venmoConfig' => $venmoConfig,
+			// 'venmoConfig' => $venmoConfig,
 			self::IS_ACTIVE_KEY => $this->paypalConfig->isActive($storeId),
 			self::MERCHANT_ID_KEY => $this->commerceHubConfig->getMerchantId($storeId),
 			self::TERMINAL_ID_KEY => $this->commerceHubConfig->getTerminalId($storeId),
-			self::SHOW_PRIVACY_STATEMENT_KEY => (bool)$this->paypalConfig->showPrivacyStatement($storeId),
 			self::API_KEY_KEY => $this->commerceHubConfig->getApiKey($storeId),
 			self::ENV_KEY => method_exists($this->commerceHubConfig, 'getApiEnvironment') ? $this->commerceHubConfig->getApiEnvironment($storeId) : '',
-			self::PAYMENT_ACTION_KEY => $this->commerceHubConfig->getPaymentAction($storeId),
+			self::PAYMENT_ACTION_KEY => $this->paypalConfig->getPaymentAction($storeId),
 			self::LOGGING_LEVEL_KEY => $this->commerceHubConfig->getLoggingLevel($storeId),
 			self::CURRENCY_KEY => $this->commerceHubConfig->getCurrency($storeId),
 			self::PROD_CLIENT_KEY => $this->commerceHubConfig->getProdClientUrl(),

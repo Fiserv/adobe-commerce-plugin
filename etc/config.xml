@@ -195,7 +195,7 @@
 				<create_valuelink_invoice>yes</create_valuelink_invoice>
 				<valuelink_title>Gift Cards</valuelink_title>
 				<card_amount_limit>1</card_amount_limit>
-                <gift_card_tier>basic</gift_card_tier>
+				<gift_card_tier>basic</gift_card_tier>
 	
 				<sdc_custom_checkout_valuelink_card_number_parent_element>fiserv_giftcard-card-number</sdc_custom_checkout_valuelink_card_number_parent_element>
 				<sdc_custom_checkout_valuelink_card_number_placeholder>Gift Card Number</sdc_custom_checkout_valuelink_card_number_placeholder>
@@ -262,11 +262,8 @@
 			<cert_client_url><![CDATA[https://cert.api.fiservapps.com/ch/sdk/v1/commercehub-client-sdk.js]]></cert_client_url>
 			<qa_client_url><![CDATA[https://qa.api.fiservapis.com/ch/sdk/v1/commercehub-client-sdk.js]]></qa_client_url>
 			<api_environment>CERT</api_environment>
-			<show_privacy_statement>1</show_privacy_statement>
 			<payment_action>AUTH</payment_action>
-			<ch_paypal_vault>1</ch_paypal_vault>
-			<ch_paypal_venmo>1</ch_paypal_venmo>
-			<ch_paypal_fastlane>1</ch_paypal_fastlane>
+			<!-- <ch_paypal_venmo>1</ch_paypal_venmo> -->
 			<debug>1</debug>
 			<logging_level>2</logging_level>
 			<currency>USD</currency>

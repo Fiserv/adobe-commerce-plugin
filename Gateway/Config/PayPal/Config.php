@@ -22,11 +22,11 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	const PAYPAL_BUTTON_COLOR_KEY = "paypal_button_color";
 	const PAYPAL_BUTTON_SHAPE_KEY = "paypal_button_shape";
 	const PAYPAL_BUTTON_LABEL_KEY = "paypal_button_label";
-	const VENMO_BUTTON_COLOR_KEY = "venmo_button_color";
-	const VENMO_BUTTON_SHAPE_KEY = "venmo_button_shape";
+	// const VENMO_BUTTON_COLOR_KEY = "venmo_button_color";
+	// const VENMO_BUTTON_SHAPE_KEY = "venmo_button_shape";
 	const KEY_MERCHANT_INTEGRATOR = 'merchant_integrator';
     const KEY_VAULT_ACTIVE = 'paypal_enable_vaulting';
-    const KEY_VENMO_ACTIVE = 'fiserv_paypal_venmo';
+    // const KEY_VENMO_ACTIVE = 'fiserv_paypal_venmo';
 	const KEY_TOKEN_STRATEGY = 'tokenization_strategy';
 	const KEY_TOKENIZATION = "tokenization";
 	const KEY_STANDALONE_SPA = 'standalone_spa';
@@ -69,10 +69,6 @@ class Config extends \Magento\Payment\Gateway\Config\Config
         return (bool)$this->getValue(self::KEY_ACTIVE, $storeId);
     }
 
-    public function showPrivacyStatement($storeId = null)
-    {
-        return (bool) $this->getValue(self::SHOW_PRIVACY_STATEMENT_KEY, $storeId);
-    }
 
     public function getPaypalButtonColor($storeId = null)
     {
@@ -89,15 +85,17 @@ class Config extends \Magento\Payment\Gateway\Config\Config
         return $this->getValue(self::PAYPAL_BUTTON_LABEL_KEY, $storeId);
     }
 
-    public function getVenmoButtonColor($storeId = null)
-    {
-        return $this->getValue(self::VENMO_BUTTON_COLOR_KEY, $storeId);
-    }
+    // VENMO DISABLED: public function getVenmoButtonColor($storeId = null)
+    // VENMO DISABLED: {
+    // VENMO DISABLED:     {
+    // VENMO DISABLED:         return $this->getValue(self::VENMO_BUTTON_COLOR_KEY, $storeId);
+    // VENMO DISABLED: }
 
-    public function getVenmoButtonShape($storeId = null)
-    {
-        return $this->getValue(self::VENMO_BUTTON_SHAPE_KEY, $storeId);
-    }
+    // VENMO DISABLED: public function getVenmoButtonShape($storeId = null)
+    // VENMO DISABLED: {
+    // VENMO DISABLED:     {
+    // VENMO DISABLED:         return $this->getValue(self::VENMO_BUTTON_SHAPE_KEY, $storeId);
+    // VENMO DISABLED: }
 
     public function getMerchantIntegrator($storeId = null)
     {
@@ -109,10 +107,11 @@ class Config extends \Magento\Payment\Gateway\Config\Config
         return (bool)$this->getValue(self::KEY_VAULT_ACTIVE, $storeId);
     }
 
-    public function isVenmoActive($storeId = null)
-    {
-        return (bool)$this->getValue(self::KEY_VENMO_ACTIVE, $storeId);
-    }
+    // VENMO DISABLED: public function isVenmoActive($storeId = null)
+    // VENMO DISABLED: {
+    // VENMO DISABLED:     {
+    // VENMO DISABLED:         return (bool)$this->getValue(self::KEY_VENMO_ACTIVE, $storeId);
+    // VENMO DISABLED: }
 
     public function isDebug($storeId = null)
     {

@@ -97,7 +97,7 @@ define(
 				}
 				return await response.json();
 			} catch (error) {
-				throw new Error("An error occurred while beginning Commercehub payment session.");
+				throw new Error("An error occurred while beginning paypal payment session.");
 			}
         };
     }

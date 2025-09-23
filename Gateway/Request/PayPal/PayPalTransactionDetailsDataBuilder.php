@@ -8,7 +8,6 @@ namespace Fiserv\Payments\Gateway\Request\PayPal;
 use Fiserv\Payments\Gateway\Subject\PayPal\SubjectReader;
 use Fiserv\Payments\Lib\CommerceHub\Model\TransactionDetails;
 use Fiserv\Payments\Gateway\Config\PayPal\Config;
-use Fiserv\Payments\Model\Source\PayPal\TokenizationStrategy;
 use Magento\Payment\Gateway\Request\BuilderInterface;
 use Magento\Vault\Model\Ui\VaultConfigProvider;
 use Fiserv\Payments\Logger\MultiLevelLogger;
@@ -60,29 +59,22 @@ abstract class PayPalTransactionDetailsDataBuilder implements BuilderInterface
 		$orderDO = $paymentDO->getOrder();
 		$orderIncrementId = $orderDO->getOrderIncrementId();
 
-		$txnDetails = new TransactionDetails();
-
 		$data = $payment->getAdditionalInformation();
-		
-		$tokenStrat = $this->paypalConfig->getTokenStrategy();
-		$createToken = !empty($data[VaultConfigProvider::IS_ACTIVE_CODE]) || $tokenStrat === TokenizationStrategy::ALWAYS;
-		$txnDetails->setCreateToken($createToken);
-		if ($createToken == true) 
-		{ 
-        	$payment->setStoreVault(self::KEY_CREATE_TOKEN);
+		$captureFlag = $this->getCaptureFlag();
+		$refundFlag = isset($data['is_refund']) ? (bool)$data['is_refund'] : false;
+
+		if ($refundFlag) {
+			$operationType = 'REFUND';
+		} elseif ($captureFlag) {
+			$operationType = 'CAPTURE';
+		} else {
+			$operationType = 'AUTHORIZE';
 		}
 
-		$captureFlag = $this->getCaptureFlag();
+		$this->logger->logDebug(3, "Transaction Details Data Builder:\n" . $operationType, "Order ID: $orderIncrementId");
 
-		$txnDetails->setCaptureFlag($captureFlag);
-		$txnDetails->setOperationType($captureFlag ? 'SALE' : 'AUTHORIZE');
-		$txnDetails->setMerchantOrderId($orderIncrementId);
-		$txnDetails->setMerchantTransactionId(uniqid());
-		$txnDetails->setAccountVerification(false);
-
-		$this->logger->logDebug(3, "Transaction Details Data Builder:\n" . $txnDetails->__toString(), "Order ID: $orderIncrementId");
-
-		return [ self::TXN_DETAILS_KEY => $txnDetails ];
+		// Always return as ['operationType' => ...]
+		return [ self::TXN_DETAILS_KEY => ['operationType' => $operationType] ];
 	}
 
 	/**

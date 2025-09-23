@@ -14,10 +14,8 @@ class DataAssignObserver extends AbstractDataAssignObserver
     /**
      * Keys for PayPal-specific additional information.
      */
-    public const SESSION_ID_KEY = 'payment_session';
     public const ORDER_ID      = 'paypal_order_id';
     public const REF_TXN_KEY   = 'paypal_order_id';
-    public const PAYER_ID      = 'paypal_payer_id';
     public const EMAIL         = 'paypal_email';
     public const TRANSACTION_ID = 'paypal_transaction_id';
     public const INTENT        = 'paypal_intent';
@@ -28,10 +26,8 @@ class DataAssignObserver extends AbstractDataAssignObserver
      * @var string[]
      */
     protected $paypalInfoKeys = [
-        self::SESSION_ID_KEY,
         self::ORDER_ID,
         self::REF_TXN_KEY,
-        self::PAYER_ID,
         self::EMAIL,
         self::TRANSACTION_ID,
         self::INTENT

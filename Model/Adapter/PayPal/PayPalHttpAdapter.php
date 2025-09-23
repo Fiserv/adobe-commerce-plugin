@@ -3,13 +3,12 @@ namespace Fiserv\Payments\Model\Adapter\PayPal;
 
 use Fiserv\Payments\Gateway\Config\PayPal\Config;
 use Fiserv\Payments\Gateway\Config\CommerceHub\Config as chConfig;
-use Fiserv\Payments\Model\Source\PayPal\ApiEnvironment;
+use Fiserv\Payments\Model\Source\CommerceHub\ApiEnvironment;
 use Fiserv\Payments\Model\Adapter\PayPal\PayPalHttpResponse;
 use Magento\Framework\HTTP\Adapter\CurlFactory;
 use Fiserv\Payments\Lib\Version;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 use Magento\Payment\Gateway\Http\ClientException;
-use Magento\Store\Model\StoreManagerInterface;
 
 class PayPalHttpAdapter
 {
@@ -20,7 +19,8 @@ class PayPalHttpAdapter
 	const MERCHANT_DETAILS_KEY = "merchantDetails";
 	const REFERENCE_TRANSACTION_DETAILS_KEY = "referenceTransactionDetails";
 	const REFENCE_MERCHANT_TRANSACTION_KEY = "referenceMerchantTransactionId";
-	// Define PayPal-specific endpoints and constants as needed
+
+	// TODO: Confirm if this is the file exictly needed or not.
 
 	/**
 	 * @var MultiLevelLogger
@@ -41,10 +41,12 @@ class PayPalHttpAdapter
 	/**
 	 * @var string
 	 */
-		private $nonce;
-		private $timestamp;
-		private $storeManager;
-		private $storeId;
+	private $nonce;
+
+	/**
+	 * @var string
+	 */
+	private $timestamp;
 
 	/**
 	 * Constructor
@@ -57,14 +59,11 @@ class PayPalHttpAdapter
 		   chConfig $commerceHubConfig,
 		   CurlFactory $curlFactory,
 		   MultiLevelLogger $logger,
-		   StoreManagerInterface $storeManager
 	   ) {
 		$this->paypalConfig = $config;
 		$this->chConfig = $commerceHubConfig;
 		   $this->curlFactory = $curlFactory;
 		   $this->logger = $logger;
-		   $this->storeManager = $storeManager;
-		   $this->storeId = $this->storeManager->getStore()->getId();
 	   }
 
 	/**
@@ -76,7 +75,7 @@ class PayPalHttpAdapter
 	public function sendRequest($data, $endpoint)
 	{
 		$this->timestamp = $this->getTimestamp();
-		$this->nonce = $this->getNonce($this->timestamp);
+		$this->nonce = $this->getnonce($this->timestamp);
 
 		$url = $this->getServiceUrl() . '/' . $endpoint;
 		$payload = json_encode($data);
@@ -122,37 +121,83 @@ class PayPalHttpAdapter
 	 */
 	private function handleTimeout($data, $endpoint)
 	{
-		$transactionID = $data["transactionDetails"]["merchantTransactionId"] ?? 'unknown';
-		$this->logger->logCritical(1, "Timeout detected for transaction ID: " . $transactionID . ". Recovery process initiated.");
+		// Step 2: Transaction Inquiry
+		$this->timestamp = $this->getTimestamp();
+		$this->nonce = $this->getnonce($this->timestamp);
+		$transactionID = $data["transactionDetails"]["merchantTransactionId"];
+		$this->logger->logCritical(1, "Initiating transaction inquiry for referenceMerchantTransactionId " . $transactionID);
+		$payload = json_encode(
+			[
+				self::MERCHANT_DETAILS_KEY => $data[self::MERCHANT_DETAILS_KEY],
+				self::REFERENCE_TRANSACTION_DETAILS_KEY => [
+					self::REFENCE_MERCHANT_TRANSACTION_KEY => $transactionID
+				]
+			]
+		);
+		
+		$inquiryUrl = $this->getServiceUrl() . '/' . self::INQUIRY_ENDPOINT;
+		$inquiryCurl = $this->generateNakedBaseCurl($inquiryUrl, $payload, 2);
+		$inquiryResponseFull = curl_exec($inquiryCurl);
+		$inquiryHeaderLength = curl_getinfo($inquiryCurl, CURLINFO_HEADER_SIZE);
+		$inquiryResponseArray = json_decode(substr($inquiryResponseFull, $inquiryHeaderLength), true);
 
-		// Attempt idempotency with a simple retry
-		try {
-			$this->timestamp = $this->getTimestamp();
-			$this->nonce = $this->getNonce($this->timestamp);
-			$url = $this->getServiceUrl() . '/' . $endpoint;
-			$payload = json_encode($data);
-
-			$retryCurl = $this->generateBaseCurl(5); // Longer timeout for retry
-			$retryCurl->write('POST', $url, '1.1', $this->getHeaders($payload), $payload);
-			$retryResponse = $retryCurl->read();
-
-			if ($retryCurl->getErrno()) {
-				$this->logger->logError(2, "Idempotency retry failed for transaction ID: " . $transactionID);
-				$retryCurl->close();
-				throw new ClientException(__('Transaction timeout: Unable to complete payment. Please try again.'));
+		// Response returned from Commerce Hub. No errors. Transaction exists
+		if(!curl_error($inquiryCurl) && $inquiryResponseArray !== array())
+		{
+			$inquiryStatusCode = curl_getinfo($inquiryCurl, CURLINFO_HTTP_CODE);
+			// Look for correct transaction within $inquiryResponse and return just the body
+			$orderID = $data["transactionDetails"]["merchantOrderId"];
+			$inquiryBody = null;
+			foreach($inquiryResponseArray as $response) {
+				if($response["transactionDetails"]["merchantOrderId"] === $orderID) {
+					$inquiryBody = $response;
+				}
 			}
 
-			$retryStatusCode = $retryCurl->getInfo(CURLINFO_HTTP_CODE);
-			$retryHeaderLength = $retryCurl->getInfo(CURLINFO_HEADER_SIZE);
-			$retryCurl->close();
-
-			$this->logger->logInfo(1, "Idempotency retry successful for transaction ID: " . $transactionID);
-			return new PayPalHttpResponse($retryStatusCode, $retryResponse, $retryHeaderLength);
-
-		} catch (\Exception $e) {
-			$this->logger->logEmergency(1, "Timeout recovery failed for transaction ID: " . $transactionID . ". Error: " . $e->getMessage());
-			throw new ClientException(__('Transaction timeout: Unable to complete payment. Please contact support if the issue persists.'));
+			$this->logger->logInfo(1, "Transaction inquiry success. Returning from recovery process...");
+			curl_close($inquiryCurl);
+			return new PayPalHttpResponse($inquiryStatusCode, substr($inquiryResponseFull, 0, $inquiryHeaderLength) . json_encode($inquiryBody), $inquiryHeaderLength);
 		}
+		curl_close($inquiryCurl);
+		$this->logger->logCritical(1, "Transaction inquiry failure. Continuing recovery process...");
+
+		// Step 3: Critical Recovery (Deal with transaction specific response flows if issue with inquiry occurred)
+		if($endpoint === "checkouts/v1/orders" && $data["transactionDetails"]["captureFlag"] === false)
+		{
+			// Attempt cancel transaction of initial Auth
+			$this->logger->logCritical(1, "Auth detected. Attempting to Cancel initial transaction...");
+			$this->timestamp = $this->getTimestamp();
+			$this->nonce = $this->getnonce($this->timestamp);
+			
+			$cancelUrl = $this->getServiceUrl() . '/' . self::CANCELS_ENDPOINT;
+			$cancelCurl = $this->generateBaseCurl(2);
+			$cancelCurl->write('POST', $cancelUrl, '1.1', $this->getHeaders($payload), $payload);
+			$cancelResponse = $cancelCurl->read();
+			$cancelStatusCode = $cancelCurl->getInfo(CURLINFO_HTTP_CODE);
+			$cancelHeaderLength = $cancelCurl->getInfo(CURLINFO_HEADER_SIZE);
+			$cancelHttpResponse = new PayPalHttpResponse($cancelStatusCode, $cancelResponse, $cancelHeaderLength);
+
+			if($cancelCurl->getErrno()) {
+				$this->logger->logEmergency(1, "Initial transaction cancel failure. Failed to recover from transaction timeout. referenceMerchantTransactionId: " . $transactionID);
+			} else {
+				$cancelResponseBody = json_decode($cancelHttpResponse->getBody(), true);
+				$cancelTransactionId = $cancelResponseBody['gatewayResponse']['transactionProcessingDetails']['transactionId'];
+				$this->logger->logInfo(1, "Cancel response received for timeout reversal");
+				$this->logger->logDebug(3, "CANCEL TXN RESPONSE INFO");
+				$this->logger->logDebug(3, "Cancel Response Headers:\n" . print_r($cancelHttpResponse->getHeaders(), true));
+				$this->logger->logDebug(3, "Cancel Response Body:\n" . json_encode($cancelResponseBody, JSON_PRETTY_PRINT));
+				$this->logger->logInfo(1, "Transaction ID: " . $cancelTransactionId);
+				$this->logger->logInfo(1, "Recovery process finished");
+			}
+			$cancelCurl->close();
+		} else {
+			// Do nothing  :(
+			$this->logger->logEmergency(1, "Non-Auth transaction detected. Further recovery attempts not possible. Failed to recover from transaction timeout. referenceMerchantTransactionId: " . $transactionID);
+		}
+		// Error Out
+		throw new ClientException(
+			__('Timeout occurred during transaction.')
+		);
 	}
 
 	/**
@@ -211,22 +256,14 @@ class PayPalHttpAdapter
 	 * See: https://developer.fiserv.com/product/CommerceHub/docs/?path=docs/Resources/API-Documents/Use-Our-APIs.md&branch=main#request-header
 	 */
 	private function getHeaders($payload) {
-		$apiKey = $this->getChApiKey();
-		$signature = $this->createSignature($payload);
-
-		$this->logger->logInfo(2, "API Key being used: " . substr($apiKey, 0, 10) . "..." . substr($apiKey, -10));
-		$this->logger->logInfo(2, "Signature being used: " . substr($signature, 0, 20) . "...");
-		$this->logger->logInfo(2, "Timestamp: " . $this->timestamp);
-		$this->logger->logInfo(2, "Nonce: " . $this->nonce);
-
 		return [
-			'Api-Key: ' . $apiKey,
+			'Api-Key: ' . $this->getPayPalApiKey(),
 			'Content-Type: ' . self::CONTENT_TYPE,
 			'Content-Length: ' . strlen($payload),
-			'Authorization: ' . $signature,
+			'Authorization: ' . $this->createSignature($payload),
 			'Client-Request-Id: ' . $this->nonce,
 			'Timestamp: ' . $this->timestamp,
-			'Auth-Token-Type: HMAC'
+			'Auth-Token-Type: HMAC' 
 		];
 	}
 
@@ -240,6 +277,11 @@ class PayPalHttpAdapter
 		{
 			if($httpResponse[$i] === '"')
 			{
+				/**
+				 * We need to check here if the " char is prepended by a \ or not (in case some bozo tries to break the form with special characters)
+				 * Since multiple \ characters can be present in the message in a row, the easiest way to tell if the escape character is related to
+				 * the " or not is to check if there is an even or odd amount of them in a row
+				 */
 				$slashCounter = 0;
 				for($j = $i - 1; $j > 0 && $httpResponse[$j] === '\\'; $j--)
 				{
@@ -270,50 +312,40 @@ class PayPalHttpAdapter
 		return 0;
 	}
 
-/** 
+	/** 
 	* Returns CommerceHub service url
 	* based on gateway's environment
 	* 
 	* @param string $storeId
 	* @return string
 	*/ 
-	   private function getServiceUrl() {
-		   $env = $this->chConfig->getApiEnvironment($this->storeId);
-		   if ($env == ApiEnvironment::ENVIRONMENT_PROD) {
-			   return $this->chConfig->getProdApiService($this->storeId);
-		   } else if ($env == ApiEnvironment::ENVIRONMENT_CERT) {
-			   return $this->chConfig->getCertApiService($this->storeId);
-		   } else if ($env == ApiEnvironment::ENVIRONMENT_QA) {
-			   return $this->chConfig->getQaApiService($this->storeId);
-		   }
+	private function getServiceUrl() {
+		$env = $this->chConfig->getApiEnvironment();
+		if ($env == ApiEnvironment::ENVIRONMENT_PROD) {
+			return $this->chConfig->getProdApiService();
+		} else if ($env == ApiEnvironment::ENVIRONMENT_CERT) {
+			return $this->chConfig->getCertApiService();
+		} else if ($env == ApiEnvironment::ENVIRONMENT_QA) {
+			return $this->chConfig->getQaApiService();
+		}
 	}
 
-	   private function createSignature($payload) {
-		   $apiKey = $this->getChApiKey();
-		   $apiSecret = $this->getChApiSecret();
-		   $msg = $apiKey . $this->nonce . $this->timestamp . $payload;
+	private function createSignature($payload) {
+		$msg = $this->getPayPalApiKey() . $this->nonce . $this->timestamp . $payload;
+		return base64_encode(hash_hmac('sha256', $msg, $this->getPayPalApiSecret()));
+	}
 
-		   $this->logger->logInfo(2, "Creating signature with API Key: " . substr($apiKey, 0, 10) . "..." . substr($apiKey, -10));
-		   $this->logger->logInfo(2, "API Secret length: " . strlen($apiSecret));
-		   $this->logger->logInfo(2, "Message for signature: " . substr($msg, 0, 50) . "...");
+	private function getPayPalApiKey() {
+		return $this->chConfig->getApiKey();
+	}
 
-		   $signature = base64_encode(hash_hmac('sha256', $msg, $apiSecret));
-		   $this->logger->logInfo(2, "Generated signature: " . substr($signature, 0, 20) . "...");
+	private function getPayPalApiSecret() {
+		return $this->chConfig->getApiSecret();
+	}
 
-		   return $signature;
-	   }
-
-	   private function getChApiKey() {
-		   return $this->chConfig->getApiKey($this->storeId);
-	   }
-
-	   private function getChApiSecret() {
-		   return $this->chConfig->getApiSecret($this->storeId);
-	   }
-
-	   private function getMerchantId() {
-		   return $this->chConfig->getMerchantId($this->storeId);
-	   }
+	private function getMerchantId() {
+		return $this->chConfig->getMerchantId();
+	}
 
 	private function getNonce($timestamp) {
 		return $timestamp + rand();
@@ -321,40 +353,6 @@ class PayPalHttpAdapter
 
 	private function getTimestamp() {
 		return floor(microtime(true) * 1000);
-	}
-
-	/**
-	 * Capture a PayPal order
-	 *
-	 * @param string $paypalOrderId
-	 * @return array
-	 */
-	public function captureOrder($paypalOrderId)
-	{
-		$data = [
-			'orderId' => $paypalOrderId,
-			'capture' => true
-		];
-		$endpoint = 'checkouts/v1/orders';
-		$response = $this->sendRequest($data, $endpoint);
-		return json_decode($response->getBody(), true);
-	}
-
-	/**
-	 * Capture PayPal authorization
-	 *
-	 * @param string $paypalOrderId
-	 * @return array
-	 */
-	public function captureAuthorization($paypalOrderId)
-	{
-		$data = [
-			'orderId' => $paypalOrderId,
-			'capture' => true
-		];
-		$endpoint = 'checkouts/v1/order'; 
-		$response = $this->sendRequest($data, $endpoint);
-		return json_decode($response->getBody(), true);
 	}
 
 }

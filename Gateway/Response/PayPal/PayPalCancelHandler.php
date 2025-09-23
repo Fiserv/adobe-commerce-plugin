@@ -9,35 +9,31 @@ use Fiserv\Payments\Gateway\Subject\PayPal\SubjectReader;
 use Magento\Payment\Gateway\Response\HandlerInterface;
 use Magento\Sales\Api\Data\OrderPaymentInterface;
 use Fiserv\Payments\Logger\MultiLevelLogger;
-use Fiserv\Payments\Gateway\Config\PayPal\Config;
 
 /**
  * Class CancelHandler
  */
 class CancelHandler extends PayPalPaymentDetailsHandler implements HandlerInterface
 {
+	//TODO: Confirm if this is the correct file exactly needed or not.
 	private $subjectReader;
 
-	/**
-	 * @var Config
-	 */
-	private $config;
+	private $logger;
 
 	/**
 	 * Constructor
 	 *
 	 * @param SubjectReader $subjectReader
 	 * @param MultiLevelLogger $logger
-	 * @param Config $config
 	 */
 	public function __construct(
 		SubjectReader $subjectReader,
-		MultiLevelLogger $logger,
-		Config $config
+		MultiLevelLogger $logger
+
 	) {
 		$this->subjectReader = $subjectReader;
-		$this->config = $config;
-		parent::__construct($subjectReader, $logger, $config);
+		$this->logger = $logger;
+		parent::__construct($subjectReader, $logger);
 	}
 
 	/**

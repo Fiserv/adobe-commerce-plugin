@@ -5,30 +5,23 @@
  */
 namespace Fiserv\Payments\Gateway\Request\PayPal;
 
-use Fiserv\Payments\Helper\MerchantPartnerHelper;
-use Fiserv\Payments\Gateway\Config\CommerceHub\Config;
 use Fiserv\Payments\Gateway\Subject\PayPal\SubjectReader;
-use Fiserv\Payments\Lib\CommerceHub\Model\MerchantDetails;
 use Magento\Payment\Gateway\Request\BuilderInterface;
+use Fiserv\Payments\Observer\PayPal\DataAssignObserver;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 
 /**
  * Adds Merchant Account ID to the request.
  */
-class MerchantDetailsDataBuilder implements BuilderInterface
+class ReferenceOrderIdDataBuilder implements BuilderInterface
 {
 
-	const MERCHANT_DETAILS_KEY = "merchantDetails";
+	const REF_ORDER_KEY = "referenceOrderId";
 
 	/**
 	 * @var MultiLevelLogger
 	 */
 	private $logger;
-	
-	/**
-	 * @var Config
-	 */
-	private $config;
 
 	/**
 	 * @var SubjectReader
@@ -43,11 +36,9 @@ class MerchantDetailsDataBuilder implements BuilderInterface
 	 * @param MultiLevelLogger $logger
 	 */
 	public function __construct(
-		Config $config,
 		SubjectReader $subjectReader,
 		MultiLevelLogger $logger
 	) {
-		$this->config = $config;
 		$this->subjectReader = $subjectReader;
 		$this->logger = $logger;
 	}
@@ -59,18 +50,11 @@ class MerchantDetailsDataBuilder implements BuilderInterface
 	{
 		$paymentDO = $this->subjectReader->readPayment($buildSubject);
 		$orderDO = $paymentDO->getOrder();
-		$merchantId = $this->config->getMerchantId($orderDO->getStoreId());
-		$terminalId = $this->config->getTerminalId($orderDO->getStoreId());
-
-		$merchantDetails = new MerchantDetails();
-		$merchantDetails->setMerchantId($merchantId);
-		$merchantDetails->setTerminalId($terminalId);
-
-		$merchantDetails->setMerchantPartner(MerchantPartnerHelper::createMerchantPartner($this->config));
+        $referenceOrderId = $paymentDO->getPayment()->getAdditionalInformation(DataAssignObserver::ORDER_ID);
 
 		$orderIncrementId = $orderDO->getOrderIncrementId();
-		$this->logger->logDebug(3, "Merchant Details Data Builder:\n" . $merchantDetails->__toString(), "Order ID: $orderIncrementId");
+		$this->logger->logDebug(3, "Merchant Details Data Builder:\n" . $referenceOrderId, "Order ID: $orderIncrementId");
 
-		return [ self::MERCHANT_DETAILS_KEY => $merchantDetails ];
+		return [ self::REF_ORDER_KEY => $referenceOrderId ];
 	}
 }

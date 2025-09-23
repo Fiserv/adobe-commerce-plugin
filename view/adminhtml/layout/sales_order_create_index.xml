@@ -7,12 +7,12 @@
 -->
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
 	<body>
-		   <referenceBlock name="order_create_billing_form">
-			   <action method="setMethodFormTemplate">
-				   <argument name="method" xsi:type="const">Fiserv\Payments\Model\Config\CommerceHub\ConfigProvider::CODE</argument>
-				   <argument name="template" xsi:type="string">Fiserv_Payments::order/form/cc.phtml</argument>
-			   </action>
-		   </referenceBlock>
+		<referenceBlock name="order_create_billing_form">
+			<action method="setMethodFormTemplate">
+				<argument name="method" xsi:type="const">Fiserv\Payments\Model\Config\CommerceHub\ConfigProvider::CODE</argument>
+				<argument name="template" xsi:type="string">Fiserv_Payments::order/form/cc.phtml</argument>
+			</action>
+		</referenceBlock>
 		<referenceBlock name="order_create_billing_form">
 			<action method="setMethodFormTemplate">
 				<argument name="method" xsi:type="const">Fiserv\Payments\Model\Config\CommerceHub\ConfigProvider::VAULT_CODE</argument>
@@ -24,6 +24,14 @@
 		</referenceBlock>
 		<referenceContainer name="js">
 			<block class="Magento\Backend\Block\Template" template="Fiserv_Payments::valuelink/sales/order/create/js.phtml" name="valuelink_js"/>
+		</referenceContainer>
+		<referenceContainer name="content">
+			<block name="fiserv_commercehub.admin.order.create"
+				as="fiserv_commercehub.admin.order.create"
+				template="Fiserv_Payments::order/form/script.phtml"
+				class="Fiserv\Payments\Block\CommerceHub\AdminHtml\Order\Create\Billing\Method\Form"
+				cacheable="false"
+				after="order_create_billing_form" />
 		</referenceContainer>
 	</body>
 </page>

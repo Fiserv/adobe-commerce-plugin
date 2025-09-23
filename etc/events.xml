@@ -25,22 +25,4 @@
  	<event name="sales_order_invoice_save_after">
         <observer name="fiserv_valuelink" instance="Fiserv\Payments\Observer\Valuelink\EnrichValuelinkTransactionsWithInvoiceId" />
     </event>
-	<!-- Removed PayPal observers to make Model/Plugin/PayPal primary -->
-	<!--
-	<event name="sales_order_place_after">
-		<observer name="fiserv_paypal" instance="Fiserv\Payments\Observer\PayPal\OrderPlace" />
-	</event>
-	<event name="sales_order_invoice_pay">
-		<observer name="fiserv_paypal" instance="Fiserv\Payments\Observer\PayPal\InvoicePay" />
-	</event>
-	<event name="sales_order_creditmemo_refund">
-		<observer name="fiserv_paypal" instance="Fiserv\Payments\Observer\PayPal\CreditmemoRefund" />
-	</event>
-	-->
-	<!-- Removed PayPal cancel observer to make Model/Plugin/PayPal primary -->
-	<!--
-	<event name="order_cancel_after">
-		<observer name="fiserv_paypal" instance="Fiserv\Payments\Observer\PayPal\CancelObserver" />
-	</event>
-	-->
 </config>

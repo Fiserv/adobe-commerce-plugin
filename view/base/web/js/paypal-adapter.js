@@ -68,7 +68,7 @@ define([
             if (!window.fiserv || typeof window.fiserv.components.paypal !== 'function') {
                 throw new Error('Fiserv SDK not loaded or window.fiserv.components.paypal not available');
             }
-            this.paypalComponent = await window.fiserv.components.paypal();
+            this.paypalComponent = await window.fiserv.components.paypal(options);
             return this.paypalComponent;
         },
 
@@ -145,21 +145,21 @@ define([
                 console.error('Renderer instance not found:', e);
             }
             const containerId ='#paypal-button-container';
-            const venmoContainerId = '#venmo-button-container';
+            // const venmoContainerId = '#venmo-button-container';
             const container = document.querySelector(containerId);
-            const venmoContainer = document.querySelector(venmoContainerId);
+            // const venmoContainer = document.querySelector(venmoContainerId);
             if(container){
                 while (container.children.length > 0) {
                     container.removeChild(container.lastChild);
                     console.log('Removed child from PayPal button container');
                 }
             }
-            if(venmoContainer){
-                while (venmoContainer.children.length > 0) {
-                    venmoContainer.removeChild(venmoContainer.lastChild);
-                    console.log('Removed child from Venmo button container');
-                }
-            }
+            // if(venmoContainer){
+            //     while (venmoContainer.children.length > 0) {
+            //         venmoContainer.removeChild(venmoContainer.lastChild);
+            //         console.log('Removed child from Venmo button container');
+            //     }
+            // }
             
             const config = this.config || {};
             const buttons = {
@@ -170,13 +170,13 @@ define([
                     label: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.paypal.label || 'paypal'
                 }
             };
-            if (config.venmoConfig && config.venmoConfig.enableVenmo) {
-                buttons.venmo = {
-                    parentElementId: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.venmo.parentElementId || 'venmo-button-container',
-                    color: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.venmo.color || 'gold',
-                    shape: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.venmo.shape || 'rect'
-                };
-            }
+            // if (config.venmoConfig && config.venmoConfig.enableVenmo) {
+            //     buttons.venmo = {
+            //         parentElementId: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.venmo.parentElementId || 'venmo-button-container',
+            //         color: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.venmo.color || 'gold',
+            //         shape: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.venmo.shape || 'rect'
+            //     };
+            // }
             return this.paypalComponent.buttons({
                 data: {
                     enableVaulting: buttonsConfig.data && buttonsConfig.data.enableVaulting !== undefined ? buttonsConfig.data.enableVaulting : false,
@@ -184,20 +184,38 @@ define([
                     buttons: buttons
                 },
                 hooks:{
-                    onApprove: async (data, actions) => {
-                        console.log("onApprove data", data);
-                        return fetch('/fiserv/paypal/validate', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                orderId: data.orderId,
-                                email: this.getGuestEmail(),
-                                merchantId: config.merchantId,
-                                terminalId: config.terminalId
+                        onApprove: async (data, actions) => {
+                            console.log("onApprove data", data);
+                            var email = '';
+                            try {
+                                if (window.checkoutConfig && window.checkoutConfig.isCustomerLoggedIn && window.checkoutConfig.customerData && window.checkoutConfig.customerData.email) {
+                                    email = window.checkoutConfig.customerData.email;
+                                }
+                                else if (quote && quote.guestEmail) {
+                                    email = quote.guestEmail;
+                                }
+                                if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                                    console.error('[PayPal] Invalid or empty email address:', email);
+                                    email = '';
+                                } else {
+                                    console.log('[PayPal] Valid email address confirmed:', email);
+                                }
+                            } catch (error) {
+                                console.error('[PayPal] Error retrieving email address:', error);
+                                email = '';
+                            }
+                            return fetch('/fiserv/paypal/validate', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    orderId: data.orderId,
+                                    email: email,
+                                    merchantId: config.merchantId,
+                                    terminalId: config.terminalId
+                                })
                             })
-                        })
                         .then(res => {
                             // Defensive: check if response is JSON
                             const contentType = res.headers.get('content-type');
@@ -230,10 +248,5 @@ define([
                 }
             });
         },
-        
-        getGuestEmail: function() {
-            var email = quote.guestEmail;
-            return email;
-        }
     };
 });

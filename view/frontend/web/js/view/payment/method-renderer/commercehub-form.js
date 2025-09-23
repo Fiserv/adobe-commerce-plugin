@@ -204,7 +204,6 @@ define(
 						self.loadIframe();  
 					} else {
 						self.cardBrandChangeHandler(null);
-						// this.cardBrandChangeHandler(null);
 						chAdapter.destroyIframe();
 					}
 				});

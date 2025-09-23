@@ -27,7 +27,6 @@
 		<arguments>
 			<argument name="tokenUiComponentProviders" xsi:type="array">
 				<item name="fiserv_commercehub" xsi:type="object">Fiserv\Payments\Model\Ui\CommerceHub\TokenUiComponentProvider</item>
-				<item name="fiserv_paypal" xsi:type="object">Fiserv\Payments\Model\Ui\PayPal\TokenUiComponentProvider</item>
 			</argument>
 		</arguments>
 	</type>

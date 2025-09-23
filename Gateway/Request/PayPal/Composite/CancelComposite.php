@@ -6,12 +6,12 @@
 namespace Fiserv\Payments\Gateway\Request\PayPal\Composite;
 
 use Fiserv\Payments\Gateway\Request\PayPal\Composite\PayPalCompositeBase;
-use Fiserv\Payments\Lib\PayPal\Model\CancelRequest;
-use Fiserv\Payments\Gateway\Request\PayPal\ReferenceTransactionDataBuilder;
+use Fiserv\Payments\Lib\PayPal\CommerceHub\CancelRequest;
+use Fiserv\Payments\Gateway\Request\CommerceHub\ReferenceTransactionDataBuilder;
 use Fiserv\Payments\Gateway\Request\PayPal\PayPalTransactionDetailsDataBuilder;
-use Fiserv\Payments\Gateway\Request\PayPal\PayPalTransactionInteractionDataBuilder;
-use Fiserv\Payments\Gateway\Request\PayPal\MerchantDetailsDataBuilder;
-use Fiserv\Payments\Gateway\Request\PayPal\CustomerDataBuilder;
+use Fiserv\Payments\Gateway\Request\CommerceHub\TransactionInteractionDataBuilder;
+use Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder;
+use Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder;
 use Magento\Framework\ObjectManager\TMapFactory;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 
@@ -21,6 +21,7 @@ use Fiserv\Payments\Logger\MultiLevelLogger;
 class CancelComposite extends PayPalCompositeBase
 {
 	const ENDPOINT = "checkouts/v1/orders";
+	//TODO: Confirm if this is the correct file exactly needed or not.
 
 	/**
 	 * @var MultiLevelLogger

@@ -8,12 +8,15 @@ namespace Fiserv\Payments\Gateway\Response\PayPal;
 use Fiserv\Payments\Gateway\Subject\PayPal\SubjectReader;
 use Magento\Payment\Gateway\Response\HandlerInterface;
 use Magento\Sales\Api\Data\OrderPaymentInterface;
+use Magento\Sales\Model\Order\Payment\Transaction;
+use Fiserv\Payments\Logger\MultiLevelLogger;
 
 /**
  * Class PaymentDetailsHandler
  */
-class PaymentDetailsHandler implements HandlerInterface
+class PayPalPaymentDetailsHandler implements HandlerInterface
 {
+	//TODO: Confirm if this is the correct file exactly needed or not.
 	const API_TRACE_ID = "apiTraceId";
 	const KEY_AMOUNT = "amount";
 	const KEY_ORDER_ID = "orderId";
@@ -27,14 +30,22 @@ class PaymentDetailsHandler implements HandlerInterface
 	private $subjectReader;
 
 	/**
+	 * @var MultiLevelLogger
+	 */
+	private $logger;
+
+	/**
 	 * Constructor
 	 *
 	 * @param SubjectReader $subjectReader
+	 * @param MultiLevelLogger $logger
 	 */
 	public function __construct(
-		SubjectReader $subjectReader
+		SubjectReader $subjectReader,
+		MultiLevelLogger $logger
 	) {
 		$this->subjectReader = $subjectReader;
+		$this->logger = $logger;
 	}
 
 	/**
@@ -47,21 +58,17 @@ class PaymentDetailsHandler implements HandlerInterface
 
 		$paypalResponse = $this->subjectReader->readPayPalResponse($response)[\Fiserv\Payments\Gateway\Http\PayPal\Client\HttpClient::RESPONSE_KEY];
 
+		$this->logger->logInfo(1, "PayPal Response: " . json_encode($paypalResponse));
+
 		$tnxDetails = $paypalResponse["gatewayResponse"]["transactionProcessingDetails"];
 
 		$transId = $tnxDetails["transactionId"];
+		$this->logger->logInfo(1, "Transaction ID: " . ($transId ?? "Not found"));
 		$payment->setLastTransId($transId);
 		$payment->setTransactionId($transId);
 
 		$payment->setShouldCloseParentTransaction(false);
-
-		// Check transaction state to determine if transaction should be closed
-		$transactionState = $paypalResponse["gatewayResponse"]["transactionState"];
-		if ($transactionState === 'CAPTURED') {
-			$payment->setIsTransactionClosed(true);
-		} else {
-			$payment->setIsTransactionClosed(false);
-		}
+		$payment->setIsTransactionClosed(false);
 
 		$payment->setTransactionAdditionalInfo(
 			self::API_TRACE_ID,
@@ -77,5 +84,14 @@ class PaymentDetailsHandler implements HandlerInterface
 			self::KEY_AMOUNT,
 			SubjectReader::getValueSafely($paypalResponse, "total", $this->amountPath)
 		);
+
+		// Set amount paid for proper refund button visibility
+		$approvedAmount = SubjectReader::getValueSafely($paypalResponse, "total", $this->amountPath);
+		if ($approvedAmount > 0) {
+			$payment->setAmountPaid($approvedAmount);
+			$payment->setBaseAmountPaid($approvedAmount);
+		}
+
+		$this->logger->logInfo(1, "Payment Details Handler completed successfully.", json_encode($payment->getData(), JSON_PRETTY_PRINT));
 	}
 }

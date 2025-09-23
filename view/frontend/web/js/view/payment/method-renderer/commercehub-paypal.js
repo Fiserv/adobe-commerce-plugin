@@ -44,13 +44,11 @@ define([
             additionalData: {},
             paymentMethodName: '[name="payment[method]"]',
             credentials: undefined,
-            cachedCredentials: null,
             isChecked: ko.observable()
         },
 
         initialize: function () {
             this._super();
-            this.vaultEnabler = new VaultEnabler();
 
             this.isChecked = ko.computed({
                 read: function () {
@@ -80,32 +78,17 @@ define([
          * Select Payment Method Handler
          */
         selectPaymentMethod: function () {
-            if (typeof this._super === 'function') {
-                this._super();
-            }
-            this.isChecked(this.getCode()); 
+            this.isChecked(this.getCode());
             this.loadPayPalForm();
-            if(this.isChecked()) {
-                if(!this.paypalButtonRendered) {
-                    this.loadPayPalForm();
-                    this.paypalButtonRendered = true;
-                }
-            }
             return true;
         },
 
-        isRadioButtonVisible: function () {
-            return true;
-        },
-
-        isPlaceOrderActionAllowed: ko.observable(quote.billingAddress() != null),
+        // isPlaceOrderActionAllowed: ko.observable(quote.billingAddress() != null),
 
         loadPayPalForm: function () {
             if (this.isChecked() === this.getCode()) {
                 this.initPayPalAdapter();
-            } else {
-                console.warn('Payment method is NOT selected');
-            }
+            } 
         },
 
     initPayPalAdapter: async function () {
@@ -118,35 +101,25 @@ define([
                     return;
                 }
 
+                // Ensure customer data is loaded before proceeding
+                await this.ensureCustomerDataLoaded();
+
                 paypalAdapter.initialize(config);
                 var credsResponse, creds;
 
-                if (self.cachedCredentials) {
-                    credsResponse = { paypal_button_config: self.cachedCredentials.buttonConfig };
-                    creds = self.cachedCredentials.creds;
-                    console.log('[PayPal] Using cached credentials');
-                } else {
-                    credsResponse = await paypalSession({});
-                    creds = credsResponse && credsResponse[paypalAdapter.credentialsKey];
-                    if (!creds) {
-                        throw new Error('No credentials returned from PayPal session');
-                    }
-                    // Cache the credentials
-                    self.cachedCredentials = {
-                        creds: creds,
-                        buttonConfig: credsResponse.paypal_button_config
-                    };
-                    console.log('[PayPal] Credentials cached');
+                credsResponse = await paypalSession({});
+                creds = credsResponse && credsResponse[paypalAdapter.credentialsKey];
+                if (!creds) {
+                    throw new Error('No credentials returned from PayPal session');
                 }
 
                 self.paymentPayload.sessionId = creds[paypalAdapter.sessionIdKey];
                 await paypalAdapter.initSdk(config, creds);
                 var intent = 'authorize';
-                if (config.payment_action && config.payment_action.toLowerCase() === 'sale') {
+                if (config.payment_action.toLowerCase() === 'authorize_capture') {
                     intent = 'capture';
                 }
                 const paypalComponent = await paypalAdapter.loadPayPalComponent({
-                    customerId: creds[paypalAdapter.customerIdKey],
                     intent: intent
                 });
                 const buttonsConfig = credsResponse && credsResponse.paypal_button_config ? credsResponse.paypal_button_config : {};
@@ -174,15 +147,10 @@ define([
         },
 
 
-        showPrivacyStatement: function () {
-            var config = (window.checkoutConfig && window.checkoutConfig.payment) ? window.checkoutConfig.payment[this.getCode()] : {};
-            return config && config.show_privacy_statement;
-        },
-
-        isVenmoEnabled: function () {
-            var config = (window.checkoutConfig && window.checkoutConfig.payment) ? window.checkoutConfig.payment[this.getCode()] : {};
-            return config && config.venmoConfig && config.venmoConfig.enableVenmo;
-        },
+        // isVenmoEnabled: function () {
+        //     var config = (window.checkoutConfig && window.checkoutConfig.payment) ? window.checkoutConfig.payment[this.getCode()] : {};
+        //     return config && config.venmoConfig && config.venmoConfig.enableVenmo;
+        // },
 
         /**
          * Check if payment is active
@@ -204,11 +172,56 @@ define([
                 if (this.getCode() !== this.isChecked()) {
                     // Clear PayPal and Venmo button containers when switching away
                     $('#paypal-button-container').empty();
-                    $('#venmo-button-container').empty();
-                    // Clear cached credentials
-                    this.cachedCredentials = null;
+                    // $('#venmo-button-container').empty();
                 }
             }.bind(this));
+        },
+
+        /**
+         * Ensure customer data is loaded before PayPal initialization
+         */
+        ensureCustomerDataLoaded: async function() {
+            var self = this;
+            var maxRetries = 10;
+            var retryCount = 0;
+            var retryDelay = 500; // 500ms
+
+            return new Promise(function(resolve, reject) {
+                function checkCustomerData() {
+                    retryCount++;
+
+                    // Check if customer data is available in checkout config
+                    var config = window.checkoutConfig || {};
+                    var paymentConfig = config.payment || {};
+                    var paypalConfig = paymentConfig[self.getCode()] || {};
+
+                    // For logged-in users, ensure customer data is loaded
+                    if (config.isCustomerLoggedIn && config.customerData) {
+                        if (config.customerData.email) {
+                            resolve();
+                            return;
+                        }
+                    }
+
+                    // For guest users, check if billing address has email
+                    if (!config.isCustomerLoggedIn && quote && quote.billingAddress && quote.billingAddress._latestValue && quote.billingAddress._latestValue.email) {
+                        resolve();
+                        return;
+                    }
+
+                    // If we've exceeded max retries, resolve anyway to prevent infinite waiting
+                    if (retryCount >= maxRetries) {
+                        resolve();
+                        return;
+                    }
+
+                    // Wait and retry
+                    setTimeout(checkCustomerData, retryDelay);
+                }
+
+                // Start checking immediately
+                checkCustomerData();
+            });
         }
     });
 });
