@@ -80,6 +80,10 @@ class Validate extends Action implements CsrfAwareActionInterface
 
 		try {
 			$data = json_decode($this->getRequest()->getContent(), true);
+			if (!is_array($data)) {
+				throw new \Exception('Invalid JSON payload');
+			}
+
 			$this->logger->logInfo(1, 'Received ApplePay validation request', ['data' => $data]);
 
 			$sessionId = $data['sessionId'] ?? null;
@@ -91,12 +95,9 @@ class Validate extends Action implements CsrfAwareActionInterface
 			}
 
 			$quote = $this->checkoutSession->getQuote();
-
-			if (isset($email) && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+			if ($email && filter_var($email, FILTER_VALIDATE_EMAIL)) {
 				$quote->setCustomerEmail($email);
-			}
-
-			if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+			} else {
 				$this->logger->logError(2, 'Invalid email in ApplePay validation', ['email' => $email]);
 				return $result->setData([
 					'success' => false,
@@ -116,35 +117,27 @@ class Validate extends Action implements CsrfAwareActionInterface
 
 			$paymentDataObject = $this->paymentDataObjectFactory->create($payment, ['order' => $order]);
 
-			try {
-				$this->logger->logInfo(1, 'ApplePay Command Start', [
-					'session_id' => $sessionId,
-					'action' => $action,
-					'order_id' => $order->getIncrementId()
-				]);
+			$this->logger->logInfo(1, 'ApplePay Command Start', [
+				'session_id' => $sessionId,
+				'action' => $action,
+				'order_id' => $order->getIncrementId()
+			]);
 
-				$commandName = match ($action) {
-					'authorize_capture' => 'sale',
-					'authorize' => 'authorize',
-					default => throw new \Exception('Invalid action: ' . $action),
-				};
+			$commandName = match ($action) {
+				'authorize_capture' => 'sale',
+				'authorize' => 'authorize',
+				default => throw new \Exception('Invalid action: ' . $action),
+			};
 
-				$commandResult = $this->commandPool->get($commandName)->execute([
-					'payment' => $paymentDataObject,
-					'amount' => $order->getGrandTotal(),
-					'action' => $action
-				]);
+			$commandResult = $this->commandPool->get($commandName)->execute([
+				'payment' => $paymentDataObject,
+				'amount' => $order->getGrandTotal(),
+				'action' => $action
+			]);
 
-				$this->logger->logInfo(1, 'ApplePay Command Finish', ['result' => $commandResult]);
-			} catch (\Exception $e) {
-				$this->logger->logError(1, 'ApplePay Command Error', ['exception' => $e->getMessage()]);
-			}
-
-			$payment->save();
-			$order->save();
+			$this->logger->logInfo(1, 'ApplePay Command Finish', ['result' => $commandResult]);
 
 			$applePayTxnId = $payment->getLastTransId() ?: $sessionId;
-
 			$transaction = $this->transactionBuilder
 				->setPayment($payment)
 				->setOrder($order)
@@ -167,7 +160,10 @@ class Validate extends Action implements CsrfAwareActionInterface
 			]);
 		} catch (\Throwable $e) {
 			$this->logger->logError(1, 'Fatal error in ApplePay Validate', ['exception' => $e]);
-			return $result->setData(['success' => false, 'message' => 'Server error: ' . $e->getMessage()]);
+			return $result->setData([
+				'success' => false,
+				'message' => 'Server error: ' . $e->getMessage()
+			]);
 		}
 	}
 

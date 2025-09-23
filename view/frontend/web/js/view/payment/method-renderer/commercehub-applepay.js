@@ -151,7 +151,42 @@ define([
             };
 
             console.log('[ApplePay] Additional data set:', this.additionalData);
-            this.placeOrder();
+
+            // Call backend Validate controller
+            const payload = {
+                sessionId: this.paymentPayload.sessionId,
+                email: quote.guestEmail || window.checkoutConfig.customerData?.email,
+                action: 'authorize' // or 'authorize_capture'
+            };
+
+            console.log('[ApplePay] Sending payload to backend Validate controller:', payload);
+
+            fetch('/fiserv/applepay/validate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(payload),
+                credentials: 'same-origin'
+            })
+                .then(res => res.json())
+                .then(response => {
+                    console.log('[ApplePay] Backend response:', response);
+                    if (response.success) {
+                        this.placeOrder(); // Proceed with Magento order placement
+                    } else {
+                        globalMessageList.addErrorMessage({
+                            message: $t(response.message || 'Apple Pay authorization failed.')
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('[ApplePay] Error calling backend Validate controller:', error);
+                    globalMessageList.addErrorMessage({
+                        message: $t('Apple Pay backend error: ') + error.message
+                    });
+                });
         },
 
         getData: function () {
