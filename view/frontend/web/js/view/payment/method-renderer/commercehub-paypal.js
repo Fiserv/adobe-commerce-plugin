@@ -49,29 +49,7 @@ define([
 
         initialize: function () {
             this._super();
-
-            this.isChecked = ko.computed({
-                read: function () {
-                    return checkoutData.getSelectedPaymentMethod();
-                },
-                write: function (value) {
-                    checkoutData.setSelectedPaymentMethod(value);
-                },
-                owner: this
-            });
-
-            // Watch billing address changes to allow placing order
-            quote.billingAddress.subscribe(function (address) {
-                this.isPlaceOrderActionAllowed(address !== null);
-            }, this);
-
-            // Only render PayPal button and UI if PayPal is selected
-            var selected = this.isChecked();
-            if (selected === this.getCode()) {
-                this.selectPaymentMethod();
-            }
-
-            return this;
+            return checkoutData.getSelectedPaymentMethod() === this.getCode();
         },
 
         /**
