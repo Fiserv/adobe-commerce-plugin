@@ -79,7 +79,9 @@ class Validate extends Action implements CsrfAwareActionInterface
 		$result = $this->resultJsonFactory->create();
 
 		try {
-			$data = json_decode($this->getRequest()->getContent(), true);
+			$rawContent = $this->getRequest()->getContent();
+			$data = json_decode($rawContent, true);
+
 			if (!is_array($data)) {
 				throw new \Exception('Invalid JSON payload');
 			}
@@ -95,6 +97,10 @@ class Validate extends Action implements CsrfAwareActionInterface
 			}
 
 			$quote = $this->checkoutSession->getQuote();
+			if (!$quote || !$quote->getBillingAddress()) {
+				return $result->setData(['success' => false, 'message' => 'Missing quote or billing address']);
+			}
+
 			if ($email && filter_var($email, FILTER_VALIDATE_EMAIL)) {
 				$quote->setCustomerEmail($email);
 			} else {
