@@ -1,21 +1,14 @@
 <?php
-/**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
- */
 namespace Fiserv\Payments\Gateway\Request\CommerceHub;
 
 use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use Fiserv\Payments\Lib\CommerceHub\Model\TransactionDetails;
-use Fiserv\Payments\Gateway\Config\CommerceHub\Config; 
+use Fiserv\Payments\Gateway\Config\CommerceHub\Config;
 use Fiserv\Payments\Model\Source\CommerceHub\TokenizationStrategy;
 use Magento\Payment\Gateway\Request\BuilderInterface;
 use Magento\Vault\Model\Ui\VaultConfigProvider;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 
-/**
- * Payment Data Builder
- */
 abstract class TransactionDetailsDataBuilder implements BuilderInterface
 {
 	const TXN_DETAILS_KEY = "transactionDetails";
@@ -23,23 +16,14 @@ abstract class TransactionDetailsDataBuilder implements BuilderInterface
 	const CAPTURE = true;
 	const AUTHORIZE = false;
 
-	/**
-	 * @var MultiLevelLogger
-	 */
+	/** @var MultiLevelLogger */
 	private $logger;
-	
-	/**
-	 * @var SubjectReader
-	 */
+
+	/** @var SubjectReader */
 	protected $subjectReader;
 
 	private $chConfig;
 
-	/**
-	 * @param MultiLevelLogger $logger
-	 * @param SubjectReader $subjectReader
-	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-	 */
 	public function __construct(
 		SubjectReader $subjectReader,
 		Config $chConfig,
@@ -50,9 +34,6 @@ abstract class TransactionDetailsDataBuilder implements BuilderInterface
 		$this->logger = $logger;
 	}
 
-	/**
-	 * @inheritdoc
-	 */
 	public function build(array $buildSubject)
 	{
 		$paymentDO = $this->subjectReader->readPayment($buildSubject);
@@ -61,32 +42,32 @@ abstract class TransactionDetailsDataBuilder implements BuilderInterface
 		$orderIncrementId = $orderDO->getOrderIncrementId();
 
 		$txnDetails = new TransactionDetails();
-
 		$data = $payment->getAdditionalInformation();
-		
+
 		$tokenStrat = $this->chConfig->getTokenStrategy();
 		$createToken = !empty($data[VaultConfigProvider::IS_ACTIVE_CODE]) || $tokenStrat === TokenizationStrategy::ALWAYS;
 		$txnDetails->setCreateToken($createToken);
-		if ($createToken == true) 
-		{ 
-        	$payment->setStoreVault(self::KEY_CREATE_TOKEN);
+
+		if ($createToken == true) {
+			$payment->setStoreVault(self::KEY_CREATE_TOKEN);
 		}
 
 		$captureFlag = $this->getCaptureFlag();
-		
 		$txnDetails->setCaptureFlag($captureFlag);
 		$txnDetails->setMerchantOrderId($orderDO->getOrderIncrementId());
 		$txnDetails->setMerchantTransactionId(uniqid());
 		$txnDetails->setAccountVerification(false);
 
-		$this->logger->logDebug(3, "Transaction Details Data Builder:\n" . $txnDetails->__toString(), "Order ID: $orderIncrementId");
+		// ✅ Log session_id and full additionalInformation
+		$this->logger->logInfo(1, 'TransactionDetailsDataBuilder session_id logging', json_encode([
+			'session_id' => $data['session_id'] ?? null,
+			'additionalInformation' => $data
+		]));
 
-		return [ self::TXN_DETAILS_KEY => $txnDetails ];
+		$this->logger->logDebug(3, "TransactionDetailsDataBuilder:\n" . $txnDetails->__toString(), "OrderID:$orderIncrementId");
+
+		return [self::TXN_DETAILS_KEY => $txnDetails];
 	}
 
-	/**
-	 * Get Capture Flag
-	 * @return bool
-	 */
 	abstract protected function getCaptureFlag();
 }

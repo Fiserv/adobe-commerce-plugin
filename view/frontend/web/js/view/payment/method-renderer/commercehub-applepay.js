@@ -3,16 +3,18 @@ define([
     'Magento_Payment/js/view/payment/cc-form',
     'Magento_Ui/js/model/messageList',
     'Magento_Checkout/js/model/full-screen-loader',
+    'Magento_Checkout/js/action/place-order',
     'Fiserv_Payments/js/ch-adapter',
     'Fiserv_Payments/js/action/create-commercehub-session',
     'Magento_Checkout/js/model/quote',
     'ko',
-    'mage/translate',
+    'mage/translate'
 ], function (
     $,
     Component,
     globalMessageList,
     fullScreenLoader,
+    placeOrderAction,
     chAdapter,
     chSession,
     quote,
@@ -24,7 +26,6 @@ define([
     return Component.extend({
         defaults: {
             template: 'Fiserv_Payments/payment/commercehub/applepay-form',
-            active: false,
             code: 'fiserv_applepay',
             additionalData: {},
             paymentPayload: {
@@ -32,67 +33,55 @@ define([
                 orderId: null,
                 type: 'applepay'
             },
-            paymentMethodName: '[name="payment[method]"',
+            isPlaceOrderActionAllowed: ko.observable(false)
         },
 
         initialize: function () {
-            console.log('[ApplePay] Initializing Apple Pay payment method.');
             this._super();
+            console.log('[ApplePay] Initializing payment method.');
             this.observeBillingAddress();
+            this.watchPaymentMethods();
             return this;
         },
 
         observeBillingAddress: function () {
-            console.log('[ApplePay] Subscribing to billing address changes.');
             quote.billingAddress.subscribe((address) => {
                 console.log('[ApplePay] Billing address changed:', address);
                 this.isPlaceOrderActionAllowed(address !== null);
             });
         },
 
-        isPlaceOrderActionAllowed: ko.observable(quote.billingAddress() !== null),
-
         buildOrderData: function () {
-            const items = quote.getItems().map(item => ({
+            return quote.getItems().map(item => ({
                 name: item.name,
                 sku: item.sku,
                 quantity: item.qty,
                 amount: item.price
             }));
-
-            return items;
         },
 
         loadApplePayForm: async function () {
-            console.log('[ApplePay] Starting Apple Pay form load.');
+            console.log('[ApplePay] Loading Apple Pay form...');
             const config = window.checkoutConfig.payment[this.getCode()];
-            console.log('[ApplePay] Checkout config:', config);
+            const sessionData = {
+                customer: {
+                    id: window.checkoutConfig.customerData?.id || 'guest'
+                },
+                billingAddress: quote.billingAddress(),
+                orderData: this.buildOrderData()
+            };
 
             try {
                 fullScreenLoader.startLoader();
-                console.log('[ApplePay] Requesting credentials from backend.');
-
-                const sessionData = {
-                    customer: { id: window.checkoutConfig.customerData?.id || 'guest' },
-                    billingAddress: quote.billingAddress(),
-                    orderData: this.buildOrderData()
-                };
-
-                console.log('[ApplePay] Session data being sent:', sessionData);
                 const creds = await chSession(sessionData);
-                console.log('[ApplePay] Credentials response:', creds);
 
                 if (!creds || !creds.ch_credentials) {
-                    throw new Error('No credentials returned from Apple Pay session');
+                    throw new Error('No credentials returned from backend');
                 }
 
                 this.paymentPayload.sessionId = creds.ch_credentials.sessionId;
-                console.log('[ApplePay] Session ID set:', this.paymentPayload.sessionId);
-
-                console.log('[ApplePay] Initializing Fiserv SDK...');
                 await chAdapter.initSdk(config, creds.ch_credentials);
 
-                console.log('[ApplePay] Rendering Apple Pay button...');
                 await window.fiserv.components.applePay({
                     data: {
                         button: {
@@ -103,63 +92,48 @@ define([
                         }
                     },
                     hooks: {
-                        onApprove: (data) => {
-                            console.log('[ApplePay] onApprove triggered with data:', data);
-                            this.onApplePaySuccess(data.details, data);
-                        },
-                        onCancel: () => {
-                            console.log('[ApplePay] onCancel triggered');
-                        },
-                        onError: (error) => {
-                            console.error('[ApplePay] onError triggered:', error);
-                        }
+                        onApprove: (data) => this.onApplePaySuccess(data.details, data),
+                        onCancel: () => console.log('[ApplePay] Payment cancelled'),
+                        onError: (error) => console.error('[ApplePay] SDK error:', error)
                     }
                 });
 
-                console.log('[ApplePay] Apple Pay button rendered successfully.');
-                fullScreenLoader.stopLoader();
+                console.log('[ApplePay] Apple Pay button rendered.');
             } catch (error) {
+                console.error('[ApplePay] Initialization error:', error);
+                globalMessageList.addErrorMessage({ message: $t('Apple Pay error: ') + error.message });
+            } finally {
                 fullScreenLoader.stopLoader();
-                console.error('[ApplePay] Error during Apple Pay initialization:', error);
-                globalMessageList.addErrorMessage({
-                    message: $t('Apple Pay error: ') + (error.message || error)
-                });
             }
         },
 
         watchPaymentMethods: function () {
-            let self = this;
-            $(self.paymentMethodName).on("click", function () {
-                let selected = $(this).attr("id");
+            const self = this;
+            $(`[name="payment[method]"]`).on("click", function () {
+                const selected = $(this).attr("id");
                 if (selected === self.getCode()) {
                     self.loadApplePayForm();
-                } else {
-                    console.log("WOW Tyson is ugly");
                 }
             });
         },
 
         onApplePaySuccess: function (details, data) {
-            console.log('[ApplePay] Apple Pay success callback triggered.');
-            console.log('[ApplePay] Details:', details);
-            console.log('[ApplePay] Data:', data);
+            console.log('[ApplePay] Payment approved:', details, data);
 
-            this.additionalData = {
+            const safeDetails = {
                 applepay_order_id: data?.orderId,
                 payment_source: data?.paymentMethod || 'applepay',
                 applepay_details: details
             };
 
-            console.log('[ApplePay] Additional data set:', this.additionalData);
+            this.additionalData = safeDetails;
 
-            // Call backend Validate controller
             const payload = {
                 sessionId: this.paymentPayload.sessionId,
-                email: quote.guestEmail || window.checkoutConfig.customerData?.email,
-                action: 'authorize' // or 'authorize_capture'
+                email: quote.guestEmail || window.checkoutConfig.customerData?.email || 'guest@example.com',
+                action: 'authorize',
+                applepay_details: safeDetails
             };
-
-            console.log('[ApplePay] Sending payload to backend Validate controller:', payload);
 
             fetch('/fiserv/applepay/validate', {
                 method: 'POST',
@@ -170,27 +144,31 @@ define([
                 body: JSON.stringify(payload),
                 credentials: 'same-origin'
             })
-                .then(res => res.json())
-                .then(response => {
-                    console.log('[ApplePay] Backend response:', response);
+                .then(async (res) => {
+                    const text = await res.text();
+                    let response;
+
+                    try {
+                        response = JSON.parse(text);
+                    } catch (jsonError) {
+                        console.error('[ApplePay] Invalid JSON from backend:', jsonError);
+                        globalMessageList.addErrorMessage({ message: $t('Invalid response from Apple Pay backend.') });
+                        return;
+                    }
+
                     if (response.success) {
-                        this.placeOrder(); // Proceed with Magento order placement
+                        this.placeOrder();
                     } else {
-                        globalMessageList.addErrorMessage({
-                            message: $t(response.message || 'Apple Pay authorization failed.')
-                        });
+                        globalMessageList.addErrorMessage({ message: $t(response.message || 'Authorization failed.') });
                     }
                 })
-                .catch(error => {
-                    console.error('[ApplePay] Error calling backend Validate controller:', error);
-                    globalMessageList.addErrorMessage({
-                        message: $t('Apple Pay backend error: ') + error.message
-                    });
+                .catch((error) => {
+                    console.error('[ApplePay] Backend call failed:', error);
+                    globalMessageList.addErrorMessage({ message: $t('Apple Pay backend error: ') + error.message });
                 });
         },
 
         getData: function () {
-            console.log('[ApplePay] Preparing payment data for submission.');
             const data = {
                 method: this.getCode(),
                 additional_data: {
@@ -207,10 +185,7 @@ define([
         },
 
         placeOrder: function () {
-            console.log('[ApplePay] placeOrder() called.');
-
             if (!this.isPlaceOrderActionAllowed()) {
-                console.warn('[ApplePay] Place order not allowed. Billing address may be missing.');
                 globalMessageList.addErrorMessage({
                     message: $t('Please enter a valid billing address before placing the order.')
                 });
@@ -218,32 +193,40 @@ define([
             }
 
             const data = this.getData();
-            console.log('[ApplePay] Data being submitted to Magento:', data);
+            fullScreenLoader.startLoader();
 
-            return this._super();
+            placeOrderAction(data, this.messageContainer)
+                .done(() => {
+                    console.log('[ApplePay] Order placed successfully.');
+                })
+                .fail((response) => {
+                    console.error('[ApplePay] Order placement failed:', response);
+                    globalMessageList.addErrorMessage({
+                        message: $t('Order placement failed. Please try again.')
+                    });
+                })
+                .always(() => {
+                    fullScreenLoader.stopLoader();
+                });
         },
 
         getCode: function () {
-            console.log('[ApplePay] Returning payment method code:', this.code);
             return this.code;
         },
 
         showPrivacyStatement: function () {
             const config = window.checkoutConfig.payment[this.getCode()];
-            console.log('[ApplePay] Privacy statement visibility:', config?.show_privacy_statement);
             return config?.show_privacy_statement;
         },
 
         isBillingAddressRequired: function () {
-            console.log('[ApplePay] Billing address is required.');
             return true;
         },
 
         isActive: function () {
             const active = this.getCode() === this.isChecked();
-            console.log('[ApplePay] Is payment method active?', active);
             this.active(active);
             return active;
-        },
+        }
     });
 });

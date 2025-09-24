@@ -1,8 +1,4 @@
 <?php
-/**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
- */
 namespace Fiserv\Payments\Gateway\Request\CommerceHub;
 
 use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
@@ -26,16 +22,15 @@ class SessionSourceDataBuilder implements BuilderInterface
 	 * @var MultiLevelLogger
 	 */
 	private $logger;
-	
+
 	/**
 	 * @var SubjectReader
 	 */
 	private $subjectReader;
 
 	/**
-	 * @param MultiLevelLogger $logger
 	 * @param SubjectReader $subjectReader
-	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+	 * @param MultiLevelLogger $logger
 	 */
 	public function __construct(
 		SubjectReader $subjectReader,
@@ -54,9 +49,18 @@ class SessionSourceDataBuilder implements BuilderInterface
 		$payment = $paymentDO->getPayment();
 		$orderDO = $paymentDO->getOrder();
 		$orderIncrementId = $orderDO->getOrderIncrementId();
-		
-		$sessionId = $payment->getAdditionalInformation(DataAssignObserver::SESSION_ID_KEY);
-		
+
+		$sessionId = $payment->getAdditionalInformation(DataAssignObserver::SESSION_ID_KEY) ?? $buildSubject['session_id'] ?? $buildSubject['sessionId'] ?? null;
+
+		if (!$sessionId) {
+			$this->logger->logError(1, 'SessionSourceDataBuilder - Missing session_id', [
+				'order_id' => $orderIncrementId,
+				'buildSubject' => $buildSubject
+			]);
+			throw new \InvalidArgumentException('Missing session_id for PaymentSession');
+		}
+
+		// Use PaymentSession model to build source
 		$source = new PaymentSession();
 		$source->setSourceType(self::PAYMENT_SESSION_SOURCE_TYPE);
 		$source->setSessionId($sessionId);
