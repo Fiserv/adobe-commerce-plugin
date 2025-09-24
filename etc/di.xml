@@ -530,7 +530,7 @@
             <argument name="requestBuilder" xsi:type="object">FiservApplePayAuthorizeRequest</argument>
             <argument name="transferFactory" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\TransferFactory</argument>
             <argument name="client" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient</argument>
-            <argument name="handler" xsi:type="object">FiservApplePayAuthorizeHandler</argument>
+            <argument name="handler" xsi:type="object">Fiserv\Payments\Gateway\Response\CommerceHub\PaymentDetailsHandler</argument>
             <argument name="validator" xsi:type="object">Fiserv\Payments\Gateway\Validator\CommerceHub\AuthorizeResponseValidator</argument>
         </arguments>
     </virtualType>
