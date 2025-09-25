@@ -18,6 +18,7 @@ define(
 		'Magento_Checkout/js/model/full-screen-loader',
 		'Magento_Checkout/js/model/payment/additional-validators',
 		'Fiserv_Payments/js/view/payment/paypal/fastlane',
+		'Fiserv_Payments/js/action/modify-requirejs',
 		'ko',
 		'mage/translate',
 		'domReady!'
@@ -35,6 +36,7 @@ define(
 		fullScreenLoader,
 		additionalValidators,
 		fastlaneHelper,
+		modifyRequirejs,
 		ko,
 		$t
 	) {
@@ -46,6 +48,7 @@ define(
 				template: 'Fiserv_Payments/payment/commercehub/form',
 				active: false,
 				code: 'fiserv_commercehub',
+				paypalCode: 'fiserv_paypal',
 				paymentPayload: {
 					sessionId: null,
 					type: null,
@@ -80,6 +83,51 @@ define(
 					(data) => { this.fieldValidityHandler(data); },
 					(data) => { this.fieldFocusHandler(data); }
 				);
+
+				if( this.isFastlaneEnabled() ) {
+
+					$('#customer-email-fieldset .note').hide().after('<div id="fiserv-paypal-watermark-container"></div>');
+					let maps = {
+						'braintree/client.min' : 'chBraintreeClient',
+						'braintree/hosted-fields.min' : 'ch-braintree-hosted-fields'
+					};
+					modifyRequirejs( maps );
+
+					let credsResponse = undefined;
+					var self = this;
+					try {
+							credsResponse = await chSession();
+					} catch (error) {
+							console.log("An error occurred while starting Commercehub payment session: ".concat(error));
+							return;
+					}
+
+					let credentials =credsResponse["ch_credentials"];
+
+					await chAdapter.initSdk(
+							window.checkoutConfig.payment['fiserv_commercehub'],
+							credentials
+					);
+
+					let fastlane = await fastlaneHelper.fastlaneInit();
+
+					await fastlaneHelper.renderFastlaneWatermark();
+
+					const customerEmailInput = $("#customer-email");
+
+					customerEmailInput.on("change", function() {
+
+						const method = { method: 'fiserv_commercehub' };
+						$('#fiserv_commercehub').trigger('click');
+
+						fullScreenLoader.startLoader();
+
+						setTimeout(() => {
+							fullScreenLoader.stopLoader();
+							fastlaneHelper.authenticateEmailForFastlane();
+						}, 1000);
+					});
+				}
 				
 
 				return self;
@@ -674,6 +722,10 @@ define(
 						frame.removeClass('sdc-focused-field');
 					}
 				}
+			},
+
+			isFastlaneEnabled: function() {
+				return window.checkoutConfig.payment[this.paypalCode].fastlane;
 			}
 		});
 	}

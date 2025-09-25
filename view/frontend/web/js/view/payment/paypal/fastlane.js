@@ -30,22 +30,7 @@ define([
 
 		fastlaneInit: async function() {
 
-			let credsResponse = undefined;
-
 			var self = this;
-			try {
-				credsResponse = await chSession();
-			} catch (error) {
-				console.log("An error occurred while starting Commercehub payment session: ".concat(error));
-				return;
-			}
-
-			let credentials =credsResponse["ch_credentials"];
-
-			await chAdapter.initSdk(
-				window.checkoutConfig.payment['fiserv_commercehub'],
-				credentials
-			);
 
 			const paypal = await window.fiserv.components.paypal();
 

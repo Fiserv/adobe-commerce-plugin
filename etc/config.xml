@@ -264,6 +264,7 @@
 			<api_environment>CERT</api_environment>
 			<payment_action>AUTH</payment_action>
 			<!-- <ch_paypal_venmo>1</ch_paypal_venmo> -->
+			<ch_paypal_fastlane>1</ch_paypal_fastlane>
 			<debug>1</debug>
 			<logging_level>2</logging_level>
 			<currency>USD</currency>
