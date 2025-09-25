@@ -3,7 +3,6 @@ define([
     'Magento_Payment/js/view/payment/cc-form',
     'Magento_Ui/js/model/messageList',
     'Magento_Checkout/js/model/full-screen-loader',
-    'Magento_Checkout/js/action/place-order',
     'Fiserv_Payments/js/ch-adapter',
     'Fiserv_Payments/js/action/create-commercehub-session',
     'Magento_Checkout/js/model/quote',
@@ -14,7 +13,6 @@ define([
     Component,
     globalMessageList,
     fullScreenLoader,
-    placeOrderAction,
     chAdapter,
     chSession,
     quote,
@@ -74,7 +72,6 @@ define([
             try {
                 fullScreenLoader.startLoader();
                 const creds = await chSession(sessionData);
-
                 if (!creds || !creds.ch_credentials) {
                     throw new Error('No credentials returned from backend');
                 }
@@ -143,37 +140,33 @@ define([
                 },
                 body: JSON.stringify(payload),
                 credentials: 'same-origin'
-            })
-                .then(async (res) => {
-                    const text = await res.text();
-                    let response;
+            }).then(async (res) => {
+                const text = await res.text();
+                let response;
+                try {
+                    response = JSON.parse(text);
+                } catch (jsonError) {
+                    console.error('[ApplePay] Invalid JSON from backend:', jsonError);
+                    globalMessageList.addErrorMessage({ message: $t('Invalid response from Apple Pay backend.') });
+                    return;
+                }
 
-                    try {
-                        response = JSON.parse(text);
-                    } catch (jsonError) {
-                        console.error('[ApplePay] Invalid JSON from backend:', jsonError);
-                        globalMessageList.addErrorMessage({ message: $t('Invalid response from Apple Pay backend.') });
-                        return;
-                    }
-
-                    if (response.success) {
-                        this.placeOrder();
-                    } else {
-                        globalMessageList.addErrorMessage({ message: $t(response.message || 'Authorization failed.') });
-                    }
-                })
-                .catch((error) => {
-                    console.error('[ApplePay] Backend call failed:', error);
-                    globalMessageList.addErrorMessage({ message: $t('Apple Pay backend error: ') + error.message });
-                });
+                if (response.success) {
+                    console.log('[ApplePay] Order placed successfully. Redirecting...');
+                    window.location.href = '/checkout/onepage/success/';
+                } else {
+                    globalMessageList.addErrorMessage({ message: $t(response.message || 'Authorization failed.') });
+                }
+            }).catch((error) => {
+                console.error('[ApplePay] Backend call failed:', error);
+                globalMessageList.addErrorMessage({ message: $t('Apple Pay backend error: ') + error.message });
+            });
         },
 
         getData: function () {
             const data = {
                 method: this.getCode(),
-                additional_data: {
-                    ...this.additionalData
-                }
+                additional_data: { ...this.additionalData }
             };
 
             if (this.paymentPayload.sessionId) {
@@ -185,29 +178,9 @@ define([
         },
 
         placeOrder: function () {
-            if (!this.isPlaceOrderActionAllowed()) {
-                globalMessageList.addErrorMessage({
-                    message: $t('Please enter a valid billing address before placing the order.')
-                });
-                return;
-            }
-
-            const data = this.getData();
-            fullScreenLoader.startLoader();
-
-            placeOrderAction(data, this.messageContainer)
-                .done(() => {
-                    console.log('[ApplePay] Order placed successfully.');
-                })
-                .fail((response) => {
-                    console.error('[ApplePay] Order placement failed:', response);
-                    globalMessageList.addErrorMessage({
-                        message: $t('Order placement failed. Please try again.')
-                    });
-                })
-                .always(() => {
-                    fullScreenLoader.stopLoader();
-                });
+            // No longer needed since order is placed in backend
+            console.log('[ApplePay] Order already placed in backend. Redirecting...');
+            window.location.href = '/checkout/onepage/success/';
         },
 
         getCode: function () {
