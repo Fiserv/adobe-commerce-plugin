@@ -121,10 +121,7 @@ class Validate extends Action implements CsrfAwareActionInterface
 				$billingAddress->setTelephone($billingData['telephone'] ?? '0000000000');
 				$billingAddress->setPostcode($billingData['postcode'] ?? '95014');
 				$billingAddress->setCountryId($billingData['countryId'] ?? 'US');
-				if (!empty($billingData['regionId'])) {
-					$billingAddress->setRegionId($billingData['regionId']);
-				}
-				$quote->setBillingAddress($billingAddress);
+				$billingAddress->setRegionId($billingData['regionId'] ?? 34);
 				$this->logger->logInfo(1, 'Billing address populated from ApplePay', json_encode($billingData));
 			} else {
 				$billingAddress->setFirstname('Test');
@@ -134,16 +131,11 @@ class Validate extends Action implements CsrfAwareActionInterface
 				$billingAddress->setTelephone('1234567890');
 				$billingAddress->setPostcode('12345');
 				$billingAddress->setCountryId('US');
-				$billingAddress->setRegionId(34); // New Jersey fallback
-				$quote->setBillingAddress($billingAddress);
+				$billingAddress->setRegionId(34);
 				$this->logger->logWarning(2, 'Billing address fallback used', json_encode(['reason' => 'Missing billing_address in ApplePay details']));
 			}
 
-			$this->logger->logInfo(1, 'Billing address region info', json_encode([
-				'regionId' => $billingAddress->getRegionId(),
-				'region' => $billingAddress->getRegion(),
-				'countryId' => $billingAddress->getCountryId()
-			]));
+			$quote->setBillingAddress($billingAddress);
 
 			$missingFields = $this->validateBillingAddress($billingAddress);
 			if (!empty($missingFields)) {
@@ -155,20 +147,23 @@ class Validate extends Action implements CsrfAwareActionInterface
 				$quote->setCustomerEmail($email);
 			} else {
 				$this->logger->logError(2, 'Invalid email in ApplePay validation', json_encode(['email' => $email]));
-				return $result->setData(['success' => false, 'message' => 'Invalid email address.', 'debug_info' => json_encode([
-					'quote_email' => $quote->getCustomerEmail(),
-					'billing_email' => $billingAddress->getEmail()
-				])]);
+				return $result->setData([
+					'success' => false,
+					'message' => 'Invalid email address.',
+					'debug_info' => json_encode([
+						'quote_email' => $quote->getCustomerEmail(),
+						'billing_email' => $billingAddress->getEmail()
+					])
+				]);
 			}
 
 			$order = $this->placeMagentoOrder();
 			$payment = $order->getPayment();
 			$payment->setMethod('fiserv_applepay');
-			$payment->setAdditionalInformation('applepay_session_id', $sessionId);
-			$payment->setAdditionalInformation('session_id', $sessionId);
-			$payment->setAdditionalInformation('applepay_details', $details);
+			$payment->setAdditionalInformation('payment_session', $sessionId); // ✅ Required by SessionSourceDataBuilder
 			$payment->save();
 
+			$this->logger->logDebug(2, 'Order payment additionalInformation after placement', json_encode($payment->getAdditionalInformation()));
 			$paymentDataObject = $this->paymentDataObjectFactory->create($payment, ['order' => $order]);
 
 			$this->logger->logInfo(1, 'ApplePay Command Start', json_encode([
@@ -233,25 +228,21 @@ class Validate extends Action implements CsrfAwareActionInterface
 		$quote = $this->checkoutSession->getQuote();
 		$quote->getPayment()->setMethod('fiserv_applepay');
 		$quote->collectTotals()->save();
-
 		$order = $this->quoteManagement->submit($quote);
 		$order->getPayment()->save();
-
 		$quote->setIsActive(false);
 		$this->cartRepository->save($quote);
 		$this->checkoutSession->clearQuote();
 		$this->cartRepository->delete($quote);
-
 		$this->checkoutSession->setQuoteId(null);
 		$this->checkoutSession->setLastQuoteId($quote->getId());
 		$this->checkoutSession->setLastSuccessQuoteId($quote->getId());
 		$this->checkoutSession->setLastOrderId($order->getId());
 		$this->checkoutSession->setLastRealOrderId($order->getIncrementId());
-
 		return $order;
 	}
 
-	protected function validateBillingAddress($address): array
+	function validateBillingAddress($address): array
 	{
 		$missing = [];
 		if (!$address->getFirstname()) $missing[] = 'firstname';

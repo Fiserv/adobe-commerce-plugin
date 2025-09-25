@@ -53,10 +53,7 @@ class SessionSourceDataBuilder implements BuilderInterface
 		$sessionId = $payment->getAdditionalInformation(DataAssignObserver::SESSION_ID_KEY) ?? $buildSubject['session_id'] ?? $buildSubject['sessionId'] ?? null;
 
 		if (!$sessionId) {
-			$this->logger->logError(1, 'SessionSourceDataBuilder - Missing session_id', [
-				'order_id' => $orderIncrementId,
-				'buildSubject' => $buildSubject
-			]);
+			$this->logger->logError(1, 'SessionSourceDataBuilder - Missing session_id', json_encode([ 'order_id' => $orderIncrementId, 'buildSubject' => $buildSubject ]));
 			throw new \InvalidArgumentException('Missing session_id for PaymentSession');
 		}
 
