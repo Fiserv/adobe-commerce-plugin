@@ -3,13 +3,15 @@ define([
 	'uiComponent',
 	'Fiserv_Payments/js/action/modify-requirejs',
 	'Magento_Customer/js/model/customer',
-	'Fiserv_Payments/js/view/payment/paypal/fastlane'
+	'Fiserv_Payments/js/view/payment/paypal/fastlane',
+	'Magento_Checkout/js/model/full-screen-loader'
 ], function (
 	$,
 	Component,
 	modifyRequirejs,
 	customerModel,
-	fastlaneHelper
+	fastlaneHelper,
+	fullScreenLoader
 ) {
 	'use strict';
 
@@ -33,7 +35,16 @@ define([
 			const fastlaneEmailSubmitButton = $("#email-submit-button");
 
 			fastlaneEmailSubmitButton.on("click", function() {
-				fastlaneHelper.authenticateEmailForFastlane();
+
+				const method = { method: 'fiserv_commercehub' };
+				$('#fiserv_commercehub').trigger('click');
+
+				fullScreenLoader.startLoader();
+
+				setTimeout(() => {
+					fullScreenLoader.stopLoader();
+					fastlaneHelper.authenticateEmailForFastlane();
+				}, 3000);
 			});
 
 			return this;

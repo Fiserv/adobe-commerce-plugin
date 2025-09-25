@@ -129,7 +129,7 @@ define([
 
 		authenticateEmailForFastlane: async function () {
 
-			const emailInputValue = $("#email-input").val();
+			const emailInputValue = $("#customer-email").val();
 
 			try {
 				this.authenticateResult = await this.fastlane.authenticate({
@@ -154,6 +154,17 @@ define([
 						countryId: profileData.shippingAddress.address.countryCode,
 						telephone: profileData.shippingAddress.phoneNumber.nationalNumber
 					};
+
+
+					$('input[name="firstname"]').val(magentoAddress.firstname);
+					$('input[name="lastname"]').val(magentoAddress.lastname);
+					$('input[name="street[0]"]').val(magentoAddress.street[0]);
+					$('input[name="street[1]"]').val(magentoAddress.street[1]);
+					$('input[name="country_id"]').val(magentoAddress.countryId);
+					$('input[name="region_id"]').val(magentoAddress.region);
+					$('input[name="city"]').val(magentoAddress.city);
+					$('input[name="postcode"]').val(magentoAddress.postcode);
+					$('input[name="telephone"]').val(magentoAddress.telephone);
 
 					const newBillingAddress = newAddress(magentoAddress);
 
