@@ -11,7 +11,7 @@ use Fiserv\Payments\Logger\MultiLevelLogger;
  */
 class ConfigProvider extends CommerceHubConfigProvider
 {
-	const CODE = 'fiserv_applepay';
+	const APPLE_CODE = 'fiserv_applepay';
 	private MultiLevelLogger $logger;
 
 	/**
@@ -64,6 +64,6 @@ class ConfigProvider extends CommerceHubConfigProvider
 			self::CARD_FORM_CONFIG_KEY => $this->buildFormConfig(ApplePayConfig::KEY_SDC_CHECKOUT, $storeId),
 			self::INVALID_FIELDS_KEY => $this->getInvalidFieldMessages(ApplePayConfig::KEY_SDC_CHECKOUT, $storeId),
 		];
-		return ['payment' => [self::CODE => $config]];
+		return ['payment' => [self::APPLE_CODE => $config]];
 	}
 }

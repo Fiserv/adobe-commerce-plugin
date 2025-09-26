@@ -111,66 +111,48 @@ define([
         },
 
         onApplePaySuccess: function (details, data) {
-
-            const billingAddress = quote.billingAddress();
             const safeDetails = {
                 applepay_order_id: data?.orderId,
-                payment_source: data?.paymentMethod || 'applepay',
-                applepay_details: {
-                    ...details,
-                    billing_address: billingAddress
-                }
+                payment_source: data?.paymentMethod || 'applepay'
             };
 
-            this.additionalData = safeDetails;
-
-            const payload = {
-                sessionId: this.paymentPayload.sessionId,
-                email: quote.guestEmail || window.checkoutConfig.customerData?.email || 'guest@example.com',
-                action: 'authorize',
-                applepay_details: safeDetails
+            this.additionalData = {
+                ...safeDetails,
+                payment_session: this.paymentPayload.sessionId // ✅ aligned with DataAssignObserver
             };
 
+            if (this.placeOrderCallback) {
+                this.placeOrderCallback({
+                    orderId: data.orderId,
+                    email: quote.guestEmail || window.checkoutConfig.customerData?.email || 'guest@example.com',
+                    merchantId: window.checkoutConfig.payment[this.getCode()].merchantId,
+                    terminalId: window.checkoutConfig.payment[this.getCode()].terminalId
+                });
+            } else {
+                console.error('No placeOrderCallback set for Apple Pay approval');
+            }
+        },
 
-            fetch('/fiserv/applepay/validate', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify(payload),
-                credentials: 'same-origin'
-            }).then(async (res) => {
-                const text = await res.text();
-                let response;
-                try {
-                    response = JSON.parse(text);
-                } catch (jsonError) {
-                    globalMessageList.addErrorMessage({message: $t('Invalid response from Apple Pay backend.')});
-                    return;
-                }
+        placeOrderCallback: function (approvalData) {
+            const self = this;
+            self.additionalData.applepay_order_id = approvalData.orderId;
 
-                if (response.success) {
+            require(['Magento_Checkout/js/action/place-order'], function (placeOrderAction) {
+                placeOrderAction(self.getData()).done(function () {
                     window.location.href = '/checkout/onepage/success/';
-                } else {
-                    globalMessageList.addErrorMessage({message: $t(response.message || 'Authorization failed.')});
-                }
-            }).catch((error) => {
-                globalMessageList.addErrorMessage({message: $t('Apple Pay backend error: ') + error.message});
+                });
             });
         },
 
         getData: function () {
-            const data = {
+            return {
                 method: this.getCode(),
-                additional_data: {...this.additionalData}
+                additional_data: {
+                    payment_source: this.additionalData.payment_source,
+                    applepay_order_id: this.additionalData.applepay_order_id,
+                    payment_session: this.additionalData.payment_session // ✅ correct key
+                }
             };
-
-            if (this.paymentPayload.sessionId) {
-                data.additional_data.payment_session = this.paymentPayload.sessionId;
-            }
-
-            return data;
         },
 
         placeOrder: function () {

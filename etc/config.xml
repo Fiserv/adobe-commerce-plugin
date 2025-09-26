@@ -254,7 +254,7 @@
                 <active>1</active>
                 <payment_active>1</payment_active>
                 <title>Apple Pay</title>
-                <model>Fiserv\Payments\Model\Payment\ApplePay</model>
+                <model>FiservApplePayFacade</model>
                 <!-- Encrypted backend models for sensitive information -->
                 <merchant_id backend_model="Fiserv\Payments\Model\System\Config\Backend\CommerceHub\Encrypted"/>
                 <terminal_id backend_model="Fiserv\Payments\Model\System\Config\Backend\CommerceHub\Encrypted"/>
