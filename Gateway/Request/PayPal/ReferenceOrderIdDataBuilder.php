@@ -5,7 +5,7 @@
  */
 namespace Fiserv\Payments\Gateway\Request\PayPal;
 
-use Fiserv\Payments\Gateway\Subject\PayPal\SubjectReader;
+use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use Magento\Payment\Gateway\Request\BuilderInterface;
 use Fiserv\Payments\Observer\PayPal\DataAssignObserver;
 use Fiserv\Payments\Logger\MultiLevelLogger;
