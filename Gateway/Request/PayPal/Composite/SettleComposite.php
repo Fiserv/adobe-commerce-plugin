@@ -46,7 +46,7 @@ class SettleComposite extends PayPalCompositeBase
 		
 		$result = parent::build($buildSubject);
 
-		$orderIncrementId = $result[TransactionDetailsDataBuilder::TXN_DETAILS_KEY]['merchant_order_id'] ?? null;
+		$orderIncrementId = $result[PayPalTransactionDetailsDataBuilder::TXN_DETAILS_KEY]['merchant_order_id'] ?? null;
 		if ($orderIncrementId !== null) {
 			$this->logger->logInfo(1, "Initiating Capture Transaction", "Order ID:" . $orderIncrementId);
 		} else {
@@ -55,7 +55,7 @@ class SettleComposite extends PayPalCompositeBase
 
 		$req = new ChargesRequest();
 		$req->setAmount($result[AmountDataBuilder::AMOUNT_KEY]);
-		$req->setTransactionDetails($result[TransactionDetailsDataBuilder::TXN_DETAILS_KEY]);
+		$req->setTransactionDetails($result[PayPalTransactionDetailsDataBuilder::TXN_DETAILS_KEY]);
 		$req->setReferenceTransactionDetails($result[ReferenceTransactionDataBuilder::REF_TXN_KEY]);
 		$req->setMerchantDetails($result[MerchantDetailsDataBuilder::MERCHANT_DETAILS_KEY]);
 		return [ 

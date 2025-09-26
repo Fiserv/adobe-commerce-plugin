@@ -22,5 +22,5 @@ var config = {
 		'fastlane/axo.min' : 'https://www.paypalobjects.com/connect-boba/axo.min',
 		'chBraintreeClient' : 'https://js.braintreegateway.com/web/3.116.2/js/client.min',
 		'ch-braintree-hosted-fields' : 'https://js.braintreegateway.com/web/3.116.2/js/hosted-fields.min'
-    }
+    },
 };

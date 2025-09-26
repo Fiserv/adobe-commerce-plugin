@@ -33,7 +33,7 @@
 				<currency>USD</currency>
 				<allowspecific>1</allowspecific>
 				<specificcountry>US</specificcountry>
-				<cc_types_ch_mapper><![CDATA[{"AMEX":"AE","DISCOVER":"DI","JCB":"JCB","MASTERCARD":"MC","VISA":"VI","DINERS":"DN","CUP":"UN"}]]></cc_types_ch_mapper>
+				<cc_types_ch_mapper><![CDATA[{"AMEX":"AE","DISCOVER":"DI","JCB":"JCB","MASTERCARD":"MC","VISA":"VI","DINERS":"DN"}]]></cc_types_ch_mapper>
 				<is_gateway>1</is_gateway>
 				<can_use_internal>1</can_use_internal>
 				<can_use_checkout>1</can_use_checkout>
@@ -195,7 +195,6 @@
 				<create_valuelink_invoice>yes</create_valuelink_invoice>
 				<valuelink_title>Gift Cards</valuelink_title>
 				<card_amount_limit>1</card_amount_limit>
-				<gift_card_tier>basic</gift_card_tier>
 	
 				<sdc_custom_checkout_valuelink_card_number_parent_element>fiserv_giftcard-card-number</sdc_custom_checkout_valuelink_card_number_parent_element>
 				<sdc_custom_checkout_valuelink_card_number_placeholder>Gift Card Number</sdc_custom_checkout_valuelink_card_number_placeholder>
@@ -250,7 +249,7 @@
 			<active>1</active>
 			<payment_active>1</payment_active>
 			<title>PayPal</title>
-			<model>Fiserv\Payments\Model\Payment\PayPal</model>
+			<model>FiservPayPalFacade</model>
 			<merchant_id backend_model="Fiserv\Payments\Model\System\Config\Backend\CommerceHub\Encrypted"/>
 			<terminal_id backend_model="Fiserv\Payments\Model\System\Config\Backend\CommerceHub\Encrypted"/>
 			<api_key backend_model="Fiserv\Payments\Model\System\Config\Backend\CommerceHub\Encrypted"/>
