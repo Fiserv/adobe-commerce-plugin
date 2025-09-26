@@ -20,6 +20,7 @@ class ConfigProvider implements ConfigProviderInterface
 	const CODE = 'fiserv_paypal';
 	const IS_ACTIVE_KEY = 'isActive';
 	const VAULT_CODE = 'fiserv_paypal_vault';
+	const FASTLANE_CODE = "fastlane";
 	const MERCHANT_ID_KEY = 'merchantId';
 	const TERMINAL_ID_KEY = 'terminalId';
 	const SHOW_PRIVACY_STATEMENT_KEY = 'show_privacy_statement';
@@ -80,6 +81,7 @@ class ConfigProvider implements ConfigProviderInterface
 			'buttonConfig' => $buttonConfig,
 			'vaultConfig' => $vaultConfig,
 			// 'venmoConfig' => $venmoConfig,
+			self::FASTLANE_CODE => $this->paypalConfig->isFastlaneActive($storeId),
 			self::IS_ACTIVE_KEY => $this->paypalConfig->isActive($storeId),
 			self::MERCHANT_ID_KEY => $this->commerceHubConfig->getMerchantId($storeId),
 			self::TERMINAL_ID_KEY => $this->commerceHubConfig->getTerminalId($storeId),

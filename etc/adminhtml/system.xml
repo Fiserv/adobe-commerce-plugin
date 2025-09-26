@@ -1001,6 +1001,12 @@
 						<config_path>payment/fiserv_paypal/paypal_enable_vaulting</config_path>
 						<comment>Allow customers to save PayPal payment method for future use.</comment>
 					</field>
+					<field id="paypal_enable_fastlane" translate="label" type="select" sortOrder="99" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Enable PayPal Fastlane</label>
+						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+						<config_path>payment/fiserv_paypal/ch_paypal_fastlane</config_path>
+						<comment>Allow customers to PayPal Fastlane for faster payement.</comment>
+					</field>
 
 					<!-- VENMO DISABLED: <field id="fiserv_paypal_venmo" translate="label" type="select" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Enable PayPal Venmo</label>

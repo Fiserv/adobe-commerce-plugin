@@ -25,7 +25,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	// const VENMO_BUTTON_COLOR_KEY = "venmo_button_color";
 	// const VENMO_BUTTON_SHAPE_KEY = "venmo_button_shape";
 	const KEY_MERCHANT_INTEGRATOR = 'merchant_integrator';
-    const KEY_VAULT_ACTIVE = 'paypal_enable_vaulting';
+	const KEY_VAULT_ACTIVE = 'paypal_enable_vaulting';
+	const KEY_FASTLANE_ACTIVE = 'ch_paypal_fastlane';
     // const KEY_VENMO_ACTIVE = 'fiserv_paypal_venmo';
 	const KEY_TOKEN_STRATEGY = 'tokenization_strategy';
 	const KEY_TOKENIZATION = "tokenization";
@@ -105,6 +106,11 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     public function isVaultActive($storeId = null)
     {
         return (bool)$this->getValue(self::KEY_VAULT_ACTIVE, $storeId);
+    }
+
+    public function isFastlaneActive($storeId = null)
+    {
+	    return (bool)$this->getValue(self::KEY_FASTLANE_ACTIVE, $storeId);
     }
 
     // VENMO DISABLED: public function isVenmoActive($storeId = null)

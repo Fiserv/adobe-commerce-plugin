@@ -1,0 +1,31 @@
+<!-- ko if: (!isCustomerLoggedIn())-->
+
+	<h1>Fiserv-PayPal Fastlane</h1>
+	<div class="rows">
+		<section id="customer" class="paypal-section">
+			<div class="header">
+				<h2> Customer</h2></div>
+			<div class="summary"></div>
+			<div class="columns">
+				<div>
+					<form class="form form-login" data-role="email-with-possible-login" method="post">
+						<fieldset id="customer-email-fieldset" class="fieldset">
+							<div class="field required">
+								<label class="label" for="customer-email"><span data-bind="i18n: 'Email Address'"></span></label>
+								<div class="control _with-tooltip">
+									<input class="input-text"
+									type="email"
+									name="username"
+									id="customer-email"></input>
+								</div>
+							</div>
+						</fieldset>
+					</form>
+					<div id="fiserv-paypal-watermark-container"></div>
+					<div id="fiserv-paypal-consent-container"></div>
+				</div>
+				<button type="button" id="email-submit-button">Continue</button>
+			</div>
+		</section>
+	</div>
+<!--/ko-->

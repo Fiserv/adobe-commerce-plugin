@@ -63,12 +63,12 @@ define(
 		function buildPayload()
 		{
 			let amount = getAmount();
-			let customer = getCustomer();
-			let billingAddress = getBillingAddress();
+			//let customer = getCustomer();
+			//let billingAddress = getBillingAddress();
 			return {
 				"amount" : amount,
-				"customer" : customer,
-				"billingAddress" : billingAddress
+				//"customer" : customer,
+				//"billingAddress" : billingAddress
 			};
 		}
 
