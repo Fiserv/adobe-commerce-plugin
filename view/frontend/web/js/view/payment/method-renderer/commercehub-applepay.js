@@ -36,7 +36,6 @@ define([
 
         initialize: function () {
             this._super();
-            console.log('[ApplePay] Initializing payment method.');
             this.observeBillingAddress();
             this.watchPaymentMethods();
             return this;
@@ -44,7 +43,6 @@ define([
 
         observeBillingAddress: function () {
             quote.billingAddress.subscribe((address) => {
-                console.log('[ApplePay] Billing address changed:', address);
                 this.isPlaceOrderActionAllowed(address !== null);
             });
         },
@@ -59,7 +57,6 @@ define([
         },
 
         loadApplePayForm: async function () {
-            console.log('[ApplePay] Loading Apple Pay form...');
             const config = window.checkoutConfig.payment[this.getCode()];
             const sessionData = {
                 customer: {
@@ -95,10 +92,9 @@ define([
                     }
                 });
 
-                console.log('[ApplePay] Apple Pay button rendered.');
             } catch (error) {
                 console.error('[ApplePay] Initialization error:', error);
-                globalMessageList.addErrorMessage({ message: $t('Apple Pay error: ') + error.message });
+                globalMessageList.addErrorMessage({message: $t('Apple Pay error: ') + error.message});
             } finally {
                 fullScreenLoader.stopLoader();
             }
@@ -115,12 +111,15 @@ define([
         },
 
         onApplePaySuccess: function (details, data) {
-            console.log('[ApplePay] Payment approved:', details, data);
 
+            const billingAddress = quote.billingAddress();
             const safeDetails = {
                 applepay_order_id: data?.orderId,
                 payment_source: data?.paymentMethod || 'applepay',
-                applepay_details: details
+                applepay_details: {
+                    ...details,
+                    billing_address: billingAddress
+                }
             };
 
             this.additionalData = safeDetails;
@@ -131,6 +130,7 @@ define([
                 action: 'authorize',
                 applepay_details: safeDetails
             };
+
 
             fetch('/fiserv/applepay/validate', {
                 method: 'POST',
@@ -146,40 +146,34 @@ define([
                 try {
                     response = JSON.parse(text);
                 } catch (jsonError) {
-                    console.error('[ApplePay] Invalid JSON from backend:', jsonError);
-                    globalMessageList.addErrorMessage({ message: $t('Invalid response from Apple Pay backend.') });
+                    globalMessageList.addErrorMessage({message: $t('Invalid response from Apple Pay backend.')});
                     return;
                 }
 
                 if (response.success) {
-                    console.log('[ApplePay] Order placed successfully. Redirecting...');
                     window.location.href = '/checkout/onepage/success/';
                 } else {
-                    globalMessageList.addErrorMessage({ message: $t(response.message || 'Authorization failed.') });
+                    globalMessageList.addErrorMessage({message: $t(response.message || 'Authorization failed.')});
                 }
             }).catch((error) => {
-                console.error('[ApplePay] Backend call failed:', error);
-                globalMessageList.addErrorMessage({ message: $t('Apple Pay backend error: ') + error.message });
+                globalMessageList.addErrorMessage({message: $t('Apple Pay backend error: ') + error.message});
             });
         },
 
         getData: function () {
             const data = {
                 method: this.getCode(),
-                additional_data: { ...this.additionalData }
+                additional_data: {...this.additionalData}
             };
 
             if (this.paymentPayload.sessionId) {
                 data.additional_data.payment_session = this.paymentPayload.sessionId;
             }
 
-            console.log('[ApplePay] Final payment data:', data);
             return data;
         },
 
         placeOrder: function () {
-            // No longer needed since order is placed in backend
-            console.log('[ApplePay] Order already placed in backend. Redirecting...');
             window.location.href = '/checkout/onepage/success/';
         },
 

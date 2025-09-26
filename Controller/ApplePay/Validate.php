@@ -86,12 +86,7 @@ class Validate extends Action implements CsrfAwareActionInterface
 				throw new \Exception('Invalid JSON payload');
 			}
 
-			$this->logger->logInfo(1, 'Received ApplePay validation request', json_encode(['data' => $data]));
-
 			$sessionId = $data['sessionId'] ?? null;
-
-			$this->logger->logInfo(1, 'ApplePay Validate - Extracted sessionId', json_encode(['sessionId_from_payload' => $sessionId]));
-
 			$email = $data['email'] ?? null;
 			$action = strtolower($data['action'] ?? $this->commerceHubConfig->getPaymentAction());
 			$details = $data['applepay_details'] ?? [];
@@ -100,53 +95,25 @@ class Validate extends Action implements CsrfAwareActionInterface
 				return $result->setData(['success' => false, 'message' => 'Missing sessionId']);
 			}
 
-			if (empty($details)) {
-				return $result->setData(['success' => false, 'message' => 'Missing ApplePay details']);
-			}
+			$billingData = $details['billing_address'] ?? [];
 
 			$quote = $this->checkoutSession->getQuote();
 			$billingAddress = $quote->getBillingAddress();
 
-			if (!$quote || !$billingAddress) {
-				return $result->setData(['success' => false, 'message' => 'Missing quote or billing address']);
-			}
-
-			$billingData = $details['billing_address'] ?? [];
-
-			if (!empty($billingData)) {
-				$billingAddress->setFirstname($billingData['firstname'] ?? 'Apple');
-				$billingAddress->setLastname($billingData['lastname'] ?? 'Pay');
-				$billingAddress->setStreet([$billingData['street'] ?? '1 Infinite Loop']);
-				$billingAddress->setCity($billingData['city'] ?? 'Cupertino');
-				$billingAddress->setTelephone($billingData['telephone'] ?? '0000000000');
-				$billingAddress->setPostcode($billingData['postcode'] ?? '95014');
-				$billingAddress->setCountryId($billingData['countryId'] ?? 'US');
-				$billingAddress->setRegionId($billingData['regionId'] ?? 34);
-				$this->logger->logInfo(1, 'Billing address populated from ApplePay', json_encode($billingData));
-			} else {
-				$billingAddress->setFirstname('Test');
-				$billingAddress->setLastname('User');
-				$billingAddress->setStreet(['123 Test Street']);
-				$billingAddress->setCity('Testville');
-				$billingAddress->setTelephone('1234567890');
-				$billingAddress->setPostcode('12345');
-				$billingAddress->setCountryId('US');
-				$billingAddress->setRegionId(34);
-				$this->logger->logWarning(2, 'Billing address fallback used', json_encode(['reason' => 'Missing billing_address in ApplePay details']));
-			}
+			$billingAddress->setFirstname($billingData['firstname'] ?? 'Apple');
+			$billingAddress->setLastname($billingData['lastname'] ?? 'Pay');
+			$billingAddress->setStreet($billingData['street'] ?? ['1 Infinite Loop']);
+			$billingAddress->setCity($billingData['city'] ?? 'Cupertino');
+			$billingAddress->setTelephone($billingData['telephone'] ?? '0000000000');
+			$billingAddress->setPostcode($billingData['postcode'] ?? '95014');
+			$billingAddress->setCountryId($billingData['countryId'] ?? 'US');
+			$billingAddress->setRegionId($billingData['regionId'] ?? 34);
 
 			$quote->setBillingAddress($billingAddress);
-
-			$missingFields = $this->validateBillingAddress($billingAddress);
-			if (!empty($missingFields)) {
-				$this->logger->logError(1, 'Incomplete billing address', json_encode(['missing_fields' => $missingFields]));
-				return $result->setData(['success' => false, 'message' => 'Please check the billing address information. Missing: ' . implode(',', $missingFields)]);
-			}
 
 			if ($email && filter_var($email, FILTER_VALIDATE_EMAIL)) {
 				$quote->setCustomerEmail($email);
 			} else {
-				$this->logger->logError(2, 'Invalid email in ApplePay validation', json_encode(['email' => $email]));
 				return $result->setData([
 					'success' => false,
 					'message' => 'Invalid email address.',
@@ -160,17 +127,10 @@ class Validate extends Action implements CsrfAwareActionInterface
 			$order = $this->placeMagentoOrder();
 			$payment = $order->getPayment();
 			$payment->setMethod('fiserv_applepay');
-			$payment->setAdditionalInformation('payment_session', $sessionId); // ✅ Required by SessionSourceDataBuilder
+			$payment->setAdditionalInformation('payment_session', $sessionId);
 			$payment->save();
 
-			$this->logger->logDebug(2, 'Order payment additionalInformation after placement', json_encode($payment->getAdditionalInformation()));
 			$paymentDataObject = $this->paymentDataObjectFactory->create($payment, ['order' => $order]);
-
-			$this->logger->logInfo(1, 'ApplePay Command Start', json_encode([
-				'session_id' => $sessionId,
-				'action' => $action,
-				'order_id' => $order->getIncrementId()
-			]));
 
 			$commandName = match ($action) {
 				'authorize_capture' => 'sale',
@@ -186,16 +146,10 @@ class Validate extends Action implements CsrfAwareActionInterface
 					'session_id' => $sessionId
 				]);
 			} catch (\Exception $e) {
-				$this->logger->logError(1, 'ApplePay Command Execution Error', json_encode(['error' => $e->getMessage()]));
 				return $result->setData(['success' => false, 'message' => 'Payment gateway error: ' . $e->getMessage()]);
 			}
 
-			$this->logger->logInfo(1, 'ApplePay Command Finish', json_encode(['result' => $commandResult]));
-
 			$applePayTxnId = $payment->getLastTransId() ?: $sessionId;
-			if (!$payment->getLastTransId()) {
-				$this->logger->logWarning(2, 'Missing transaction ID, falling back to sessionId', json_encode(['session_id' => $sessionId]));
-			}
 
 			$transaction = $this->transactionBuilder
 				->setPayment($payment)
@@ -218,7 +172,6 @@ class Validate extends Action implements CsrfAwareActionInterface
 				'last_transaction_id' => $payment->getLastTransId()
 			]);
 		} catch (\Throwable $e) {
-			$this->logger->logError(1, 'Fatal error in ApplePay Validate', json_encode(['error' => $e->getMessage()]));
 			return $result->setData(['success' => false, 'message' => 'Server error: ' . $e->getMessage()]);
 		}
 	}
