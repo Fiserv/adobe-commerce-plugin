@@ -15,7 +15,7 @@ class DataAssignObserver extends AbstractDataAssignObserver
      * Keys for PayPal-specific additional information.
      */
     public const ORDER_ID      = 'paypal_order_id';
-    public const REF_TXN_KEY   = 'paypal_order_id';
+    public const REF_TXN_KEY   = 'paypal_txn_id';
     public const EMAIL         = 'paypal_email';
     public const TRANSACTION_ID = 'paypal_transaction_id';
     public const INTENT        = 'paypal_intent';
@@ -52,6 +52,15 @@ class DataAssignObserver extends AbstractDataAssignObserver
         foreach ($this->paypalInfoKeys as $key) {
             if (array_key_exists($key, $additionalData)) {
                 $paymentInfo->setAdditionalInformation($key, $additionalData[$key]);
+                // Add logging to track paypal_order_id assignment
+                if ($key === self::ORDER_ID) {
+                    error_log("DataAssignObserver: Setting paypal_order_id to " . $additionalData[$key]);
+                }
+            } else {
+                // Log if paypal_order_id is missing
+                if ($key === self::ORDER_ID) {
+                    error_log("DataAssignObserver: paypal_order_id not found in additional_data");
+                }
             }
         }
     }

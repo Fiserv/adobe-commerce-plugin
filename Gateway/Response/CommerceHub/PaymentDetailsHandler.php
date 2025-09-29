@@ -66,9 +66,17 @@ class PaymentDetailsHandler implements HandlerInterface
 			$tnxDetails["orderId"]
 		);
 
-		$payment->setTransactionAdditionalInfo(
-			self::KEY_AMOUNT,
-			SubjectReader::getValueSafely($chResponse, "total", $this->amountPath)
-		);
+		$amount = null;
+		if(isset($chResponse["transaction"]["paymentReceipt"]["approvedAmount"])){
+			$amount = $chResponse["transaction"]["paymentReceipt"]["approvedAmount"]['total'] ?? null;
+		} elseif (isset($chResponse["paymentReceipt"]["approvedAmount"])){
+			$amount = $chResponse["paymentReceipt"]["approvedAmount"]['total'] ?? null;
+		}
+		if ($amount !== null){
+			$payment->setTransactionAdditionalInfo(
+				self::KEY_AMOUNT,
+				(float)$amount
+			);
+		}
 	}
 }

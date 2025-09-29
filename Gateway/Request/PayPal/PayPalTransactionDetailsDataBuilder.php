@@ -5,7 +5,7 @@
  */
 namespace Fiserv\Payments\Gateway\Request\PayPal;
 
-use Fiserv\Payments\Gateway\Subject\PayPal\SubjectReader;
+use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use Fiserv\Payments\Lib\CommerceHub\Model\TransactionDetails;
 use Fiserv\Payments\Gateway\Config\PayPal\Config;
 use Magento\Payment\Gateway\Request\BuilderInterface;
@@ -21,6 +21,8 @@ abstract class PayPalTransactionDetailsDataBuilder implements BuilderInterface
 	const KEY_CREATE_TOKEN = 'T';
 	const CAPTURE = true;
 	const AUTHORIZE = false;
+	const REFUND = false;
+	const CANCEL = false;
 
 	/**
 	 * @var MultiLevelLogger
@@ -62,10 +64,13 @@ abstract class PayPalTransactionDetailsDataBuilder implements BuilderInterface
 		$data = $payment->getAdditionalInformation();
 		$captureFlag = $this->getCaptureFlag();
 		$refundFlag = isset($data['is_refund']) ? (bool)$data['is_refund'] : false;
+		$voidFlag = isset($data['is_void']) ? (bool)$data['is_void'] : false;
 
 		if ($refundFlag) {
 			$operationType = 'REFUND';
-		} elseif ($captureFlag) {
+		} elseif ($voidFlag) {
+			$operationType = 'CANCEL';
+		} elseif ($captureFlag === true) {
 			$operationType = 'CAPTURE';
 		} else {
 			$operationType = 'AUTHORIZE';

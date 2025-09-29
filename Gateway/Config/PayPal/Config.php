@@ -16,20 +16,17 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 {
     // Config keys (adjust as needed for PayPal)
     const KEY_ACTIVE = 'active';
-    const KEY_TITLE = 'title';
+    const KEY_TITLE = 'paypal';
     const KEY_SORT_ORDER = 'sort_order';
-	const SHOW_PRIVACY_STATEMENT_KEY = "show_privacy_statement";
-	const PAYPAL_BUTTON_COLOR_KEY = "paypal_button_color";
-	const PAYPAL_BUTTON_SHAPE_KEY = "paypal_button_shape";
-	const PAYPAL_BUTTON_LABEL_KEY = "paypal_button_label";
+	const PAYPAL_BUTTON_COLOR_KEY = 'paypal_button_color';
+	const PAYPAL_BUTTON_SHAPE_KEY = 'paypal_button_shape';
+	const PAYPAL_BUTTON_LABEL_KEY = 'paypal_button_label';
 	// const VENMO_BUTTON_COLOR_KEY = "venmo_button_color";
 	// const VENMO_BUTTON_SHAPE_KEY = "venmo_button_shape";
 	const KEY_MERCHANT_INTEGRATOR = 'merchant_integrator';
 	const KEY_VAULT_ACTIVE = 'paypal_enable_vaulting';
 	const KEY_FASTLANE_ACTIVE = 'ch_paypal_fastlane';
     // const KEY_VENMO_ACTIVE = 'fiserv_paypal_venmo';
-	const KEY_TOKEN_STRATEGY = 'tokenization_strategy';
-	const KEY_TOKENIZATION = "tokenization";
 	const KEY_STANDALONE_SPA = 'standalone_spa';
 	const KEY_DEBUG = 'debug';
 	const KEY_PAYMENT_ACTION = 'payment_action';

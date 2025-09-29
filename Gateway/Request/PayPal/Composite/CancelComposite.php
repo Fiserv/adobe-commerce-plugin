@@ -6,7 +6,7 @@
 namespace Fiserv\Payments\Gateway\Request\PayPal\Composite;
 
 use Fiserv\Payments\Gateway\Request\PayPal\Composite\PayPalCompositeBase;
-use Fiserv\Payments\Lib\PayPal\CommerceHub\CancelRequest;
+use Fiserv\Payments\Lib\CommerceHub\Model\CancelRequest;
 use Fiserv\Payments\Gateway\Request\CommerceHub\ReferenceTransactionDataBuilder;
 use Fiserv\Payments\Gateway\Request\PayPal\PayPalTransactionDetailsDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\TransactionInteractionDataBuilder;
@@ -50,7 +50,7 @@ class CancelComposite extends PayPalCompositeBase
 
 		$req = new CancelRequest();
 		$req->setTransactionDetails($result[PayPalTransactionDetailsDataBuilder::TXN_DETAILS_KEY]);
-		$req->setOrder($result[ReferenceTransactionDataBuilder::REF_TXN_KEY]);
+		$req->setReferenceTransactionDetails($result[ReferenceTransactionDataBuilder::REF_TXN_KEY]);
 		$req->setMerchantDetails($result[MerchantDetailsDataBuilder::MERCHANT_DETAILS_KEY]);
 
 		return [
