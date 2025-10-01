@@ -698,16 +698,6 @@
         </arguments>
     </virtualType>
 
-    <!-- Validate Controller Injection for Apple Pay -->
-    <type name="Fiserv\Payments\Controller\ApplePay\Validate">
-        <arguments>
-            <argument name="applePayHttpAdapter" xsi:type="object">Fiserv\Payments\Model\Adapter\ApplePay\ApplePayHttpAdapter</argument>
-            <argument name="commandPool" xsi:type="object">FiservApplePayCommandPool</argument>
-            <argument name="applePayConfig" xsi:type="object">Fiserv\Payments\Gateway\Config\ApplePay\Config</argument>
-            <argument name="commerceHubConfig" xsi:type="object">Fiserv\Payments\Gateway\Config\CommerceHub\Config</argument>
-        </arguments>
-    </type>
-
     <type name="Fiserv\Payments\Gateway\Config\ApplePay\Config">
         <arguments>
             <argument name="methodCode" xsi:type="const">Fiserv\Payments\Model\Config\ApplePay\ConfigProvider::CODE</argument>
