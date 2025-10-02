@@ -103,7 +103,12 @@ $transaction = $block->getTransactionDetails();
                         <div class="failed-transaction-detail-value"><?= $block->escapeHtml(isset($transaction["merchantAdviceCode"]) ? $transaction["merchantAdviceCode"] : "N/A"); ?></div>
                     </div>
                     <div class="failed-transaction-detail">
-                        <div class="failed-transaction-detail-label"><?= $block->escapeHtml(__('Bank Association Response Code')); ?></div>
+                        <div class="failed-transaction-detail-label">
+							<?php echo $block->escapeHtml(__('Bank Association Response Code')); ?>
+                            <a href="https://developer.fiserv.com/product/CommerceHub/docs/?path=docs/Resources/Guides/Response-Codes/Association-Response-Code.md&branch=main" target="_blank" title="Link to bankAssociationDetails fail codes" class="external-link">
+                                <img src="<?= $block->getViewFileUrl('Fiserv_Payments::images/External_Link_Icon.png') ?>" alt="link">
+                            </a>
+                        </div>
                         <div class="failed-transaction-detail-value"><?= $block->escapeHtml(isset($transaction["bank_association_details"]) ? $transaction["bank_association_details"] : "N/A"); ?></div>
                     </div>
                     <div class="failed-transaction-detail">
