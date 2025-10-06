@@ -29,7 +29,8 @@ define([
             paymentPayload: {
                 sessionId: null,
                 orderId: null,
-                type: 'applepay'
+                type: 'applepay',
+                publicKeyHash: null
             },
             isPlaceOrderActionAllowed: ko.observable(false)
         },
@@ -86,7 +87,19 @@ define([
                         }
                     },
                     hooks: {
-                        onApprove: (data) => this.onApplePaySuccess(data.details, data),
+                        onApprove: (data) => {
+                            console.log('[ApplePay] Full SDK response:', data); // ✅ Log full SDK response
+
+                            if (data?.publicKeyHash) {
+                                this.paymentPayload.publicKeyHash = data.publicKeyHash;
+                            } else if (data?.details?.publicKeyHash) {
+                                this.paymentPayload.publicKeyHash = data.details.publicKeyHash;
+                            } else {
+                                console.warn('[ApplePay] publicKeyHash not found in SDK response');
+                            }
+
+                            this.onApplePaySuccess(data.details, data);
+                        },
                         onCancel: () => console.log('[ApplePay] Payment cancelled'),
                         onError: (error) => console.error('[ApplePay] SDK error:', error)
                     }
@@ -94,7 +107,9 @@ define([
 
             } catch (error) {
                 console.error('[ApplePay] Initialization error:', error);
-                globalMessageList.addErrorMessage({message: $t('Apple Pay error: ') + error.message});
+                globalMessageList.addErrorMessage({
+                    message: $t('Apple Pay error: ') + error.message
+                });
             } finally {
                 fullScreenLoader.stopLoader();
             }
@@ -118,7 +133,8 @@ define([
 
             this.additionalData = {
                 ...safeDetails,
-                payment_session: this.paymentPayload.sessionId // ✅ aligned with DataAssignObserver
+                payment_session: this.paymentPayload.sessionId,
+                public_key_hash: this.paymentPayload.publicKeyHash // ✅ Include publicKeyHash
             };
 
             if (this.placeOrderCallback) {
@@ -150,7 +166,8 @@ define([
                 additional_data: {
                     payment_source: this.additionalData.payment_source,
                     applepay_order_id: this.additionalData.applepay_order_id,
-                    payment_session: this.additionalData.payment_session // ✅ correct key
+                    payment_session: this.additionalData.payment_session,
+                    public_key_hash: this.additionalData.public_key_hash // ✅ Send to backend
                 }
             };
         },
