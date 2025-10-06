@@ -70,7 +70,8 @@ define([
             try {
                 fullScreenLoader.startLoader();
                 const creds = await chSession(sessionData);
-                if (!creds || !creds.ch_credentials) {
+
+                if (!creds?.ch_credentials) {
                     throw new Error('No credentials returned from backend');
                 }
 
@@ -88,25 +89,17 @@ define([
                     },
                     hooks: {
                         onApprove: (data) => {
-                            console.log('[ApplePay] Full SDK response:', data); // ✅ Log full SDK response
-
-                            if (data?.publicKeyHash) {
-                                this.paymentPayload.publicKeyHash = data.publicKeyHash;
-                            } else if (data?.details?.publicKeyHash) {
-                                this.paymentPayload.publicKeyHash = data.details.publicKeyHash;
-                            } else {
-                                console.warn('[ApplePay] publicKeyHash not found in SDK response');
-                            }
+                            this.paymentPayload.publicKeyHash =
+                                data?.publicKeyHash || data?.details?.publicKeyHash || null;
 
                             this.onApplePaySuccess(data.details, data);
                         },
-                        onCancel: () => console.log('[ApplePay] Payment cancelled'),
-                        onError: (error) => console.error('[ApplePay] SDK error:', error)
+                        onCancel: () => {},
+                        onError: () => {}
                     }
                 });
 
             } catch (error) {
-                console.error('[ApplePay] Initialization error:', error);
                 globalMessageList.addErrorMessage({
                     message: $t('Apple Pay error: ') + error.message
                 });
@@ -118,23 +111,18 @@ define([
         watchPaymentMethods: function () {
             const self = this;
             $(`[name="payment[method]"]`).on("click", function () {
-                const selected = $(this).attr("id");
-                if (selected === self.getCode()) {
+                if ($(this).attr("id") === self.getCode()) {
                     self.loadApplePayForm();
                 }
             });
         },
 
         onApplePaySuccess: function (details, data) {
-            const safeDetails = {
-                applepay_order_id: data?.orderId,
-                payment_source: data?.paymentMethod || 'applepay'
-            };
-
             this.additionalData = {
-                ...safeDetails,
+                applepay_order_id: data?.orderId,
+                payment_source: data?.paymentMethod || 'applepay',
                 payment_session: this.paymentPayload.sessionId,
-                public_key_hash: this.paymentPayload.publicKeyHash // ✅ Include publicKeyHash
+                public_key_hash: this.paymentPayload.publicKeyHash
             };
 
             if (this.placeOrderCallback) {
@@ -144,17 +132,13 @@ define([
                     merchantId: window.checkoutConfig.payment[this.getCode()].merchantId,
                     terminalId: window.checkoutConfig.payment[this.getCode()].terminalId
                 });
-            } else {
-                console.error('No placeOrderCallback set for Apple Pay approval');
             }
         },
 
         placeOrderCallback: function (approvalData) {
-            const self = this;
-            self.additionalData.applepay_order_id = approvalData.orderId;
-
-            require(['Magento_Checkout/js/action/place-order'], function (placeOrderAction) {
-                placeOrderAction(self.getData()).done(function () {
+            this.additionalData.applepay_order_id = approvalData.orderId;
+            require(['Magento_Checkout/js/action/place-order'], (placeOrderAction) => {
+                placeOrderAction(this.getData()).done(() => {
                     window.location.href = '/checkout/onepage/success/';
                 });
             });
@@ -167,7 +151,7 @@ define([
                     payment_source: this.additionalData.payment_source,
                     applepay_order_id: this.additionalData.applepay_order_id,
                     payment_session: this.additionalData.payment_session,
-                    public_key_hash: this.additionalData.public_key_hash // ✅ Send to backend
+                    public_key_hash: this.additionalData.public_key_hash
                 }
             };
         },
