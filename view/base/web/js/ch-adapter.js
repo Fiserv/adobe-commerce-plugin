@@ -137,9 +137,6 @@ define([
 			if(fastlaneHelper.fastlane) {
 				formConfig.paypalFastlane = {
 					component: fastlaneHelper.fastlane,
-					watermark: {
-						parentElementId: fastlaneHelper.watermarkElementID
-					},
 					consent: {
 						parentElementId: fastlaneHelper.consentElementID
 					}
