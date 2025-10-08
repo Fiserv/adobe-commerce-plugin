@@ -84,7 +84,7 @@ define(
 					(data) => { this.fieldFocusHandler(data); }
 				);
 
-				if( this.isFastlaneEnabled() ) {
+				if( this.isOnepageCheckoutEnabled() && this.isFastlaneEnabled() ) {
 
 					$('#customer-email-fieldset .note').hide().after('<div id="fiserv-paypal-watermark-container"></div>');
 					let maps = {
@@ -127,6 +127,17 @@ define(
 							fastlaneHelper.authenticateEmailForFastlane();
 						}, 1000);
 					});
+
+					if(customerEmailInput.val()) {
+						customerEmailInput.trigger("change");
+					}
+
+					const changeCard = $('.reset-ch-form');
+
+					changeCard.on('click', function() {
+						chAdapter.resetIframe();
+						$('#fiserv-checkout-submit').attr('disabled', true);
+					});
 				}
 				
 
@@ -154,8 +165,6 @@ define(
 				var self = this;
 				let failureCb = this.iframeLoadFailure.bind(this);
 
-				console.log(fastlaneHelper);
-
 				let iframePromise = new Promise((resolve, reject) => {
 					this.beginIframeFlow();
 					chAdapter.instantiateIframe(
@@ -165,6 +174,7 @@ define(
 					)
 				});
 				iframePromise.then((data) => {
+
 				}).catch((error) =>{
 					failureCb(error);
 				})
@@ -172,7 +182,6 @@ define(
 
 			iframeLoadSuccess: function (data) {
 				this.endIframeFlow();
-				console.log('here2');
 			},
 
 			iframeRunSuccess: async function (sessionId) {
@@ -726,6 +735,10 @@ define(
 
 			isFastlaneEnabled: function() {
 				return window.checkoutConfig.payment[this.paypalCode].fastlane;
+			},
+
+			isOnepageCheckoutEnabled: function() {
+				return window.checkoutConfig.payment[this.paypalCode].onepageCheckoutEnabled;
 			}
 		});
 	}

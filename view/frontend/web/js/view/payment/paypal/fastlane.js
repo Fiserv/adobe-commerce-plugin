@@ -103,11 +103,6 @@ define([
 
 			return await window.fiserv.components.address({
 				fields: fields,
-				paypalFastlane: {
-					watermark: {
-						parentElementId: 'fiserv-paypal-watermark-container'
-					}
-				},
 				hooks: {}
 			});
 		},
@@ -134,10 +129,11 @@ define([
 						lastname: profileData.shippingAddress.name.lastName,
 						street: [profileData.shippingAddress.address.addressLine1, profileData.shippingAddress.address.addressLine2],
 						city: profileData.shippingAddress.address.adminArea2,
-						region: profileData.shippingAddress.address.adminArea1,
+						region: window.checkoutConfig.payment.fiserv_paypal.regionsData[profileData.shippingAddress.address.countryCode][profileData.shippingAddress.address.adminArea1],
 						postcode: profileData.shippingAddress.address.postalCode,
 						countryId: profileData.shippingAddress.address.countryCode,
-						telephone: profileData.shippingAddress.phoneNumber.nationalNumber
+						telephone: profileData.shippingAddress.phoneNumber.nationalNumber,
+						email: emailInputValue
 					};
 
 
@@ -145,8 +141,8 @@ define([
 					$('input[name="lastname"]').val(magentoAddress.lastname);
 					$('input[name="street[0]"]').val(magentoAddress.street[0]);
 					$('input[name="street[1]"]').val(magentoAddress.street[1]);
-					$('input[name="country_id"]').val(magentoAddress.countryId);
-					$('input[name="region_id"]').val(magentoAddress.region);
+					$('select[name="country_id"]').val(magentoAddress.countryId).trigger('change');
+					$('select[name="region_id"]').val(magentoAddress.region.region_id).trigger('change');
 					$('input[name="city"]').val(magentoAddress.city);
 					$('input[name="postcode"]').val(magentoAddress.postcode);
 					$('input[name="telephone"]').val(magentoAddress.telephone);
