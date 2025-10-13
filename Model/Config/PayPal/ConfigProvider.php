@@ -25,7 +25,6 @@ class ConfigProvider implements ConfigProviderInterface
 	const FASTLANE_CODE = 'fastlane';
 	const MERCHANT_ID_KEY = 'merchantId';
 	const TERMINAL_ID_KEY = 'terminalId';
-	const SHOW_PRIVACY_STATEMENT_KEY = 'show_privacy_statement';
 	const API_KEY_KEY = 'apiKey';
 	const ENV_KEY = 'environment';
 	const PAYMENT_ACTION_KEY = 'payment_action';
@@ -64,28 +63,34 @@ class ConfigProvider implements ConfigProviderInterface
 	{
 		$storeId = $this->storeManager->getStore()->getId();
 		$allowedFunding = ['paypal'];
+		$vaultConfig = [
+			'enableVault' => method_exists($this->paypalConfig, 'isVaultActive') ? $this->paypalConfig->isVaultActive($storeId) : false,
+			'vaultLabel' => __('Save PayPal for future use'),
+		];
 		if (method_exists($this->paypalConfig, 'isVenmoActive') && $this->paypalConfig->isVenmoActive($storeId)) {
 			$allowedFunding[] = 'venmo';
 		}
 		$buttonConfig = [
-			'style' => [
-				'layout' => 'vertical',
-				'color' => $this->paypalConfig->getPaypalButtonColor($storeId) ?: 'gold',
-				'shape' => $this->paypalConfig->getPaypalButtonShape($storeId) ?: 'rect',
-				'label' => $this->paypalConfig->getPaypalButtonLabel($storeId) ?: 'paypal',
+			'data' => [
+				'vaulting' => $vaultConfig['enableVault'],
+				'buttons' => [
+					'paypal' => [
+						'color' => $this->paypalConfig->getPaypalButtonColor($storeId) ?: 'gold',
+						'shape' => $this->paypalConfig->getPaypalButtonShape($storeId) ?: 'rect',
+						'label' => $this->paypalConfig->getPaypalButtonLabel($storeId) ?: 'paypal',
+						'parentElementId' => 'paypal-button-container'
+					]
+					// 'venmo' => [
+						// 	'color' => $this->paypalConfig->getVenmoButtonColor($storeId) ?: 'gold',
+						// 	'shape' => $this->paypalConfig->getVenmoButtonShape($storeId) ?: 'rect',
+					// ],
+
+				]
 			],
-			// 'venmo_style' => [
-			// 	'color' => $this->paypalConfig->getVenmoButtonColor($storeId) ?: 'gold',
-			// 	'shape' => $this->paypalConfig->getVenmoButtonShape($storeId) ?: 'rect',
-			// ],
 			'funding' => [
 				'allowed' => $allowedFunding,
 				'disallowed' => [],
 			],
-		];
-		$vaultConfig = [
-			'enableVault' => method_exists($this->paypalConfig, 'isVaultActive') ? $this->paypalConfig->isVaultActive($storeId) : false,
-			'vaultLabel' => __('Save PayPal for future use'),
 		];
 		// $venmoConfig = [
 		// 	'enableVenmo' => method_exists($this->paypalConfig, 'isVenmoActive') ? $this->paypalConfig->isVenmoActive($storeId) : false,

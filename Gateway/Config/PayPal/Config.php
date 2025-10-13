@@ -35,6 +35,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	const KEY_API_KEY = 'api_key';
 	const KEY_API_SECRET = 'api_secret';
 	const KEY_ENVIRONMENT = 'api_environment';
+	const KEY_TOKEN_STRATEGY = 'token_strategy';
 
     /**
      * @var \Magento\Framework\Serialize\Serializer\Json

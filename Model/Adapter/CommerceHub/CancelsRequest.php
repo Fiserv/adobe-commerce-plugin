@@ -2,6 +2,7 @@
 namespace Fiserv\Payments\Model\Adapter\CommerceHub;
 
 use Fiserv\Payments\Gateway\Config\CommerceHub\Config;
+use Fiserv\Payments\Gateway\Config\PayPal\Config as PayPalConfig;
 use Fiserv\Payments\Model\Source\CommerceHub\ApiEnvironment;
 use Fiserv\Payments\Model\Adapter\CommerceHub\ChHttpAdapter;
 use Magento\Store\Model\StoreManagerInterface;
@@ -9,9 +10,10 @@ use Fiserv\Payments\Logger\MultiLevelLogger;
 
 class CancelsRequest
 {
-	const CANCELS_ENDPOINT = 'payments/v1/cancels';
-	
-	// CommerceHub Cancels Request Keys
+	const CANCELS_ENDPOINT_COMMERCEHUB = 'payments/v1/cancels';
+	const CANCELS_ENDPOINT_PAYPAL = 'checkouts/v1/orders';
+
+	// Cancels Request Keys
 	const KEY_MERCHANT_DETAILS = 'merchantDetails';
 	const KEY_MERCHANT_ID = 'merchantId';
 	const KEY_TERMINAL_ID = 'terminalId';
@@ -29,7 +31,17 @@ class CancelsRequest
 	private $chConfig;
 
 	/**
-	 * @ChHttpAdapter
+	 * @var PayPalConfig
+	 */
+	private $payPalConfig;
+
+	/**
+	 * @var bool
+	 */
+	private $isPayPal = false;
+
+	/**
+	 * @var ChHttpAdapter
 	 */
 	private $httpAdapter;
 	
@@ -47,31 +59,37 @@ class CancelsRequest
 		Config $config,
 		ChHttpAdapter $httpAdapter,
 		StoreManagerInterface $storeManager,
-		MultiLevelLogger $logger
+		MultiLevelLogger $logger,
+		PayPalConfig $payPalConfig = null
 	) {
 		$this->chConfig = $config;
 		$this->httpAdapter = $httpAdapter;
 		$this->storeManager = $storeManager;
 		$this->logger = $logger;
+		if ($payPalConfig !== null) {
+			$this->payPalConfig = $payPalConfig;
+			$this->isPayPal = true;
+		}
 	}
 
 	public function requestCancel($referenceTransactionId)
 	{
 		$this->logger->logInfo(1, "Initiating Cancel Request");
 		$data = $this->getCancelsPayload($this->getMerchantId(), $this->getTerminalId(), $referenceTransactionId);
-		$chResponse = $this->httpAdapter->sendRequest($data, self::CANCELS_ENDPOINT);
-		return $this->parseChCancelsResponse($chResponse);
+		$endpoint = $this->isPayPal ? self::CANCELS_ENDPOINT_PAYPAL : self::CANCELS_ENDPOINT_COMMERCEHUB;
+		$response = $this->httpAdapter->sendRequest($data, $endpoint);
+		return $this->parseCancelsResponse($response);
 	}
 
-	private function parseChCancelsResponse($chResponse) {
-		$statusCode = $chResponse->getStatusCode();
-		$response = $chResponse->getResponse();
-		$headerLength = $chResponse->getHeaderLength();
-		$body = $chResponse->getBody();
-		
+	private function parseCancelsResponse($response) {
+		$statusCode = $response->getStatusCode();
+		$responseBody = $response->getResponse();
+		$headerLength = $response->getHeaderLength();
+		$body = $response->getBody();
+
 		$header = [];
 
-		foreach(explode("\r\n", trim(substr($response, 0, $headerLength))) as $row) {
+		foreach(explode("\r\n", trim(substr($responseBody, 0, $headerLength))) as $row) {
 			if(preg_match('/(.*?): (.*)/', $row, $matches)) {
 				$header[$matches[1]] = $matches[2];
 			}
@@ -95,10 +113,16 @@ class CancelsRequest
 	}
 
 	private function getMerchantId() {
+		if ($this->isPayPal) {
+			return $this->payPalConfig->getMerchantId();
+		}
 		return $this->chConfig->getMerchantId();
 	}
 
 	private function getTerminalId() {
+		if ($this->isPayPal) {
+			return $this->payPalConfig->getTerminalId();
+		}
 		return $this->chConfig->getTerminalId();
 	}
 }

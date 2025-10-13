@@ -7,30 +7,31 @@
 define([
     'jquery',
     'Magento_Payment/js/view/payment/cc-form',
-    'Fiserv_Payments/js/paypal-adapter',
-    'Fiserv_Payments/js/action/create-paypal-session',
+    'Fiserv_Payments/js/ch-adapter',
+    'Fiserv_Payments/js/action/create-commercehub-session',
     'Magento_Checkout/js/model/quote',
     'Magento_Ui/js/model/messageList',
-    'Magento_Vault/js/view/payment/vault-enabler',
     'Magento_Checkout/js/checkout-data',
+    'Magento_Checkout/js/model/full-screen-loader',
     'ko',
     'mage/translate',
     'domReady!'
 ], function (
     $,
     Component,
-    paypalAdapter,
-    paypalSession,
+    chAdapter,
+    commercehubSession,
     quote,
     globalMessageList,
-    VaultEnabler,
     checkoutData,
+    fullScreenLoader,
     ko,
     $t
 ) {
     'use strict';
 
     return Component.extend({
+        isPlaceOrderActionAllowed: ko.observable(quote.billingAddress() != null),
         defaults: {
             template: 'Fiserv_Payments/payment/commercehub/paypal-form',
             code: 'fiserv_paypal',
@@ -44,10 +45,18 @@ define([
             additionalData: {},
             paymentMethodName: '[name="payment[method]"]',
             credentials: undefined,
-            isChecked: ko.observable()
+            isChecked: ko.observable(),
+            paypalComponent: null,
+            vaultEnabler: null,
+            placeOrderCallback: null
+
         },
 
         initialize: function () {
+            quote.billingAddress.subscribe(function (address) {
+                this.isPlaceOrderActionAllowed(address !== null);
+            }, this);
+
             this._super();
             return checkoutData.getSelectedPaymentMethod() === this.getCode();
         },
@@ -61,15 +70,13 @@ define([
             return true;
         },
 
-        // isPlaceOrderActionAllowed: ko.observable(quote.billingAddress() != null),
-
         loadPayPalForm: function () {
             if (this.isChecked() === this.getCode()) {
-                this.initPayPalAdapter();
+                this.initchAdapter();
             } 
         },
 
-    initPayPalAdapter: async function () {
+        initchAdapter: async function () {
             var self = this;
             var config = (window.checkoutConfig && window.checkoutConfig.payment) ? window.checkoutConfig.payment[self.getCode()] : {};
             try {
@@ -79,35 +86,129 @@ define([
                     return;
                 }
 
-                // Ensure customer data is loaded before proceeding
-                await this.ensureCustomerDataLoaded();
-
-                paypalAdapter.initialize(config);
+                chAdapter.initialize(config);
                 var credsResponse, creds;
 
-                credsResponse = await paypalSession({});
-                creds = credsResponse && credsResponse[paypalAdapter.credentialsKey];
+                credsResponse = await commercehubSession({});
+                creds = credsResponse && credsResponse[chAdapter.credentialsKey];
                 if (!creds) {
                     throw new Error('No credentials returned from PayPal session');
                 }
 
-                self.paymentPayload.sessionId = creds[paypalAdapter.sessionIdKey];
-                await paypalAdapter.initSdk(config, creds);
+                self.paymentPayload.sessionId = creds[chAdapter.sessionIdKey];
+                await chAdapter.initSdk(config, creds);
                 var intent = 'authorize';
                 if (config.payment_action.toLowerCase() === 'authorize_capture') {
                     intent = 'capture';
                 }
-                const paypalComponent = await paypalAdapter.loadPayPalComponent({
+                const paypalComponent = await chAdapter.loadPayPalComponent({
                     intent: intent
                 });
-                const buttonsConfig = credsResponse && credsResponse.paypal_button_config ? credsResponse.paypal_button_config : {};
-                await paypalAdapter.renderPayPalButtons(buttonsConfig);
+                this.paypalComponent = paypalComponent;
+                const buttonsConfig = config.buttonConfig;
+                await this.renderPayPalButtons(buttonsConfig);
+                this.placeOrderCallback = function(approvalData) {
+                    self.additionalData.paypal_order_id = approvalData.orderId;
+                    self.additionalData.email = approvalData.email;
+                    require(['Magento_Checkout/js/action/place-order'], function(placeOrderAction) {
+                        placeOrderAction(self.getData()).done(function() {
+                            window.location.href = '/checkout/onepage/success/';
+                        });
+                    });
+                };
             } catch (error) {
                 globalMessageList.addErrorMessage({ message: $t('PayPal credentials error: ') + (error.message || error) });
-                console.error('[PayPal] Error in initPayPalAdapter:', error);
+                console.error('[PayPal] Error in initchAdapter:', error);
             }
         },
 
+        /**
+         * Renders PayPal and Venmo buttons
+         * @param {Object} buttonsConfig - ButtonsConfig object (see Fiserv docs)
+         * @returns {Promise}
+         */
+        async renderPayPalButtons(buttonsConfig) {
+            fullScreenLoader.startLoader();
+            try {
+                const containerId ='#paypal-button-container';
+                const venmoContainerId = '#venmo-button-container';
+                const container = document.querySelector(containerId);
+                const venmoContainer = document.querySelector(venmoContainerId);
+                if(container){
+                    while (container.children.length > 0) {
+                        container.removeChild(container.lastChild);
+                    }
+                }
+                if(venmoContainer){
+                    while (venmoContainer.children.length > 0) {
+                        venmoContainer.removeChild(venmoContainer.lastChild);
+                    }
+                }
+
+                const config = (window.checkoutConfig && window.checkoutConfig.payment) ? window.checkoutConfig.payment[this.getCode()] : {};
+                const buttons = {
+                    paypal: {
+                        parentElementId: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.paypal.parentElementId || 'paypal-button-container',
+                        color: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.paypal.color || 'gold',
+                        shape: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.paypal.shape || 'rect',
+                        label: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.paypal.label || 'paypal'
+                    }
+                };
+                if (config.venmoConfig && config.venmoConfig.enableVenmo) {
+                    buttons.venmo = {
+                        parentElementId: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.venmo.parentElementId || 'venmo-button-container',
+                        shape: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.venmo.shape || 'rect',
+                        label: config.venmoConfig.venmoLabel || 'Venmo'
+                    };
+                }
+
+                if (!this.paypalComponent || typeof this.paypalComponent.buttons !== 'function') {
+                    return;
+                }
+
+                return await this.paypalComponent.buttons({
+                    data: {
+                        enableVaulting: buttonsConfig.data && buttonsConfig.data.vaulting !== undefined ? buttonsConfig.data.vaulting : false,
+                        customerConfirmation: buttonsConfig.data && typeof buttonsConfig.data.customerConfirmation === 'string' ? buttonsConfig.data.customerConfirmation : 'PAY_NOW',
+                        buttons: buttons
+                    },
+                    hooks: {
+                        onApprove: async (data, actions) => {
+                            console.log('on Approve called', data);
+                            var email = '';
+                            try {
+                                if (window.checkoutConfig && window.checkoutConfig.isCustomerLoggedIn && window.checkoutConfig.customerData && window.checkoutConfig.customerData.email) {
+                                    email = window.checkoutConfig.customerData.email;
+                                } else if (quote && quote.guestEmail) {
+                                    email = quote.guestEmail;
+                                }
+                                if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                                    email = '';
+                                }
+                            } catch (error) {
+                                email = '';
+                            }
+                            if (this.placeOrderCallback) {
+                                this.placeOrderCallback({
+                                    orderId: data.orderId,
+                                    email: email
+                                });
+                            } else {
+                                console.error('No placeOrderCallback set for PayPal approval');
+                            }
+                        },
+                        onCancel: () => {
+                            console.log('on cancel called');
+                        },
+                        onError: error => {
+                            console.log('on error called', error);
+                        }
+                    }
+                });
+            } finally {
+                fullScreenLoader.stopLoader();
+            }
+        },
 
         getData: function () {
             var data = {
@@ -120,15 +221,10 @@ define([
             return data;
         },
 
-        isVaultEnabled: function () {
-            return this.vaultEnabler && this.vaultEnabler.isVaultEnabled();
+        isVenmoEnabled: function () {
+            var config = (window.checkoutConfig && window.checkoutConfig.payment) ? window.checkoutConfig.payment[this.getCode()] : {};
+            return config && config.venmoConfig && config.venmoConfig.enableVenmo;
         },
-
-
-        // isVenmoEnabled: function () {
-        //     var config = (window.checkoutConfig && window.checkoutConfig.payment) ? window.checkoutConfig.payment[this.getCode()] : {};
-        //     return config && config.venmoConfig && config.venmoConfig.enableVenmo;
-        // },
 
         /**
          * Check if payment is active
@@ -145,61 +241,61 @@ define([
             return this.code;
         },
 
-        watchPaymentMethods: function(element) {
-            $(element).on('click', function() {
-                if (this.getCode() !== this.isChecked()) {
-                    // Clear PayPal and Venmo button containers when switching away
-                    $('#paypal-button-container').empty();
-                    // $('#venmo-button-container').empty();
-                }
-            }.bind(this));
+        /**
+         * Show error message
+         *
+         * @param {String} errorMessage
+         * @private
+         */
+        showError: function (errorMessage) {
+            globalMessageList.addErrorMessage({
+                message: errorMessage
+            });
         },
 
         /**
-         * Ensure customer data is loaded before PayPal initialization
+         * Get billing address
+         *
+         * @returns {String}
          */
-        ensureCustomerDataLoaded: async function() {
-            var self = this;
-            var maxRetries = 10;
-            var retryCount = 0;
-            var retryDelay = 500; // 500ms
+        getBillingAddress: function () {
+            let billingAddress = checkoutData.getBillingAddressFromData();
+            if (!billingAddress) {
+                billingAddress = quote.billingAddress();
+            }
+            return billingAddress;
+        },
 
-            return new Promise(function(resolve, reject) {
-                function checkCustomerData() {
-                    retryCount++;
+        /**
+		 * Set list of observable attributes
+		 *
+		 * @returns {exports.initObservable}
+		 */
+		initObservable: function () {
+			this._super()
+				.observe(['active']);
+			return this;
+		},
 
-                    // Check if customer data is available in checkout config
-                    var config = window.checkoutConfig || {};
-                    var paymentConfig = config.payment || {};
-                    var paypalConfig = paymentConfig[self.getCode()] || {};
-
-                    // For logged-in users, ensure customer data is loaded
-                    if (config.isCustomerLoggedIn && config.customerData) {
-                        if (config.customerData.email) {
-                            resolve();
-                            return;
-                        }
-                    }
-
-                    // For guest users, check if billing address has email
-                    if (!config.isCustomerLoggedIn && quote && quote.billingAddress && quote.billingAddress._latestValue && quote.billingAddress._latestValue.email) {
-                        resolve();
-                        return;
-                    }
-
-                    // If we've exceeded max retries, resolve anyway to prevent infinite waiting
-                    if (retryCount >= maxRetries) {
-                        resolve();
-                        return;
-                    }
-
-                    // Wait and retry
-                    setTimeout(checkCustomerData, retryDelay);
+        watchPaymentMethods: function(element) {
+            let self = this;
+			$(self.paymentMethodName).on("click", function() {
+                let selected = $(this).attr("id");
+				if (selected === self.getCode()) {
+                    self.loadPayPalForm();
+                } else {
+                    // Clear PayPal button container if another payment method is selected
+                    $('#paypal-button-container').empty();
+                    $('#venmo-button-container').empty();
                 }
-
-                // Start checking immediately
-                checkCustomerData();
             });
-        }
+        },
+
+        refreshBillingAddress: function () {
+			if (this.isAchActive() && quote.billingAddress()) {
+				shpfUtils.setBillingAddress(quote.billingAddress());
+				this.initAchIframe();
+			}
+		}
     });
 });

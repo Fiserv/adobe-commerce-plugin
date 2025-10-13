@@ -70,11 +70,11 @@ class SettleDetailsDataBuilder extends PayPalTransactionDetailsDataBuilder
 		$invoiceTotalToDate = round($invoiceTotalToDate, 2, PHP_ROUND_HALF_UP);
 
 		$splitShipment = new SplitShipment();
-		// Ugh FLOATS
 		$finalInvoice = $grandTotal- $invoiceTotalToDate - $currentInvoiceTotal <= 0.00001;
 		$splitShipment->setFinalShipment($finalInvoice);
 		$splitShipment->setTotalCount($totalInvoices);
-		$deets->setSplitShipment($splitShipment);
+		$deets['splitShipment'] = $splitShipment;
+		$res[self::TXN_DETAILS_KEY] = $deets;
 
 		return $res;
 	}

@@ -13,9 +13,12 @@ use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Webapi\Exception;
 use Fiserv\Payments\Logger\MultiLevelLogger;
+use Magento\Customer\Model\Session as CustomerSession;
+use Fiserv\Payments\Model\PayPal\ProviderCustomerIdFactory;
+use Fiserv\Payments\Gateway\Config\PayPal\Config as PayPalConfig;
 
 /**
- * Class GetChCredentials
+ * Class GetCredentials
  */
 class GetCredentials extends Action implements HttpPostActionInterface
 {
@@ -33,18 +36,42 @@ class GetCredentials extends Action implements HttpPostActionInterface
     private $logger;
 
     /**
+     * @var CustomerSession
+     */
+    private $customerSession;
+
+    /**
+     * @var ProviderCustomerIdFactory
+     */
+    private $providerCustomerIdFactory;
+
+    /**
+     * @var PayPalConfig
+     */
+    private $paypalConfig;
+
+    /**
     * @param Context $context
-    * @param MultiLevelLogger $logger
     * @param CredentialsRequest $chAdapter
+    * @param MultiLevelLogger $logger
+    * @param CustomerSession $customerSession
+    * @param ProviderCustomerIdFactory $providerCustomerIdFactory
+    * @param PayPalConfig $paypalConfig
     */
     public function __construct(
         Context $context,
         CredentialsRequest $chAdapter,
-        MultiLevelLogger $logger
+        MultiLevelLogger $logger,
+        CustomerSession $customerSession = null,
+        ProviderCustomerIdFactory $providerCustomerIdFactory = null,
+        PayPalConfig $paypalConfig = null
     ) {
         parent::__construct($context);
         $this->chAdapter = $chAdapter;
         $this->logger = $logger;
+        $this->customerSession = $customerSession;
+        $this->providerCustomerIdFactory = $providerCustomerIdFactory;
+        $this->paypalConfig = $paypalConfig;
     }
 
     /**
@@ -54,10 +81,32 @@ class GetCredentials extends Action implements HttpPostActionInterface
     {
 		$response = $this->resultFactory->create(ResultFactory::TYPE_JSON);
 
-		try {
-			$data = $this->getRequest()->getContent();
-			$sessionData = json_decode($data, true) ?? array();
-			$response->setData(['ch_credentials' => $this->chAdapter->requestCredentials($sessionData)]);
+        try {
+            $data = $this->getRequest()->getContent();
+            $sessionData = json_decode($data, true) ?? array();
+            // Add customer id if logged in
+            if ($this->customerSession !== null && $this->customerSession->isLoggedIn()) {
+                $sessionData['customer']['id'] = $this->customerSession->getCustomerId();
+                // Only add providerCustomerId if vaulting is active (PayPal logic)
+                if ($this->paypalConfig !== null && $this->paypalConfig->isVaultActive()) {
+                    $customerId = $this->customerSession->getCustomerId();
+                    try {
+                        $providerCustomerIdModel = $this->providerCustomerIdFactory->create()->getCollection()
+                            ->addFieldToFilter('customer_id', $customerId)
+                            ->getFirstItem();
+                        if ($providerCustomerIdModel->getId()) {
+                            $storedProviderCustomerId = $providerCustomerIdModel->getPaypalProviderCustomerId();
+                            if ($storedProviderCustomerId) {
+                                $sessionData['customer']['providerCustomerId'] = $storedProviderCustomerId;
+                                $this->logger->logInfo(1, "Using stored providerCustomerId for customer " . $customerId);
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        $this->logger->logError(1, "Error retrieving providerCustomerId: " . $e->getMessage());
+                    }
+                }
+            }
+            $response->setData(['ch_credentials' => $this->chAdapter->requestCredentials($sessionData)]);
         } catch (\Exception $e) {
 			$this->logger->logCritical(1, "An error occured in the retrieval of credentials");
             $this->logger->logCritical(2, $e);
