@@ -11,6 +11,7 @@ class ButtonColor implements OptionSourceInterface
             ['value' => 'gold', 'label' => __('Gold')],
             ['value' => 'blue', 'label' => __('Blue')],
             ['value' => 'silver', 'label' => __('Silver')],
+            ['value' => 'white', 'label' => __('White')],
             ['value' => 'black', 'label' => __('Black')],
         ];
     }

@@ -350,20 +350,9 @@
 	</virtualType>
 
 	<!-- Config -->
-	<!-- <type name="Fiserv\Payments\Gateway\Config\Config">
-		<arguments>
-			<argument name="methodCode" xsi:type="const">Fiserv\Payments\Model\Config\ConfigProvider::CODE</argument>
-		</arguments>
-	</type> -->
 	<type name="Fiserv\Payments\Gateway\Config\CommerceHub\Config">
 		<arguments>
 			<argument name="methodCode" xsi:type="const">Fiserv\Payments\Model\Config\CommerceHub\ConfigProvider::CODE</argument>
-		</arguments>
-	</type>
-
-	<type name="Fiserv\Payments\Gateway\Config\Valuelink\Config">
-		<arguments>
-			<argument name="methodCode" xsi:type="const">Fiserv\Payments\Model\Config\ConfigProvider::FISERV_VALUELINK_KEY</argument>
 		</arguments>
 	</type>
 
@@ -417,11 +406,6 @@
 	<type name='PayPal\Braintree\Gateway\Data\Order\OrderAdapter'>
 		<plugin name="fiservorderadapter" type="Fiserv\Payments\Model\OrderAdapterFix" />
 	</type>
-
-	<type name = 'PayPal\Braintree\Gateway\Data\Order\OrderAdapter'>
-		<plugin name = "fiservorderadapter" type="Fiserv\Payments\Model\CustomOrderAdapter" />
-	</type>
-
 
 	<virtualType name="Fiserv\Model\ResourceModel\FailedTransaction\Collection" type="Magento\Framework\View\Element\UiComponent\DataProvider\SearchResult">
 		<arguments>
@@ -528,7 +512,7 @@
 		<arguments>
 			<argument name="requestBuilder" xsi:type="object">FiservPayPalAuthorizeRequest</argument>
 			<argument name="transferFactory" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\TransferFactory</argument>
-			<argument name="client" xsi:type="object">Fiserv\Payments\Gateway\Http\PayPal\Client\HttpClient</argument>
+			<argument name="client" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient</argument>
 			<argument name="handler" xsi:type="object">FiservPayPalAuthorizeHandler</argument>
 			<argument name="validator" xsi:type="object">Fiserv\Payments\Gateway\Validator\CommerceHub\AuthorizeResponseValidator</argument>
 		</arguments>
@@ -544,7 +528,7 @@
 		<arguments>
 			<argument name="requestBuilder" xsi:type="object">FiservPayPalSaleRequest</argument>
 			<argument name="transferFactory" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\TransferFactory</argument>
-			<argument name="client" xsi:type="object">Fiserv\Payments\Gateway\Http\PayPal\Client\HttpClient</argument>
+			<argument name="client" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient</argument>
 			<argument name="handler" xsi:type="object">FiservPayPalAuthorizeHandler</argument>
 			<argument name="validator" xsi:type="object">Fiserv\Payments\Gateway\Validator\CommerceHub\SaleResponseValidator</argument>
 		</arguments>
@@ -554,7 +538,7 @@
 		<arguments>
 			<argument name="requestBuilder" xsi:type="object">FiservPayPalSettleRequest</argument>
 			<argument name="transferFactory" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\TransferFactory</argument>
-			<argument name="client" xsi:type="object">Fiserv\Payments\Gateway\Http\PayPal\Client\HttpClient</argument>
+			<argument name="client" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient</argument>
 			<argument name="handler" xsi:type="object">FiservPayPalSettleHandler</argument>
 			<argument name="validator" xsi:type="object">Fiserv\Payments\Gateway\Validator\CommerceHub\CaptureResponseValidator</argument>
 		</arguments>
@@ -564,7 +548,7 @@
 		<arguments>
 			<argument name="requestBuilder" xsi:type="object">FiservPayPalCancelRequest</argument>
 			<argument name="transferFactory" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\TransferFactory</argument>
-			<argument name="client" xsi:type="object">Fiserv\Payments\Gateway\Http\PayPal\Client\HttpClient</argument>
+			<argument name="client" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient</argument>
 			<argument name="handler" xsi:type="object">FiservPayPalCancelHandler</argument>
 			<argument name="validator" xsi:type="object">Fiserv\Payments\Gateway\Validator\CommerceHub\CancelResponseValidator</argument>
 		</arguments>
@@ -574,7 +558,7 @@
 		<arguments>
 			<argument name="requestBuilder" xsi:type="object">FiservPayPalRefundRequest</argument>
 			<argument name="transferFactory" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\TransferFactory</argument>
-			<argument name="client" xsi:type="object">Fiserv\Payments\Gateway\Http\PayPal\Client\HttpClient</argument>
+			<argument name="client" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient</argument>
 			<argument name="handler" xsi:type="object">FiservPayPalRefundHandler</argument>
 			<argument name="validator" xsi:type="object">Fiserv\Payments\Gateway\Validator\CommerceHub\PayPalRefundResponseValidator</argument>
 		</arguments>
@@ -650,7 +634,7 @@
 		<arguments>
 			<argument name="handlers" xsi:type="array">
 				<item name="payment_details" xsi:type="string">Fiserv\Payments\Gateway\Response\CommerceHub\PaymentDetailsHandler</item>
-				<!-- <item name="vault_details" xsi:type="string">Fiserv\Payments\Gateway\Response\PayPal\PayPalVaultDetailsHandler</item> -->
+				<item name="vault_details" xsi:type="string">Fiserv\Payments\Gateway\Response\PayPal\PayPalVaultDetailsHandler</item>
 			</argument>
 		</arguments>
 	</virtualType>
@@ -680,13 +664,9 @@
 		</arguments>
 	</virtualType>
 
-	<!-- PayPalHttpAdapter Injection for Validate Controller -->
-	<type name="Fiserv\Payments\Controller\PayPal\Validate">
+	<type name="Fiserv\Payments\Gateway\Response\PayPal\PayPalVaultDetailsHandler">
 		<arguments>
-			<argument name="payPalHttpAdapter" xsi:type="object">Fiserv\Payments\Model\Adapter\PayPal\PayPalHttpAdapter</argument>
-			<argument name="commandPool" xsi:type="object">FiservPayPalCommandPool</argument>
-			<argument name="payPalConfig" xsi:type="object">Fiserv\Payments\Gateway\Config\PayPal\Config</argument>
-			<argument name="commerceHubConfig" xsi:type="object">Fiserv\Payments\Gateway\Config\CommerceHub\Config</argument>
+			<argument name="paymentTokenFactory" xsi:type="object">Magento\Vault\Api\Data\PaymentTokenFactoryInterface</argument>
 		</arguments>
 	</type>
 
@@ -699,6 +679,7 @@
 	<type name="Magento\Payment\Model\Method\Adapter">
 		<plugin name="fiservPayPalAvailability" type="Fiserv\Payments\Model\Plugin\CommerceHub\PaymentMethodAvailable" />
 	</type>
+	
 	<type name="Magento\Sales\Model\Order\RefundAdapter">
 		<plugin name="paypalCardCreditmemoRefund" type="Fiserv\Payments\Model\Plugin\CommerceHub\CreditMemoRefund" sortOrder="100"/>
 	</type>
@@ -714,6 +695,29 @@
 	</type>
 	<type name="Magento\Sales\Model\Order\Invoice">
 		<plugin name="paypalInvoiceRegister" type="Fiserv\Payments\Model\Plugin\CommerceHub\InvoiceRegister" sortOrder="100"/>
+	</type>
+
+	<virtualType name="PayPalChHttpAdapter" type="Fiserv\Payments\Model\Adapter\CommerceHub\ChHttpAdapter">
+		<arguments>
+			<argument name="config" xsi:type="object">Fiserv\Payments\Gateway\Config\PayPal\Config</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="PayPalCredentialsRequest" type="Fiserv\Payments\Model\Adapter\CommerceHub\CredentialsRequest">
+		<arguments>
+			<argument name="httpAdapter" xsi:type="object">PayPalChHttpAdapter</argument>
+		</arguments>
+	</virtualType>
+
+	<type name="Fiserv\Payments\Controller\CommerceHub\GetCredentials">
+		<arguments>
+			<argument name="customerSession" xsi:type="object">Magento\Customer\Model\Session</argument>
+			<argument name="credentialsRequest" xsi:type="object">Fiserv\Payments\Model\Adapter\CommerceHub\CredentialsRequest</argument>
+			<argument name="logger" xsi:type="object">Fiserv\Payments\Logger\MultiLevelLogger</argument>
+			<argument name="paypalConfig" xsi:type="object">Fiserv\Payments\Gateway\Config\PayPal\Config</argument>
+			<argument name="providerCustomerIdFactory" xsi:type="object">Fiserv\Payments\Model\PayPal\ProviderCustomerIdFactory</argument>
+			<argument name="paypalCredentialsRequest" xsi:type="object">PayPalCredentialsRequest</argument>
+		</arguments>
 	</type>
 
 </config>

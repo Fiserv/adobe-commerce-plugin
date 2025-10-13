@@ -160,6 +160,19 @@ define([
 
 		},
 
+		 /**
+         * Load PayPal SDK
+         * @param {Object} options - { customerId, intent }
+         * @returns {Promise<Object>} PayPal component instance
+         */
+        async loadPayPalComponent(options) {
+            if (!window.fiserv || typeof window.fiserv.components.paypal !== 'function') {
+                throw new Error('Fiserv SDK not loaded or window.fiserv.components.paypal not available');
+            }
+            this.paypalComponent = await window.fiserv.components.paypal(options);
+            return this.paypalComponent;
+        },
+
 		submitCardForm: function (
 			storeUrl,
 			runSuccessCb, 

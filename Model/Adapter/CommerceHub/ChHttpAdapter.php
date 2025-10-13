@@ -2,6 +2,7 @@
 namespace Fiserv\Payments\Model\Adapter\CommerceHub;
 
 use Fiserv\Payments\Gateway\Config\CommerceHub\Config;
+use Fiserv\Payments\Gateway\Config\PayPal\Config as PayPalConfig;
 use Fiserv\Payments\Model\Source\CommerceHub\ApiEnvironment;
 use Fiserv\Payments\Model\Adapter\CommerceHub\ChHttpResponse;
 use Magento\Framework\HTTP\Adapter\CurlFactory;
@@ -13,8 +14,10 @@ class ChHttpAdapter
 {
 	const CONTENT_TYPE = 'application/json';
 	const USER_AGENT_PREFIX = 'Fiserv-CommerceHub Adobe Commerce Plugin - v';
-	const INQUIRY_ENDPOINT = 'payments/v1/transaction-inquiry';
-	const CANCELS_ENDPOINT = 'payments/v1/cancels';
+	const INQUIRY_ENDPOINT_COMMERCEHUB = 'payments/v1/transaction-inquiry';
+	const INQUIRY_ENDPOINT_PAYPAL = 'checkouts/v1/inquiry';
+	const CANCELS_ENDPOINT_COMMERCEHUB = 'payments/v1/cancels';
+	const CANCELS_ENDPOINT_PAYPAL = 'checkouts/v1/orders';
 	const MERCHANT_DETAILS_KEY = "merchantDetails";
 	const REFERENCE_TRANSACTION_DETAILS_KEY = "referenceTransactionDetails";
 	const REFENCE_MERCHANT_TRANSACTION_KEY = "referenceMerchantTransactionId";
@@ -23,11 +26,21 @@ class ChHttpAdapter
 	 * @var MultiLevelLogger
 	 */
 	private $logger;
-	
+
 	/**
 	 * @var Config
 	 */
 	private $chConfig;
+
+	/**
+	 * @var PayPalConfig
+	 */
+	private $paypalConfig;
+
+	/**
+	 * @var bool
+	 */
+	private $isPayPal = false;
 
 	/**
 	 * @var CurlFactory
@@ -48,16 +61,23 @@ class ChHttpAdapter
 	 * Constructor
 	 *
 	 * @param Config $config
+	 * @param CurlFactory $curlFactory
 	 * @param MultiLevelLogger $logger
+	 * @param PayPalConfig $paypalConfig
 	 */
 	public function __construct(
 		Config $config,
 		CurlFactory $curlFactory,
-		MultiLevelLogger $logger
+		MultiLevelLogger $logger,
+		PayPalConfig $paypalConfig = null
 	) {
 		$this->chConfig = $config;
 		$this->curlFactory = $curlFactory;
 		$this->logger = $logger;
+		if ($paypalConfig !== null) {
+			$this->paypalConfig = $paypalConfig;
+			$this->isPayPal = true;
+		}
 	}
 
 	/**
@@ -129,7 +149,8 @@ class ChHttpAdapter
 			]
 		);
 		
-		$inquiryUrl = $this->getServiceUrl() . '/' . self::INQUIRY_ENDPOINT;
+		$inquiryEndpoint = $this->isPayPal ? self::INQUIRY_ENDPOINT_PAYPAL : self::INQUIRY_ENDPOINT_COMMERCEHUB;
+		$inquiryUrl = $this->getServiceUrl() . '/' . $inquiryEndpoint;
 		$inquiryCurl = $this->generateNakedBaseCurl($inquiryUrl, $payload, 2);
 		$inquiryResponseFull = curl_exec($inquiryCurl);
 		$inquiryHeaderLength = curl_getinfo($inquiryCurl, CURLINFO_HEADER_SIZE);
@@ -156,14 +177,16 @@ class ChHttpAdapter
 		$this->logger->logCritical(1, "Transaction inquiry failure. Continuing recovery process...");
 
 		// Step 3: Critical Recovery (Deal with transaction specific response flows if issue with inquiry occurred)
-		if($endpoint === "payments/v1/charges" && $data["transactionDetails"]["captureFlag"] === false)
+		$chargesEndpoint = $this->isPayPal ? "checkouts/v1/orders" : "payments/v1/charges";
+		$cancelsEndpoint = $this->isPayPal ? self::CANCELS_ENDPOINT_PAYPAL : self::CANCELS_ENDPOINT_COMMERCEHUB;
+		if($endpoint === $chargesEndpoint && $data["transactionDetails"]["captureFlag"] === false)
 		{
 			// Attempt cancel transaction of initial Auth
 			$this->logger->logCritical(1, "Auth detected. Attempting to Cancel initial transaction...");
 			$this->timestamp = $this->getTimestamp();
 			$this->nonce = $this->getnonce($this->timestamp);
-			
-			$cancelUrl = $this->getServiceUrl() . '/' . self::CANCELS_ENDPOINT;
+
+			$cancelUrl = $this->getServiceUrl() . '/' . $cancelsEndpoint;
 			$cancelCurl = $this->generateBaseCurl(2);
 			$cancelCurl->write('POST', $cancelUrl, '1.1', $this->getHeaders($payload), $payload);
 			$cancelResponse = $cancelCurl->read();
