@@ -21,7 +21,7 @@ var config = {
 		commercehubProdClient : 'https://prod.api.fiservapps.com/ch/sdk/v1/commercehub-client-sdk',
 		'fastlane/axo.min' : 'https://www.paypalobjects.com/connect-boba/axo.min',
 		'fastlane/axo' : 'https://www.paypalobjects.com/connect-boba/axo',
-		'chBraintreeClient' : 'https://js.braintreegateway.com/web/3.116.2/js/client.min',
-		'ch-braintree-hosted-fields' : 'https://js.braintreegateway.com/web/3.116.2/js/hosted-fields.min'
+		'chBraintreeClient' : 'https://js.braintreegateway.com/web/3.128.0/js/client.min',
+		'ch-braintree-hosted-fields' : 'https://js.braintreegateway.com/web/3.128.0/js/hosted-fields.min'
     },
 };
