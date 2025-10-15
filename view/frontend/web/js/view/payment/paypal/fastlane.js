@@ -119,8 +119,6 @@ define([
 				if( ! this.authenticateResult.isGuestCheckout) {
 					const symbolKey = Object.getOwnPropertySymbols(this.authenticateResult)[0];
 					const symbolData = this.authenticateResult[symbolKey];
-					console.log(symbolData.customerContextId)
-					console.log(this.authenticateResult);
 
 					const profileData = symbolData.profile;
 
@@ -154,6 +152,25 @@ define([
 			} catch (error) {
 				console.error("Authentication failed:", error);
 			}
+		},
+
+		getConfigData: function() {
+			var self = this;
+			let formConfig = {};
+			if(this.fastlane) {
+				formConfig.paypalFastlane = {
+					component: this.fastlane,
+					consent: {
+						parentElementId: this.consentElementID
+					}
+				}
+			}
+
+			if(this.addressComponent) {
+				formConfig.billingAddress = this.addressComponent;
+			}
+
+			return formConfig;
 		}
 	};
 });

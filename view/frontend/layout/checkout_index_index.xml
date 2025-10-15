@@ -3,11 +3,9 @@
 	   <head>
 <css src="Fiserv_Payments::css/ch-form.css"/>
 <css src="Fiserv_Payments::css/paypal-styles.css"/>
+<link src="Fiserv_Payments::js/view/payment/checkout-script.js" />
 	   </head>
 	   <body>
-		   <referenceContainer name="content">
-			   <block name="custom.checkout.script" template="Fiserv_Payments::checkout_scripts.phtml"/>
-		   </referenceContainer>
 		<referenceBlock name="checkout.root">
 			<arguments>
 				<argument name="jsLayout" xsi:type="array">

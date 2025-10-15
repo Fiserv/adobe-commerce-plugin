@@ -113,7 +113,7 @@ define(
 					chAdapter.instantiateIframe(
 						resolve, 
 						reject,
-						fastlaneHelper
+						fastlaneHelper.getConfigData()
 					)
 				});
 				iframePromise.then((data) => {
