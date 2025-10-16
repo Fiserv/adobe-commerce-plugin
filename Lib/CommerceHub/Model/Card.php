@@ -303,7 +303,7 @@ class Card implements ModelInterface, ArrayAccess, \JsonSerializable
      * @param mixed[] $data Associated array of property values
      *                      initializing the model
      */
-    public function __construct(array $data = null)
+    public function __construct(?array $data = null)
     {
         $this->setIfExists('name_on_card', $data ?? [], null);
         $this->setIfExists('card_data', $data ?? [], null);

@@ -255,7 +255,7 @@ class PrivateLabel implements ModelInterface, ArrayAccess, \JsonSerializable
      * @param mixed[] $data Associated array of property values
      *                      initializing the model
      */
-    public function __construct(array $data = null)
+    public function __construct(?array $data = null)
     {
         $this->setIfExists('special_finance_indicator', $data ?? [], null);
         $this->setIfExists('credit_plan', $data ?? [], null);

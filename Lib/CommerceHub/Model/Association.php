@@ -255,7 +255,7 @@ class Association implements ModelInterface, ArrayAccess, \JsonSerializable
      * @param mixed[] $data Associated array of property values
      *                      initializing the model
      */
-    public function __construct(array $data = null)
+    public function __construct(?array $data = null)
     {
         $this->setIfExists('avs_code', $data ?? [], null);
         $this->setIfExists('cardholder_name_response', $data ?? [], null);

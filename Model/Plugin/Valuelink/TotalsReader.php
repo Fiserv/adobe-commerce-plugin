@@ -50,7 +50,7 @@ class TotalsReader
 
 		if ( !$chConfig[ConfigProvider::IS_ACTIVE_KEY] ||  !$fconfig[FiservConfigProvider::FISERV_VALUELINK_KEY][FiservConfigProvider::IS_ACTIVE_KEY]) {
 		
-			$valuelinkCards = json_decode($shippingAssignment["valuelink_cards"], true);
+			$valuelinkCards = json_decode($shippingAssignment["valuelink_cards"] ?? "{}", true);
 			$cardsDetails = array();
 
 			foreach($valuelinkCards as $card)

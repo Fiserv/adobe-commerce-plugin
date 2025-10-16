@@ -9,6 +9,7 @@ use Fiserv\Payments\Logger\MultiLevelLogger;
 use Fiserv\Payments\Model\ValuelinkTransaction;
 use Magento\Sales\Model\Order\Payment;
 use Magento\Framework\Exception\LocalizedException;
+use Fiserv\Payments\Gateway\Config\Valuelink\Config; // Import Config class
 
 /**
  * Plugin to capture Valuelink authorizations when
@@ -20,18 +21,21 @@ class InvoiceRegister
 	protected $invoiceHelper;
 	protected $logger;
 	protected $valuelinkTransactionManager;
+	protected $config; // Add Config property
 
 	public function __construct(
 		ValuelinkOrderHelper $orderHelper,
 		ValuelinkInvoiceHelper $invoiceHelper,
 		MultiLevelLogger $logger,
-		ValuelinkTransactionManager $valuelinkTransactionManager
-    ) {
+		ValuelinkTransactionManager $valuelinkTransactionManager,
+		Config $config // Inject Config class
+	) {
 		$this->orderHelper = $orderHelper;
 		$this->invoiceHelper = $invoiceHelper;
 		$this->logger = $logger;
 		$this->valuelinkTransactionManager = $valuelinkTransactionManager;
-    }
+		$this->config = $config; // Assign Config to property
+	}
 
 	public function aroundRegister(\Magento\Sales\Model\Order\Invoice $subject, callable $proceed)
 	{
@@ -45,6 +49,17 @@ class InvoiceRegister
 		$uninvoicedSaleAmt = $this->orderHelper->getUninvoicedSaleAmount($order);
 
 		$payment = $order->getPayment();
+
+		// Fetch the selected gift card tier
+		$giftCardTier = $this->config->getGiftCardTier(); // Store-specific scope can be passed here if required
+
+		// Log the selected tier (optional, for debugging)
+		$this->logger->logInfo(1, 'Selected Gift Solutions Tier in InvoiceRegister: ' . $giftCardTier);
+
+		// Check if the invoice is a partial capture, Valuelink tier is set to Basic, and there is remaining gift auth
+		if (!$this->invoiceHelper->isFullInvoice($order, $subject) && $giftCardTier == 'basic' && $remainingGiftAuth > 0) {
+			throw new LocalizedException(__('Unable to carry out Partial Capture on Basic Tier of Gift Solutions'));
+		}
 
 		// if Grand Total is zero and there is remaining auth, then set Capture Case to offline
 		// so we don't trigger the payment gateway capture command.

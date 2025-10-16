@@ -30,11 +30,11 @@ function createDropdownOptions($values) {
     <!-- Black Banner -->
     <div class="black-banner">
         <div class="banner-left">
-            <button class="back-button"><a href="<?php echo $block->getUrl('fiserv/declines/preview'); ?>"><?php echo __('<'); ?></a></button>
-            <span class="order-id"><?php echo __('Order ID: '); ?><?= htmlspecialchars(isset($order["order_increment_id"]) ? $order["order_increment_id"] : "N/A", ENT_QUOTES, 'UTF-8'); ?></span>
+            <button class="back-button"><a href="<?= $block->escapeUrl($block->getUrl('fiserv/declines/preview')); ?>"><?= $block->escapeHtml(__('<')); ?></a></button>
+            <span class="order-id"><?= $block->escapeHtml(__('Order ID: ')); ?><?= $block->escapeHtml(htmlspecialchars(isset($order["order_increment_id"]) ? $order["order_increment_id"] : "N/A", ENT_QUOTES, 'UTF-8')); ?></span>
         </div>
         <div class="banner-right">
-            <span class="order-state"><?php echo __('Order State: '); ?><?= htmlspecialchars(isset($order["order_state"]) ? strtoupper($order["order_state"]) : "N/A", ENT_QUOTES, 'UTF-8'); ?></span>
+            <span class="order-state"><?= $block->escapeHtml(__('Order State: ')); ?><?= $block->escapeHtml(htmlspecialchars(isset($order["order_state"]) ? strtoupper($order["order_state"]) : "N/A", ENT_QUOTES, 'UTF-8')); ?></span>
         </div>
     </div>
 
@@ -44,21 +44,21 @@ function createDropdownOptions($values) {
             <div class="three-col">
                 <!-- Items Ordered Section -->
                 <div class="failed-transaction-section header-margin">
-                    <div class="failed-transaction-section-header"><?php echo __('Items Ordered'); ?></div>
+                    <div class="failed-transaction-section-header"><?= $block->escapeHtml(__('Items Ordered')); ?></div>
                     <div class="failed-transaction-section-body">
                         <div class="failed-transaction-detail-header">
-                            <div class="failed-transaction-detail-column"><?php echo __('Product'); ?></div>
-                            <div class="failed-transaction-detail-column"><?php echo __('Quantity'); ?></div>
-                            <div class="failed-transaction-detail-column"><?php echo __('Price'); ?></div>
-                            <div class="failed-transaction-detail-column"><?php echo __('Subtotal'); ?></div>
+                            <div class="failed-transaction-detail-column"><?= $block->escapeHtml(__('Product')); ?></div>
+                            <div class="failed-transaction-detail-column"><?= $block->escapeHtml(__('Quantity')); ?></div>
+                            <div class="failed-transaction-detail-column"><?= $block->escapeHtml(__('Price')); ?></div>
+                            <div class="failed-transaction-detail-column"><?= $block->escapeHtml(__('Subtotal')); ?></div>
                         </div>
                         <div class="failed-transaction-line"></div>
 						<?php foreach (isset($order["items"]) ? json_decode($order["items"], true) : [] as $item): ?>
                             <div class="failed-transaction-detail-row">
-                                <div class="failed-transaction-detail-column"><?= htmlspecialchars(isset($item["name"]) ? $item["name"] : "N/A", ENT_QUOTES, 'UTF-8'); ?></div>
-                                <div class="failed-transaction-detail-column"><?= htmlspecialchars(isset($item["qty"]) ? floor($item["qty"]) : "N/A", ENT_QUOTES, 'UTF-8'); ?></div>
-                                <div class="failed-transaction-detail-column"><?= htmlspecialchars(isset($item["price"]) ? $block->formatPrice($item["price"]) : "N/A", ENT_QUOTES, 'UTF-8'); ?></div>
-                                <div class="failed-transaction-detail-column"><?= htmlspecialchars(isset($item["price"]) && isset($item["qty"]) ? $block->formatPrice($item["qty"] * $item["price"]) : "N/A", ENT_QUOTES, 'UTF-8'); ?></div>
+                                <div class="failed-transaction-detail-column"><?= $block->escapeHtml(htmlspecialchars(isset($item["name"]) ? $item["name"] : "N/A", ENT_QUOTES, 'UTF-8')); ?></div>
+                                <div class="failed-transaction-detail-column"><?= $block->escapeHtml(htmlspecialchars(isset($item["qty"]) ? floor($item["qty"]) : "N/A", ENT_QUOTES, 'UTF-8')); ?></div>
+                                <div class="failed-transaction-detail-column"><?= $block->escapeHtml(htmlspecialchars(isset($item["price"]) ? $block->formatPrice($item["price"]) : "N/A", ENT_QUOTES, 'UTF-8')); ?></div>
+                                <div class="failed-transaction-detail-column"><?= $block->escapeHtml(htmlspecialchars(isset($item["price"]) && isset($item["qty"]) ? $block->formatPrice($item["qty"] * $item["price"]) : "N/A", ENT_QUOTES, 'UTF-8')); ?></div>
                             </div>
 						<?php endforeach; ?>
                     </div>
@@ -66,27 +66,27 @@ function createDropdownOptions($values) {
 
                 <!-- Order and Account Details Section -->
                 <div class="failed-transaction-section">
-                    <div class="failed-transaction-section-header"><?php echo __('Order and Account Details'); ?></div>
+                    <div class="failed-transaction-section-header"><?= $block->escapeHtml(__('Order and Account Details')); ?></div>
                     <div class="failed-transaction-section-body">
                         <div class="order-account-top">
                             <div class="failed-transaction-detail-row">
                                 <div class="failed-transaction-detail-column">
-                                    <div class="failed-transaction-detail-label"><?php echo __('Order Date (UTC)'); ?></div>
-                                    <div class="failed-transaction-detail-value"><?= htmlspecialchars(isset($order["date_time"]) ? $order["date_time"] : "N/A", ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <div class="failed-transaction-detail-label"><?= $block->escapeHtml(__('Order Date (UTC)')); ?></div>
+                                    <div class="failed-transaction-detail-value"><?= $block->escapeHtml(htmlspecialchars(isset($order["date_time"]) ? $order["date_time"] : "N/A", ENT_QUOTES, 'UTF-8')); ?></div>
                                 </div>
                                 <div class="failed-transaction-detail-column">
-                                    <div class="failed-transaction-detail-label"><?php echo __('Order State'); ?></div>
-                                    <div class="failed-transaction-detail-value"><?= htmlspecialchars(isset($order["order_state"]) ? ucwords($order["order_state"]) : "N/A", ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <div class="failed-transaction-detail-label"><?= $block->escapeHtml(__('Order State')); ?></div>
+                                    <div class="failed-transaction-detail-value"><?= $block->escapeHtml(htmlspecialchars(isset($order["order_state"]) ? ucwords($order["order_state"]) : "N/A", ENT_QUOTES, 'UTF-8')); ?></div>
                                 </div>
                             </div>
                             <div class="failed-transaction-detail-row">
                                 <div class="failed-transaction-detail-column">
-                                    <div class="failed-transaction-detail-label"><?php echo __('Shipping Address'); ?></div>
-                                    <div class="failed-transaction-detail-value"><?= htmlspecialchars(isset($order["shipping_address"]) && !empty($order["shipping_address"]) ? $order["shipping_address"] : "N/A", ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <div class="failed-transaction-detail-label"><?= $block->escapeHtml(__('Shipping Address')); ?></div>
+                                    <div class="failed-transaction-detail-value"><?= $block->escapeHtml(htmlspecialchars(isset($order["shipping_address"]) && !empty($order["shipping_address"]) ? $order["shipping_address"] : "N/A", ENT_QUOTES, 'UTF-8')); ?></div>
                                 </div>
                                 <div class="failed-transaction-detail-column">
-                                    <div class="failed-transaction-detail-label"><?php echo __('Billing Address'); ?></div>
-                                    <div class="failed-transaction-detail-value"><?= htmlspecialchars(isset($order["billing_address"]) ? $order["billing_address"] : "N/A", ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <div class="failed-transaction-detail-label"><?= $block->escapeHtml(__('Billing Address')); ?></div>
+                                    <div class="failed-transaction-detail-value"><?= $block->escapeHtml(htmlspecialchars(isset($order["billing_address"]) ? $order["billing_address"] : "N/A", ENT_QUOTES, 'UTF-8')); ?></div>
                                 </div>
                             </div>
                         </div>
@@ -94,12 +94,12 @@ function createDropdownOptions($values) {
                         <div class="order-account-bottom">
                             <div class="failed-transaction-detail-row">
                                 <div class="failed-transaction-detail-column">
-                                    <div class="failed-transaction-detail-label"><?php echo __('Customer Name'); ?></div>
-                                    <div class="failed-transaction-detail-value"><?= htmlspecialchars(isset($order["customer_name"]) ? $order["customer_name"] : "N/A", ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <div class="failed-transaction-detail-label"><?= $block->escapeHtml(__('Customer Name')); ?></div>
+                                    <div class="failed-transaction-detail-value"><?= $block->escapeHtml(htmlspecialchars(isset($order["customer_name"]) ? $order["customer_name"] : "N/A", ENT_QUOTES, 'UTF-8')); ?></div>
                                 </div>
                                 <div class="failed-transaction-detail-column">
-                                    <div class="failed-transaction-detail-label"><?php echo __('Email'); ?></div>
-                                    <div class="failed-transaction-detail-value"><?= htmlspecialchars(isset($order["customer_email"]) ? $order["customer_email"] : "N/A", ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <div class="failed-transaction-detail-label"><?= $block->escapeHtml(__('Email')); ?></div>
+                                    <div class="failed-transaction-detail-value"><?= $block->escapeHtml(htmlspecialchars(isset($order["customer_email"]) ? $order["customer_email"] : "N/A", ENT_QUOTES, 'UTF-8')); ?></div>
                                 </div>
                             </div>
                         </div>
@@ -110,50 +110,50 @@ function createDropdownOptions($values) {
             <div class="two-col">
                 <!-- Order Totals Section -->
                 <div class="failed-order-section full-height header-margin">
-                    <div class="failed-transaction-section-header"><?php echo __('Order Totals'); ?></div>
+                    <div class="failed-transaction-section-header"><?= $block->escapeHtml(__('Order Totals')); ?></div>
                     <div class="failed-transaction-section-body">
                         <div class="failed-transaction-detail">
-                            <div class="failed-transaction-detail-label"><?php echo __('Subtotal'); ?></div>
-                            <div class="failed-transaction-detail-value"><?= htmlspecialchars(isset($order["subtotal"]) ? $block->formatPrice($order["subtotal"]) : "N/A", ENT_QUOTES, 'UTF-8'); ?></div>
+                            <div class="failed-transaction-detail-label"><?= $block->escapeHtml(__('Subtotal')); ?></div>
+                            <div class="failed-transaction-detail-value"><?= $block->escapeHtml(htmlspecialchars(isset($order["subtotal"]) ? $block->formatPrice($order["subtotal"]) : "N/A", ENT_QUOTES, 'UTF-8')); ?></div>
                         </div>
 
 						<?php if ($discountAmount > 0): ?>
                             <div class="failed-transaction-detail">
-                                <div class="failed-transaction-detail-label"><?php echo __('Discount Total'); ?></div>
-                                <div class="failed-transaction-detail-value"><?= htmlspecialchars("-".$block->formatPrice($discountAmount), ENT_QUOTES, 'UTF-8'); ?></div>
+                                <div class="failed-transaction-detail-label"><?= $block->escapeHtml(__('Discount Total')); ?></div>
+                                <div class="failed-transaction-detail-value"><?= $block->escapeHtml(htmlspecialchars("-".$block->formatPrice($discountAmount), ENT_QUOTES, 'UTF-8')); ?></div>
                             </div>
 						<?php endif; ?>
 
 						<?php if ($giftAmount > 0.00): ?>
                             <div class="failed-transaction-detail">
-                                <div class="failed-transaction-detail-label"><?php echo __('Gift Cards'); ?></div>
-                                <div class="failed-transaction-detail-value">-<?= htmlspecialchars($block->formatPrice($giftAmount), ENT_QUOTES, 'UTF-8'); ?></div>
+                                <div class="failed-transaction-detail-label"><?= $block->escapeHtml( __('Gift Cards')); ?></div>
+                                <div class="failed-transaction-detail-value">-<?= $block->escapeHtml(htmlspecialchars($block->formatPrice($giftAmount), ENT_QUOTES, 'UTF-8')); ?></div>
                             </div>
 						<?php endif; ?>
 
 						<?php if ($storeCreditAmount > 0.00): ?>
                             <div class="failed-transaction-detail">
-                                <div class="failed-transaction-detail-label"><?php echo __('Store Credit'); ?></div>
-                                <div class="failed-transaction-detail-value">-<?= htmlspecialchars($block->formatPrice($storeCreditAmount), ENT_QUOTES, 'UTF-8'); ?></div>
+                                <div class="failed-transaction-detail-label"><?= $block->escapeHtml( __('Store Credit')); ?></div>
+                                <div class="failed-transaction-detail-value">-<?= $block->escapeHtml(htmlspecialchars($block->formatPrice($storeCreditAmount), ENT_QUOTES, 'UTF-8')); ?></div>
                             </div>
 						<?php endif; ?>
 
                         <div class="failed-transaction-detail">
-                            <div class="failed-transaction-detail-label"><?php echo __('Shipping & Handling'); ?></div>
-                            <div class="failed-transaction-detail-value"><?= htmlspecialchars(isset($order["shipping_handling"]) ? $block->formatPrice($order["shipping_handling"]) : "N/A", ENT_QUOTES, 'UTF-8'); ?></div>
+                            <div class="failed-transaction-detail-label"><?= $block->escapeHtml( __('Shipping & Handling')); ?></div>
+                            <div class="failed-transaction-detail-value"><?= $block->escapeHtml(htmlspecialchars(isset($order["shipping_handling"]) ? $block->formatPrice($order["shipping_handling"]) : "N/A", ENT_QUOTES, 'UTF-8')); ?></div>
                         </div>
                         <div class="failed-transaction-line"></div>
                         <div class="failed-transaction-detail">
-                            <div class="failed-transaction-detail-label"><?php echo __('Order Total'); ?></div>
-                            <div class="failed-transaction-detail-value"><?= htmlspecialchars($orderTotalFormatted, ENT_QUOTES, 'UTF-8'); ?></div>
+                            <div class="failed-transaction-detail-label"><?= $block->escapeHtml( __('Order Total')); ?></div>
+                            <div class="failed-transaction-detail-value"><?= $block->escapeHtml(htmlspecialchars($orderTotalFormatted, ENT_QUOTES, 'UTF-8')); ?></div>
                         </div>
 
                         <!-- Order Notes Section -->
                         <div class="order-notes-section">
-                            <div class="order-notes-header"><?php echo __('Order Notes'); ?></div>
+                            <div class="order-notes-header"><?= $block->escapeHtml( __('Order Notes')); ?></div>
                             <div class="order-notes-box">
                                 <div class="order-notes-list">
-									<?= htmlspecialchars(isset($order['notes']) && !is_null($order['notes']) ? $order['notes'] : "", ENT_QUOTES, 'UTF-8'); ?>
+									<?= $block->escapeHtml(htmlspecialchars(isset($order['notes']) && !is_null($order['notes']) ? $order['notes'] : "", ENT_QUOTES, 'UTF-8')); ?>
                                 </div>
                             </div>
                         </div>
@@ -177,17 +177,17 @@ function createDropdownOptions($values) {
                 <label for="exportOptions"></label>
                 <span style="display: flex;position: relative;">
                      <button id="exportDropdownButton" class="exportButton" style="background-color: transparent; border: none;">
-                    <img style="width: 14px; height: 14px;" src="<?php echo htmlspecialchars($this->getViewFileUrl('Fiserv_Payments::images/Export_Button.svg'), ENT_QUOTES, 'UTF-8'); ?>" alt="Export">
+                    <img style="width: 14px; height: 14px;" src="<?= $block->escapeHtml(htmlspecialchars($this->getViewFileUrl('Fiserv_Payments::images/Export_Button.svg'), ENT_QUOTES, 'UTF-8')); ?>" alt="Export">
                     Export
                     <span id="exportArrow" class="arrow-down">▼</span><span id="exportArrowUp" class="arrow-up" style="display: none;">▲</span>
                 </button>
                 <div id="exportDropdownMenu" class="dropdown-menu" style="display: none;">
                     <input type="radio" id="exportCsvOption" name="exportFormat" value="csv">
-                    <label for="exportCsvOption"><?php echo htmlspecialchars(__('CSV'), ENT_QUOTES, 'UTF-8'); ?></label><br>
+                    <label for="exportCsvOption"><?= $block->escapeHtml(htmlspecialchars(__('CSV'), ENT_QUOTES, 'UTF-8')); ?></label><br>
                     <input type="radio" id="exportXlsxOption" name="exportFormat" value="xls">
-                    <label for="exportXlsxOption"><?php echo htmlspecialchars(__('Excel XML'), ENT_QUOTES, 'UTF-8'); ?></label><br>
-                    <button id="cancelButton" style="font-size: 1rem; margin-top: 10px; background-color: #f1f1f1; padding: 5px 8px; margin-right: 10px;"><?php echo htmlspecialchars(__('Cancel'), ENT_QUOTES, 'UTF-8'); ?></button>
-                    <button id="exportButton" style="font-size: 1rem; margin-top: 10px; background-color: #f1f1f1; padding: 5px 8px;"><?php echo htmlspecialchars(__('Export'), ENT_QUOTES, 'UTF-8'); ?></button>
+                    <label for="exportXlsxOption"><?= $block->escapeHtml(htmlspecialchars(__('Excel XML'), ENT_QUOTES, 'UTF-8')); ?></label><br>
+                    <button id="cancelButton" style="font-size: 1rem; margin-top: 10px; background-color: #f1f1f1; padding: 5px 8px; margin-right: 10px;"><?= $block->escapeHtml(htmlspecialchars(__('Cancel'), ENT_QUOTES, 'UTF-8')); ?></button>
+                    <button id="exportButton" style="font-size: 1rem; margin-top: 10px; background-color: #f1f1f1; padding: 5px 8px;"><?= $block->escapeHtml(htmlspecialchars(__('Export'), ENT_QUOTES, 'UTF-8')); ?></button>
                 </div>
                 </span>
                 <!-- Export Button Implementation End -->
@@ -211,7 +211,7 @@ function createDropdownOptions($values) {
                 <select id="approvalStatus">
                     <option value="">Select</option>
 					<?php foreach ($approvalStatuses as $approvalStatus): ?>
-                        <option value="<?php echo htmlspecialchars($approvalStatus, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($approvalStatus, ENT_QUOTES, 'UTF-8'); ?></option>
+                        <option value="<?= $block->escapeHtml(htmlspecialchars($approvalStatus, ENT_QUOTES, 'UTF-8')); ?>"><?= $block->escapeHtml(htmlspecialchars($approvalStatus, ENT_QUOTES, 'UTF-8')); ?></option>
 					<?php endforeach; ?>
                 </select>
             </div>
@@ -220,7 +220,7 @@ function createDropdownOptions($values) {
                 <select id="transactionStateFilter">
                     <option value="">Select</option>
 					<?php foreach ($transactionStates as $transactionState): ?>
-                        <option value="<?= htmlspecialchars($transactionState ?? 'N/A', ENT_QUOTES, 'UTF-8'); ?>"><?= htmlspecialchars($transactionState ?? 'N/A', ENT_QUOTES, 'UTF-8'); ?></option>
+                        <option value="<?= $block->escapeHtml(htmlspecialchars($transactionState ?? 'N/A', ENT_QUOTES, 'UTF-8')); ?>"><?= $block->escapeHtml(htmlspecialchars($transactionState ?? 'N/A', ENT_QUOTES, 'UTF-8')); ?></option>
 					<?php endforeach; ?>
                 </select>
             </div>
@@ -251,17 +251,17 @@ function createDropdownOptions($values) {
         <tbody id="tableBody">
 		<?php foreach ($transactions as $transaction): ?>
             <tr>
-                <td><?= htmlspecialchars($transaction['date_time'] ?? "N/A", ENT_QUOTES, 'UTF-8'); ?></td>
-                <td><?= htmlspecialchars($transaction['transaction_id'] ?? "N/A", ENT_QUOTES, 'UTF-8'); ?></td>
-                <td><?= htmlspecialchars(strtoupper($transaction['transaction_state'] ?? "N/A"), ENT_QUOTES, 'UTF-8'); ?></td>
-                <td><?= htmlspecialchars(ucfirst($transaction['approval_status'] ?? "N/A"), ENT_QUOTES, 'UTF-8'); ?></td>
-                <td><?= htmlspecialchars(isset($transaction["total_amount"]) ? $block->formatPrice($transaction["total_amount"]) : "N/A", ENT_QUOTES, 'UTF-8'); ?></td>
-                <td><?= htmlspecialchars($transaction['remote_ip'] ?? "N/A", ENT_QUOTES, 'UTF-8'); ?></td>
+                <td><?= $block->escapeHtml(htmlspecialchars($transaction['date_time'] ?? "N/A", ENT_QUOTES, 'UTF-8')); ?></td>
+                <td><?= $block->escapeHtml(htmlspecialchars($transaction['transaction_id'] ?? "N/A", ENT_QUOTES, 'UTF-8')); ?></td>
+                <td><?= $block->escapeHtml(htmlspecialchars(strtoupper($transaction['transaction_state'] ?? "N/A"), ENT_QUOTES, 'UTF-8')); ?></td>
+                <td><?= $block->escapeHtml(htmlspecialchars(ucfirst($transaction['approval_status'] ?? "N/A"), ENT_QUOTES, 'UTF-8')); ?></td>
+                <td><?= $block->escapeHtml(htmlspecialchars(isset($transaction["total_amount"]) ? $block->formatPrice($transaction["total_amount"]) : "N/A", ENT_QUOTES, 'UTF-8')); ?></td>
+                <td><?= $block->escapeHtml(htmlspecialchars($transaction['remote_ip'] ?? "N/A", ENT_QUOTES, 'UTF-8')); ?></td>
                 <td>
 					<?php if (isset($transaction[$block::KEY_SUCCESSFUL]) && $transaction[$block::KEY_SUCCESSFUL] === true): ?>
-                        <a href="<?= $block->getUrl('sales/transactions/view', ['txn_id' => $transaction[$block::KEY_SUCCESSFUL_TXN]]); ?>">View</a>
+                        <a href="<?= $block->escapeUrl($block->getUrl('sales/transactions/view', ['txn_id' => $transaction[$block::KEY_SUCCESSFUL_TXN]])); ?>">View</a>
 					<?php elseif ($transaction['transaction_id'] !== "N/A"): ?>
-                        <a href="<?= $block->getUrl('fiserv/declines/transaction', ['transaction_id' => $transaction['transaction_id']]); ?>">View</a>
+                        <a href="<?= $block->escapeUrl($block->getUrl('fiserv/declines/transaction', ['transaction_id' => $transaction['transaction_id']])); ?>">View</a>
 					<?php endif; ?>
                 </td>
             </tr>
@@ -270,8 +270,8 @@ function createDropdownOptions($values) {
     </table>
     <input type="hidden" id="transactionStateFilterValue" value="">
     <input type="hidden" id="approvalStatusFilterValue" value="">
-    <div id="paginationControls" data-totalPage="<?php echo $totalPages; ?>"></div>
-    <div id="noRecordsMessage" style="display:none;"><?= __('No records found'); ?></div>
+    <div id="paginationControls" data-totalPage="<?= $block->escapeHtml($totalPages); ?>"></div>
+    <div id="noRecordsMessage" style="display:none;"><?= $block->escapeHtml(__('No records found')); ?></div>
 
     <script type="text/x-magento-init">
         {

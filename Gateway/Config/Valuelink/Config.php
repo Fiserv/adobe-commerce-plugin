@@ -17,6 +17,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	const KEY_VALUELINK_TITLE = 'valuelink_title';
 	const KEY_CARD_AMOUNT_LIMIT = 'card_amount_limit';
 	const KEY_PRIVACY_STATEMENT = 'show_privacy_statement';
+	const KEY_GIFT_CARD_TIER = 'gift_card_tier'; // New constant for gift card tier
 
 	// Iframe Customization Fields
 	const KEY_SDC_CUSTOM = 'sdc_custom';
@@ -64,9 +65,9 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	 */
 	public function __construct(
 		ScopeConfigInterface $scopeConfig,
-		$methodCode = null,
+		?string $methodCode = null,
 		$pathPattern = self::DEFAULT_PATH_PATTERN,
-		Json $serializer = null
+		?Json $serializer = null
 	) {
 		parent::__construct($scopeConfig, $methodCode, $pathPattern);
 		$this->serializer = $serializer ?: \Magento\Framework\App\ObjectManager::getInstance()
@@ -141,8 +142,19 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	public function getCardAmountLimit($storeId = null)
 	{
 		return (int) $this->getValue(self::KEY_CARD_AMOUNT_LIMIT, $storeId);
-	}	
-		
+	}
+
+	/**
+	 * Gets the value of the gift card tier.
+	 *
+	 * @param int|null $storeId
+	 * @return string
+	 */
+	public function getGiftCardTier($storeId = null)
+	{
+		return $this->getValue(self::KEY_GIFT_CARD_TIER, $storeId);
+	}
+
 	//////////////////////////
 	// SDC v2 Customization //
 	//////////////////////////
