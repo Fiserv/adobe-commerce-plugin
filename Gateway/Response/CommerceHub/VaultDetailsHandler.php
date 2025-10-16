@@ -91,7 +91,7 @@ class VaultDetailsHandler implements HandlerInterface
 		PaymentTokenRepositoryInterface $paymentTokenRepository,
 		PaymentTokenManagementInterface $paymentTokenManager,
 		EncryptorInterface $encryptor,
-		Json $serializer = null
+		?Json $serializer = null
 	) {
 		$this->config = $config;
 		$this->vaultPaymentTokenUtils = $vaultPaymentTokenUtils;

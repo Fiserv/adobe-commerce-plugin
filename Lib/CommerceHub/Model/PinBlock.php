@@ -255,7 +255,7 @@ class PinBlock implements ModelInterface, ArrayAccess, \JsonSerializable
      * @param mixed[] $data Associated array of property values
      *                      initializing the model
      */
-    public function __construct(array $data = null)
+    public function __construct(?array $data = null)
     {
         $this->setIfExists('encrypted_pin', $data ?? [], null);
         $this->setIfExists('key_serial_number', $data ?? [], null);

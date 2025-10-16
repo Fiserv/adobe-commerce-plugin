@@ -2,6 +2,7 @@
 namespace Fiserv\Payments\Model\Adapter\Valuelink;
 
 use Fiserv\Payments\Gateway\Config\CommerceHub\Config;
+use Fiserv\Payments\Lib\CommerceHub\Model\Balance;
 use Fiserv\Payments\Model\Source\CommerceHub\ApiEnvironment;
 use Fiserv\Payments\Model\Adapter\CommerceHub\ChHttpAdapter;
 use Magento\Store\Model\StoreManagerInterface;
@@ -9,6 +10,7 @@ use Fiserv\Payments\Gateway\Request\CommerceHub\SessionSourceDataBuilder;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 use Fiserv\Payments\Helper\MerchantPartnerHelper;
 
+use Fiserv\Payments\Lib\CommerceHub\Model\BalanceInquiryRequest;
 use Fiserv\Payments\Lib\CommerceHub\Model\GiftCardRequest;
 use Fiserv\Payments\Lib\CommerceHub\Model\PaymentSession;
 use Fiserv\Payments\Lib\CommerceHub\Model\MerchantDetails;
@@ -21,7 +23,8 @@ class ValuelinkBalanceRequest
 	// CommerceHub Credentials Request Keys
 	const KEY_SECURITY_CODE_TYPE = 'securityCodeType';
 	const KEY_URL = 'url';
-	const KEY_ENDING_BALANCE = 'endingBalance';
+	const KEY_AVAILABLE_BALANCE = 'endingBalance';
+	const KEY_LOCK_AMOUNT = 'lockAmount';
 	const KEY_CURRENCY = 'currency';
 	const KEY_RESPONSE_MESSAGE = 'responseMessage';
 	const GIFT_CATEGORY = 'GIFT';
@@ -76,7 +79,6 @@ class ValuelinkBalanceRequest
 		$this->logger->logDebug(3, "Payload:\n" . print_r($data, true));
 		$chResponse = $this->httpAdapter->sendRequest($data, self::BALANCE_INQUIRY_ENDPOINT);
 
-		
 		return $this->parseChBalanceInquiryResponse($chResponse);
 	}
 
@@ -107,9 +109,25 @@ class ValuelinkBalanceRequest
 
 		$data = [];
 		if ($statusCode === 201) {
-			$data[self::KEY_ENDING_BALANCE] = $bodyArray[self::KEY_PAYMENT_RECEIPT][self::KEY_BALANCES][0][self::KEY_ENDING_BALANCE];
-			$data[self::KEY_CURRENCY] = $bodyArray[self::KEY_PAYMENT_RECEIPT][self::KEY_BALANCES][0][self::KEY_CURRENCY];
-			$data[self::KEY_RESPONSE_MESSAGE] = $bodyArray[self::KEY_PAYMENT_RECEIPT][self::KEY_PROCESSOR_RESPONSE_DETAILS][self::KEY_RESPONSE_MESSAGE];
+			$balanceArray = $bodyArray[self::KEY_PAYMENT_RECEIPT][self::KEY_BALANCES];
+			$arrayLength = count($balanceArray);
+			$balanceData = [];
+			for($i = 0; $i < $arrayLength; $i++)
+			{
+				if ($balanceArray[$i]['currency'] === 'USD')
+				{
+					$balanceData = $balanceArray[$i];
+					break;
+				}
+			}
+
+			$endingBalance = $balanceData[self::KEY_AVAILABLE_BALANCE] ?? 0;
+			$lockAmount = $balanceData[self::KEY_LOCK_AMOUNT] ?? 0;
+			$availableBalance = $endingBalance - $lockAmount;
+
+			$data[self::KEY_AVAILABLE_BALANCE] = $availableBalance;
+			$data[self::KEY_CURRENCY] = $balanceData[self::KEY_CURRENCY] ?? 'USD';
+			$data[self::KEY_RESPONSE_MESSAGE] = $bodyArray[self::KEY_PAYMENT_RECEIPT][self::KEY_PROCESSOR_RESPONSE_DETAILS][self::KEY_RESPONSE_MESSAGE] ?? '';
 		} else {
 			throw new \Exception('CommerceHub Gift Card BalanceInquiry request HTTP error code: ' . $statusCode, 1);
 		};
@@ -117,9 +135,12 @@ class ValuelinkBalanceRequest
 		return $data;
 	}
 
-	private function getBalanceInquiryPayload($merchantId, $terminalId, $sessionId): GiftCardRequest{
-		$payload = new GiftCardRequest();
+	private function getBalanceInquiryPayload($merchantId, $terminalId, $sessionId): BalanceInquiryRequest{
+		$payload = new BalanceInquiryRequest();
 		$source = new PaymentSession();
+		$balance = new Balance();
+		$balance->setCurrency('USD');
+		$payload->setBalance($balance);
 		$source->setSourceType(SessionSourceDataBuilder::PAYMENT_SESSION_SOURCE_TYPE);
 		$source->setSessionId($sessionId);
 

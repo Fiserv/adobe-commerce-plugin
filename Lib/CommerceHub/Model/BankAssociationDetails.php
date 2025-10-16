@@ -267,7 +267,7 @@ class BankAssociationDetails implements ModelInterface, ArrayAccess, \JsonSerial
      * @param mixed[] $data Associated array of property values
      *                      initializing the model
      */
-    public function __construct(array $data = null)
+    public function __construct(?array $data = null)
     {
         $this->setIfExists('association_response_code', $data ?? [], null);
         $this->setIfExists('transaction_reference_information', $data ?? [], null);

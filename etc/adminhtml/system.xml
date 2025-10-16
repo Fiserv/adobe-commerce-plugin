@@ -18,23 +18,23 @@
 						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 						<config_path>payment/fiserv_commercehub/active</config_path>
 					</field>
-					<field id="merchant_id" translate="label" type="obscure" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="merchant_id" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Merchant ID</label>
 						<backend_model>Fiserv\Payments\Model\System\Config\Backend\CommerceHub\Encrypted</backend_model>
 						<config_path>payment/fiserv_commercehub/merchant_id</config_path>
 					</field>
-					<field id="terminal_id" translate="label" type="obscure" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="terminal_id" translate="label" type="text" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Terminal ID</label>
 						<backend_model>Fiserv\Payments\Model\System\Config\Backend\CommerceHub\Encrypted</backend_model>
 						<config_path>payment/fiserv_commercehub/terminal_id</config_path>
 					</field>
 
-					<field id="api_key" translate="label" type="obscure" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="api_key" translate="label" type="text" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>API Key</label>
 						<backend_model>Fiserv\Payments\Model\System\Config\Backend\CommerceHub\Encrypted</backend_model>
 						<config_path>payment/fiserv_commercehub/api_key</config_path>
 					</field>
-					<field id="api_secret" translate="label" type="obscure" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="api_secret" translate="label" type="text" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>API Secret</label>
 						<backend_model>Fiserv\Payments\Model\System\Config\Backend\CommerceHub\Encrypted</backend_model>
 						<config_path>payment/fiserv_commercehub/api_secret</config_path>
@@ -181,6 +181,15 @@
 						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 						<config_path>payment/fiserv_valuelink/show_privacy_statement</config_path>
 					</field>
+                    <field id="gift_card_tier" translate="label" type="select" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Gift Solutions Tier</label>
+                        <depends>
+                            <field id="valuelink">1</field>
+                        </depends>
+                        <source_model>Fiserv\Payments\Model\Source\CommerceHub\GiftSolutionsTier</source_model>
+                        <config_path>payment/fiserv_valuelink/gift_card_tier</config_path>
+                        <tooltip><![CDATA[Basic tier does not allow for multiple partial captures of gift card transactions]]></tooltip>
+                    </field>
 				</group>
 				<group id="sdc_custom" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="17">
 					<label>Payment Form Customization</label>

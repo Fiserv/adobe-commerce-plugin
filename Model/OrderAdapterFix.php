@@ -7,7 +7,7 @@ use Fiserv\Payments\Logger\MultiLevelLogger;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Api\OrderRepositoryInterface;
  
-class CustomOrderAdapter
+class OrderAdapterFix
 {
     protected $logger;
     private OrderRepositoryInterface $orderRepository;
@@ -30,8 +30,8 @@ class CustomOrderAdapter
     public function aroundGetGrandTotalAmount(OrderAdapter $subject, callable $proceed):?float
     {
         try {
-            $result = $proceed();
-                return $result;
+			$result = $proceed();
+			return $result;
 
         } catch (\TypeError $e) {
             $order = $this->getOrderFromSubject($subject);

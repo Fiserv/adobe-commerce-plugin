@@ -357,7 +357,7 @@ class AdditionalData3DS implements ModelInterface, ArrayAccess, \JsonSerializabl
      * @param mixed[] $data Associated array of property values
      *                      initializing the model
      */
-    public function __construct(array $data = null)
+    public function __construct(?array $data = null)
     {
         $this->setIfExists('acs_reference_number', $data ?? [], null);
         $this->setIfExists('acs_transaction_id', $data ?? [], null);

@@ -291,7 +291,7 @@ class AdditionalDataCommon implements ModelInterface, ArrayAccess, \JsonSerializ
      * @param mixed[] $data Associated array of property values
      *                      initializing the model
      */
-    public function __construct(array $data = null)
+    public function __construct(?array $data = null)
     {
         $this->setIfExists('bill_payment_type', $data ?? [], null);
         $this->setIfExists('payment_amount_type', $data ?? [], null);

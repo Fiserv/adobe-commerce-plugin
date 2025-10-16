@@ -255,7 +255,7 @@ class ReturnScoreDetails implements ModelInterface, ArrayAccess, \JsonSerializab
      * @param mixed[] $data Associated array of property values
      *                      initializing the model
      */
-    public function __construct(array $data = null)
+    public function __construct(?array $data = null)
     {
         $this->setIfExists('average_return_value', $data ?? [], null);
         $this->setIfExists('average_order_value', $data ?? [], null);

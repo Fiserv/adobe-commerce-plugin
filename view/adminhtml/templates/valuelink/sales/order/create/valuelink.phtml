@@ -4,7 +4,7 @@
 	 */ 
 ?>
 <?php if ($block->useValuelink() === true): ?>
-	<link rel="stylesheet" type="text/css" href="<?php echo $block->getViewFileUrl('Fiserv_Payments/css/ch-form-admin.css')?>">
+	<link rel="stylesheet" type="text/css" href="<?= $block->escapeUrl($block->getViewFileUrl('Fiserv_Payments/css/ch-form-admin.css')); ?>">
 	<div id="gift-card-form-fiserv_valuelink" class="admin__field field-add-gift-card">
 	    <div id="valuelinkMessageContainer">
     		<div id="valuelink-success-message-container" style="display: none;" aria-atomic="true" role="alert" class="message message-success success">
@@ -15,7 +15,7 @@
 	        </div>
 		</div>
 		<label class="admin__field-label">
-			<span><?= $block->getValuelinkTitle() ?></span>
+			<span><?= $block->escapeHtml($block->getValuelinkTitle()); ?></span>
 		</label>
 		<div id="valuelink-sdc-container">
 			<div class="sdc-row">
