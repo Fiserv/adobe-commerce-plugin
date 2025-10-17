@@ -117,7 +117,7 @@ define(
 					)
 				});
 				iframePromise.then((data) => {
-
+					fastlaneHelper.authenticateEmailForFastlane();
 				}).catch((error) =>{
 					failureCb(error);
 				})

@@ -65,15 +65,16 @@ waitForElement('#customer-email-fieldset .note', function () {
 
 				const customerEmailInput = $("#customer-email");
 
-				customerEmailInput.on("change", function () {
+				customerEmailInput.on("change", async function () {
 					const method = { method: 'fiserv_commercehub' };
 					$('#fiserv_commercehub').trigger('click');
 
 					fullScreenLoader.startLoader();
 
-					setTimeout(() => {
+					setTimeout( async function() {
 						fullScreenLoader.stopLoader();
-						fastlaneHelper.authenticateEmailForFastlane();
+						await fastlaneHelper.authenticateEmailForFastlane();
+						fastlaneHelper.processAuthResult();
 					}, 1000);
 				});
 
