@@ -66,7 +66,7 @@ define(
 			//let customer = getCustomer();
 			//let billingAddress = getBillingAddress();
 			return {
-				"amount" : amount,
+				//"amount" : amount,
 				//"customer" : customer,
 				//"billingAddress" : billingAddress
 			};

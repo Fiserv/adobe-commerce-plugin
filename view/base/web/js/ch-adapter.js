@@ -130,23 +130,15 @@ define([
 		instantiateIframe: function (
 			loadSuccessCb, 
 			loadErrorCb,
-			fastlaneHelper = undefined
+			configData = undefined
 		) {
 			let formConfig = this.buildFormConfig();
 
-			if(fastlaneHelper.fastlane) {
-				formConfig.paypalFastlane = {
-					component: fastlaneHelper.fastlane,
-					consent: {
-						parentElementId: fastlaneHelper.consentElementID
-					}
-				}
+			if (configData)
+			{
+				formConfig = { ...configData, ...formConfig };
 			}
 
-			if(fastlaneHelper.addressComponent) {
-				formConfig.billingAddress = fastlaneHelper.addressComponent;
-			}
-						
 			window.fiserv.components.paymentFields(formConfig)
 				.then((next) => { 
 					this.sdcv2Form = next; 

@@ -115,45 +115,63 @@ define([
 				this.authenticateResult = await this.fastlane.authenticate({
 					email: emailInputValue
 				});
-
-				if( ! this.authenticateResult.isGuestCheckout) {
-					const symbolKey = Object.getOwnPropertySymbols(this.authenticateResult)[0];
-					const symbolData = this.authenticateResult[symbolKey];
-					console.log(symbolData.customerContextId)
-					console.log(this.authenticateResult);
-
-					const profileData = symbolData.profile;
-
-					const magentoAddress = {
-						firstname: profileData.shippingAddress.name.firstName,
-						lastname: profileData.shippingAddress.name.lastName,
-						street: [profileData.shippingAddress.address.addressLine1, profileData.shippingAddress.address.addressLine2],
-						city: profileData.shippingAddress.address.adminArea2,
-						region: window.checkoutConfig.payment.fiserv_paypal.regionsData[profileData.shippingAddress.address.countryCode][profileData.shippingAddress.address.adminArea1],
-						postcode: profileData.shippingAddress.address.postalCode,
-						countryId: profileData.shippingAddress.address.countryCode,
-						telephone: profileData.shippingAddress.phoneNumber.nationalNumber,
-						email: emailInputValue
-					};
-
-
-					$('input[name="firstname"]').val(magentoAddress.firstname);
-					$('input[name="lastname"]').val(magentoAddress.lastname);
-					$('input[name="street[0]"]').val(magentoAddress.street[0]);
-					$('input[name="street[1]"]').val(magentoAddress.street[1]);
-					$('select[name="country_id"]').val(magentoAddress.countryId).trigger('change');
-					$('select[name="region_id"]').val(magentoAddress.region.region_id).trigger('change');
-					$('input[name="city"]').val(magentoAddress.city);
-					$('input[name="postcode"]').val(magentoAddress.postcode);
-					$('input[name="telephone"]').val(magentoAddress.telephone);
-
-					const newBillingAddress = newAddress(magentoAddress);
-
-					selectBillingAddress(newBillingAddress);
-				}
 			} catch (error) {
 				console.error("Authentication failed:", error);
 			}
+		},
+
+		processAuthResult: function() {
+			if( ! this.authenticateResult.isGuestCheckout) {
+				const symbolKey = Object.getOwnPropertySymbols(this.authenticateResult)[0];
+				const symbolData = this.authenticateResult[symbolKey];
+
+				const profileData = symbolData.profile;
+
+				const magentoAddress = {
+					firstname: profileData.shippingAddress.name.firstName,
+					lastname: profileData.shippingAddress.name.lastName,
+					street: [profileData.shippingAddress.address.addressLine1, profileData.shippingAddress.address.addressLine2],
+					city: profileData.shippingAddress.address.adminArea2,
+					region: window.checkoutConfig.payment.fiserv_paypal.regionsData[profileData.shippingAddress.address.countryCode][profileData.shippingAddress.address.adminArea1],
+					postcode: profileData.shippingAddress.address.postalCode,
+					countryId: profileData.shippingAddress.address.countryCode,
+					telephone: profileData.shippingAddress.phoneNumber.nationalNumber,
+					email: symbolData.email
+				};
+
+				$('input[name="firstname"]').val(magentoAddress.firstname).trigger('change');
+				$('input[name="lastname"]').val(magentoAddress.lastname).trigger('change');
+				$('input[name="street[0]"]').val(magentoAddress.street[0]).trigger('change');
+				$('input[name="street[1]"]').val(magentoAddress.street[1]).trigger('change');
+				$('select[name="country_id"]').val(magentoAddress.countryId).trigger('change');
+				$('select[name="region_id"]').val(magentoAddress.region.region_id).trigger('change');
+				$('input[name="city"]').val(magentoAddress.city).trigger('change');
+				$('input[name="postcode"]').val(magentoAddress.postcode).trigger('change');
+				$('input[name="telephone"]').val(magentoAddress.telephone).trigger('change');
+
+				const newBillingAddress = newAddress(magentoAddress);
+
+				selectBillingAddress(newBillingAddress);
+			}
+		},
+
+		getConfigData: function() {
+			var self = this;
+			let formConfig = {};
+			if(this.fastlane) {
+				formConfig.paypalFastlane = {
+					component: this.fastlane,
+					consent: {
+						parentElementId: this.consentElementID
+					}
+				}
+			}
+
+			if(this.addressComponent) {
+				formConfig.billingAddress = this.addressComponent;
+			}
+
+			return formConfig;
 		}
 	};
 });
