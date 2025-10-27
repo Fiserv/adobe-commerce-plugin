@@ -3,7 +3,7 @@
 			 <input type="radio"
 				 name="payment[method]"
 				 class="radio"
-				 data-bind="attr: {id: 'p_method_' + getCode()}, value: getCode(), checked: isChecked, click: selectPaymentMethod, visible: isRadioButtonVisible(), afterRender: watchPaymentMethods"/>
+				 data-bind="attr: {'id': getCode()}, value: getCode(), checked: isChecked, click: selectPaymentMethod, visible: isRadioButtonVisible(), afterRender: watchPaymentMethods"/>
 		<img data-bind="attr: {src: require.toUrl('Fiserv_Payments/images/paypal_logo.svg')}" alt="PayPal" style="height: 18px; display: inline-block; vertical-align: middle;"/>
 	</div>
 
