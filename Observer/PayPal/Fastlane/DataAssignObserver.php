@@ -3,7 +3,7 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-namespace Fiserv\Payments\Observer\CommerceHub;
+namespace Fiserv\Payments\Observer\PayPal\Fastlane;
 
 use Magento\Framework\Event\Observer;
 use Magento\Payment\Observer\AbstractDataAssignObserver;
@@ -14,26 +14,17 @@ use Magento\Quote\Api\Data\PaymentInterface;
  */
 class DataAssignObserver extends AbstractDataAssignObserver
 {
-	const SESSION_ID_KEY = 'payment_session';
-	const PAYMENT_TOKEN_KEY = 'payment_token';
-	const PAYMENT_TYPE_KEY = 'payment_type';
-	const TOKEN_SOURCE_KEY = 'token_source';
-	const EXP_MONTH_KEY = 'expiration_month';
-	const EXP_YEAR_KEY = 'expiration_year';
-	const NAME_ON_CARD_KEY = 'nameOnCard';
-	const THREE_D_SECURE_KEY = '3DSecureId';
+	const FASTLANE_CUSTOMER_KEY = 'fastlane_customer';
+	const FASTLANE_CARD_ID = 'fastlane_card_id';
+	const FASTLANE_SESSION_ID = 'fastlane_session_id';
 
 	/**
 	 * @var array
 	 */
 	protected $additionalInformationList = [
-		self::SESSION_ID_KEY,
-		self::PAYMENT_TYPE_KEY,
-		self::PAYMENT_TOKEN_KEY,
-		self::TOKEN_SOURCE_KEY,
-		self::EXP_MONTH_KEY,
-		self::EXP_YEAR_KEY,
-		self::THREE_D_SECURE_KEY
+		self::FASTLANE_CUSTOMER_KEY,
+		self::FASTLANE_CARD_ID,
+		self::FASTLANE_SESSION_ID
 	];
 
 	/**

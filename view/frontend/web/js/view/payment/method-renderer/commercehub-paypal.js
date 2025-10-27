@@ -43,9 +43,8 @@ define([
                 orderID: null
             },
             additionalData: {},
-            paymentMethodName: '[name="payment[method]"]',
+            paymentMethodName: '[name="payment[method]"',
             credentials: undefined,
-            isChecked: ko.observable(),
             paypalComponent: null,
             vaultEnabler: null,
             placeOrderCallback: null
@@ -58,19 +57,12 @@ define([
             }, this);
 
             this._super();
-            return checkoutData.getSelectedPaymentMethod() === this.getCode();
-        },
-
-        /**
-         * Select Payment Method Handler
-         */
-        selectPaymentMethod: function () {
-            this.isChecked(this.getCode());
             this.loadPayPalForm();
-            return true;
+			
+			return this;
         },
 
-        loadPayPalForm: function () {
+       loadPayPalForm: function () {
             if (this.isChecked() === this.getCode()) {
                 this.initchAdapter();
             } 

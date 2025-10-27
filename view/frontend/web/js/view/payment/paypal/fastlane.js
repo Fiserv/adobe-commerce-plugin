@@ -1,17 +1,21 @@
 define([
 	'jquery',
+	'ko',
 	'Fiserv_Payments/js/ch-adapter',
 	'Fiserv_Payments/js/action/create-commercehub-session',
 	'chBraintreeClient',
 	'ch-braintree-hosted-fields',
+	'Magento_Checkout/js/model/full-screen-loader',
 	'Magento_Checkout/js/model/new-customer-address',
 	'Magento_Checkout/js/action/select-billing-address'
 ], function (
 	$,
+	ko,
 	chAdapter,
 	chSession,
 	chBraintreeClient,
 	chBraintreeHostedFields,
+	fullScreenLoader,
 	newAddress,
 	selectBillingAddress
 ) {
@@ -23,6 +27,15 @@ define([
 		authenticateResult: undefined,
 
 		addressComponent: undefined,
+		
+		isEngaged: ko.observable(false),
+		customerId: ko.observable(undefined),
+		sessionId: ko.observable(undefined),
+		cardId: ko.observable(undefined),
+		maskedCardNumber: ko.observable(undefined),
+		nameOnCard: ko.observable(undefined),
+		cardBrand: ko.observable(undefined),
+		cardExpiry: ko.observable(undefined),
 
 		watermarkElementID: 'fiserv-paypal-watermark-container',
 
@@ -31,6 +44,7 @@ define([
 		fastlaneInit: async function() {
 
 			var self = this;
+			fullScreenLoader.startLoader();
 
 			const paypal = await window.fiserv.components.paypal();
 
@@ -41,6 +55,8 @@ define([
 			this.fastlane = await paypal.fastlane();
 			this.addressComponent = await this.getAddressComponent();
 
+			fullScreenLoader.stopLoader();
+	
 			return this.fastlane;
 		},
 
@@ -115,6 +131,7 @@ define([
 				this.authenticateResult = await this.fastlane.authenticate({
 					email: emailInputValue
 				});
+				
 			} catch (error) {
 				console.error("Authentication failed:", error);
 			}
@@ -152,6 +169,24 @@ define([
 				const newBillingAddress = newAddress(magentoAddress);
 
 				selectBillingAddress(newBillingAddress);
+				this.isEngaged(true);
+				this.sessionId(symbolData.sessionId);
+				this.cardId(symbolData.profile.card.id);
+				this.customerId(symbolData.customerContextId);
+				this.maskedCardNumber(symbolData.profile.card.paymentSource.card.lastDigits.padStart(16, 'x'));
+				this.nameOnCard(symbolData.profile.card.paymentSource.card.name);
+				this.cardBrand(symbolData.profile.card.paymentSource.card.brand);
+				this.cardExpiry(symbolData.profile.card.paymentSource.card.expiry);
+			}
+			else {
+				this.isEngaged(false);
+				this.sessionId(undefined);
+				this.cardId(undefined);
+				this.customerId(undefined);
+				this.maskedCardNumber(undefined);
+				this.nameOnCard(undefined);
+				this.cardBrand(undefined);
+				this.cardExpiry(undefined);
 			}
 		},
 

@@ -17,7 +17,6 @@ define(
 		'Magento_Vault/js/view/payment/vault-enabler',
 		'Magento_Checkout/js/model/full-screen-loader',
 		'Magento_Checkout/js/model/payment/additional-validators',
-		'Fiserv_Payments/js/view/payment/paypal/fastlane',
 		'Fiserv_Payments/js/action/modify-requirejs',
 		'ko',
 		'mage/translate',
@@ -35,7 +34,6 @@ define(
 		VaultEnabler,
 		fullScreenLoader,
 		additionalValidators,
-		fastlaneHelper,
 		modifyRequirejs,
 		ko,
 		$t
@@ -48,7 +46,6 @@ define(
 				template: 'Fiserv_Payments/payment/commercehub/form',
 				active: false,
 				code: 'fiserv_commercehub',
-				paypalCode: 'fiserv_paypal',
 				paymentPayload: {
 					sessionId: null,
 					type: null,
@@ -113,11 +110,9 @@ define(
 					chAdapter.instantiateIframe(
 						resolve, 
 						reject,
-						fastlaneHelper.getConfigData()
 					)
 				});
 				iframePromise.then((data) => {
-					fastlaneHelper.authenticateEmailForFastlane();
 				}).catch((error) =>{
 					failureCb(error);
 				})
@@ -206,7 +201,7 @@ define(
 					if (selected === self.getCode()) {
 						self.loadIframe();	
 					} else {
-						this.cardBrandChangeHandler(null);
+						self.cardBrandChangeHandler(null);
 						chAdapter.destroyIframe();
 					}
 				});
@@ -674,14 +669,6 @@ define(
 						frame.removeClass('sdc-focused-field');
 					}
 				}
-			},
-
-			isFastlaneEnabled: function() {
-				return window.checkoutConfig.payment[this.paypalCode].fastlane;
-			},
-
-			isOnepageCheckoutEnabled: function() {
-				return window.checkoutConfig.payment[this.paypalCode].onepageCheckoutEnabled;
 			}
 		});
 	}

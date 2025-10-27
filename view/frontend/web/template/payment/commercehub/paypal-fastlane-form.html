@@ -1,0 +1,45 @@
+<!-- ko if: (isEngaged())-->
+<div class="payment-method" data-bind="css: {'_active': (getCode() == isChecked())}">
+	<div class="payment-method-title field choice">
+			 <input type="radio"
+				 name="payment[method]"
+				 class="radio"
+				 data-bind="attr: {'id': getCode()}, value: getCode(), checked: isChecked, click: selectPaymentMethod, visible: isRadioButtonVisible()"/>
+		<img data-bind="attr: {src: require.toUrl('Fiserv_Payments/images/paypal_fastlane_logo.svg')}" alt="PayPal Fastlane" style="height: 18px; display: inline-block; vertical-a    lign: middle;"/>
+	</div>
+
+	<div class="payment-method-content">
+		<!-- ko foreach: getRegion('messages') -->
+		<!-- ko template: getTemplate() --><!-- /ko -->
+		<!--/ko-->
+
+		<div class="payment-method-billing-address">
+			<!-- ko foreach: $parent.getRegion(getBillingAddressFormName()) -->
+			<!-- ko template: getTemplate() --><!-- /ko -->
+			<!--/ko-->
+		</div>
+
+		<div id="token-name-container"><span data-bind="text: nameOnCard()"></span></div>
+		<div id="token-brand-container"><span data-bind="text: cardBrand()"></span></div>
+		<div id="token-number-container"><span data-bind="text: maskedCardNumber()"></span></div>
+		<div id="token-expiry-container"><span data-bind="text: cardExpiry()"></div>
+
+		<div class="actions-toolbar">
+			<div class="primary">
+				<button 
+				 class="action primary checkout" 
+				 type="submit"
+				 data-bind="click: placeOrder" 
+				 id="fiserv-paypal-fastlane-checkout-submit">
+					<span translate="'Place Order'"></span>
+				</button>
+			</div>
+		</div> 
+		
+		<div class="privacyPolicy">
+			<span></span>Payments Powered by Fiserv.&nbsp; <a target="_blank" href="http://www.fiserv.com/privacy">Privacy Notice</a>.
+		</div>
+
+	</div>
+</div>
+<!-- /ko -->

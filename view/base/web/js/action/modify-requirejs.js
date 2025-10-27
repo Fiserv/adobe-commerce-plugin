@@ -3,7 +3,7 @@ define([], function () {
 
 	return function (maps) {
 		let oldRequire = window.require;
-		window.require = (a,b,c) =>
+		window.require = Object.assign((a,b,c) =>
 		{
 			if (typeof a === "object" && 
 				typeof a[0] !== "undefined" &&
@@ -11,7 +11,7 @@ define([], function () {
 				a[0] = maps[a[0]];
 			}
 			return oldRequire(a,b,c);
-		}
+		}, oldRequire);
 	};
 }
 );
