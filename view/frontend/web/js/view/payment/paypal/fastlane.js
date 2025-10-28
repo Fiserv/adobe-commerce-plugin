@@ -64,6 +64,7 @@ define([
 			try {
 				await this.fastlane.renderWatermark("fiserv-paypal-watermark-container");
 			} catch (error) {
+				fullScreenLoader.stopLoader();
 				console.error("Watermark rendering failed:", error);
 			}
 		},
@@ -133,6 +134,7 @@ define([
 				});
 				
 			} catch (error) {
+				fullScreenLoader.stopLoader();
 				console.error("Authentication failed:", error);
 			}
 		},
