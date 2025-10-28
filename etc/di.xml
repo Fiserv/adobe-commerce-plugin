@@ -444,7 +444,7 @@
 			<argument name="commands" xsi:type="array">
 				<item name="authorize" xsi:type="string">FiservPayPalFastlaneAuthorizeCommand</item>
 				<item name="sale" xsi:type="string">FiservFiservPayPalFastlaneSaleCommand</item>
-				<item name="capture" xsi:type="string">FiservCommerceHubCaptureCommand</item>
+				<item name="capture" xsi:type="string">FiservPayPalFastlaneCaptureCommand</item>
 				<item name="settle" xsi:type="string">FiservCommerceHubSettleCommand</item>
 				<item name="vault_authorize" xsi:type="string">FiservCommerceHubVaultAuthorizeCommand</item>
 				<item name="vault_sale" xsi:type="string">FiservCommerceHubVaultSaleCommand</item>
@@ -477,6 +477,12 @@
 		</arguments>
 	</virtualType>
 
+	<virtualType name="FiservPayPalFastlaneCaptureCommand" type="Fiserv\Payments\Gateway\Command\CommerceHub\CaptureStrategyCommand">
+		<arguments>
+			<argument name="commandPool" xsi:type="object">FiservPayPalFastlaneCommandPool</argument>
+		</arguments>
+	</virtualType>
+	
 	<virtualType name="FiservPayPalFastlaneAuthorizeRequest" type="Fiserv\Payments\Gateway\Request\PayPal\Fastlane\Composite\TokenAuthComposite">
 		<arguments>
 			<argument name="builders" xsi:type="array">
