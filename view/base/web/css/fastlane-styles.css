@@ -1,0 +1,122 @@
+.fastlane-credit-card {
+    background: linear-gradient(135deg, #ff6f00 0%, #d79420 100%);
+    border-radius: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    color: white;
+    padding: 50px;
+    margin: 20px 0;
+    position: relative;
+    overflow: hidden;
+    width: 40%;
+    height: 110px;
+    max-width: 400px;
+}
+
+@media (max-width: 768px) {
+    .fastlane-credit-card {
+        width: 70%;
+    }
+}
+
+.fastlane-credit-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+}
+
+.fastlane-card-header {
+    margin-bottom: 10px;
+}
+
+.fastlane-card-brand-icon {
+    width: 30px;
+    height: 20px;
+    background-image: url('../images/cc/blank-brand-icon.png');
+    background-size: contain;
+    display: block;
+    position: absolute;
+    bottom: 10px;
+    right: 25px;
+}
+
+.fastlane-card-brand-icon[data-brand="visa"],
+.fastlane-card-brand-icon[data-brand="VISA"] {
+	background-image: url('../../Magento_Payment/images/cc/vi.png');
+}
+
+.fastlane-card-brand-icon[data-brand="discover"],
+.fastlane-card-brand-icon[data-brand="DISCOVER"] {
+	background-image: url('../../Magento_Payment/images/cc/di.png');
+}
+
+.fastlane-card-brand-icon[data-brand="mastercard"],
+.fastlane-card-brand-icon[data-brand="MASTERCARD"] {
+	background-image: url('../../Magento_Payment/images/cc/mc.png');
+}
+
+.fastlane-card-brand-icon[data-brand="amex"],
+.fastlane-card-brand-icon[data-brand="american-express"],
+.fastlane-card-brand-icon[data-brand="AMEX"],
+.fastlane-card-brand-icon[data-brand="AMERICAN-EXPRESS"] {
+	background-image: url('../../Magento_Payment/images/cc/ae.png');
+}
+
+.fastlane-card-brand-icon[data-brand="diners"],
+.fastlane-card-brand-icon[data-brand="DINERS"] {
+	background-image: url('../../Magento_Payment/images/cc/dn.png');
+}
+
+.fastlane-card-brand-icon[data-brand="jcb"],
+.fastlane-card-brand-icon[data-brand="JCB"] {
+	background-image: url('../../Magento_Payment/images/cc/jcb.png');
+}
+
+.fastlane-card-brand-icon[data-brand="maestro"],
+.fastlane-card-brand-icon[data-brand="MAESTRO"] {
+	background-image: url('../../Magento_Payment/images/cc/md.png');
+}
+
+.fastlane-card-brand-icon[data-brand="elo"],
+.fastlane-card-brand-icon[data-brand="ELO"] {
+	background-image: url('../../Magento_Payment/images/cc/elo.png');
+}
+
+.fastlane-card-brand-icon[data-brand="union"],
+.fastlane-card-brand-icon[data-brand="UNION"] {
+	background-image: url('../../Magento_Payment/images/cc/un.png');
+}
+
+.fastlane-card-body {
+    position: relative;
+    z-index: 1;
+}
+
+.fastlane-card-number {
+    font-size: 20px;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 6px;
+    margin-bottom: 15px;
+}
+
+.fastlane-card-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.fastlane-card-name {
+    font-size: 16px;
+    text-transform: uppercase;
+    position: absolute;
+    bottom: 20px;
+    left: 50px;
+}
+
+.fastlane-card-expiry {
+    font-size: 16px;
+}
