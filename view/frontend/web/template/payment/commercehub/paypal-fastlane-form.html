@@ -5,7 +5,7 @@
 				 name="payment[method]"
 				 class="radio"
 				 data-bind="attr: {'id': getCode()}, value: getCode(), checked: isChecked, click: selectPaymentMethod, visible: isRadioButtonVisible()"/>
-		<img data-bind="attr: {src: require.toUrl('Fiserv_Payments/images/paypal_fastlane_logo.svg')}" alt="PayPal Fastlane" style="height: 18px; display: inline-block; vertical-a    lign: middle;"/>
+		<img data-bind="attr: {src: require.toUrl('Fiserv_Payments/images/paypal_fastlane_logo.svg')}" alt="PayPal Fastlane" style="height: 18px; display: inline-block; vertical-align: middle;"/>
 	</div>
 
 	<div class="payment-method-content">
@@ -19,10 +19,12 @@
 			<!--/ko-->
 		</div>
 
-		<div id="token-name-container"><span data-bind="text: nameOnCard()"></span></div>
-		<div id="token-brand-container"><span data-bind="text: cardBrand()"></span></div>
-		<div id="token-number-container"><span data-bind="text: maskedCardNumber()"></span></div>
-		<div id="token-expiry-container"><span data-bind="text: cardExpiry()"></div>
+		<div class="fastlane-credit-card">
+			<div class="fastlane-card-number" data-bind="text: maskedCardNumber()"></div>
+			<div class="fastlane-card-expiry" data-bind="text: cardExpiry()"></div>
+			<div class="fastlane-card-name" data-bind="text: nameOnCard()"></div>
+			<div class="fastlane-card-brand-icon" data-bind="attr: {'data-brand': cardBrand()}"></div>
+		</div>
 
 		<div class="actions-toolbar">
 			<div class="primary">
