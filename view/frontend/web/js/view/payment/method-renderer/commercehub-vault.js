@@ -4,7 +4,7 @@ define([
 	'Magento_Ui/js/model/messageList',
 	'Magento_Checkout/js/model/full-screen-loader',
 	'Fiserv_Payments/js/ch-adapter',
-	'Fiserv_Payments/js/action/create-commercehub-session'
+	'Fiserv_Payments/js/action/create-commercehub-enriched-session'
 ], function(
 	$,
 	VaultComponent,

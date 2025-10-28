@@ -180,12 +180,12 @@ $payload = [];
 
 		if (isset($sessionData[self::KEY_PAYMENT_TOKEN])) {
 			// Customer ID should be set, because only customers can use payment tokens
-			$payload[self::KEY_SOURCE] = $this->buildPaymentTokenSource($sessionData[self::KEY_PAYMENT_TOKEN], $sessionData[self::KEY_CUSTOMER][self::KEY_CUSTOMER_ID]);	
+			$payload[self::KEY_SOURCE] = $this->buildPaymentTokenSource($sessionData[self::KEY_PAYMENT_TOKEN], $sessionData[self::KEY_CUSTOMER][self::KEY_CUSTOMER_ID_COMMERCEHUB]);	
 		}	
 
 		// Add providerCredentials with customerId attribute as requested, only if not guest
 		$customerIdValue = 'guest';
-		if (isset($sessionData[self::KEY_CUSTOMER][self::KEY_CUSTOMER_ID_PAYPAL])) {
+		if (isset($sessionData[self::KEY_CUSTOMER]) && isset($sessionData[self::KEY_CUSTOMER][self::KEY_CUSTOMER_ID_PAYPAL])) {
 			$customerIdValue = $sessionData[self::KEY_CUSTOMER][self::KEY_CUSTOMER_ID_PAYPAL];
 		}
 		if ($customerIdValue !== 'guest') {
@@ -202,12 +202,6 @@ $payload = [];
 			];
 		}
 			
-		if (isset($sessionData[self::KEY_3DS]) && $sessionData[self::KEY_3DS] === true) {
-			$payload[self::KEY_TRANSACTION_DETAILS] = array(	
-				self::KEY_AUTHENTICATION_3DS => true
-			);
-		}
-
 		$payload[self::KEY_ADDITIONAL_DATA_COMMON] = array(
 			self::KEY_ADDITIONAL_DATA => array(
 				self::KEY_ECOM_URL => $this->getStoreBaseUrl() 
