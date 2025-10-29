@@ -44,18 +44,25 @@ define([
 			var self = this;
 			fullScreenLoader.startLoader();
 
-			const paypal = await window.fiserv.components.paypal();
+			try {
+				const paypal = await window.fiserv.components.paypal();
 
-			window.braintree = window.braintree || {};
-			window.braintree.client = chBraintreeClient;
-			window.braintree.hostedFields = chBraintreeHostedFields;
+				window.braintree = window.braintree || {};
+				window.braintree.client = chBraintreeClient;
+				window.braintree.hostedFields = chBraintreeHostedFields;
 
-			this.fastlane = await paypal.fastlane();
-			this.addressComponent = await this.getAddressComponent();
-
-			fullScreenLoader.stopLoader();
+				this.fastlane = await paypal.fastlane();
+				this.addressComponent = await this.getAddressComponent();
+			
+				fullScreenLoader.stopLoader();
 	
-			return this.fastlane;
+				return this.fastlane;
+			}
+			catch(e) {
+				console.log("unable to load PayPal Fastlane component.");
+				fullScreenLoader.stopLoader();
+				return undefined;
+			}
 		},
 
 		renderFastlaneWatermark: async function() {

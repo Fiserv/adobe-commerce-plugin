@@ -61,6 +61,10 @@ waitForElement('#customer-email-fieldset .note', function () {
 
 				let fastlane = await fastlaneHelper.fastlaneInit();
 
+				if (typeof(fastlane) === "undefined")
+				{
+					return;
+				}
 				await fastlaneHelper.renderFastlaneWatermark();
 
 				const customerEmailInput = $("#customer-email");
