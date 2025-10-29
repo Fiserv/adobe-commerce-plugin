@@ -6,7 +6,8 @@ define([
 	'ch-braintree-hosted-fields',
 	'Magento_Checkout/js/model/full-screen-loader',
 	'Magento_Checkout/js/model/new-customer-address',
-	'Magento_Checkout/js/action/select-billing-address'
+	'Magento_Checkout/js/action/select-billing-address',
+	'Magento_Checkout/js/model/payment/method-list'
 ], function (
 	$,
 	ko,
@@ -15,7 +16,8 @@ define([
 	chBraintreeHostedFields,
 	fullScreenLoader,
 	newAddress,
-	selectBillingAddress
+	selectBillingAddress,
+	methodList
 ) {
 	'use strict';
 
@@ -184,17 +186,26 @@ define([
 				this.nameOnCard(symbolData.profile.card.paymentSource.card.name);
 				this.cardBrand(symbolData.profile.card.paymentSource.card.brand);
 				this.cardExpiry(symbolData.profile.card.paymentSource.card.expiry);
+	
+				let currentMethods = methodList();
+				methodList([]);
+				methodList(currentMethods);
 			}
 			else {
-				this.isEngaged(false);
-				this.sessionId(undefined);
-				this.cardId(undefined);
-				this.customerId(undefined);
-				this.maskedCardNumber(undefined);
-				this.nameOnCard(undefined);
-				this.cardBrand(undefined);
-				this.cardExpiry(undefined);
-			}
+				this.unengageFastlane();
+			}	
+		
+		},
+
+		unengageFastlane: function() {
+			this.isEngaged(false);
+			this.sessionId(undefined);
+			this.cardId(undefined);
+			this.customerId(undefined);
+			this.maskedCardNumber(undefined);
+			this.nameOnCard(undefined);
+			this.cardBrand(undefined);
+			this.cardExpiry(undefined);
 		},
 
 		getConfigData: function() {

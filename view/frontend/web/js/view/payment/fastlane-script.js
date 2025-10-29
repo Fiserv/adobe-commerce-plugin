@@ -69,17 +69,18 @@ waitForElement('#customer-email-fieldset .note', function () {
 
 				const customerEmailInput = $("#customer-email");
 
-				customerEmailInput.on("change", async function () {
-					const method = { method: 'fiserv_commercehub' };
-					$('#fiserv_commercehub').trigger('click');
+				customerEmailInput.on("change", async function (ev) {
+					if (!ev.target.value)
+					{
+						fastlaneHelper.unengageFastlane();
+						return;
+					}
 
 					fullScreenLoader.startLoader();
 
-					setTimeout( async function() {
-						await fastlaneHelper.authenticateEmailForFastlane();
-						fastlaneHelper.processAuthResult();
-						fullScreenLoader.stopLoader();
-					}, 1000);
+					await fastlaneHelper.authenticateEmailForFastlane();
+					fastlaneHelper.processAuthResult();
+					fullScreenLoader.stopLoader();
 				});
 
 				if (customerEmailInput.val()) {
