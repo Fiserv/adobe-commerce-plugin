@@ -2,12 +2,10 @@
 /*global define*/
 define([
 	'jquery',
-	'SDCv2Library',
-	'Fiserv_Payments/js/view/payment/paypal/fastlane'
+	'SDCv2Library'
 ], function (
 	$,
-	sdcv2,
-	fastlaneHelper
+	sdcv2
 ) {
 	'use strict';
 
