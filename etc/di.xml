@@ -432,7 +432,7 @@
 		<arguments>
 			<argument name="code" xsi:type="const">Fiserv\Payments\Model\Config\PayPal\Fastlane\ConfigProvider::CODE</argument>
 			<argument name="formBlockType" xsi:type="string">Fiserv\Payments\Block\CommerceHub\Form</argument>
-			<argument name="infoBlockType" xsi:type="string">Fiserv\Payments\Block\PayPal\Fastlane\Info</argument>
+			<argument name="infoBlockType" xsi:type="string">Fiserv\Payments\Block\CommerceHub\Info</argument>
 			<argument name="valueHandlerPool" xsi:type="object">FiservPayPalFastlaneValueHandlerPool</argument>
 			<argument name="validatorPool" xsi:type="object">FiservCommerceHubValidatorPool</argument>
 			<argument name="commandPool" xsi:type="object">FiservPayPalFastlaneCommandPool</argument>
@@ -443,9 +443,11 @@
 		<arguments>
 			<argument name="handlers" xsi:type="array">
 				<item name="default" xsi:type="string">FiservPayPalFastlaneValueHandler</item>
+				<item name="payment_action" xsi:type="string">Fiserv\Payments\Gateway\Config\PayPal\Fastlane\PaymentActionHandler</item>
 				<item name="can_void" xsi:type="string">Fiserv\Payments\Gateway\Config\CanVoidHandler</item>
 				<item name="can_refund" xsi:type="string">Fiserv\Payments\Gateway\Config\CanRefundHandler</item>
- 				<item name="can_cancel" xsi:type="string">Fiserv\Payments\Gateway\Config\CanVoidHandler</item>			</argument>
+				<item name="can_cancel" xsi:type="string">Fiserv\Payments\Gateway\Config\CanVoidHandler</item>
+			</argument>
 		</arguments>
 	</virtualType>
 	
@@ -454,7 +456,14 @@
 			<argument name="configInterface" xsi:type="object">Fiserv\Payments\Gateway\Config\PayPal\Fastlane\Config</argument>
 		</arguments>
 	</virtualType>
-	
+
+	<!-- Fastlane Config -->
+	<type name="Fiserv\Payments\Gateway\Config\PayPal\Fastlane\Config">
+		<arguments>
+			<argument name="methodCode" xsi:type="const">Fiserv\Payments\Model\Config\PayPal\Fastlane\ConfigProvider::CODE</argument>
+		</arguments>
+	</type>
+
 	<virtualType name="FiservPayPalFastlaneCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
 		<arguments>
 			<argument name="commands" xsi:type="array">
