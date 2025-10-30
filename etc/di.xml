@@ -356,6 +356,12 @@
 		</arguments>
 	</type>
 
+	<type name="Fiserv\Payments\Gateway\Config\Valuelink\Config">
+		<arguments>
+			<argument name="methodCode" xsi:type="const">Fiserv\Payments\Model\Config\ConfigProvider::FISERV_VALUELINK_KEY</argument>
+		</arguments>
+	</type>
+
 	<!-- Payment JS Session Data -->
 	<virtualType name="Fiserv\Payments\Model\Session\Storage" type="Magento\Framework\Session\Storage">
 		<arguments>
