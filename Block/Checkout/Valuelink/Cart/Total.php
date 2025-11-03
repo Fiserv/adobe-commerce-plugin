@@ -39,7 +39,7 @@ class Total extends \Magento\Checkout\Block\Total\DefaultTotal
         DataHelper $valuelinkDataHelper,
 		array $layoutProcessors = [],
         array $data = [],
-        Data $checkoutHelper = null
+        ?Data $checkoutHelper = null
     ) {
         $data['checkoutHelper'] = $checkoutHelper ?? ObjectManager::getInstance()->get(Data::class);
         $this->valuelinkDataHelper = $valuelinkDataHelper;

@@ -7,7 +7,7 @@
 ?>
 
 <?php if ($block->canCreateStandaloneSpa()) : ?>
-	<link rel="stylesheet" type="text/css" href="<?php echo $block->getViewFileUrl('Fiserv_Payments/css/ch-form-token.css')?>">
+	<link rel="stylesheet" type="text/css" href="<?= $block->escapeUrl($block->getViewFileUrl('Fiserv_Payments/css/ch-form-token.css')); ?>">
 	<div id="tokenization-builder-container" style="display:none "data-bind="scope: 'standalone-spa'">
 		<div id="tokenization-builder-title">
 			<h3>Add a Stored Payment Account</h3>

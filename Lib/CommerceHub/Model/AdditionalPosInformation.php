@@ -345,7 +345,7 @@ class AdditionalPosInformation implements ModelInterface, ArrayAccess, \JsonSeri
      * @param mixed[] $data Associated array of property values
      *                      initializing the model
      */
-    public function __construct(array $data = null)
+    public function __construct(?array $data = null)
     {
         $this->setIfExists('attended_terminal_data', $data ?? [], null);
         $this->setIfExists('alternate_routing_indicator', $data ?? [], null);

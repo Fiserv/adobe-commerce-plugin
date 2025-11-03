@@ -351,7 +351,7 @@ class PosFeatures implements ModelInterface, ArrayAccess, \JsonSerializable
      * @param mixed[] $data Associated array of property values
      *                      initializing the model
      */
-    public function __construct(array $data = null)
+    public function __construct(?array $data = null)
     {
         $this->setIfExists('authentication_capability', $data ?? [], null);
         $this->setIfExists('card_capture_capability', $data ?? [], null);

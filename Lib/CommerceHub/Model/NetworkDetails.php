@@ -399,7 +399,7 @@ class NetworkDetails implements ModelInterface, ArrayAccess, \JsonSerializable
      * @param mixed[] $data Associated array of property values
      *                      initializing the model
      */
-    public function __construct(array $data = null)
+    public function __construct(?array $data = null)
     {
         $this->setIfExists('network', $data ?? [], null);
         $this->setIfExists('debit_network_id', $data ?? [], null);
