@@ -49,6 +49,12 @@ define([
         },
 
         loadApplePayForm: async function () {
+            // Prevent multiple ApplePay buttons
+            const container = document.getElementById("applepay-button-container");
+            if (container && container.querySelector(".apple-pay-button")) {
+                return; // Button already rendered
+            }
+
             const config = window.checkoutConfig.payment[this.getCode()];
 
             try {
