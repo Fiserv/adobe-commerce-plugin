@@ -808,9 +808,6 @@
 		<plugin name="paypalCardCreditmemoRefund" type="Fiserv\Payments\Model\Plugin\CommerceHub\CreditMemoRefund" sortOrder="100"/>
 	</type>
 
-	<type name = "Magento\Sales\Model\Order">
-		<plugin name = "paypalFailedOrder" type="Fiserv\Payments\Model\Plugin\CommerceHub\OrderPlace" />
-	</type>
 	<type name = "Magento\Sales\Model\Service\CreditmemoService">
 		<plugin name = "refundPaypalFailedTransactionHandler" type="Fiserv\Payments\Model\Plugin\CommerceHub\CreditMemoServicePlugin" />
 	</type>
