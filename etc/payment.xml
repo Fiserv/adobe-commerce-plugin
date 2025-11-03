@@ -16,5 +16,8 @@
 		<method name="fiserv_paypal_fastlane">
 			<allow_multiple_address>0</allow_multiple_address>
 		</method>
+        <method name="fiserv_applepay">
+            <allow_multiple_address>0</allow_multiple_address>
+        </method>
 	</methods>
 </payment>

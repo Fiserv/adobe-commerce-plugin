@@ -50,6 +50,14 @@
 																		</item>
 																	</item>
 																</item>
+                                                                <item name="fiserv_applepay" xsi:type="array">
+                                                                    <item name="component" xsi:type="string">Fiserv_Payments/js/view/payment/fiserv_applepay</item>
+                                                                    <item name="methods" xsi:type="array">
+                                                                        <item name="fiserv_applepay" xsi:type="array">
+                                                                            <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
+                                                                        </item>
+                                                                    </item>
+                                                                </item>
 															</item>
 														</item>
 														<item name="afterMethods" xsi:type="array">

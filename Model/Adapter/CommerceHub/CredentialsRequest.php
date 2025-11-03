@@ -2,12 +2,13 @@
 namespace Fiserv\Payments\Model\Adapter\CommerceHub;
 
 use Fiserv\Payments\Gateway\Config\CommerceHub\Config;
-use Fiserv\Payments\Gateway\Config\PayPal\Config as PayPalConfig;
 use Fiserv\Payments\Model\Source\CommerceHub\ApiEnvironment;
 use Fiserv\Payments\Model\Adapter\CommerceHub\ChHttpAdapter;
 use Magento\Store\Model\StoreManagerInterface;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 use Fiserv\Payments\Model\System\Utils\VaultPaymentTokenUtils;
+use Fiserv\Payments\Lib\CommerceHub\Model\DynamicDescriptors;
+use Fiserv\Payments\Lib\CommerceHub\Model\Address;
 
 class CredentialsRequest
 {
@@ -36,6 +37,10 @@ class CredentialsRequest
 	const KEY_API_KEY = "apiKey";
 	const KEY_API_SECRET = "apiSecret";
 	const KEY_TERMINAL_ID = "terminalId";
+    const KEY_ORDER_DATA = 'orderData';
+    const KEY_DYNAMIC_DESCRIPTORS = 'dynamicDescriptors';
+    const KEY_MERCHANT_NAME = 'merchantName';
+    const KEY_COUNTRY = 'country';
 
 	const CODE_PAYMENT_METHOD_COMMERCEHUB = "fiserv_commercehub";
 	const CODE_PAYMENT_METHOD_PAYPAL = "fiserv_paypal";
@@ -55,11 +60,6 @@ class CredentialsRequest
 	 * @var Config
 	 */
 	private $chConfig;
-
-	/**
-	 * @var PayPalConfig
-	 */
-	private $payPalConfig;
 
 	private $vaultUtils;
 
@@ -81,22 +81,19 @@ class CredentialsRequest
 	 * @param StoreManagerInterface $storeManager
 	 * @param MultiLevelLogger $logger
 	 * @param VaultPaymentTokenUtils $vaultUtils
-	 * @param PayPalConfig|null $payPalConfig
 	 */
 	public function __construct(
 		Config $config,
 		ChHttpAdapter $chHttpAdapter,
 		StoreManagerInterface $storeManager,
 		MultiLevelLogger $logger,
-		VaultPaymentTokenUtils $vaultUtils,
-		PayPalConfig $payPalConfig = null
+		VaultPaymentTokenUtils $vaultUtils
 	) {
 		$this->chConfig = $config;
 		$this->storeManager = $storeManager;
 		$this->logger = $logger;
 		$this->vaultUtils = $vaultUtils;
 		$this->httpAdapter = $chHttpAdapter;
-		$this->payPalConfig = $payPalConfig;
 	}
 
 	/**
@@ -156,7 +153,7 @@ class CredentialsRequest
 	 * @return array
 	 */
 	private function getCredentialsPayload($merchantId, $sessionData) {
-$payload = [];
+        $payload = [];
 		$domains = [];
 		$urls = []; 
 		$urls[self::KEY_URL] = $this->getStoreBaseUrl();
@@ -172,7 +169,24 @@ $payload = [];
 		
 		if (isset($sessionData[self::KEY_CUSTOMER])) {
 			$payload[self::KEY_CUSTOMER] = $sessionData[self::KEY_CUSTOMER];
-		}	
+        }
+
+        if (isset($sessionData[self::KEY_ORDER_DATA])) {
+			$payload[self::KEY_ORDER_DATA] = $sessionData[self::KEY_ORDER_DATA];
+		}
+
+        if (isset($sessionData[self::KEY_DYNAMIC_DESCRIPTORS]) &&
+            isset($sessionData[self::KEY_MERCHANT_NAME]) &&
+            isset($sessionData[self::KEY_COUNTRY])) {
+            $address = new Address();
+            $address->setCountry($sessionData[self::KEY_COUNTRY]);
+
+            $descriptors = new DynamicDescriptors();
+            $descriptors->setMerchantName($sessionData[self::KEY_MERCHANT_NAME]);
+            $descriptors->setAddress($address);
+            
+            $payload[self::KEY_DYNAMIC_DESCRIPTORS] = $descriptors;
+        }
 
 		if (isset($sessionData[self::KEY_BILLING_ADDRESS])) {
 			$payload[self::KEY_BILLING_ADDRESS] = $sessionData[self::KEY_BILLING_ADDRESS];
@@ -184,24 +198,20 @@ $payload = [];
 		}	
 
 		// Add providerCredentials with customerId attribute as requested, only if not guest
-		$customerIdValue = 'guest';
 		if (isset($sessionData[self::KEY_CUSTOMER]) && isset($sessionData[self::KEY_CUSTOMER][self::KEY_CUSTOMER_ID_PAYPAL])) {
-			$customerIdValue = $sessionData[self::KEY_CUSTOMER][self::KEY_CUSTOMER_ID_PAYPAL];
+            $payload[self::KEY_PROVIDER_CREDENTIALS] = [
+                [
+                    'credentialType' => 'PAYPAL',
+                    'attributes' => [
+                        [
+                            'key' => 'customerId',
+                            'value' => $sessionData[self::KEY_CUSTOMER][self::KEY_CUSTOMER_ID_PAYPAL]
+                        ]
+                    ]
+                ]
+            ];
 		}
-		if ($customerIdValue !== 'guest') {
-			$payload[self::KEY_PROVIDER_CREDENTIALS] = [
-				[
-					'credentialType' => 'PAYPAL',
-					'attributes' => [
-						[
-							'key' => 'customerId',
-							'value' => $customerIdValue
-						]
-					]
-				]
-			];
-		}
-			
+        
 		$payload[self::KEY_ADDITIONAL_DATA_COMMON] = array(
 			self::KEY_ADDITIONAL_DATA => array(
 				self::KEY_ECOM_URL => $this->getStoreBaseUrl() 

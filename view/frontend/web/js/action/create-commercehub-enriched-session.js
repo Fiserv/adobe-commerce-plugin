@@ -1,19 +1,13 @@
 define(
 	[
-		'jquery',
-		'mage/url',
-	    	'Fiserv_Payments/js/action/create-commercehub-session',
+        'Fiserv_Payments/js/action/create-commercehub-session',
 		'Magento_Customer/js/model/customer',
-		'Magento_Checkout/js/model/quote',
-		'Magento_Catalog/js/price-utils'
+		'Magento_Checkout/js/model/quote'
 	],
 	function (
-		$,
-		urlBuilder,
 		session,
 		customer,
 		quote,
-		priceUtils,
 	) {
 		'use strict';
 		
