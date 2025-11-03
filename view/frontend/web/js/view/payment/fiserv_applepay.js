@@ -1,7 +1,7 @@
 define(
     [
         'uiComponent',
-        'Magento_Checkout/js/model/payment/renderer-list',
+        'Magento_Checkout/js/model/payment/renderer-list'
     ],
     function (
         Component,
@@ -18,7 +18,7 @@ define(
             rendererList.push(
                 {
                     type: applepayCode,
-                    component: 'Fiserv_Payments/js/view/payment/method-renderer/commercehub-applepay',
+                    component: 'Fiserv_Payments/js/view/payment/method-renderer/commercehub-applepay'
                 }
             );
         }

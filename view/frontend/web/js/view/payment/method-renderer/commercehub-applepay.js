@@ -59,7 +59,7 @@ define([
 
             try {
                 fullScreenLoader.startLoader();
-				let merchantName = window.checkoutConfig.payment[this.getCode()]["storeName"];
+                let merchantName = window.checkoutConfig.payment[this.getCode()]["storeName"];
                 const creds = await chSession({ "merchantName" : merchantName });
 
                 if (!creds?.ch_credentials) {
@@ -67,7 +67,7 @@ define([
                 }
 
                 this.paymentPayload.sessionId = creds.ch_credentials.sessionId;
-				await chAdapter.initSdk(config, creds.ch_credentials);
+                await chAdapter.initSdk(config, creds.ch_credentials);
 
                 await window.fiserv.components.applePay({
                     data: {
@@ -186,9 +186,9 @@ define([
         },
 
         isActive: function () {
-            const active = this.getCode() === this.isChecked();
-            this.active(active);
-            return active;
+            // Only active if enabled in config
+            const config = window.checkoutConfig.payment[this.getCode()];
+            return !!config?.isActive;
         }
     });
 });
