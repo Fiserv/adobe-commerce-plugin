@@ -805,12 +805,9 @@
 	</type>
 	
 	<type name="Magento\Sales\Model\Order\RefundAdapter">
-		<plugin name="paypalCardCreditmemoRefund" type="Fiserv\Payments\Model\Plugin\CommerceHub\CreditMemoRefund" sortOrder="100"/>
+		<plugin name="paypalCardCreditmemoRefund" type="Fiserv\Payments\Model\Plugin\PayPal\CreditMemoRefund" sortOrder="100"/>
 	</type>
 
-	<type name = "Magento\Sales\Model\Service\CreditmemoService">
-		<plugin name = "refundPaypalFailedTransactionHandler" type="Fiserv\Payments\Model\Plugin\CommerceHub\CreditMemoServicePlugin" />
-	</type>
 	<type name="Magento\Multishipping\Block\Checkout\Billing">
 		<plugin name="filterPayPalMultishipping" type="Fiserv\Payments\Model\Plugin\CommerceHub\FilterMultishipping" />
 	</type>
