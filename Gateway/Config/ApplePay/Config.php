@@ -6,8 +6,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	const CODE = 'fiserv_applepay';
 
 	const KEY_ACTIVE = 'active';
-	const KEY_TITLE = 'applepay_title';
-	const KEY_PAYMENT_ACTION = 'applepay_payment_action';
+	const KEY_TITLE = 'title';
+	const KEY_PAYMENT_ACTION = 'payment_action';
 
 	/**
 	 * Constructor

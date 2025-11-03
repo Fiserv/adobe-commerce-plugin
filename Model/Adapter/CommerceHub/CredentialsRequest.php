@@ -105,6 +105,7 @@ class CredentialsRequest
 		{
 			$this->logger->logInfo(1, "Initiating Credentials Request");
 			$data = $this->getCredentialsPayload($this->getMerchantId(), $sessionData);
+			$this->logger->logDebug(3, "Credentials Request Payload\n" . json_encode($data));
 			$chResponse = $this->httpAdapter->sendRequest($data, self::CREDENTIALS_ENDPOINT);
 			return $this->parseChCredentialsResponse($chResponse);
 		}
@@ -175,8 +176,7 @@ class CredentialsRequest
 			$payload[self::KEY_ORDER_DATA] = $sessionData[self::KEY_ORDER_DATA];
 		}
 
-        if (isset($sessionData[self::KEY_DYNAMIC_DESCRIPTORS]) &&
-            isset($sessionData[self::KEY_MERCHANT_NAME]) &&
+        if (isset($sessionData[self::KEY_MERCHANT_NAME]) &&
             isset($sessionData[self::KEY_COUNTRY])) {
             $address = new Address();
             $address->setCountry($sessionData[self::KEY_COUNTRY]);

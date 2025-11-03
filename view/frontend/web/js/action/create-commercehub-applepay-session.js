@@ -2,12 +2,10 @@ define(
 	[
         'Fiserv_Payments/js/action/create-commercehub-enriched-session',
 		'Magento_Checkout/js/model/quote',
-        'mage/store'
 	],
 	function (
 		session,
 		quote,
-        store
 	) {
 		'use strict';
 		
@@ -41,7 +39,6 @@ define(
 
 			return {
 				orderData: orderData,
-                merchantName: store.get('name'),
                 country: "US"
 			};
 		}

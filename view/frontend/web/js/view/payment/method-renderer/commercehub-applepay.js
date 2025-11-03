@@ -53,14 +53,15 @@ define([
 
             try {
                 fullScreenLoader.startLoader();
-                const creds = await chSession();
+				let merchantName = window.checkoutConfig.payment[this.getCode()]["storeName"];
+                const creds = await chSession({ "merchantName" : merchantName });
 
                 if (!creds?.ch_credentials) {
                     throw new Error('No credentials returned from backend');
                 }
 
                 this.paymentPayload.sessionId = creds.ch_credentials.sessionId;
-                await chAdapter.initSdk(config, creds.ch_credentials);
+				await chAdapter.initSdk(config, creds.ch_credentials);
 
                 await window.fiserv.components.applePay({
                     data: {
