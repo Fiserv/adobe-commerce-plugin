@@ -39,6 +39,15 @@ define([
             this._super();
             this.observeBillingAddress();
             this.watchPaymentMethods();
+            if (this.isActive())
+            {
+                this.loadApplePayForm()
+                    .catch((error) => {
+                        globalMessageList.addErrorMessage({
+                            message: $t('Apple Pay error: ') + error.message
+                        });
+                    });
+            }
             return this;
         },
 
