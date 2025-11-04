@@ -60,6 +60,10 @@ define([
             const config = window.checkoutConfig.payment[this.getCode()];
 
             try {
+                // Prevent duplicate button rendering
+                if ($('#applepay-button-container').children().length > 0) {
+                    return;
+                }
                 fullScreenLoader.startLoader();
                 $('#applepay-button-container').empty();
                 let merchantName = config["storeName"];
