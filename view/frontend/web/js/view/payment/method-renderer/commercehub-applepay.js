@@ -52,8 +52,9 @@ define([
             const config = window.checkoutConfig.payment[this.getCode()];
 
             try {
-                fullScreenLoader.startLoader();
-				let merchantName = window.checkoutConfig.payment[this.getCode()]["storeName"];
+		fullScreenLoader.startLoader();
+		$('#applepay-button-container').empty();
+		let merchantName = window.checkoutConfig.payment[this.getCode()]["storeName"];
                 const creds = await chSession({ "merchantName" : merchantName });
 
                 if (!creds?.ch_credentials) {
