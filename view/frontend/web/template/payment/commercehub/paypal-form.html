@@ -19,7 +19,7 @@
 		</div>
 
 		<!-- Buttons -->
-		<div id="paypal-button-container"></div>
+		<div data-bind="visible: isPlaceOrderActionAllowed" id="paypal-button-container"></div>
 		<!-- ko if: isVenmoEnabled() -->
 		<!-- <div id="venmo-button-container"></div> -->
 		<!-- /ko -->

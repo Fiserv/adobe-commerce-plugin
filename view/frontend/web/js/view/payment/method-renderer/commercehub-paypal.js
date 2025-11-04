@@ -31,7 +31,7 @@ define([
     'use strict';
 
     return Component.extend({
-        isPlaceOrderActionAllowed: ko.observable(quote.billingAddress() != null),
+        isPlaceOrderActionAllowed: ko.observable(false),
         defaults: {
             template: 'Fiserv_Payments/payment/commercehub/paypal-form',
             code: 'fiserv_paypal',
