@@ -32,19 +32,27 @@ define([
                 type: 'applepay',
                 publicKeyHash: null
             },
-            isPlaceOrderActionAllowed: ko.observable(false)
+            isPlaceOrderActionAllowed: ko.observable(false),
+            active: ko.observable(false) // <-- Added observable
         },
 
         initialize: function () {
             this._super();
             this.observeBillingAddress();
-            this.watchPaymentMethods();
             return this;
         },
 
         observeBillingAddress: function () {
             quote.billingAddress.subscribe((address) => {
                 this.isPlaceOrderActionAllowed(address !== null);
+                if (this.isActive() && address !== null) {
+                    this.loadApplePayForm()
+                        .catch((error) => {
+                            globalMessageList.addErrorMessage({
+                                message: $t('Apple Pay error: ') + error.message
+                            });
+                        });
+                }
             });
         },
 
@@ -52,10 +60,10 @@ define([
             const config = window.checkoutConfig.payment[this.getCode()];
 
             try {
-		fullScreenLoader.startLoader();
-		$('#applepay-button-container').empty();
-		let merchantName = window.checkoutConfig.payment[this.getCode()]["storeName"];
-                const creds = await chSession({ "merchantName" : merchantName });
+                fullScreenLoader.startLoader();
+                $('#applepay-button-container').empty();
+                let merchantName = config["storeName"];
+                const creds = await chSession({ "merchantName": merchantName });
 
                 if (!creds?.ch_credentials) {
                     throw new Error('No credentials returned from backend');
@@ -77,7 +85,6 @@ define([
                         onApprove: (data) => {
                             this.paymentPayload.publicKeyHash =
                                 data?.publicKeyHash || data?.details?.publicKeyHash || null;
-
                             try {
                                 this.onApplePaySuccess(data.details, data);
                                 if (typeof data.completePayment === 'function') {
@@ -117,11 +124,25 @@ define([
 
         watchPaymentMethods: function () {
             const self = this;
-            $(`[name="payment[method]"]`).on("click", function () {
-                if ($(this).attr("id") === self.getCode()) {
-                    self.loadApplePayForm();
+            $(`[name="payment[method]"]`).on("click change", function () {
+                if ($(this).attr("id") === self.getCode() && self.isPlaceOrderActionAllowed()) {
+                    self.loadApplePayForm()
+                        .catch((error) => {
+                            globalMessageList.addErrorMessage({
+                                message: $t('Apple Pay error: ') + error.message
+                            });
+                        });
                 }
             });
+
+            if (self.isActive() && self.isPlaceOrderActionAllowed()) {
+                self.loadApplePayForm()
+                    .catch((error) => {
+                        globalMessageList.addErrorMessage({
+                            message: $t('Apple Pay error: ') + error.message
+                        });
+                    });
+            }
         },
 
         onApplePaySuccess: function (details, data) {
