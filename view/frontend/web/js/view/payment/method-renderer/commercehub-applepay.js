@@ -49,33 +49,37 @@ define([
         },
 
         loadApplePayForm: async function () {
-            // Prevent multiple ApplePay buttons
-            const container = document.getElementById("applepay-button-container");
-            if (container && container.querySelector(".apple-pay-button")) {
-                return; // Button already rendered
+            const container = document.getElementById('applepay-button-container');
+            if (!container) {
+                return;
             }
+
+            // Always clear the container to avoid stale buttons across re-renders
+            $('#applepay-button-container').empty();
 
             const config = window.checkoutConfig.payment[this.getCode()];
 
             try {
                 fullScreenLoader.startLoader();
-                let merchantName = window.checkoutConfig.payment[this.getCode()]["storeName"];
-                const creds = await chSession({ "merchantName" : merchantName });
 
-                if (!creds?.ch_credentials) {
+                const merchantName = config && config.storeName ? config.storeName : '';
+                const creds = await chSession({ merchantName: merchantName });
+
+                if (!creds || !creds.ch_credentials) {
                     throw new Error('No credentials returned from backend');
                 }
 
                 this.paymentPayload.sessionId = creds.ch_credentials.sessionId;
+
                 await chAdapter.initSdk(config, creds.ch_credentials);
 
                 await window.fiserv.components.applePay({
                     data: {
                         button: {
-                            parentElementId: "applepay-button-container",
+                            parentElementId: 'applepay-button-container',
                             color: 'black',
                             type: 'buy',
-                            locale: "en-US"
+                            locale: 'en-US'
                         }
                     },
                     hooks: {
@@ -110,10 +114,9 @@ define([
                         }
                     }
                 });
-
             } catch (error) {
                 globalMessageList.addErrorMessage({
-                    message: $t('Apple Pay error: ') + error.message
+                    message: $t('Apple Pay error: ') + (error && error.message ? error.message : $t('Unknown error'))
                 });
             } finally {
                 fullScreenLoader.stopLoader();
@@ -122,8 +125,8 @@ define([
 
         watchPaymentMethods: function () {
             const self = this;
-            $(`[name="payment[method]"]`).on("click", function () {
-                if ($(this).attr("id") === self.getCode()) {
+            $('[name="payment[method]"]').on('click', function () {
+                if ($(this).attr('id') === self.getCode()) {
                     self.loadApplePayForm();
                 }
             });
@@ -149,6 +152,7 @@ define([
 
         placeOrderCallback: function (approvalData) {
             this.additionalData.applepay_order_id = approvalData.orderId;
+
             require(['Magento_Checkout/js/action/place-order'], (placeOrderAction) => {
                 placeOrderAction(this.getData()).done(() => {
                     window.location.href = '/checkout/onepage/success/';
@@ -186,7 +190,6 @@ define([
         },
 
         isActive: function () {
-            // Only active if enabled in config
             const config = window.checkoutConfig.payment[this.getCode()];
             return !!config?.isActive;
         }

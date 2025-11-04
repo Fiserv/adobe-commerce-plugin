@@ -93,9 +93,12 @@ define([
                 if (config.payment_action.toLowerCase() === 'authorize_capture') {
                     intent = 'capture';
                 }
-                const paypalComponent = await chAdapter.loadPayPalComponent({
-                    intent: intent
-                });
+                const shippingAddress = this.getMapShippingAddress(this.getShippingAddress());
+                const paypalComponentConfig = {
+                    intent: intent,
+                    shippingAddress: shippingAddress,
+                };
+                const paypalComponent = await chAdapter.loadPayPalComponent(paypalComponentConfig);
                 this.paypalComponent = paypalComponent;
                 const buttonsConfig = config.buttonConfig;
                 await this.renderPayPalButtons(buttonsConfig);
@@ -123,17 +126,10 @@ define([
             fullScreenLoader.startLoader();
             try {
                 const containerId ='#paypal-button-container';
-                const venmoContainerId = '#venmo-button-container';
                 const container = document.querySelector(containerId);
-                const venmoContainer = document.querySelector(venmoContainerId);
                 if(container){
                     while (container.children.length > 0) {
                         container.removeChild(container.lastChild);
-                    }
-                }
-                if(venmoContainer){
-                    while (venmoContainer.children.length > 0) {
-                        venmoContainer.removeChild(venmoContainer.lastChild);
                     }
                 }
 
@@ -146,13 +142,6 @@ define([
                         label: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.paypal.label || 'paypal'
                     }
                 };
-                if (config.venmoConfig && config.venmoConfig.enableVenmo) {
-                    buttons.venmo = {
-                        parentElementId: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.venmo.parentElementId || 'venmo-button-container',
-                        shape: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.venmo.shape || 'rect',
-                        label: config.venmoConfig.venmoLabel || 'Venmo'
-                    };
-                }
 
                 if (!this.paypalComponent || typeof this.paypalComponent.buttons !== 'function') {
                     return;
@@ -161,7 +150,7 @@ define([
                 return await this.paypalComponent.buttons({
                     data: {
                         enableVaulting: buttonsConfig.data && buttonsConfig.data.vaulting !== undefined ? buttonsConfig.data.vaulting : false,
-                        customerConfirmation: buttonsConfig.data && typeof buttonsConfig.data.customerConfirmation === 'string' ? buttonsConfig.data.customerConfirmation : 'PAY_NOW',
+                        customerConfirmation: buttonsConfig.data && typeof buttonsConfig.data.customerConfirmation === 'string' ? buttonsConfig.data.customerConfirmation : 'REVIEW_AND_PAY',
                         buttons: buttons
                     },
                     hooks: {
@@ -245,17 +234,39 @@ define([
             });
         },
 
-        /**
-         * Get billing address
-         *
-         * @returns {String}
-         */
-        getBillingAddress: function () {
-            let billingAddress = checkoutData.getBillingAddressFromData();
-            if (!billingAddress) {
-                billingAddress = quote.billingAddress();
+        getShippingAddress: function () {
+            let shippingAddress = quote.shippingAddress();
+            if (!shippingAddress) {
+                shippingAddress = checkoutData.getShippingAddressFromData() ;
             }
-            return billingAddress;
+            return shippingAddress;
+        },
+
+        getMapShippingAddress: function (address) {
+            if (!address) {
+                return undefined;
+            }
+            // Inline mapShippingAddress logic
+            if (!address.street || !address.firstname || !address.lastname) {
+                console.warn('Shipping address is incomplete:', address);
+                return undefined;
+            }
+            // Handle both array and object for street
+            let streetArr = Array.isArray(address.street)
+                ? address.street
+                : Object.values(address.street);
+            const mappedAddress = {
+                street: streetArr[0] || undefined,
+                city: address.city || undefined,
+                stateOrProvince: address.region || address.region_id || undefined,
+                postalCode: address.postcode || undefined,
+                country: address.country_id || address.countryId || address.country || undefined
+            };
+            return {
+                firstName: address.firstname || undefined,
+                lastName: address.lastname || undefined,
+                address: mappedAddress
+            };
         },
 
         /**
@@ -278,7 +289,6 @@ define([
                 } else {
                     // Clear PayPal button container if another payment method is selected
                     $('#paypal-button-container').empty();
-                    $('#venmo-button-container').empty();
                 }
             });
         },

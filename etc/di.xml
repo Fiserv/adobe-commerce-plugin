@@ -805,12 +805,9 @@
 	</type>
 	
 	<type name="Magento\Sales\Model\Order\RefundAdapter">
-		<plugin name="paypalCardCreditmemoRefund" type="Fiserv\Payments\Model\Plugin\CommerceHub\CreditMemoRefund" sortOrder="100"/>
+		<plugin name="paypalCardCreditmemoRefund" type="Fiserv\Payments\Model\Plugin\PayPal\CreditMemoRefund" sortOrder="100"/>
 	</type>
 
-	<type name = "Magento\Sales\Model\Service\CreditmemoService">
-		<plugin name = "refundPaypalFailedTransactionHandler" type="Fiserv\Payments\Model\Plugin\CommerceHub\CreditMemoServicePlugin" />
-	</type>
 	<type name="Magento\Multishipping\Block\Checkout\Billing">
 		<plugin name="filterPayPalMultishipping" type="Fiserv\Payments\Model\Plugin\CommerceHub\FilterMultishipping" />
 	</type>
@@ -842,19 +839,35 @@
 	</type>
 
     <!-- Apple Pay payment facade, value/validator pools, commands, handlers -->
-    <virtualType name="FiservApplePayFacade" type="Magento\Payment\Model\Method\Adapter">
-        <arguments>
-            <argument name="code" xsi:type="const">Fiserv\Payments\Model\Config\ApplePay\ConfigProvider::CODE</argument>
-            <argument name="formBlockType" xsi:type="string">Fiserv\Payments\Block\CommerceHub\Form</argument>
-            <argument name="infoBlockType" xsi:type="string">Fiserv\Payments\Block\ApplePay\ApplePayInfo</argument>
-			<argument name="valueHandlerPool" xsi:type="object">FiservCommerceHubValueHandlerPool</argument>
+	<virtualType name="FiservApplePayFacade" type="Magento\Payment\Model\Method\Adapter">
+		<arguments>
+			<argument name="code" xsi:type="const">Fiserv\Payments\Model\Config\ApplePay\ConfigProvider::CODE</argument>
+			<argument name="formBlockType" xsi:type="string">Fiserv\Payments\Block\CommerceHub\Form</argument>
+			<argument name="infoBlockType" xsi:type="string">Fiserv\Payments\Block\ApplePay\ApplePayInfo</argument>
+			<argument name="valueHandlerPool" xsi:type="object">FiservApplePayValueHandlerPool</argument>
 			<argument name="validatorPool" xsi:type="object">FiservCommerceHubValidatorPool</argument>
 			<argument name="commandPool" xsi:type="object">FiservCommerceHubCommandPool</argument>
+		</arguments>
+	</virtualType>
 
-        </arguments>
-    </virtualType>
+	<virtualType name="FiservApplePayValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+		<arguments>
+			<argument name="handlers" xsi:type="array">
+				<item name="default" xsi:type="string">FiservApplePayValueHandler</item>
+				<item name="can_void" xsi:type="string">Fiserv\Payments\Gateway\Config\CanVoidHandler</item>
+				<item name="can_refund" xsi:type="string">Fiserv\Payments\Gateway\Config\CanRefundHandler</item>
+				<item name="can_cancel" xsi:type="string">Fiserv\Payments\Gateway\Config\CanVoidHandler</item>
+			</argument>
+		</arguments>
+	</virtualType>
 
-    <!-- Config objects for ApplePay and PayPal -->
+	<virtualType name="FiservApplePayValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+		<arguments>
+			<argument name="configInterface" xsi:type="object">Fiserv\Payments\Gateway\Config\ApplePay\Config</argument>
+		</arguments>
+	</virtualType>
+
+	<!-- Config objects for ApplePay and PayPal -->
     <type name="Fiserv\Payments\Gateway\Config\ApplePay\Config">
         <arguments>
             <argument name="methodCode" xsi:type="const">Fiserv\Payments\Model\Config\ApplePay\ConfigProvider::CODE</argument>
