@@ -71,6 +71,7 @@ define([
         initchAdapter: async function () {
             var self = this;
             var config = (window.checkoutConfig && window.checkoutConfig.payment) ? window.checkoutConfig.payment[self.getCode()] : {};
+            fullScreenLoader.startLoader();
             try {
                 if (!window.fiserv || typeof window.fiserv.components.paypal !== 'function') {
                     globalMessageList.addErrorMessage({ message: $t('Fiserv SDK is not loaded. Please check your network and configuration.') });
@@ -114,6 +115,8 @@ define([
             } catch (error) {
                 globalMessageList.addErrorMessage({ message: $t('PayPal credentials error: ') + (error.message || error) });
                 console.error('[PayPal] Error in initchAdapter:', error);
+            } finally {
+                fullScreenLoader.stopLoader();
             }
         },
 
@@ -123,7 +126,6 @@ define([
          * @returns {Promise}
          */
         async renderPayPalButtons(buttonsConfig) {
-            fullScreenLoader.startLoader();
             try {
                 const containerId ='#paypal-button-container';
                 const container = document.querySelector(containerId);
@@ -186,8 +188,8 @@ define([
                         }
                     }
                 });
-            } finally {
-                fullScreenLoader.stopLoader();
+            } catch (error) {
+                console.error('[PayPal] Error rendering PayPal buttons:', error);
             }
         },
 
