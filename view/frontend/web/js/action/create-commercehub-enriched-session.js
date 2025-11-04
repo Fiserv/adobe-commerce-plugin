@@ -13,6 +13,12 @@ define(
 		
 		function getBillingAddress()
 		{
+			// billing address can be null and is not strictly required for all sessions
+			if (quote.billingAddress() === null)
+			{
+				return;
+			}
+
 			let addr = {
 				"city" : quote.billingAddress().city,
 				"stateOrProvince" : quote.billingAddress().region,
@@ -35,8 +41,8 @@ define(
 		function getCustomer()
 		{
 			let email = customer.isLoggedIn() ? customer.customerData.email : quote.guestEmail;
-			let firstName = customer.isLoggedIn() ? customer.customerData.firstname : quote.billingAddress().firstname;
-			let lastName = customer.isLoggedIn() ? customer.customerData.lastname : quote.billingAddress().lastname;
+			let firstName = customer.isLoggedIn() ? customer.customerData.firstname : quote.billingAddress()?.firstname;
+			let lastName = customer.isLoggedIn() ? customer.customerData.lastname : quote.billingAddress()?.lastname;
 			let id = customer.isLoggedIn() ? customer.customerData.id : "guest";
 			return {
 				"id" : id,
