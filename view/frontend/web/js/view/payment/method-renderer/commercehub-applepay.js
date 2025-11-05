@@ -32,15 +32,25 @@ define([
                 type: 'applepay',
                 publicKeyHash: null
             },
+			initializingApplePay: false,
             isPlaceOrderActionAllowed: ko.observable(false)
         },
 
-        initialize: function () {
-            this._super();
+        initialize: async function () {
+			this._super();
+
             this.observeBillingAddress();
-            this.watchPaymentMethods();
             return this;
         },
+
+		initializeApplePay: async function () 
+		{
+			if (this.getCode() === this.isChecked() && !this.initializingApplePay)
+			{
+				await this.loadApplePayForm();
+			}
+			this.watchPaymentMethods();
+		},
 
         observeBillingAddress: function () {
             quote.billingAddress.subscribe((address) => {
@@ -50,12 +60,13 @@ define([
 
         loadApplePayForm: async function () {
             const config = window.checkoutConfig.payment[this.getCode()];
-
-            try {
-		fullScreenLoader.startLoader();
-		$('#applepay-button-container').empty();
-		let merchantName = window.checkoutConfig.payment[this.getCode()]["storeName"];
-                const creds = await chSession({ "merchantName" : merchantName });
+			this.initializingApplePay = true;
+			
+			try {
+				fullScreenLoader.startLoader();
+				$('#applepay-button-container').empty();
+				let merchantName = window.checkoutConfig.payment[this.getCode()]["storeName"];
+				const creds = await chSession({ "merchantName" : merchantName });
 
                 if (!creds?.ch_credentials) {
                     throw new Error('No credentials returned from backend');
@@ -63,7 +74,7 @@ define([
 
                 this.paymentPayload.sessionId = creds.ch_credentials.sessionId;
 				await chAdapter.initSdk(config, creds.ch_credentials);
-
+				
                 await window.fiserv.components.applePay({
                     data: {
                         button: {
@@ -112,7 +123,8 @@ define([
                 });
             } finally {
                 fullScreenLoader.stopLoader();
-            }
+            	this.initializingApplePay = false;
+			}
         },
 
         watchPaymentMethods: function () {

@@ -52,19 +52,23 @@ define([
         },
 
         initialize: function () {
+            this._super();
             quote.billingAddress.subscribe(function (address) {
                 this.isPlaceOrderActionAllowed(address !== null);
             }, this);
 
-            this._super();
-            this.loadPayPalForm();
-			
 			return this;
         },
 
-       loadPayPalForm: function () {
+		initializePayPal: async function()
+		{
+			await this.loadPayPalForm();
+			this.watchPaymentMethods();
+		},
+
+		loadPayPalForm: async function () {
             if (this.isChecked() === this.getCode()) {
-                this.initchAdapter();
+                await this.initchAdapter();
             } 
         },
 
