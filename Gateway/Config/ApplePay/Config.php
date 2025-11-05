@@ -8,6 +8,9 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	const KEY_ACTIVE = 'active';
 	const KEY_TITLE = 'title';
 	const KEY_PAYMENT_ACTION = 'payment_action';
+	const APPLEPAY_BUTTON_STYLE_KEY = 'applepay_button_style';
+	const APPLEPAY_BUTTON_TYPE_KEY = 'applepay_button_type';
+
 
 	/**
 	 * Constructor
@@ -54,5 +57,16 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	{
 		return (string) $this->getValue(self::KEY_PAYMENT_ACTION, $storeId);
 	}
+
+	public function getApplePayButtonStyle($storeId = null)
+	{
+		return $this->getValue(self::APPLEPAY_BUTTON_STYLE_KEY, $storeId);
+	}
+
+	public function getApplePayButtonType($storeId = null)
+	{
+		return $this->getValue(self::APPLEPAY_BUTTON_TYPE_KEY, $storeId);
+	}
+
 }
 

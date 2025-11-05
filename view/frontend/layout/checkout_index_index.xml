@@ -3,6 +3,8 @@
 	   <head>
 <css src="Fiserv_Payments::css/ch-form.css"/>
 <css src="Fiserv_Payments::css/paypal-styles.css"/>
+           <css src="Fiserv_Payments::css/applepay-styles.css"/>
+
 <css src="Fiserv_Payments::css/fastlane-styles.css"/>
 <link src="Fiserv_Payments::js/view/payment/fastlane-script.js" />
 	   </head>

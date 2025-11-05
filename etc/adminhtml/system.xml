@@ -194,6 +194,18 @@
                         <source_model>Fiserv\Payments\Model\Source\CommerceHub\TransactionType</source_model>
                         <config_path>payment/fiserv_applepay/payment_action</config_path>
                     </field>
+                    <field id="applepay_button_style" translate="label" type="select" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Apple Pay Button Style</label>
+                        <comment>Set the style for the Apple Pay button.</comment>
+                        <source_model>Fiserv\Payments\Model\Source\ApplePay\ButtonStyle</source_model>
+                        <config_path>payment/fiserv_applepay/applepay_button_style</config_path>
+                    </field>
+                    <field id="applepay_button_type" translate="label" type="select" sortOrder="101" showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Apple Pay Button Type</label>
+                        <comment>Set the type for the Apple Pay button.</comment>
+                        <source_model>Fiserv\Payments\Model\Source\ApplePay\ButtonStyle</source_model>
+                        <config_path>payment/fiserv_applepay/applepay_button_type</config_path>
+                    </field>
                 </group>
 				<group id="sdc_custom" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="7">
 					<label>Payment Form Customization</label>

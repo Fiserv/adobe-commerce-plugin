@@ -43,7 +43,7 @@ define([
             return this;
         },
 
-		initializeApplePay: async function () 
+		initializeApplePay: async function ()
 		{
 			if (this.getCode() === this.isChecked() && !this.initializingApplePay)
 			{
@@ -60,8 +60,12 @@ define([
 
         loadApplePayForm: async function () {
             const config = window.checkoutConfig.payment[this.getCode()];
+            const validStyles = ['black', 'white', 'white-outline'];
+            const validTypes = ['buy', 'donate', 'checkout', 'book', 'subscribe'];
+            const buttonStyle = validStyles.includes(config.applepayButtonStyle) ? config.applepayButtonStyle : 'black';
+            const buttonType = validTypes.includes(config.applepayButtonType) ? config.applepayButtonType : 'buy';
 			this.initializingApplePay = true;
-			
+
 			try {
 				fullScreenLoader.startLoader();
 				$('#applepay-button-container').empty();
@@ -74,13 +78,13 @@ define([
 
                 this.paymentPayload.sessionId = creds.ch_credentials.sessionId;
 				await chAdapter.initSdk(config, creds.ch_credentials);
-				
+
                 await window.fiserv.components.applePay({
                     data: {
                         button: {
                             parentElementId: "applepay-button-container",
-                            color: 'black',
-                            type: 'buy',
+                            color: buttonStyle,
+                            type: buttonType,
                             locale: "en-US"
                         }
                     },
