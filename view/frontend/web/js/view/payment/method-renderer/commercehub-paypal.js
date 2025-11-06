@@ -47,8 +47,8 @@ define([
             credentials: undefined,
             paypalComponent: null,
             vaultEnabler: null,
-            placeOrderCallback: null
-
+            placeOrderCallback: null,
+		initializedAmount: 0.00
         },
 
         initialize: function () {
@@ -107,7 +107,10 @@ define([
                 this.paypalComponent = paypalComponent;
                 const buttonsConfig = config.buttonConfig;
                 await this.renderPayPalButtons(buttonsConfig);
-                this.placeOrderCallback = function(approvalData) {
+		this.initializedAmount = quote.totals()['grand_total'];
+		this.observeTotals();
+		   
+		this.placeOrderCallback = function(approvalData) {
                     self.additionalData.paypal_order_id = approvalData.orderId;
                     self.additionalData.email = approvalData.email;
                     require(['Magento_Checkout/js/action/place-order'], function(placeOrderAction) {
@@ -192,10 +195,26 @@ define([
                         }
                     }
                 });
+
             } catch (error) {
                 console.error('[PayPal] Error rendering PayPal buttons:', error);
             }
         },
+
+	observeTotals: function()
+	{
+		quote.totals.subscribe( (totals) => {
+		    if (
+			    this.getCode() === this.isChecked() &&
+			    this.initializedAmount && 
+			    this.initializedAmount > 0.00 && 
+			    totals && 
+			    totals['grand_total'] && 
+			    totals['grand_total'] != this.initializedAmount) {
+			    location.reload();
+		    }
+	    });
+	},
 
         getData: function () {
             var data = {

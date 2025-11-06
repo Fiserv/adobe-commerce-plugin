@@ -32,25 +32,26 @@ define([
                 type: 'applepay',
                 publicKeyHash: null
             },
-			initializingApplePay: false,
-            isPlaceOrderActionAllowed: ko.observable(false)
+            isPlaceOrderActionAllowed: ko.observable(false),
+		initializedAmount: 0.00
         },
 
-        initialize: async function () {
-			this._super();
+	initialize: async function () {
+		this._super();
 
-            this.observeBillingAddress();
-            return this;
+            	this.observeBillingAddress();
+		
+		return this;
         },
 
-		initializeApplePay: async function () 
+	initializeApplePay: async function () 
+	{
+		if (this.getCode() === this.isChecked())
 		{
-			if (this.getCode() === this.isChecked() && !this.initializingApplePay)
-			{
-				await this.loadApplePayForm();
-			}
-			this.watchPaymentMethods();
-		},
+			await this.loadApplePayForm();
+		}
+		this.watchPaymentMethods();
+	},
 
         observeBillingAddress: function () {
             quote.billingAddress.subscribe((address) => {
@@ -58,74 +59,89 @@ define([
             });
         },
 
-        loadApplePayForm: async function () {
-            const config = window.checkoutConfig.payment[this.getCode()];
-			this.initializingApplePay = true;
-			
-			try {
-				fullScreenLoader.startLoader();
-				$('#applepay-button-container').empty();
-				let merchantName = window.checkoutConfig.payment[this.getCode()]["storeName"];
-				const creds = await chSession({ "merchantName" : merchantName });
-
-                if (!creds?.ch_credentials) {
-                    throw new Error('No credentials returned from backend');
-                }
-
-                this.paymentPayload.sessionId = creds.ch_credentials.sessionId;
-				await chAdapter.initSdk(config, creds.ch_credentials);
-				
-                await window.fiserv.components.applePay({
-                    data: {
-                        button: {
-                            parentElementId: "applepay-button-container",
-                            color: 'black',
-                            type: 'buy',
-                            locale: "en-US"
-                        }
-                    },
-                    hooks: {
-                        onApprove: (data) => {
-                            this.paymentPayload.publicKeyHash =
-                                data?.publicKeyHash || data?.details?.publicKeyHash || null;
-
-                            try {
-                                this.onApplePaySuccess(data.details, data);
-                                if (typeof data.completePayment === 'function') {
-                                    data.completePayment('SUCCESS');
-                                }
-                            } catch (e) {
-                                if (typeof data.completePayment === 'function') {
-                                    data.completePayment('FAILURE');
-                                }
-                                throw e;
-                            }
-                        },
-                        onCancel: (data) => {
-                            if (typeof data?.completePayment === 'function') {
-                                data.completePayment('FAILURE');
-                            }
-                        },
-                        onError: (data) => {
-                            if (typeof data?.completePayment === 'function') {
-                                data.completePayment('FAILURE');
-                            }
-                            globalMessageList.addErrorMessage({
-                                message: $t('Apple Pay error occurred.')
-                            });
-                        }
-                    }
-                });
-
-            } catch (error) {
-                globalMessageList.addErrorMessage({
-                    message: $t('Apple Pay error: ') + error.message
-                });
-            } finally {
-                fullScreenLoader.stopLoader();
-            	this.initializingApplePay = false;
+	observeTotals: function()
+	{
+		quote.totals.subscribe( (totals) => {
+			if (
+				this.getCode() === this.isChecked() &&
+				this.initializedAmount && 
+				this.initializedAmount > 0.00 && 
+				totals && 
+				totals['grand_total'] && 
+				totals['grand_total'] != this.initializedAmount) {
+				location.reload();
 			}
-        },
+		});
+	},
+	    
+        loadApplePayForm: async function () {
+ 		const config = window.checkoutConfig.payment[this.getCode()];
+			
+		try {
+			fullScreenLoader.startLoader();
+			$('#applepay-button-container').empty();
+			let merchantName = window.checkoutConfig.payment[this.getCode()]["storeName"];
+			const creds = await chSession({ "merchantName" : merchantName });
+
+			if (!creds?.ch_credentials) {
+				throw new Error('No credentials returned from backend');
+			}
+
+			this.paymentPayload.sessionId = creds.ch_credentials.sessionId;
+			await chAdapter.initSdk(config, creds.ch_credentials);
+				
+			await window.fiserv.components.applePay({
+				data: {
+					button: {
+						parentElementId: "applepay-button-container",
+						color: 'black',
+						type: 'buy',
+						locale: "en-US"
+					}
+				},
+				hooks: {
+					onApprove: (data) => {
+						this.paymentPayload.publicKeyHash =
+							data?.publicKeyHash || data?.details?.publicKeyHash || null;
+
+						try {
+							this.onApplePaySuccess(data.details, data);
+							if (typeof data.completePayment === 'function') {
+								data.completePayment('SUCCESS');
+							}
+						} catch (e) {
+							if (typeof data.completePayment === 'function') {
+								data.completePayment('FAILURE');
+							}
+							throw e;
+						}
+					},
+					onCancel: (data) => {
+						if (typeof data?.completePayment === 'function') {
+							data.completePayment('FAILURE');
+						}
+					},
+					onError: (data) => {
+						if (typeof data?.completePayment === 'function') {
+							data.completePayment('FAILURE');
+						}
+						globalMessageList.addErrorMessage({
+							message: $t('Apple Pay error occurred.')
+						});
+					}
+				}
+			});
+			this.initializedAmount = quote.totals()['grand_total'];
+			this.observeTotals();
+
+		} catch (error) {
+			globalMessageList.addErrorMessage({
+				message: $t('Apple Pay error: ') + error.message
+			});
+		} finally {
+			fullScreenLoader.stopLoader();
+		}
+	},
 
         watchPaymentMethods: function () {
             const self = this;
