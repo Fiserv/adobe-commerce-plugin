@@ -36,22 +36,21 @@ define([
 		initializedAmount: 0.00
         },
 
-	initialize: async function () {
-		this._super();
-
-            	this.observeBillingAddress();
+    	initialize: async function () {
+    		this._super();
+            this.observeBillingAddress();
 		
-		return this;
+		    return this;
         },
 
-	initializeApplePay: async function () 
-	{
-		if (this.getCode() === this.isChecked())
-		{
-			await this.loadApplePayForm();
-		}
-		this.watchPaymentMethods();
-	},
+    	initializeApplePay: async function () 
+    	{
+            if (this.getCode() === this.isChecked())
+            {
+                await this.loadApplePayForm();
+            }
+            this.watchPaymentMethods();
+    	},
 
         observeBillingAddress: function () {
             quote.billingAddress.subscribe((address) => {
@@ -74,9 +73,8 @@ define([
 		});
 	},
 	    
-        loadApplePayForm: async function () {
+    loadApplePayForm: async function () {
  		const config = window.checkoutConfig.payment[this.getCode()];
-			
 		try {
 			fullScreenLoader.startLoader();
 			$('#applepay-button-container').empty();
@@ -90,12 +88,14 @@ define([
 			this.paymentPayload.sessionId = creds.ch_credentials.sessionId;
 			await chAdapter.initSdk(config, creds.ch_credentials);
 				
+            const buttonStyle = config.applepayButtonStyle ?? 'black';
+            const buttonType = config.applepayButtonType ?? 'buy';
 			await window.fiserv.components.applePay({
 				data: {
 					button: {
 						parentElementId: "applepay-button-container",
-						color: 'black',
-						type: 'buy',
+						color: buttonStyle,
+						type: buttonType,
 						locale: "en-US"
 					}
 				},

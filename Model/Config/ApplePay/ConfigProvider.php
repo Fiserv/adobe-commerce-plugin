@@ -15,6 +15,8 @@ class ConfigProvider implements ConfigProviderInterface
 {
 	const CODE = 'fiserv_applepay';
 	const STORE_NAME_KEY = 'storeName';
+	const BUTTON_STYLE_KEY = 'applepayButtonStyle';
+	const BUTTON_TYPE_KEY = 'applepayButtonType';
 
 	private MultiLevelLogger $logger;
 
@@ -69,7 +71,9 @@ class ConfigProvider implements ConfigProviderInterface
 			ChConfigProvider::MERCHANT_ID_KEY => $this->chConfig->getMerchantId($storeId),
 			ChConfigProvider::TERMINAL_ID_KEY => $this->chConfig->getTerminalId($storeId),
 			ChConfigProvider::ENV_KEY => $this->chConfig->getApiEnvironment($storeId),
-			ChConfigProvider::API_KEY_KEY => $this->chConfig->getApiKey($storeId)
+			ChConfigProvider::API_KEY_KEY => $this->chConfig->getApiKey($storeId),
+			self::BUTTON_STYLE_KEY => $this->config->getApplePayButtonStyle($storeId),
+			self::BUTTON_TYPE_KEY => $this->config->getApplePayButtonType($storeId)
 		];
 		return ['payment' => [self::CODE => $config]];
 	}
