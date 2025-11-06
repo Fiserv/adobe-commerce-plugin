@@ -54,7 +54,8 @@ define(
 
 		function getAmount()
 		{
-			let grandTotal = quote.totals() ? quote.totals().grand_total : 0;
+			let rawGrandTotal = quote.totals() ? quote.totals().grand_total : 0;
+			let grandTotal = Math.round(rawGrandTotal * 100) / 100;
 			let currency = quote.totals() ? quote.totals().quote_currency_code : "USD";
 			return {
 				"total" : grandTotal,

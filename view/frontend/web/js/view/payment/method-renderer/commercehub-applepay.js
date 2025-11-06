@@ -33,7 +33,8 @@ define([
                 publicKeyHash: null
             },
             isPlaceOrderActionAllowed: ko.observable(false),
-		initializedAmount: 0.00
+		initializedAmount: 0.00,
+		reloadOnRender: false
         },
 
     	initialize: async function () {
@@ -45,6 +46,18 @@ define([
 
     	initializeApplePay: async function () 
     	{
+		// stop-gap until checkouts team fixes amount caching issue
+		let fastlaneAmount = window.checkoutConfig?.payment?.fiserv_paypal_fastlane?.initializedAmount;
+		if (fastlaneAmount)
+		{
+			let grandTotal = quote.totals()['grand_total'];
+			if (fastlaneAmount != grandTotal)
+			{
+				window.checkoutConfig.payment.fiserv_paypal_fastlane.initializedAmount = undefined
+				this.reloadOnRender = true;
+			}
+		}
+
             if (this.getCode() === this.isChecked())
             {
                 await this.loadApplePayForm();
@@ -144,10 +157,16 @@ define([
 	},
 
         watchPaymentMethods: function () {
-            const self = this;
-            $(`[name="payment[method]"]`).on("click", function () {
-                if ($(this).attr("id") === self.getCode()) {
-                    self.loadApplePayForm();
+            $(`[name="payment[method]"]`).on("click", (event) => {
+                if (event.currentTarget.id === this.getCode()) {
+			if (this.reloadOnRender)
+			{
+				this.reloadOnRender = false;
+				location.reload();
+			} else
+			{
+				this.loadApplePayForm();
+			}
                 }
             });
         },

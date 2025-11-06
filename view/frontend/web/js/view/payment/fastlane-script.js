@@ -16,7 +16,7 @@ waitForElement('#customer-email-fieldset .note', function () {
 	require([
 		'jquery',
 		'Fiserv_Payments/js/ch-adapter',
-		'Fiserv_Payments/js/action/create-commercehub-session',
+		'Fiserv_Payments/js/action/create-commercehub-fastlane-session',
 		'Fiserv_Payments/js/view/payment/paypal/fastlane',
 		'Fiserv_Payments/js/action/modify-requirejs',
 		'Magento_Checkout/js/model/full-screen-loader'
