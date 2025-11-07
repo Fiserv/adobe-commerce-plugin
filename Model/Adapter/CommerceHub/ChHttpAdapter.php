@@ -5,7 +5,6 @@ use Fiserv\Payments\Gateway\Config\CommerceHub\Config;
 use Fiserv\Payments\Gateway\Config\PayPal\Config as PayPalConfig;
 use Fiserv\Payments\Model\Source\CommerceHub\ApiEnvironment;
 use Fiserv\Payments\Model\Adapter\CommerceHub\ChHttpResponse;
-use Magento\Framework\HTTP\Adapter\CurlFactory;
 use Fiserv\Payments\Lib\Version;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 use Magento\Payment\Gateway\Http\ClientException;
@@ -43,11 +42,6 @@ class ChHttpAdapter
 	private $isPayPal = false;
 
 	/**
-	 * @var CurlFactory
-	 */
-	private $curlFactory;
-
-	/**
 	 * @var string
 	 */
 	private $nonce;
@@ -61,18 +55,15 @@ class ChHttpAdapter
 	 * Constructor
 	 *
 	 * @param Config $config
-	 * @param CurlFactory $curlFactory
 	 * @param MultiLevelLogger $logger
 	 * @param PayPalConfig $paypalConfig
 	 */
 	public function __construct(
 		Config $config,
-		CurlFactory $curlFactory,
 		MultiLevelLogger $logger,
 		PayPalConfig $paypalConfig = null
 	) {
 		$this->chConfig = $config;
-		$this->curlFactory = $curlFactory;
 		$this->logger = $logger;
 		if ($paypalConfig !== null) {
 			$this->paypalConfig = $paypalConfig;
@@ -99,34 +90,33 @@ class ChHttpAdapter
 
 	private function execHttpRequest($payload, $url, $endpoint)
 	{
-		$curl = $this->generateBaseCurl(22);
-		$curl->write('POST', $url, '1.1', $this->getHeaders($payload), $payload);
-		$curlResponse = $curl->read();
+		$curl = $this->generateNakedBaseCurl($url, $payload, 22);
+		$curlResponse = curl_exec($curl);
 
-		if($curl->getErrno()) {
-			$this->logger->logError(2, "Curl error: ErrNo - " . $curl->getErrno() . "      Message - " . $curl->getError());
+		if(curl_error($curl)) {
+			$this->logger->logError(2, "Curl error: ErrNo - " . curl_errno($curl) . "      Message - " . curl_error($curl));
 			// Error code 28 is the timeout error code
 			$data = json_decode($payload, true);
-			if(array_key_exists("transactionDetails", $data) && $curl->getErrno() === 28) {
+			if(array_key_exists("transactionDetails", $data) && curl_errno($curl) === 28) {
 				$this->logger->logCritical(1, "Timeout detected. Attempting recovery...");
-				$curl->close();
+				curl_close($curl);
 				// Step 1: Idempotency attempt
 				$this->logger->logCritical(1, "Initiating idempotency attempt for Client-Request-Id " . $this->nonce);
 				$this->timestamp = $this->getTimestamp();
-				$curl = $this->generateBaseCurl(2);
-				$curl->write('POST', $url, '1.1', $this->getHeaders($payload), $payload);
-				$curlResponse = $curl->read();
-				if($curl->getErrno()) {
+				$curl = $this->generateNakedBaseCurl($url, $payload, 2);
+				$curlResponse = curl_exec($curl);
+
+				if(curl_error($curl)) {
 					$this->logger->logCritical(1, "Idempotency attempt failure. Continuing recovery process...");
-					$curl->close();
+					curl_close($curl);
 					return $this->handleTimeout(json_decode($payload, true), $endpoint);
 				}
 				$this->logger->logInfo(1, "Idempotency attempt success. Returning from recovery process...");
 			}
 		}
-		$statusCode = $curl->getInfo(CURLINFO_HTTP_CODE);
-		$headerLength = $curl->getInfo(CURLINFO_HEADER_SIZE);
-		$curl->close();
+		$statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+		$headerLength = curl_getinfo($curl, CURLINFO_HEADER_SIZE);
+		curl_close($curl);
 		return new ChHttpResponse($statusCode, $curlResponse, $headerLength);
 	}
 
@@ -187,14 +177,13 @@ class ChHttpAdapter
 			$this->nonce = $this->getnonce($this->timestamp);
 
 			$cancelUrl = $this->getServiceUrl() . '/' . $cancelsEndpoint;
-			$cancelCurl = $this->generateBaseCurl(2);
-			$cancelCurl->write('POST', $cancelUrl, '1.1', $this->getHeaders($payload), $payload);
-			$cancelResponse = $cancelCurl->read();
-			$cancelStatusCode = $cancelCurl->getInfo(CURLINFO_HTTP_CODE);
-			$cancelHeaderLength = $cancelCurl->getInfo(CURLINFO_HEADER_SIZE);
+			$cancelCurl = $this->generateNakedBaseCurl($url, $payload, 2);
+			$cancelResponse = curl_exec($cancelCurl);
+			$cancelStatusCode = curl_getinfo($cancelCurl, CURLINFO_HTTP_CODE);
+			$cancelHeaderLength = curl_getinfo($cancelCurl, CURLINFO_HEADER_SIZE);
 			$cancelHttpResponse = new ChHttpResponse($cancelStatusCode, $cancelResponse, $cancelHeaderLength);
 
-			if($cancelCurl->getErrno()) {
+			if(curl_error($cancelCurl)) {
 				$this->logger->logEmergency(1, "Initial transaction cancel failure. Failed to recover from transaction timeout. referenceMerchantTransactionId: " . $transactionID);
 			} else {
 				$cancelResponseBody = json_decode($cancelHttpResponse->getBody(), true);
@@ -206,7 +195,7 @@ class ChHttpAdapter
 				$this->logger->logInfo(1, "Transaction ID: " . $cancelTransactionId);
 				$this->logger->logInfo(1, "Recovery process finished");
 			}
-			$cancelCurl->close();
+			curl_close($cancelCurl);
 		} else {
 			// Do nothing  :(
 			$this->logger->logEmergency(1, "Non-Auth transaction detected. Further recovery attempts not possible. Failed to recover from transaction timeout. referenceMerchantTransactionId: " . $transactionID);
@@ -215,24 +204,6 @@ class ChHttpAdapter
 		throw new ClientException(
 			__('Timeout occurred during transaction.')
 		);
-	}
-
-	/**
-	 * Fills in base information of a curl object
-	 *
-	 * @param int $timeout
-	 */
-	private function generateBaseCurl($timeout)
-	{
-		$curl = $this->curlFactory->create();
-		$curl->setConfig(
-			[
-				CURLOPT_TIMEOUT => $timeout,
-				CURLOPT_USERAGENT => $this->getUserAgent(),
-				CURLOPT_SSL_VERIFYHOST => 0
-			]
-		);
-		return $curl;
 	}
 
 	/**
