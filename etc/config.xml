@@ -20,9 +20,8 @@
 				<qa_api_service><![CDATA[https://connect-qa.fiservapis.com/ch/]]></qa_api_service>
 				<prod_client_url><![CDATA[https://prod.api.fiservapps.com/ch/sdk/v1/commercehub-client-sdk.js]]></prod_client_url>
 				<cert_client_url><![CDATA[https://cert.api.fiservapps.com/ch/sdk/v1/commercehub-client-sdk.js]]></cert_client_url>
-				<qa_client_url><![CDATA[https://qa.api.fiservapps.com/ch/sdk/v1/commercehub-client-sdk.js]]></qa_client_url>
+				<qa_client_url><![CDATA[https://qa.api.fiservapis.com/ch/sdk/v1/commercehub-client-sdk.js]]></qa_client_url>
 				<api_environment>CERT</api_environment>
-				<show_privacy_statement>1</show_privacy_statement>
 				<payment_action>AUTH</payment_action>
 				<cc_types>AE,VI,MC,DI,JCB,DN</cc_types>
 				<tokenization_strategy>CUSTOMER</tokenization_strategy>
@@ -34,7 +33,7 @@
 				<currency>USD</currency>
 				<allowspecific>1</allowspecific>
 				<specificcountry>US</specificcountry>
-				<cc_types_ch_mapper><![CDATA[{"AMEX":"AE","DISCOVER":"DI","JCB":"JCB","MASTERCARD":"MC","VISA":"VI","DINERS":"DN"}]]></cc_types_ch_mapper>
+				<cc_types_ch_mapper><![CDATA[{"AMEX":"AE","DISCOVER":"DI","JCB":"JCB","MASTERCARD":"MC","VISA":"VI","DINERS":"DN","CUP":"UN"}]]></cc_types_ch_mapper>
 				<is_gateway>1</is_gateway>
 				<can_use_internal>1</can_use_internal>
 				<can_use_checkout>1</can_use_checkout>
@@ -196,8 +195,7 @@
 				<create_valuelink_invoice>yes</create_valuelink_invoice>
 				<valuelink_title>Gift Cards</valuelink_title>
 				<card_amount_limit>1</card_amount_limit>
-				<show_privacy_statement>1</show_privacy_statement>
-                <gift_card_tier>basic</gift_card_tier>
+				<gift_card_tier>basic</gift_card_tier>
 	
 				<sdc_custom_checkout_valuelink_card_number_parent_element>fiserv_giftcard-card-number</sdc_custom_checkout_valuelink_card_number_parent_element>
 				<sdc_custom_checkout_valuelink_card_number_placeholder>Gift Card Number</sdc_custom_checkout_valuelink_card_number_placeholder>
@@ -248,6 +246,66 @@
 				<title>Stored Accounts (Fiserv)</title>
 				<active>1</active>
 			</fiserv_commercehub_vault>
+			<fiserv_paypal>
+				<active>1</active>
+				<payment_active>1</payment_active>
+				<title>PayPal</title>
+				<model>FiservPayPalFacade</model>
+				<payment_action>AUTH</payment_action>
+				<!-- <ch_paypal_venmo>1</ch_paypal_venmo> -->
+				<ch_paypal_fastlane>1</ch_paypal_fastlane>
+				<is_gateway>1</is_gateway>
+				<can_use_internal>0</can_use_internal>
+				<can_use_checkout>1</can_use_checkout>
+				<can_authorize>1</can_authorize>
+				<can_capture>1</can_capture>
+				<can_capture_partial>1</can_capture_partial>
+				<can_refund>1</can_refund>
+				<can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
+				<can_void>1</can_void>
+				<can_authorize_vault>1</can_authorize_vault>
+				<can_capture_vault>1</can_capture_vault>
+				<order_status>pending</order_status>
+				<group>fiserv_group</group>
+			</fiserv_paypal>
+			<fiserv_paypal_fastlane>
+				<active>1</active>
+				<payment_active>1</payment_active>
+				<title>PayPal Fastlane</title>
+				<model>FiservPayPalFastlaneFacade</model>
+				<payment_action>AUTH</payment_action>
+				<is_gateway>1</is_gateway>
+				<can_use_internal>0</can_use_internal>
+				<can_use_checkout>1</can_use_checkout>
+				<can_authorize>1</can_authorize>
+				<can_capture>1</can_capture>
+				<can_capture_partial>1</can_capture_partial>
+				<can_refund>1</can_refund>
+				<can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
+				<can_void>1</can_void>
+				<order_status>pending</order_status>
+				<group>fiserv_group</group>
+			</fiserv_paypal_fastlane>
+            <fiserv_applepay>
+                <active>1</active>
+                <payment_active>1</payment_active>
+                <title>ApplePay</title>
+                <model>FiservApplePayFacade</model>
+                <payment_action>AUTH</payment_action>
+                <is_gateway>1</is_gateway>
+                <can_use_internal>0</can_use_internal>
+                <can_use_checkout>1</can_use_checkout>
+                <can_authorize>1</can_authorize>
+                <can_capture>1</can_capture>
+                <can_capture_partial>1</can_capture_partial>
+                <can_refund>1</can_refund>
+                <can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
+                <can_void>1</can_void>
+                <order_status>pending</order_status>
+		<applepay_button_style>black</applepay_button_style>
+		<applepay_button_type>buy</applepay_button_type>
+                <group>fiserv_group</group>
+            </fiserv_applepay>
 		</payment>
 	</default>
 </config>

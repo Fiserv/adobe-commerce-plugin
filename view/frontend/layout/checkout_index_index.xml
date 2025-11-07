@@ -1,9 +1,14 @@
 <?xml version="1.0"?>
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
-	<head>
-		<css src="Fiserv_Payments::css/ch-form.css"/>
-	</head> 
-	<body>
+	   <head>
+<css src="Fiserv_Payments::css/ch-form.css"/>
+<css src="Fiserv_Payments::css/paypal-styles.css"/>
+           <css src="Fiserv_Payments::css/applepay-styles.css"/>
+
+<css src="Fiserv_Payments::css/fastlane-styles.css"/>
+<link src="Fiserv_Payments::js/view/payment/fastlane-script.js" />
+	   </head>
+	   <body>
 		<referenceBlock name="checkout.root">
 			<arguments>
 				<argument name="jsLayout" xsi:type="array">
@@ -18,7 +23,7 @@
 												<item name="payment" xsi:type="array">
 													<item name="children" xsi:type="array">
 														<item name="renders" xsi:type="array">
-														<!-- merge payment method renders here -->
+															<!-- merge payment method renders here -->
 															<item name="children" xsi:type="array">
 																<item name="fiserv_payments" xsi:type="array">
 																	<item name="component" xsi:type="string">Fiserv_Payments/js/view/payment/fiserv_payments</item>
@@ -31,6 +36,30 @@
 																		</item>
 																	</item>
 																</item>
+																<item name="fiserv_paypal" xsi:type="array">
+																	<item name="component" xsi:type="string">Fiserv_Payments/js/view/payment/fiserv_paypal</item>
+																	<item name="methods" xsi:type="array">
+																		<item name="fiserv_paypal" xsi:type="array">
+																			<item name="isBillingAddressRequired" xsi:type="boolean">true</item>
+																		</item>
+																	</item>
+																</item>
+																<item name="fiserv_paypal_fastlane" xsi:type="array">
+																	<item name="component" xsi:type="string">Fiserv_Payments/js/view/payment/fiserv_paypal_fastlane</item>
+																	<item name="methods" xsi:type="array">
+																		<item name="fiserv_paypal_fastlane" xsi:type="array">
+																			<item name="isBillingAddressRequired" xsi:type="boolean">true</item>
+																		</item>
+																	</item>
+																</item>
+                                                                <item name="fiserv_applepay" xsi:type="array">
+                                                                    <item name="component" xsi:type="string">Fiserv_Payments/js/view/payment/fiserv_applepay</item>
+                                                                    <item name="methods" xsi:type="array">
+                                                                        <item name="fiserv_applepay" xsi:type="array">
+                                                                            <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
+                                                                        </item>
+                                                                    </item>
+                                                                </item>
 															</item>
 														</item>
 														<item name="afterMethods" xsi:type="array">

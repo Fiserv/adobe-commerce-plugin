@@ -10,13 +10,14 @@ define(
 		'jquery',
 		'Magento_Payment/js/view/payment/cc-form',
 		'Fiserv_Payments/js/ch-adapter',
-		'Fiserv_Payments/js/action/create-commercehub-session',
+		'Fiserv_Payments/js/action/create-commercehub-enriched-session',
 		'Magento_Checkout/js/model/quote',
 		'Magento_Checkout/js/checkout-data',
 		'Magento_Ui/js/model/messageList',
 		'Magento_Vault/js/view/payment/vault-enabler',
 		'Magento_Checkout/js/model/full-screen-loader',
 		'Magento_Checkout/js/model/payment/additional-validators',
+		'Fiserv_Payments/js/action/modify-requirejs',
 		'ko',
 		'mage/translate',
 		'domReady!'
@@ -33,6 +34,7 @@ define(
 		VaultEnabler,
 		fullScreenLoader,
 		additionalValidators,
+		modifyRequirejs,
 		ko,
 		$t
 	) {
@@ -63,24 +65,27 @@ define(
 					this.isPlaceOrderActionAllowed(address !== null);
 					this.checkoutValidHandler();	
 				}, this);
-				
-				var self = this;
-
-				self._super();
-				self.vaultEnabler = new VaultEnabler();
-				self.vaultEnabler.setPaymentCode(self.getVaultCode());
 			
+				this.code = 'fiserv_commercehub';
+				this.initializeChAdapter();
+
+				this._super();
+				this.vaultEnabler = new VaultEnabler();
+				this.vaultEnabler.setPaymentCode(this.getVaultCode());
+			
+						return self;
+			},
+
+			initializeChAdapter: function () 
+			{
 				chAdapter.initialize(
-					window.checkoutConfig.payment[self.code],
-					self.iframeLoadSuccess.bind(self),
-					self.iframeValidHandler.bind(self),
+					window.checkoutConfig.payment[this.code],
+					() => { this.iframeLoadSuccess(); },
+					(valid) => { this.iframeValidHandler(valid); },
 					(brand) => { this.cardBrandChangeHandler(brand); },
 					(data) => { this.fieldValidityHandler(data); },
 					(data) => { this.fieldFocusHandler(data); }
 				);
-				
-
-				return self;
 			},
 
 			loadSdcForm: function () {
@@ -108,11 +113,10 @@ define(
 					this.beginIframeFlow();
 					chAdapter.instantiateIframe(
 						resolve, 
-						reject
+						reject,
 					)
 				});
 				iframePromise.then((data) => {
-					
 				}).catch((error) =>{
 					failureCb(error);
 				})
@@ -194,11 +198,11 @@ define(
 			 * isActive() not working with COD, for some reason.
 			 */
 			watchPaymentMethods: function () {
-				let self = this;
-				$(self.paymentMethodName).on("click", function() {
-					let selected = $(this).attr("id");
-					if (selected === self.getCode()) {
-						self.loadIframe();	
+				$(this.paymentMethodName).on("click", (event) => {
+					if (event.currentTarget.id === this.getCode()) {
+						// must re-init SDK if other Fiserv APMs exist
+						this.initializeChAdapter();
+						this.loadIframe();	
 					} else {
 						this.cardBrandChangeHandler(null);
 						chAdapter.destroyIframe();
@@ -227,14 +231,6 @@ define(
 			 */
 			isVaultEnabled: function () {
 				return this.vaultEnabler.isVaultEnabled();
-			},
-
-			/**
-			 * Show Privacy statement
-			 */
-			showPrivacyStatement: function() 
-			{
-				return window.checkoutConfig.payment[this.getCode()].show_privacy_statement;
 			},
 
 			/**

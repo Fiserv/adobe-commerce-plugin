@@ -7,6 +7,8 @@ use Fiserv\Payments\Model\Adapter\CommerceHub\ChHttpAdapter;
 use Magento\Store\Model\StoreManagerInterface;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 use Fiserv\Payments\Model\System\Utils\VaultPaymentTokenUtils;
+use Fiserv\Payments\Lib\CommerceHub\Model\DynamicDescriptors;
+use Fiserv\Payments\Lib\CommerceHub\Model\Address;
 
 class CredentialsRequest
 {
@@ -19,7 +21,8 @@ class CredentialsRequest
 	const KEY_MERCHANT_ID = 'merchantId';
 	const KEY_KEY_ID = 'keyId';
 	const KEY_CUSTOMER = "customer";
-	const KEY_CUSTOMER_ID = "id";
+	const KEY_CUSTOMER_ID_COMMERCEHUB = "id";
+	const KEY_CUSTOMER_ID_PAYPAL = "providerCustomerId";
 	const KEY_AMOUNT = "amount";
 	const KEY_BILLING_ADDRESS = "billingAddress";
 	const KEY_PAYMENT_TOKEN = "paymentToken";
@@ -30,15 +33,23 @@ class CredentialsRequest
 	const KEY_ADDITIONAL_DATA_COMMON = "additionalDataCommon";
 	const KEY_ADDITIONAL_DATA = "additionalData";
 	const KEY_ECOM_URL = "ecomUrl";
-			
-	const CODE_PAYMENT_METHOD = "fiserv_commercehub";
+	const KEY_PROVIDER_CREDENTIALS = "providerCredentials";
+	const KEY_API_KEY = "apiKey";
+	const KEY_API_SECRET = "apiSecret";
+	const KEY_TERMINAL_ID = "terminalId";
+    const KEY_ORDER_DATA = 'orderData';
+    const KEY_DYNAMIC_DESCRIPTORS = 'dynamicDescriptors';
+    const KEY_MERCHANT_NAME = 'merchantName';
+    const KEY_COUNTRY = 'country';
+
+	const CODE_PAYMENT_METHOD_COMMERCEHUB = "fiserv_commercehub";
+	const CODE_PAYMENT_METHOD_PAYPAL = "fiserv_paypal";
 
 	// CommerceHub Credentials Response Keys
 	const KEY_SYMMETRIC_ENCRYPTION_ALGO = 'symmetricEncryptionAlgorithm';
 	const KEY_ACCESS_TOKEN = 'accessToken';
 	const KEY_SESSION_ID = 'sessionId';
 	const KEY_PUBLIC_KEY = 'publicKey';
-
 
 	/**
 	 * @var MultiLevelLogger
@@ -66,34 +77,39 @@ class CredentialsRequest
 	 * Constructor
 	 *
 	 * @param Config $config
+	 * @param ChHttpAdapter $chHttpAdapter
+	 * @param StoreManagerInterface $storeManager
+	 * @param MultiLevelLogger $logger
+	 * @param VaultPaymentTokenUtils $vaultUtils
 	 */
 	public function __construct(
 		Config $config,
-		ChHttpAdapter $httpAdapter,
+		ChHttpAdapter $chHttpAdapter,
 		StoreManagerInterface $storeManager,
 		MultiLevelLogger $logger,
 		VaultPaymentTokenUtils $vaultUtils
 	) {
 		$this->chConfig = $config;
-		$this->httpAdapter = $httpAdapter;
 		$this->storeManager = $storeManager;
 		$this->logger = $logger;
 		$this->vaultUtils = $vaultUtils;
+		$this->httpAdapter = $chHttpAdapter;
 	}
 
 	/**
-	 * Retrieve assoc array of 
-	 * CommerceHub CredentialsRequest info
+	 * Retrieve assoc array of CredentialsRequest info
 	 *
 	 * @return array
 	 */
 	public function requestCredentials(Array $sessionData)
-	{
-		$this->logger->logInfo(1, "Initiating Credentials Request");
-		$data = $this->getCredentialsPayload($this->getMerchantId(), $sessionData);
-		$chResponse = $this->httpAdapter->sendRequest($data, self::CREDENTIALS_ENDPOINT);
-		return $this->parseChCredentialsResponse($chResponse);
-	}
+		{
+			$this->logger->logInfo(1, "Initiating Credentials Request");
+			$data = $this->getCredentialsPayload($this->getMerchantId(), $sessionData);
+			$this->logger->logDebug(3, "Credentials Request Payload\n" . json_encode($data));
+			$chResponse = $this->httpAdapter->sendRequest($data, self::CREDENTIALS_ENDPOINT);
+			return $this->parseChCredentialsResponse($chResponse);
+		}
+
 
 	private function parseChCredentialsResponse($chResponse) {
 		$statusCode = $chResponse->getStatusCode();
@@ -138,7 +154,7 @@ class CredentialsRequest
 	 * @return array
 	 */
 	private function getCredentialsPayload($merchantId, $sessionData) {
-		$payload = [];
+        $payload = [];
 		$domains = [];
 		$urls = []; 
 		$urls[self::KEY_URL] = $this->getStoreBaseUrl();
@@ -154,7 +170,23 @@ class CredentialsRequest
 		
 		if (isset($sessionData[self::KEY_CUSTOMER])) {
 			$payload[self::KEY_CUSTOMER] = $sessionData[self::KEY_CUSTOMER];
-		}	
+        }
+
+        if (isset($sessionData[self::KEY_ORDER_DATA])) {
+			$payload[self::KEY_ORDER_DATA] = $sessionData[self::KEY_ORDER_DATA];
+		}
+
+        if (isset($sessionData[self::KEY_MERCHANT_NAME]) &&
+            isset($sessionData[self::KEY_COUNTRY])) {
+            $address = new Address();
+            $address->setCountry($sessionData[self::KEY_COUNTRY]);
+
+            $descriptors = new DynamicDescriptors();
+            $descriptors->setMerchantName($sessionData[self::KEY_MERCHANT_NAME]);
+            $descriptors->setAddress($address);
+            
+            $payload[self::KEY_DYNAMIC_DESCRIPTORS] = $descriptors;
+        }
 
 		if (isset($sessionData[self::KEY_BILLING_ADDRESS])) {
 			$payload[self::KEY_BILLING_ADDRESS] = $sessionData[self::KEY_BILLING_ADDRESS];
@@ -162,15 +194,24 @@ class CredentialsRequest
 
 		if (isset($sessionData[self::KEY_PAYMENT_TOKEN])) {
 			// Customer ID should be set, because only customers can use payment tokens
-			$payload[self::KEY_SOURCE] = $this->buildPaymentTokenSource($sessionData[self::KEY_PAYMENT_TOKEN], $sessionData[self::KEY_CUSTOMER][self::KEY_CUSTOMER_ID]);	
+			$payload[self::KEY_SOURCE] = $this->buildPaymentTokenSource($sessionData[self::KEY_PAYMENT_TOKEN], $sessionData[self::KEY_CUSTOMER][self::KEY_CUSTOMER_ID_COMMERCEHUB]);	
 		}	
-		
-		if (isset($sessionData[self::KEY_3DS]) && $sessionData[self::KEY_3DS] === true) {
-			$payload[self::KEY_TRANSACTION_DETAILS] = array(	
-				self::KEY_AUTHENTICATION_3DS => true
-			);
-		}
 
+		// Add providerCredentials with customerId attribute as requested, only if not guest
+		if (isset($sessionData[self::KEY_CUSTOMER]) && isset($sessionData[self::KEY_CUSTOMER][self::KEY_CUSTOMER_ID_PAYPAL])) {
+            $payload[self::KEY_PROVIDER_CREDENTIALS] = [
+                [
+                    'credentialType' => 'PAYPAL',
+                    'attributes' => [
+                        [
+                            'key' => 'customerId',
+                            'value' => $sessionData[self::KEY_CUSTOMER][self::KEY_CUSTOMER_ID_PAYPAL]
+                        ]
+                    ]
+                ]
+            ];
+		}
+        
 		$payload[self::KEY_ADDITIONAL_DATA_COMMON] = array(
 			self::KEY_ADDITIONAL_DATA => array(
 				self::KEY_ECOM_URL => $this->getStoreBaseUrl() 
@@ -182,8 +223,8 @@ class CredentialsRequest
 
 	private function buildPaymentTokenSource(string $tokenData, string $customerId) : array
 	{
-		$token = $this->vaultUtils->getByGatewayToken($tokenData, self::CODE_PAYMENT_METHOD, $customerId);
-		if (is_null($token) || count($token) < 1) 
+		$token = $this->vaultUtils->getByGatewayToken($tokenData, self::CODE_PAYMENT_METHOD_COMMERCEHUB, $customerId);
+		if (is_null($token) || count($token) < 1)
 		{
 			throw new \Exception("Unable to locate payment token for Commercehub payment session with source.");
 		}

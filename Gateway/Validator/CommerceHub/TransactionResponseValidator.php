@@ -22,6 +22,7 @@ abstract class TransactionResponseValidator extends AbstractValidator
 	const STATE_CAPTURE = "CAPTURED";
 	const STATE_AUTHORIZED = "AUTHORIZED";
 	const STATE_VOIDED = "VOIDED";
+	const STATE_REFUNDED = "REFUNDED";
 
 	protected $successStatuses = [
 		self::HTTP_CREATED,
@@ -119,10 +120,13 @@ abstract class TransactionResponseValidator extends AbstractValidator
 		if (!$this->isStatusSuccessful($chRawResponse[HttpClient::STATUS_CODE_KEY])) {
 			array_push($errorMessages, "Something went wrong while processing CommerceHub transaction.");
 			array_push($errorCodes, $chRawResponse[HttpClient::STATUS_CODE_KEY]);
-			$chRawResponse[HttpClient::RESPONSE_KEY]["amount"] = $validationSubject["amount"];
+			if (isset($validationSubject["amount"])) {
+				$chRawResponse[HttpClient::RESPONSE_KEY]["amount"] = $validationSubject["amount"];
+			} else {
+				$chRawResponse[HttpClient::RESPONSE_KEY]["amount"] = null;
+			}
 			$this->logger->logError(2, "Transaction failure. Commerce Hub response returned with unsuccessful status", "Order ID: " . ($orderIncrementId ?? "Not found"));
 			$this->logger->logError(2, "Status Code: " . $chRawResponse[HttpClient::STATUS_CODE_KEY], "Order ID: " . ($orderIncrementId ?? "Not found"));
-			$amount = $this->subjectReader->readAmount($validationSubject);
 			$chRawResponse[HttpClient::RESPONSE_KEY]['countryCode'] = $countryCode;
 			$this->failedTransactionManager->createFailedTransaction($orderIncrementId, $chRawResponse, $this->paths, $this->getPaymentAction());
 			return $this->createResult(false, $errorMessages, $errorCodes);
@@ -134,16 +138,19 @@ abstract class TransactionResponseValidator extends AbstractValidator
 		if (!$this->isStateSuccessful($transactionState)) {
 			array_push($errorMessages, "Transaction state failure: " . ($transactionState ?? "Transaction state not found"));
 			array_push($errorCodes, $transactionState);
-			$chRawResponse[HttpClient::RESPONSE_KEY]["amount"] = $validationSubject["amount"];
+			if (isset($validationSubject["amount"])) {
+				$chRawResponse[HttpClient::RESPONSE_KEY]["amount"] = $validationSubject["amount"];
+			} else {
+				$chRawResponse[HttpClient::RESPONSE_KEY]["amount"] = null;
+			}
 			$context = "Transaction ID: " . ($transactionId ?? "Not found") . "\n"
 				. "API Trace ID: " . ($apiTraceId ?? "Not found") . "\n"
 				. ", Transaction state: " . ($transactionState ?? "Not found") . "\n"
 				. ", Response message: " . ($this->subjectReader->getValueSafely($chRawResponse, 'responseMessage', $this->paths['responseMessage']) ?? "Not found") . "\n"
 				. ", Payment Source Type: " . ($this->subjectReader->getValueSafely($chRawResponse, 'sourcetype', $this->paths['sourceType']) ?? "Not found");
 			$this->logger->logError(2, "Transaction failure. Commerce Hub response returned with unsuccessful transaction state: $context", "Order ID: " . ($orderIncrementId ?? "Not found"));
-			$amount = $this->subjectReader->readAmount($validationSubject);
 			$chRawResponse[HttpClient::RESPONSE_KEY]['countryCode'] = $countryCode;
-		
+
 			$this->failedTransactionManager->createFailedTransaction($orderIncrementId, $chRawResponse, $this->paths, $this->getPaymentAction());
 			return $this->createResult(false, $errorMessages, $errorCodes);
 		}

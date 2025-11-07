@@ -5,7 +5,10 @@
 			<argument name="configProviders" xsi:type="array">
 				<item name="fiserv_payments_config_provider" xsi:type="object">Fiserv\Payments\Model\Config\ConfigProvider</item>
 				<item name="fiserv_commercehub_config_provider" xsi:type="object">Fiserv\Payments\Model\Config\CommerceHub\ConfigProvider</item>
-			</argument>
+				<item name="fiserv_paypal" xsi:type="object">Fiserv\Payments\Model\Config\PayPal\ConfigProvider</item>
+				<item name="fiserv_paypal_fastlane" xsi:type="object">Fiserv\Payments\Model\Config\PayPal\Fastlane\ConfigProvider</item>
+                <item name="fiserv_applepay" xsi:type="object">Fiserv\Payments\Model\Config\ApplePay\ConfigProvider</item>
+            </argument>
 		</arguments>
 	</type>
 	<type name="Magento\Payment\Model\CcGenericConfigProvider">
@@ -15,7 +18,6 @@
 			</argument>
 		</arguments>
 	</type>
-
 	<type name="Magento\Vault\Model\Ui\TokensConfigProvider">
 		<arguments>
 			<argument name="tokenUiComponentProviders" xsi:type="array">

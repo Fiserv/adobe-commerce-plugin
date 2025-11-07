@@ -20,4 +20,7 @@
 				<attribute code="base_gift_cards_amount" type="float" />
 				<attribute code="gift_cards_amount" type="float" />
 		</extension_attributes>
+		<extension_attributes for="Magento\Customer\Api\Data\CustomerInterface">
+			<attribute code="paypal_provider_customer_id" type="string" />
+		</extension_attributes>
 </config>

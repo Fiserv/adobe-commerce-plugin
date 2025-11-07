@@ -4,7 +4,7 @@ define([
 	'Magento_Ui/js/model/messageList',
 	'Magento_Checkout/js/model/full-screen-loader',
 	'Fiserv_Payments/js/ch-adapter',
-	'Fiserv_Payments/js/action/create-commercehub-session'
+	'Fiserv_Payments/js/action/create-commercehub-enriched-session'
 ], function(
 	$,
 	VaultComponent,
@@ -118,7 +118,7 @@ define([
 		run3DSecure: async function() {
 			const {transactionState, authenticationTransactionId} = await window.fiserv.components.threeDSecure();
 			if (transactionState.toUpperCase() === "DECLINED") {
-				throw new Error("3D-Secure authentication failure");
+				throw new Error("3D-Secure authentication failure.");
 			}
 
 			this.handle3DSecureAuth(authenticationTransactionId);
@@ -146,14 +146,6 @@ define([
 			data['additional_data'] = _.extend(data['additional_data'], this.additionalData);
 
 			return data;
-		},
-
-		/**
-		 * Show Privacy statement
-		 */
-		showPrivacyStatement: function() 
-		{
-			return window.checkoutConfig.payment[this.getCode()].show_privacy_statement;
 		},
 
 		/**

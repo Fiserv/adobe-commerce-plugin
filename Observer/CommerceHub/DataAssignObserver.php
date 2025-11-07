@@ -22,7 +22,7 @@ class DataAssignObserver extends AbstractDataAssignObserver
 	const EXP_YEAR_KEY = 'expiration_year';
 	const NAME_ON_CARD_KEY = 'nameOnCard';
 	const THREE_D_SECURE_KEY = '3DSecureId';
-	
+
 	/**
 	 * @var array
 	 */
@@ -46,7 +46,6 @@ class DataAssignObserver extends AbstractDataAssignObserver
 
 		$additionalData = $data->getData(PaymentInterface::KEY_ADDITIONAL_DATA);
 
-		
 		if (!is_array($additionalData)) {
 			return;
 		}
