@@ -3,14 +3,14 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-namespace Fiserv\Payments\Gateway\Request\PayPal\Fastlane\Composite;
+namespace Fiserv\Payments\Gateway\Request\OrdersApi\Fastlane\Composite;
 
 use Fiserv\Payments\Gateway\Request\CommerceHub\Composite\ChCompositeBase;
 use Fiserv\Payments\Lib\CommerceHub\Model\ChargesRequest;
 use Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder;
-use Fiserv\Payments\Gateway\Request\PayPal\Fastlane\TokenSourceDataBuilder;
-use Fiserv\Payments\Gateway\Request\PayPal\Fastlane\TransactionDetailsDataBuilder;
-use Fiserv\Payments\Gateway\Request\PayPal\Fastlane\ProviderCredentialsDataBuilder;
+use Fiserv\Payments\Gateway\Request\OrdersApi\Fastlane\TokenSourceDataBuilder;
+use Fiserv\Payments\Gateway\Request\OrdersApi\Fastlane\TransactionDetailsDataBuilder;
+use Fiserv\Payments\Gateway\Request\OrdersApi\Fastlane\ProviderCredentialsDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\TransactionInteractionDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder;
@@ -21,19 +21,19 @@ use Fiserv\Payments\Gateway\Config\CommerceHub\Config;
 use Fiserv\Payments\Gateway\Request\CommerceHub\ThreeDSecureDataBuilder;
 
 /**
- * Class TokenAuthComposite
+ * Class TokenSaleComposite
  */
-class TokenAuthComposite extends ChCompositeBase
-{	
+class TokenSaleComposite extends ChCompositeBase
+{
 	const ENDPOINT = "payments/v1/charges";
 
 	/**
 	 * @var MultiLevelLogger
 	 */
 	private $logger;
-	
+
 	private $chConfig;
-	
+
 	/**
 	 * @param MultiLevelLogger $logger
 	 * @param TMapFactory $tmapFactory
@@ -59,9 +59,9 @@ class TokenAuthComposite extends ChCompositeBase
 		$result = parent::build($buildSubject);
 		$orderIncrementId = $result[TransactionDetailsDataBuilder::TXN_DETAILS_KEY]['merchant_order_id'] ?? null;
 		if ($orderIncrementId !== null) {
-			$this->logger->logInfo(1, "Initiating Auth Transaction", "Order ID:" . $orderIncrementId);
+			$this->logger->logInfo(1, "Initiating Token Sale Transaction", "Order ID:" . $orderIncrementId);
 		} else {
-			$this->logger->logInfo(1, "Initiating Auth Transaction");
+			$this->logger->logInfo(1, "Initiating Token Sale Transaction");
 		}
 
 		$req = new ChargesRequest();
@@ -74,7 +74,7 @@ class TokenAuthComposite extends ChCompositeBase
 		$req->setCustomer($result[CustomerDataBuilder::CUSTOMER_KEY]);
 		$req->setProviderCredentials([$result[ProviderCredentialsDataBuilder::PROVIDER_CREDENTIALS_KEY]]);
 
-		return [ 
+		return [
 			self::REQUEST_KEY => $req,
 			self::ENDPOINT_KEY => self::ENDPOINT
 		];

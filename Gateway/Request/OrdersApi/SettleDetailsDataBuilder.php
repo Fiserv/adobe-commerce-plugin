@@ -3,11 +3,12 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-namespace Fiserv\Payments\Gateway\Request\PayPal;
+namespace Fiserv\Payments\Gateway\Request\OrdersApi;
 
 use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use Fiserv\Payments\Gateway\Config\PayPal\Config;
-use Fiserv\Payments\Gateway\Request\PayPal\PayPalTransactionDetailsDataBuilder;
+use Fiserv\Payments\Gateway\Config\Venmo\Config as VenmoConfig;
+use Fiserv\Payments\Gateway\Request\OrdersApi\OrderApiTransactionDetailsDataBuilder;
 use Fiserv\Payments\Lib\CommerceHub\Model\TransactionDetails;
 use Fiserv\Payments\Lib\CommerceHub\Model\SplitShipment;
 use Magento\Sales\Api\OrderRepositoryInterface;
@@ -17,13 +18,14 @@ use Fiserv\Payments\Logger\MultiLevelLogger;
 /**
  * Settle Details Data Builder
  */
-class SettleDetailsDataBuilder extends PayPalTransactionDetailsDataBuilder
+class SettleDetailsDataBuilder extends OrderApiTransactionDetailsDataBuilder
 {
 
 	/**
 	 * @var OrderRepositoryInterface
 	 */
 	private $orderRepo;
+	private $venmoConfig;
 
 	/**
 	 * @param MultiLevelLogger $logger
@@ -34,10 +36,11 @@ class SettleDetailsDataBuilder extends PayPalTransactionDetailsDataBuilder
 		SubjectReader $subjectReader,
 		MultiLevelLogger $logger,
 		Config $paypalConfig,
+		VenmoConfig $venmoConfig,
 		OrderRepositoryInterface $orderRepo
 	)
 	{
-		parent::__construct($subjectReader, $paypalConfig, $logger);
+		parent::__construct($subjectReader, $paypalConfig, $venmoConfig, $logger);
 		$this->orderRepo = $orderRepo;
 	}
 

@@ -3,28 +3,29 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-namespace Fiserv\Payments\Gateway\Request\PayPal\Fastlane;
+namespace Fiserv\Payments\Gateway\Request\OrdersApi\Fastlane;
 
 use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use Fiserv\Payments\Observer\CommerceHub\DataAssignObserver;
-use Fiserv\Payments\Lib\CommerceHub\Model\ProviderCredential;
-use Fiserv\Payments\Lib\CommerceHub\Model\Attribute;
+use Fiserv\Payments\Lib\CommerceHub\Model\PaymentToken;
+use Fiserv\Payments\Lib\CommerceHub\Model\Card;
 use Magento\Payment\Gateway\Request\BuilderInterface;
 use Magento\Payment\Helper\Formatter;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 
 /**
- * Fastlane Provider Credentials Data Builder
+ * Token Payment Data Builder
  */
-class ProviderCredentialsDataBuilder implements BuilderInterface
+class TokenSourceDataBuilder implements BuilderInterface
 {
 	use Formatter;
 
-	const PROVIDER_CREDENTIALS_KEY = "providerCreds";
-	const SESSION_ID_KEY = "fastlane_session_id";
+	const TOKEN_SOURCE_KEY = "tokenSource";
+	const CARD_ID_KEY = "fastlane_card_id";
 
-	const PAYPAL_CREDENTIAL_TYPE = "PAYPAL";
-	const FASTLANE_SESSION_KEY = "FASTLANE_SESSION_ID";
+	const TOKEN_SOURCE_TYPE = "PaymentToken";
+	const PAYMENT_TOKEN_SOURCE = "FASTLANE";
+	const WALLET_TYPE = "FASTLANE";
 
 	/**
 	 * @var MultiLevelLogger
@@ -59,18 +60,17 @@ class ProviderCredentialsDataBuilder implements BuilderInterface
 		$orderDO = $paymentDO->getOrder();
 		$orderIncrementId = $orderDO->getOrderIncrementId();
 		
-		$sessionId = $payment->getAdditionalInformation(self::SESSION_ID_KEY);
+		$tokenData = $payment->getAdditionalInformation(self::CARD_ID_KEY);
 
-		$attr = new Attribute();
-		$attr->setKey(self::FASTLANE_SESSION_KEY);
-		$attr->setValue($sessionId);
+		$source = new PaymentToken();
+		$source->setSourceType(self::TOKEN_SOURCE_TYPE);
+		$source->setWalletType(self::WALLET_TYPE);
+		$source->setTokenData($tokenData);
+		$source->setTokenSource(self::PAYMENT_TOKEN_SOURCE);
+		$source->setDeclineDuplicates(false);
 
-		$creds = new ProviderCredential();
-		$creds->setCredentialType(self::PAYPAL_CREDENTIAL_TYPE);
-		$creds->setAttributes([$attr]);
+		$this->logger->logDebug(3, "Fastlane Token Source Data Builder:\n" . $source->__toString(), "Order ID: $orderIncrementId");
 
-		$this->logger->logDebug(3, "Fastlane Provider Credentials Data Builder:\n" . $creds->__toString(), "Order ID: $orderIncrementId");
-
-		return [ self::PROVIDER_CREDENTIALS_KEY => $creds ];
+		return [ self::TOKEN_SOURCE_KEY => $source ];
 	}
 }
