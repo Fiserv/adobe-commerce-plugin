@@ -7,6 +7,7 @@ namespace Fiserv\Payments\Gateway\Request\PayPal;
 
 use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use Fiserv\Payments\Gateway\Config\PayPal\Config;
+use Fiserv\Payments\Gateway\Config\Venmo\Config as VenmoConfig;
 use Fiserv\Payments\Gateway\Request\PayPal\PayPalTransactionDetailsDataBuilder;
 use Fiserv\Payments\Lib\CommerceHub\Model\TransactionDetails;
 use Fiserv\Payments\Lib\CommerceHub\Model\SplitShipment;
@@ -24,6 +25,7 @@ class SettleDetailsDataBuilder extends PayPalTransactionDetailsDataBuilder
 	 * @var OrderRepositoryInterface
 	 */
 	private $orderRepo;
+	private $venmoConfig;
 
 	/**
 	 * @param MultiLevelLogger $logger
@@ -34,10 +36,11 @@ class SettleDetailsDataBuilder extends PayPalTransactionDetailsDataBuilder
 		SubjectReader $subjectReader,
 		MultiLevelLogger $logger,
 		Config $paypalConfig,
+		VenmoConfig $venmoConfig,
 		OrderRepositoryInterface $orderRepo
 	)
 	{
-		parent::__construct($subjectReader, $paypalConfig, $logger);
+		parent::__construct($subjectReader, $paypalConfig, $venmoConfig, $logger);
 		$this->orderRepo = $orderRepo;
 	}
 

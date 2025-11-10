@@ -33,8 +33,8 @@ define([
     return Component.extend({
         isPlaceOrderActionAllowed: ko.observable(false),
         defaults: {
-            template: 'Fiserv_Payments/payment/commercehub/paypal-form',
-            code: 'fiserv_paypal',
+            template: 'Fiserv_Payments/payment/commercehub/venmo-form',
+            code: 'fiserv_venmo',
             active: false,
             sortOrder: 20,
             paymentPayload: {
@@ -47,34 +47,24 @@ define([
             credentials: undefined,
             paypalComponent: null,
             vaultEnabler: null,
-            placeOrderCallback: null,
-		initializedAmount: 0.00
+            placeOrderCallback: null
+
         },
 
         initialize: function () {
-            this._super();
             quote.billingAddress.subscribe(function (address) {
                 this.isPlaceOrderActionAllowed(address !== null);
             }, this);
 
-		quote.shippingAddress.subscribe(async () => {
-			if (this.isChecked() === this.getCode())
-			{
-				await this.initchAdapter();
-			}
-		});
-		return this;
+            this._super();
+            this.loadPayPalForm();
+			
+			return this;
         },
 
-		initializePayPal: async function()
-		{
-			await this.loadPayPalForm();
-			this.watchPaymentMethods();
-		},
-
-		loadPayPalForm: async function () {
+       loadPayPalForm: function () {
             if (this.isChecked() === this.getCode()) {
-                await this.initchAdapter();
+                this.initchAdapter();
             } 
         },
 
@@ -95,7 +85,7 @@ define([
                 credsResponse = await commercehubSession({});
                 creds = credsResponse && credsResponse[chAdapter.credentialsKey];
                 if (!creds) {
-                    throw new Error('No credentials returned from PayPal session');
+                    throw new Error('No credentials returned from Venmo session');
                 }
 
                 self.paymentPayload.sessionId = creds[chAdapter.sessionIdKey];
@@ -113,10 +103,7 @@ define([
                 this.paypalComponent = paypalComponent;
                 const buttonsConfig = config.buttonConfig;
                 await this.renderPayPalButtons(buttonsConfig);
-		this.initializedAmount = quote.totals()['grand_total'];
-		this.observeTotals();
-		   
-		this.placeOrderCallback = function(approvalData) {
+                this.placeOrderCallback = function(approvalData) {
                     self.additionalData.paypal_order_id = approvalData.orderId;
                     self.additionalData.email = approvalData.email;
                     require(['Magento_Checkout/js/action/place-order'], function(placeOrderAction) {
@@ -126,21 +113,21 @@ define([
                     });
                 };
             } catch (error) {
-                globalMessageList.addErrorMessage({ message: $t('PayPal credentials error: ') + (error.message || error) });
-                console.error('[PayPal] Error in initchAdapter:', error);
+                globalMessageList.addErrorMessage({ message: $t('Venmo credentials error: ') + (error.message || error) });
+                console.error('[Venmo] Error in initchAdapter:', error);
             } finally {
                 fullScreenLoader.stopLoader();
             }
         },
 
         /**
-         * Renders PayPal and Venmo buttons
+         * Renders Venmo buttons
          * @param {Object} buttonsConfig - ButtonsConfig object (see Fiserv docs)
          * @returns {Promise}
          */
         async renderPayPalButtons(buttonsConfig) {
             try {
-                const containerId ='#paypal-button-container';
+                const containerId ='#venmo-button-container';
                 const container = document.querySelector(containerId);
                 if(container){
                     while (container.children.length > 0) {
@@ -150,11 +137,9 @@ define([
 
                 const config = (window.checkoutConfig && window.checkoutConfig.payment) ? window.checkoutConfig.payment[this.getCode()] : {};
                 const buttons = {
-                    paypal: {
-                        parentElementId: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.paypal.parentElementId || 'paypal-button-container',
-                        color: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.paypal.color || 'gold',
-                        shape: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.paypal.shape || 'rect',
-                        label: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.paypal.label || 'paypal'
+                    venmo: {
+                        parentElementId: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.venmo.parentElementId || 'venmo-button-container',
+                        shape: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.venmo.shape || 'rect',
                     }
                 };
 
@@ -164,8 +149,7 @@ define([
 
                 return await this.paypalComponent.buttons({
                     data: {
-                        enableVaulting: buttonsConfig.data && buttonsConfig.data.vaulting !== undefined ? buttonsConfig.data.vaulting : false,
-                        customerConfirmation: buttonsConfig.data && typeof buttonsConfig.data.customerConfirmation === 'string' ? buttonsConfig.data.customerConfirmation : 'REVIEW_AND_PAY',
+                        customerConfirmation: buttonsConfig.data && typeof buttonsConfig.data.customerConfirmation === 'string' ? buttonsConfig.data.customerConfirmation : 'PAY_NOW',
                         buttons: buttons
                     },
                     hooks: {
@@ -190,7 +174,7 @@ define([
                                     email: email
                                 });
                             } else {
-                                console.error('No placeOrderCallback set for PayPal approval');
+                                console.error('No placeOrderCallback set for Venmo approval');
                             }
                         },
                         onCancel: () => {
@@ -201,26 +185,10 @@ define([
                         }
                     }
                 });
-
             } catch (error) {
-                console.error('[PayPal] Error rendering PayPal buttons:', error);
+                console.error('[Venmo] Error rendering PayPal buttons:', error);
             }
         },
-
-	observeTotals: function()
-	{
-		quote.totals.subscribe( (totals) => {
-		    if (
-			    this.getCode() === this.isChecked() &&
-			    this.initializedAmount && 
-			    this.initializedAmount > 0.00 && 
-			    totals && 
-			    totals['grand_total'] && 
-			    totals['grand_total'] != this.initializedAmount) {
-			    location.reload();
-		    }
-	    });
-	},
 
         getData: function () {
             var data = {
@@ -231,6 +199,11 @@ define([
                 data.additional_data.payment_session = this.paymentPayload.sessionId;
             }
             return data;
+        },
+
+        isVenmoEnabled: function () {
+            var config = (window.checkoutConfig && window.checkoutConfig.payment) ? window.checkoutConfig.payment[this.getCode()] : {};
+            return config && config.venmoConfig && config.venmoConfig.enableVenmo;
         },
 
         /**
@@ -313,8 +286,7 @@ define([
 				if (selected === self.getCode()) {
                     self.loadPayPalForm();
                 } else {
-                    // Clear PayPal button container if another payment method is selected
-                    $('#paypal-button-container').empty();
+                    $('#venmo-button-container').empty();
                 }
             });
         },

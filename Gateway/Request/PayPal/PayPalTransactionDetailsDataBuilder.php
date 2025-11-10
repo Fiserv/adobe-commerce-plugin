@@ -8,6 +8,7 @@ namespace Fiserv\Payments\Gateway\Request\PayPal;
 use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use Fiserv\Payments\Lib\CommerceHub\Model\TransactionDetails;
 use Fiserv\Payments\Gateway\Config\PayPal\Config;
+use Fiserv\Payments\Gateway\Config\Venmo\Config as VenmoConfig;
 use Magento\Payment\Gateway\Request\BuilderInterface;
 use Magento\Vault\Model\Ui\VaultConfigProvider;
 use Fiserv\Payments\Logger\MultiLevelLogger;
@@ -35,6 +36,7 @@ abstract class PayPalTransactionDetailsDataBuilder implements BuilderInterface
 	protected $subjectReader;
 
 	private $paypalConfig;
+	private $venmoConfig;
 
 	/**
 	 * @param MultiLevelLogger $logger
@@ -44,10 +46,12 @@ abstract class PayPalTransactionDetailsDataBuilder implements BuilderInterface
 	public function __construct(
 		SubjectReader $subjectReader,
 		Config $paypalConfig,
+		VenmoConfig $venmoConfig,
 		MultiLevelLogger $logger
 	) {
 		$this->subjectReader = $subjectReader;
 		$this->paypalConfig = $paypalConfig;
+		$this->venmoConfig = $venmoConfig;
 		$this->logger = $logger;
 	}
 
