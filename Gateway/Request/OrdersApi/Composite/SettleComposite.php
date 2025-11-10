@@ -3,24 +3,23 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-namespace Fiserv\Payments\Gateway\Request\PayPal\Composite;
+namespace Fiserv\Payments\Gateway\Request\OrdersApi\Composite;
 
-use Fiserv\Payments\Gateway\Request\PayPal\Composite\PayPalCompositeBase;
-use Fiserv\Payments\Lib\CommerceHub\Model\RefundRequest;
+use Fiserv\Payments\Gateway\Request\OrdersApi\Composite\OrderApiCompositeBase;
+use Fiserv\Payments\Lib\CommerceHub\Model\ChargesRequest;
 use Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\ReferenceTransactionDataBuilder;
-use Fiserv\Payments\Gateway\Request\PayPal\PayPalTransactionDetailsDataBuilder;
+use Fiserv\Payments\Gateway\Request\OrdersApi\OrderApiTransactionDetailsDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\TransactionInteractionDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder;
-use Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder;
 use Magento\Framework\ObjectManager\TMapFactory;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 
 /**
- * Class RefundComposite
+ * Class SettleComposite
  */
-class RefundComposite extends PayPalCompositeBase
-{	
+class SettleComposite extends OrderApiCompositeBase
+{
 	const ENDPOINT = "checkouts/v1/orders";
 
 	/**
@@ -46,15 +45,17 @@ class RefundComposite extends PayPalCompositeBase
 	{
 		
 		$result = parent::build($buildSubject);
-		$orderIncrementId = $result[PayPalTransactionDetailsDataBuilder::TXN_DETAILS_KEY]['merchant_order_id'] ?? null;
+
+		$orderIncrementId = $result[OrderApiTransactionDetailsDataBuilder::TXN_DETAILS_KEY]['merchant_order_id'] ?? null;
 		if ($orderIncrementId !== null) {
-			$this->logger->logInfo(1, "Initiating Refund Transaction", "Order ID:" . $orderIncrementId);
+			$this->logger->logInfo(1, "Initiating Capture Transaction", "Order ID:" . $orderIncrementId);
 		} else {
-			$this->logger->logInfo(1, "Initiating Refund Transaction");
+			$this->logger->logInfo(1, "Initiating Capture Transaction");
 		}
 
-		$req = new RefundRequest();
-		$req->setTransactionDetails($result[PayPalTransactionDetailsDataBuilder::TXN_DETAILS_KEY]);
+		$req = new ChargesRequest();
+		$req->setAmount($result[AmountDataBuilder::AMOUNT_KEY]);
+		$req->setTransactionDetails($result[OrderApiTransactionDetailsDataBuilder::TXN_DETAILS_KEY]);
 		$req->setReferenceTransactionDetails($result[ReferenceTransactionDataBuilder::REF_TXN_KEY]);
 		$req->setMerchantDetails($result[MerchantDetailsDataBuilder::MERCHANT_DETAILS_KEY]);
 		return [ 

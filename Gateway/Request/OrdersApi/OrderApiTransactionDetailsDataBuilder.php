@@ -3,11 +3,12 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-namespace Fiserv\Payments\Gateway\Request\PayPal;
+namespace Fiserv\Payments\Gateway\Request\OrdersApi;
 
 use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use Fiserv\Payments\Lib\CommerceHub\Model\TransactionDetails;
 use Fiserv\Payments\Gateway\Config\PayPal\Config;
+use Fiserv\Payments\Gateway\Config\Venmo\Config as VenmoConfig;
 use Magento\Payment\Gateway\Request\BuilderInterface;
 use Magento\Vault\Model\Ui\VaultConfigProvider;
 use Fiserv\Payments\Logger\MultiLevelLogger;
@@ -15,7 +16,7 @@ use Fiserv\Payments\Logger\MultiLevelLogger;
 /**
  * Payment Data Builder
  */
-abstract class PayPalTransactionDetailsDataBuilder implements BuilderInterface
+abstract class OrderApiTransactionDetailsDataBuilder implements BuilderInterface
 {
 	const TXN_DETAILS_KEY = "transactionDetails";
 	const KEY_CREATE_TOKEN = 'T';
@@ -35,6 +36,7 @@ abstract class PayPalTransactionDetailsDataBuilder implements BuilderInterface
 	protected $subjectReader;
 
 	private $paypalConfig;
+	private $venmoConfig;
 
 	/**
 	 * @param MultiLevelLogger $logger
@@ -44,10 +46,12 @@ abstract class PayPalTransactionDetailsDataBuilder implements BuilderInterface
 	public function __construct(
 		SubjectReader $subjectReader,
 		Config $paypalConfig,
+		VenmoConfig $venmoConfig,
 		MultiLevelLogger $logger
 	) {
 		$this->subjectReader = $subjectReader;
 		$this->paypalConfig = $paypalConfig;
+		$this->venmoConfig = $venmoConfig;
 		$this->logger = $logger;
 	}
 
@@ -60,6 +64,8 @@ abstract class PayPalTransactionDetailsDataBuilder implements BuilderInterface
 		$payment = $paymentDO->getPayment();
 		$orderDO = $paymentDO->getOrder();
 		$orderIncrementId = $orderDO->getOrderIncrementId();
+
+		$txnDetails = new TransactionDetails();
 
 		$data = $payment->getAdditionalInformation();
 		$captureFlag = $this->getCaptureFlag();
@@ -76,10 +82,14 @@ abstract class PayPalTransactionDetailsDataBuilder implements BuilderInterface
 			$operationType = 'AUTHORIZE';
 		}
 
+		$txnDetails->setMerchantTransactionId(uniqid());
+		$txnDetails->setAccountVerification(false);
+		$txnDetails->setMerchantOrderId($orderIncrementId);
+		$txnDetails->setOperationType($operationType);
+
 		$this->logger->logDebug(3, "Transaction Details Data Builder:\n" . $operationType, "Order ID: $orderIncrementId");
 
-		// Always return as ['operationType' => ...]
-		return [ self::TXN_DETAILS_KEY => ['operationType' => $operationType] ];
+		return [ self::TXN_DETAILS_KEY => $txnDetails ];
 	}
 
 	/**
