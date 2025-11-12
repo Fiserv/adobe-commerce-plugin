@@ -65,6 +65,8 @@ class HttpClient implements ClientInterface
 		$requestBody = $transferObject->getBody();
 		$payload = $requestBody[ChCompositeBase::REQUEST_KEY];
 		$endpoint = $requestBody[ChCompositeBase::ENDPOINT_KEY];
+
+		$this->logger->logInfo(1,'Commercehub RequestBody Validation' . json_encode($requestBody));
 	
 	    $log = [
 			'request' => $requestBody,

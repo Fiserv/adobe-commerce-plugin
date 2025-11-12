@@ -46,9 +46,7 @@ define([
             paymentMethodName: '[name="payment[method]"',
             credentials: undefined,
             paypalComponent: null,
-            vaultEnabler: null,
-            placeOrderCallback: null
-
+            vaultEnabler: null
         },
 
         initialize: function () {
@@ -58,7 +56,6 @@ define([
 
             this._super();
             this.loadPayPalForm();
-			
 			return this;
         },
 
@@ -95,23 +92,16 @@ define([
                     intent = 'capture';
                 }
                 const shippingAddress = this.getMapShippingAddress(this.getShippingAddress());
+                var shippingPreference = 'SET_PROVIDED_ADDRESS';
                 const paypalComponentConfig = {
                     intent: intent,
-                    shippingAddress: shippingAddress,
+                    // shippingAddress: shippingAddress,
+                    // shippingPreference: shippingPreference,
                 };
                 const paypalComponent = await chAdapter.loadPayPalComponent(paypalComponentConfig);
                 this.paypalComponent = paypalComponent;
                 const buttonsConfig = config.buttonConfig;
                 await this.renderPayPalButtons(buttonsConfig);
-                this.placeOrderCallback = function(approvalData) {
-                    self.additionalData.paypal_order_id = approvalData.orderId;
-                    self.additionalData.email = approvalData.email;
-                    require(['Magento_Checkout/js/action/place-order'], function(placeOrderAction) {
-                        placeOrderAction(self.getData()).done(function() {
-                            window.location.href = '/checkout/onepage/success/';
-                        });
-                    });
-                };
             } catch (error) {
                 globalMessageList.addErrorMessage({ message: $t('Venmo credentials error: ') + (error.message || error) });
                 console.error('[Venmo] Error in initchAdapter:', error);
@@ -168,14 +158,10 @@ define([
                             } catch (error) {
                                 email = '';
                             }
-                            if (this.placeOrderCallback) {
-                                this.placeOrderCallback({
-                                    orderId: data.orderId,
-                                    email: email
-                                });
-                            } else {
-                                console.error('No placeOrderCallback set for Venmo approval');
-                            }
+                            this.additionalData.paypal_order_id = data.orderId;
+                            this.additionalData.email = email;
+                            // Use inherited placeOrder method to trigger Magento's default flow
+                            this.placeOrder('parent');
                         },
                         onCancel: () => {
                             console.log('on cancel called');
@@ -245,12 +231,10 @@ define([
             if (!address) {
                 return undefined;
             }
-            // Inline mapShippingAddress logic
             if (!address.street || !address.firstname || !address.lastname) {
                 console.warn('Shipping address is incomplete:', address);
                 return undefined;
             }
-            // Handle both array and object for street
             let streetArr = Array.isArray(address.street)
                 ? address.street
                 : Object.values(address.street);

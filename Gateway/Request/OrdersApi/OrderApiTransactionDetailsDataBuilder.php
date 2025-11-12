@@ -3,7 +3,7 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-namespace Fiserv\Payments\Gateway\Request\PayPal;
+namespace Fiserv\Payments\Gateway\Request\OrdersApi;
 
 use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use Fiserv\Payments\Lib\CommerceHub\Model\TransactionDetails;
@@ -16,7 +16,7 @@ use Fiserv\Payments\Logger\MultiLevelLogger;
 /**
  * Payment Data Builder
  */
-abstract class PayPalTransactionDetailsDataBuilder implements BuilderInterface
+abstract class OrderApiTransactionDetailsDataBuilder implements BuilderInterface
 {
 	const TXN_DETAILS_KEY = "transactionDetails";
 	const KEY_CREATE_TOKEN = 'T';
@@ -65,6 +65,8 @@ abstract class PayPalTransactionDetailsDataBuilder implements BuilderInterface
 		$orderDO = $paymentDO->getOrder();
 		$orderIncrementId = $orderDO->getOrderIncrementId();
 
+		$txnDetails = new TransactionDetails();
+
 		$data = $payment->getAdditionalInformation();
 		$captureFlag = $this->getCaptureFlag();
 		$refundFlag = isset($data['is_refund']) ? (bool)$data['is_refund'] : false;
@@ -80,10 +82,14 @@ abstract class PayPalTransactionDetailsDataBuilder implements BuilderInterface
 			$operationType = 'AUTHORIZE';
 		}
 
+		$txnDetails->setMerchantTransactionId(uniqid());
+		$txnDetails->setAccountVerification(false);
+		$txnDetails->setMerchantOrderId($orderIncrementId);
+		$txnDetails->setOperationType($operationType);
+
 		$this->logger->logDebug(3, "Transaction Details Data Builder:\n" . $operationType, "Order ID: $orderIncrementId");
 
-		// Always return as ['operationType' => ...]
-		return [ self::TXN_DETAILS_KEY => ['operationType' => $operationType] ];
+		return [ self::TXN_DETAILS_KEY => $txnDetails ];
 	}
 
 	/**

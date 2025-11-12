@@ -3,12 +3,12 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-namespace Fiserv\Payments\Gateway\Request\PayPal\Composite;
+namespace Fiserv\Payments\Gateway\Request\OrdersApi\Composite;
 
-use Fiserv\Payments\Gateway\Request\PayPal\Composite\PayPalCompositeBase;
+use Fiserv\Payments\Gateway\Request\OrdersApi\Composite\OrderApiCompositeBase;
 use Fiserv\Payments\Lib\CommerceHub\Model\ChargesRequest;
-use Fiserv\Payments\Gateway\Request\PayPal\PayPalTransactionDetailsDataBuilder;
-use Fiserv\Payments\Gateway\Request\PayPal\ReferenceOrderIdDataBuilder;
+use Fiserv\Payments\Gateway\Request\OrdersApi\OrderApiTransactionDetailsDataBuilder;
+use Fiserv\Payments\Gateway\Request\OrdersApi\ReferenceOrderIdDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder;
 use Fiserv\Payments\Observer\PayPal\DataAssignObserver;
 use Magento\Framework\ObjectManager\TMapFactory;
@@ -17,7 +17,7 @@ use Fiserv\Payments\Logger\MultiLevelLogger;
 /**
  * Class SessionAuthComposite
  */
-class SessionAuthComposite extends PayPalCompositeBase
+class SessionAuthComposite extends OrderApiCompositeBase
 {
 	const ENDPOINT = "checkouts/v1/orders";
 
@@ -50,7 +50,7 @@ class SessionAuthComposite extends PayPalCompositeBase
 		$result = parent::build($buildSubject);
 
 		$req = new ChargesRequest();
-		$req->setTransactionDetails($result[PayPalTransactionDetailsDataBuilder::TXN_DETAILS_KEY]);
+		$req->setTransactionDetails($result[OrderApiTransactionDetailsDataBuilder::TXN_DETAILS_KEY]);
 		$req->setReferenceTransactionDetails(["referenceOrderId" => $result[ReferenceOrderIdDataBuilder::REF_ORDER_KEY]]);
 		$req->setMerchantDetails($result[MerchantDetailsDataBuilder::MERCHANT_DETAILS_KEY]);
 

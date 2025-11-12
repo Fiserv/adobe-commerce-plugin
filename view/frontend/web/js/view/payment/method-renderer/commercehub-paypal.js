@@ -1,9 +1,3 @@
-/**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
- */
-/*browser:true*/
-/*global define*/
 define([
     'jquery',
     'Magento_Payment/js/view/payment/cc-form',
@@ -47,8 +41,7 @@ define([
             credentials: undefined,
             paypalComponent: null,
             vaultEnabler: null,
-            placeOrderCallback: null,
-		initializedAmount: 0.00
+            initializedAmount: 0.00
         },
 
         initialize: function () {
@@ -105,26 +98,18 @@ define([
                     intent = 'capture';
                 }
                 const shippingAddress = this.getMapShippingAddress(this.getShippingAddress());
+                var shippingPreference = 'SET_PROVIDED_ADDRESS';
                 const paypalComponentConfig = {
                     intent: intent,
                     shippingAddress: shippingAddress,
+                    shippingPreference: shippingPreference,
                 };
                 const paypalComponent = await chAdapter.loadPayPalComponent(paypalComponentConfig);
                 this.paypalComponent = paypalComponent;
                 const buttonsConfig = config.buttonConfig;
                 await this.renderPayPalButtons(buttonsConfig);
-		this.initializedAmount = quote.totals()['grand_total'];
-		this.observeTotals();
-		   
-		this.placeOrderCallback = function(approvalData) {
-                    self.additionalData.paypal_order_id = approvalData.orderId;
-                    self.additionalData.email = approvalData.email;
-                    require(['Magento_Checkout/js/action/place-order'], function(placeOrderAction) {
-                        placeOrderAction(self.getData()).done(function() {
-                            window.location.href = '/checkout/onepage/success/';
-                        });
-                    });
-                };
+                this.initializedAmount = quote.totals()['grand_total'];
+                this.observeTotals();
             } catch (error) {
                 globalMessageList.addErrorMessage({ message: $t('PayPal credentials error: ') + (error.message || error) });
                 console.error('[PayPal] Error in initchAdapter:', error);
@@ -184,14 +169,10 @@ define([
                             } catch (error) {
                                 email = '';
                             }
-                            if (this.placeOrderCallback) {
-                                this.placeOrderCallback({
-                                    orderId: data.orderId,
-                                    email: email
-                                });
-                            } else {
-                                console.error('No placeOrderCallback set for PayPal approval');
-                            }
+                            this.additionalData.paypal_order_id = data.orderId;
+                            this.additionalData.email = email;
+                            // Use inherited placeOrder method to trigger Magento's default flow
+                            this.placeOrder('parent');
                         },
                         onCancel: () => {
                             console.log('on cancel called');
@@ -207,20 +188,21 @@ define([
             }
         },
 
-	observeTotals: function()
-	{
-		quote.totals.subscribe( (totals) => {
-		    if (
-			    this.getCode() === this.isChecked() &&
-			    this.initializedAmount && 
-			    this.initializedAmount > 0.00 && 
-			    totals && 
-			    totals['grand_total'] && 
-			    totals['grand_total'] != this.initializedAmount) {
-			    location.reload();
-		    }
-	    });
-	},
+        observeTotals: function ()
+        {
+            quote.totals.subscribe((totals) => {
+                if (
+                    this.getCode() === this.isChecked() &&
+                    this.initializedAmount &&
+                    this.initializedAmount > 0.00 &&
+                    totals &&
+                    totals['grand_total'] &&
+                    totals['grand_total'] != this.initializedAmount
+                ) {
+                    location.reload();
+                }
+            });
+        },
 
         getData: function () {
             var data = {
@@ -272,12 +254,10 @@ define([
             if (!address) {
                 return undefined;
             }
-            // Inline mapShippingAddress logic
             if (!address.street || !address.firstname || !address.lastname) {
                 console.warn('Shipping address is incomplete:', address);
                 return undefined;
             }
-            // Handle both array and object for street
             let streetArr = Array.isArray(address.street)
                 ? address.street
                 : Object.values(address.street);
