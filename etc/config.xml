@@ -286,6 +286,10 @@
 				<order_status>pending</order_status>
 				<group>fiserv_group</group>
 			</fiserv_paypal_fastlane>
+			<fiserv_pay_by_link>
+				<active>1</active>
+				<optional_notes></optional_notes>
+			</fiserv_pay_by_link>
 		</payment>
 	</default>
 </config>
