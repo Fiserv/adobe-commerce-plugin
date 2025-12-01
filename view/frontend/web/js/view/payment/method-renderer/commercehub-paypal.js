@@ -1,6 +1,6 @@
 define([
     'jquery',
-    'Fiserv_Payments/js/view/payment/method-renderer/commercehub-paypal-venmo-base',
+    'Fiserv_Payments/js/commercehub-paypal-venmo-base',
     'Magento_Checkout/js/model/quote',
     'Magento_Ui/js/model/messageList',
     'Magento_Checkout/js/checkout-data',
@@ -20,7 +20,7 @@ define([
 ) {
     'use strict';
 
-    return PayPalVenmoBase.extend({
+    return PayPalVenmoBase.extend(PaymentMethodMixin, {
         defaults: {
             template: 'Fiserv_Payments/payment/commercehub/paypal-form',
             code: 'fiserv_paypal',
@@ -40,7 +40,7 @@ define([
             // Observe shipping address change, reinitialize SDK if this payment method is selected
             quote.shippingAddress.subscribe(async () => {
                 if (this.isChecked() === this.getCode()) {
-                    await this.initchAdapter();
+                    await this.initChAdapter();
                 }
             });
 
