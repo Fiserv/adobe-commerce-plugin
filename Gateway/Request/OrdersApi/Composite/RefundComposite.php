@@ -3,12 +3,13 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-namespace Fiserv\Payments\Gateway\Request\PayPal\Composite;
+namespace Fiserv\Payments\Gateway\Request\OrdersApi\Composite;
 
-use Fiserv\Payments\Gateway\Request\PayPal\Composite\PayPalCompositeBase;
-use Fiserv\Payments\Lib\CommerceHub\Model\CancelRequest;
+use Fiserv\Payments\Gateway\Request\OrdersApi\Composite\OrderApiCompositeBase;
+use Fiserv\Payments\Lib\CommerceHub\Model\RefundRequest;
+use Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\ReferenceTransactionDataBuilder;
-use Fiserv\Payments\Gateway\Request\PayPal\PayPalTransactionDetailsDataBuilder;
+use Fiserv\Payments\Gateway\Request\OrdersApi\OrderApiTransactionDetailsDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\TransactionInteractionDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder;
@@ -16,12 +17,11 @@ use Magento\Framework\ObjectManager\TMapFactory;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 
 /**
- * Class CancelComposite
+ * Class RefundComposite
  */
-class CancelComposite extends PayPalCompositeBase
-{
+class RefundComposite extends OrderApiCompositeBase
+{	
 	const ENDPOINT = "checkouts/v1/orders";
-	//TODO: Confirm if this is the correct file exactly needed or not.
 
 	/**
 	 * @var MultiLevelLogger
@@ -44,16 +44,20 @@ class CancelComposite extends PayPalCompositeBase
 	 */
 	public function build(array $buildSubject)
 	{
-		$this->logger->logInfo(1, "Initiating Cancel Transaction");
-
+		
 		$result = parent::build($buildSubject);
+		$orderIncrementId = $result[OrderApiTransactionDetailsDataBuilder::TXN_DETAILS_KEY]['merchant_order_id'] ?? null;
+		if ($orderIncrementId !== null) {
+			$this->logger->logInfo(1, "Initiating Refund Transaction", "Order ID:" . $orderIncrementId);
+		} else {
+			$this->logger->logInfo(1, "Initiating Refund Transaction");
+		}
 
-		$req = new CancelRequest();
-		$req->setTransactionDetails($result[PayPalTransactionDetailsDataBuilder::TXN_DETAILS_KEY]);
+		$req = new RefundRequest();
+		$req->setTransactionDetails($result[OrderApiTransactionDetailsDataBuilder::TXN_DETAILS_KEY]);
 		$req->setReferenceTransactionDetails($result[ReferenceTransactionDataBuilder::REF_TXN_KEY]);
 		$req->setMerchantDetails($result[MerchantDetailsDataBuilder::MERCHANT_DETAILS_KEY]);
-
-		return [
+		return [ 
 			self::REQUEST_KEY => $req,
 			self::ENDPOINT_KEY => self::ENDPOINT
 		];

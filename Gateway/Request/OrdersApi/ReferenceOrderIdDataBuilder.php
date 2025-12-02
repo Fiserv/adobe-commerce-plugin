@@ -3,7 +3,7 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-namespace Fiserv\Payments\Gateway\Request\PayPal;
+namespace Fiserv\Payments\Gateway\Request\OrdersApi;
 
 use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use Magento\Payment\Gateway\Request\BuilderInterface;

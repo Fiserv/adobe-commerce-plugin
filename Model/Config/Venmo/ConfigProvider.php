@@ -3,9 +3,9 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-namespace Fiserv\Payments\Model\Config\PayPal;
+namespace Fiserv\Payments\Model\Config\Venmo;
 
-use Fiserv\Payments\Gateway\Config\PayPal\Config as PayPalConfig;
+use Fiserv\Payments\Gateway\Config\Venmo\Config as VenmoConfig;
 use Fiserv\Payments\Gateway\Config\CommerceHub\Config as CommerceHubConfig;
 use Magento\Checkout\Model\ConfigProviderInterface;
 use Magento\Store\Model\StoreManagerInterface;
@@ -19,10 +19,8 @@ use Magento\Checkout\Helper\Data as CheckoutHelper;
  */
 class ConfigProvider implements ConfigProviderInterface
 {
-	const CODE = 'fiserv_paypal';
+	const CODE = 'fiserv_venmo';
 	const IS_ACTIVE_KEY = 'isActive';
-	const VAULT_CODE = 'fiserv_paypal_vault';
-	const FASTLANE_CODE = 'fastlane';
 	const MERCHANT_ID_KEY = 'merchantId';
 	const TERMINAL_ID_KEY = 'terminalId';
 	const API_KEY_KEY = 'apiKey';
@@ -34,8 +32,8 @@ class ConfigProvider implements ConfigProviderInterface
 	const CERT_CLIENT_KEY = 'certClientUrl';
 	const IS_ONEPAGE_CHECKOUT_KEY = 'onepageCheckoutEnabled';
 
-	/** @var PayPalConfig */
-	private $paypalConfig;
+	/** @var VenmoConfig */
+	private $venmoConfig;
 	/** @var CommerceHubConfig */
 	private $commerceHubConfig;
 	/** @var StoreManagerInterface */
@@ -46,13 +44,13 @@ class ConfigProvider implements ConfigProviderInterface
 	private $checkoutHelper;
 
 	public function __construct(
-		PayPalConfig $paypalConfig,
+		VenmoConfig $venmoConfig,
 		CommerceHubConfig $commerceHubConfig,
 		StoreManagerInterface $storeManager,
 		Collection $regionCollection,
 		CheckoutHelper $checkoutHelper
 	){
-		$this->paypalConfig = $paypalConfig;
+		$this->venmoConfig = $venmoConfig;
 		$this->commerceHubConfig = $commerceHubConfig;
 		$this->storeManager = $storeManager;
 		$this->regionCollection = $regionCollection;
@@ -62,20 +60,15 @@ class ConfigProvider implements ConfigProviderInterface
 	public function getConfig()
 	{
 		$storeId = $this->storeManager->getStore()->getId();
-		$allowedFunding = ['paypal'];
-		$vaultConfig = [
-			'enableVault' => method_exists($this->paypalConfig, 'isVaultActive') ? $this->paypalConfig->isVaultActive($storeId) : false,
-			'vaultLabel' => __('Save PayPal for future use'),
-		];
+		$allowedFunding = ['venmo'];
+
 		$buttonConfig = [
 			'data' => [
-				'vaulting' => $vaultConfig['enableVault'],
 				'buttons' => [
-					'paypal' => [
-						'color' => $this->paypalConfig->getPaypalButtonColor($storeId) ?: 'gold',
-						'shape' => $this->paypalConfig->getPaypalButtonShape($storeId) ?: 'rect',
-						'label' => $this->paypalConfig->getPaypalButtonLabel($storeId) ?: 'paypal',
-						'parentElementId' => 'paypal-button-container'
+					'venmo' => [
+						'color' => $this->venmoConfig->getVenmoButtonColor($storeId) ?: 'blue',
+						'shape' => $this->venmoConfig->getVenmoButtonShape($storeId) ?: 'rect',
+						'parentElementId' => 'venmo-button-container'
 					],
 				]
 			],
@@ -85,42 +78,18 @@ class ConfigProvider implements ConfigProviderInterface
 			],
 		];
 
-		$regionsByCountry = [];
-
-		foreach ($this->regionCollection->getItems() as $region) {
-			$countryId = $region->getCountryId();
-			$regionCode = $region->getCode();
-
-			$regionData = [
-				'region_id'    => $region->getRegionId(),
-				'region_code'  => $regionCode,
-				'default_name' => $region->getDefaultName(),
-				'name'         => $region->getName(),
-			];
-
-			if (!isset($regionsByCountry[$countryId])) {
-				$regionsByCountry[$countryId] = [];
-			}
-
-			$regionsByCountry[$countryId][$regionCode] = $regionData;
-		}
-
 		$config = [
 			'buttonConfig' => $buttonConfig,
-			'vaultConfig' => $vaultConfig,
-			self::FASTLANE_CODE => $this->paypalConfig->isFastlaneActive($storeId),
-			self::IS_ONEPAGE_CHECKOUT_KEY => $this->checkoutHelper->canOnepageCheckout(),
-			self::IS_ACTIVE_KEY => $this->paypalConfig->isActive($storeId),
+			self::IS_ACTIVE_KEY => $this->venmoConfig->isActive($storeId),
 			self::MERCHANT_ID_KEY => $this->commerceHubConfig->getMerchantId($storeId),
 			self::TERMINAL_ID_KEY => $this->commerceHubConfig->getTerminalId($storeId),
 			self::API_KEY_KEY => $this->commerceHubConfig->getApiKey($storeId),
 			self::ENV_KEY => method_exists($this->commerceHubConfig, 'getApiEnvironment') ? $this->commerceHubConfig->getApiEnvironment($storeId) : '',
-			self::PAYMENT_ACTION_KEY => $this->paypalConfig->getPaymentAction($storeId),
+			self::PAYMENT_ACTION_KEY => $this->venmoConfig->getPaymentAction($storeId),
 			self::LOGGING_LEVEL_KEY => $this->commerceHubConfig->getLoggingLevel($storeId),
 			self::CURRENCY_KEY => $this->commerceHubConfig->getCurrency($storeId),
 			self::PROD_CLIENT_KEY => $this->commerceHubConfig->getProdClientUrl(),
-			self::CERT_CLIENT_KEY => $this->commerceHubConfig->getCertClientUrl(),
-			'regionsData' => $regionsByCountry
+			self::CERT_CLIENT_KEY => $this->commerceHubConfig->getCertClientUrl()
 		];
 		return [
 			'payment' => [
@@ -128,4 +97,5 @@ class ConfigProvider implements ConfigProviderInterface
 			]
 		];
 	}
+
 }
