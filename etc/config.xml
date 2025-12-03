@@ -287,8 +287,13 @@
 				<group>fiserv_group</group>
 			</fiserv_paypal_fastlane>
 			<fiserv_pay_by_link>
+				<title>Pay by Link</title>
 				<active>1</active>
-				<optional_notes></optional_notes>
+				<expiry_time>{"hours":4,"minutes":0}</expiry_time>
+				<payment_page_id></payment_page_id>
+				<optional_note>0</optional_note>
+				<order_status>pending</order_status>
+				<group>fiserv_group</group>
 			</fiserv_pay_by_link>
 		</payment>
 	</default>
