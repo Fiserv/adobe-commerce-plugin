@@ -325,6 +325,15 @@
 		<applepay_button_type>buy</applepay_button_type>
                 <group>fiserv_group</group>
             </fiserv_applepay>
+			<fiserv_pay_by_link>
+				<title>Pay by Link</title>
+				<active>1</active>
+				<expiry_time>{"hours":4,"minutes":0}</expiry_time>
+				<payment_page_id></payment_page_id>
+				<optional_note>0</optional_note>
+				<order_status>pending</order_status>
+				<group>fiserv_group</group>
+			</fiserv_pay_by_link>
 		</payment>
 	</default>
 </config>
