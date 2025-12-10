@@ -1106,7 +1106,7 @@
 						<frontend_model>Fiserv\Payments\Block\Adminhtml\System\Config\Form\Field\ExpiryTime</frontend_model>
 						<backend_model>Fiserv\Payments\Model\System\Config\Backend\PayByLink\ExpiryTime</backend_model>
 						<config_path>payment/fiserv_pay_by_link/expiry_time</config_path>
-						<comment>Select the expiration time for payment links (maximum 4 hours)</comment>
+						<comment>Select the expiration time for payment links (maximum 48 hours)</comment>
 					</field>
 					<field id="payment_page_id" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Default Payment Page ID</label>

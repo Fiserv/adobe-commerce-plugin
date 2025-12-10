@@ -44,11 +44,22 @@ class ExpiryTime extends Field
         $elementName = $element->getName();
         $element->setStyle('width:70px;');
         
-        // Hours dropdown
-        $hoursHtml = '<select name="' . $elementName . '[hours]" id="' . $element->getHtmlId() . '_hours" class="select admin__control-select" style="width:100px;">';
+        // Days dropdown
+        $daysHtml = '<select name="' . $elementName . '[days]" id="' . $element->getHtmlId() . '_days" class="select admin__control-select" style="width:100px;">';
+        $daysValue = $this->getDaysValue($element);
+        
+        for ($i = 0; $i <= 1; $i++) {
+            $selected = ($daysValue == $i) ? 'selected="selected"' : '';
+            $label = $i . ' ' . ($i == 1 ? 'Day' : 'Days');
+            $daysHtml .= '<option value="' . $i . '" ' . $selected . '>' . __($label) . '</option>';
+        }
+        $daysHtml .= '</select>';
+        
+        // Hours dropdown (0-23)
+        $hoursHtml = '<select name="' . $elementName . '[hours]" id="' . $element->getHtmlId() . '_hours" class="select admin__control-select" style="width:100px; margin-left:10px;">';
         $hoursValue = $this->getHoursValue($element);
         
-        for ($i = 0; $i <= 4; $i++) {
+        for ($i = 0; $i <= 23; $i++) {
             $selected = ($hoursValue == $i) ? 'selected="selected"' : '';
             $label = $i . ' ' . ($i == 1 ? 'Hour' : 'Hours');
             $hoursHtml .= '<option value="' . $i . '" ' . $selected . '>' . __($label) . '</option>';
@@ -66,7 +77,7 @@ class ExpiryTime extends Field
         }
         $minutesHtml .= '</select>';
         
-        return $hoursHtml . $minutesHtml;
+        return $daysHtml . $hoursHtml . $minutesHtml;
     }
     
     /**
@@ -91,7 +102,7 @@ class ExpiryTime extends Field
         if (is_array($value) && isset($value['hours'])) {
             return (int)$value['hours'];
         }
-        return 4; // Default to 4 hours
+        return 0; // Default to 0 hours
     }
     
     /**
@@ -117,5 +128,30 @@ class ExpiryTime extends Field
             return (int)$value['minutes'];
         }
         return 0; // Default to 0 minutes
+    }
+    
+    /**
+     * Get days value from config
+     *
+     * @param AbstractElement $element
+     * @return int
+     */
+    protected function getDaysValue($element)
+    {
+        $value = $element->getValue();
+        
+        // If value is a string (serialized), unserialize it
+        if (is_string($value) && !empty($value)) {
+            try {
+                $value = $this->serializer->unserialize($value);
+            } catch (\Exception $e) {
+                $value = [];
+            }
+        }
+        
+        if (is_array($value) && isset($value['days'])) {
+            return (int)$value['days'];
+        }
+        return 1; // Default to 1 day
     }
 }
