@@ -54,16 +54,17 @@ class ExpiryTime extends Value
         $value = $this->getValue();
         
         if (is_array($value)) {
+            $days = isset($value['days']) ? (int)$value['days'] : 0;
             $hours = isset($value['hours']) ? (int)$value['hours'] : 0;
             $minutes = isset($value['minutes']) ? (int)$value['minutes'] : 0;
             
             // Calculate total minutes
-            $totalMinutes = ($hours * 60) + $minutes;
+            $totalMinutes = ($days * 24 * 60) + ($hours * 60) + $minutes;
             
-            // Maximum 4 hours = 240 minutes
-            if ($totalMinutes > 240) {
+            // Maximum 1 day 23 hours 59 minutes = 2879 minutes
+            if ($totalMinutes > 2879) {
                 throw new LocalizedException(
-                    __('Expiry time cannot exceed 4 hours. Please adjust your selection.')
+                    __('Expiry time cannot exceed 1 day 23 hours 59 minutes. Please adjust your selection.')
                 );
             }
             

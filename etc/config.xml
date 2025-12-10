@@ -328,7 +328,7 @@
 			<fiserv_pay_by_link>
 				<title>Pay by Link</title>
 				<active>1</active>
-				<expiry_time>{"hours":4,"minutes":0}</expiry_time>
+				<expiry_time>{"days":1,"hours":23,"minutes":59}</expiry_time>
 				<payment_page_id></payment_page_id>
 				<optional_note>0</optional_note>
 				<order_status>pending</order_status>
