@@ -46,23 +46,34 @@ define([
             paymentMethodName: '[name="payment[method]"',
             credentials: undefined,
             paypalComponent: null,
-            vaultEnabler: null
+            initializedAmount: 0.00
         },
 
         initialize: function () {
+            this._super();
             quote.billingAddress.subscribe(function (address) {
                 this.isPlaceOrderActionAllowed(address !== null);
             }, this);
 
-            this._super();
-            this.loadPayPalForm();
-			return this;
+            quote.shippingAddress.subscribe(async () => {
+                if (this.isChecked() === this.getCode())
+                {
+                    await this.initchAdapter();
+                }
+            });
+            return this;
         },
 
-       loadPayPalForm: function () {
+        initializePayPal: async function()
+        {
+            await this.loadPayPalForm();
+            this.watchPaymentMethods();
+        },
+
+        loadPayPalForm: async function () {
             if (this.isChecked() === this.getCode()) {
-                this.initchAdapter();
-            } 
+                await this.initchAdapter();
+            }
         },
 
         initchAdapter: async function () {
@@ -100,6 +111,8 @@ define([
                 this.paypalComponent = paypalComponent;
                 const buttonsConfig = config.buttonConfig;
                 await this.renderPayPalButtons(buttonsConfig);
+                this.initializedAmount = quote.totals()['grand_total'];
+                this.observeTotals();
             } catch (error) {
                 globalMessageList.addErrorMessage({ message: $t('Venmo credentials error: ') + (error.message || error) });
                 console.error('[Venmo] Error in initchAdapter:', error);
@@ -173,6 +186,22 @@ define([
             } catch (error) {
                 console.error('[Venmo] Error rendering PayPal buttons:', error);
             }
+        },
+
+        observeTotals: function ()
+        {
+            quote.totals.subscribe((totals) => {
+                if (
+                    this.getCode() === this.isChecked() &&
+                    this.initializedAmount &&
+                    this.initializedAmount > 0.00 &&
+                    totals &&
+                    totals['grand_total'] &&
+                    totals['grand_total'] != this.initializedAmount
+                ) {
+                    location.reload();
+                }
+            });
         },
 
         getData: function () {

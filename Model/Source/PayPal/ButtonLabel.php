@@ -1,5 +1,5 @@
 <?php
-namespace Fiserv\Payments\Model\Source;
+namespace Fiserv\Payments\Model\Source\PayPal;
 
 use Magento\Framework\Data\OptionSourceInterface;
 
