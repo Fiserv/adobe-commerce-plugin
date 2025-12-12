@@ -3,7 +3,7 @@
 			 <input type="radio"
 				 name="payment[method]"
 				 class="radio"
-				 data-bind="attr: {'id': getCode()}, value: getCode(), checked: isChecked, click: selectPaymentMethod, visible: isRadioButtonVisible(), afterRender: watchPaymentMethods"/>
+				 data-bind="attr: {'id': getCode()}, value: getCode(), checked: isChecked, click: selectPaymentMethod, visible: isRadioButtonVisible(), afterRender: initializePayPal"/>
 		<img data-bind="attr: {src: require.toUrl('Fiserv_Payments/images/venmo_logo.svg')}" alt="venmo" style="height: 12px; display: inline-block; vertical-align: middle;"/>
 	</div>
 
