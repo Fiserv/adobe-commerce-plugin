@@ -6,4 +6,3 @@ include:
 variables:
   ARTIFACT_TYPE : "React"
   APM_ID: "0011801"
-  
