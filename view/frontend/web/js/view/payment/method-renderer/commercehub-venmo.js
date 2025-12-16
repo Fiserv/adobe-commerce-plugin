@@ -105,7 +105,7 @@ define([
                 const shippingAddress = this.getMapShippingAddress(this.getShippingAddress());
                 const paypalComponentConfig = {
                     intent: intent,
-                    // shippingAddress: shippingAddress,
+                    shippingAddress: shippingAddress,
                 };
                 const paypalComponent = await chAdapter.loadPayPalComponent(paypalComponentConfig);
                 this.paypalComponent = paypalComponent;
