@@ -192,7 +192,12 @@ define(
 
 				return this;
 			},
-			
+	
+			setupPaymentMethod: function() {
+				this.watchPaymentMethods();
+				this.handleFastlaneConsent();
+			},
+
 			/** 
 			 * Deactivates card form when fiserv_commercehub not checked.
 			 * isActive() not working with COD, for some reason.
@@ -208,6 +213,17 @@ define(
 						chAdapter.destroyIframe();
 					}
 				});
+			},
+
+			handleFastlaneConsent: function() {
+				if (window.checkoutConfig.payment.fiserv_paypal_fastlane &&
+					window.checkoutConfig.payment.fiserv_paypal_fastlane.consent &&
+					window.checkoutConfig.payment.fiserv_paypal_fastlane.consent.render &&
+					$("#fiserv-paypal-consent-container").length &&
+					!$("fiserv-paypal-consent-container").children().length)
+				{
+					window.checkoutConfig.payment.fiserv_paypal_fastlane.consent.render("#fiserv-paypal-consent-container");
+				}
 			},
 
 			refreshBillingAddress: function () {
