@@ -196,6 +196,11 @@ define([
 				else {
 					this.unengageFastlane();
 				}
+				if ($("#fiserv-paypal-consent-container").length &&
+					!$("fiserv-paypal-consent-container").children().length)
+				{
+					window.checkoutConfig.payment.fiserv_paypal_fastlane.consent.render("#fiserv-paypal-consent-container");
+				}
 			} catch (err)
 			{
 				console.log(err);
