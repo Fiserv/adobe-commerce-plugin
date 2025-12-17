@@ -22,6 +22,10 @@ class DataAssignObserver extends AbstractDataAssignObserver
 	const EXP_YEAR_KEY = 'expiration_year';
 	const NAME_ON_CARD_KEY = 'nameOnCard';
 	const THREE_D_SECURE_KEY = '3DSecureId';
+	const IS_SUBSCRIPTION_KEY = 'is_subscription';
+	const SUBSCRIPTION_INTERVAL_VALUE_KEY = 'subscription_interval_value';
+	const SUBSCRIPTION_INTERVAL_UNIT_KEY = 'subscription_interval_unit';
+	const SCHEME_REFERENCE_TRANSACTION_ID_KEY = 'scheme_reference_transaction_id';
 
 	/**
 	 * @var array
@@ -33,7 +37,11 @@ class DataAssignObserver extends AbstractDataAssignObserver
 		self::TOKEN_SOURCE_KEY,
 		self::EXP_MONTH_KEY,
 		self::EXP_YEAR_KEY,
-		self::THREE_D_SECURE_KEY
+		self::THREE_D_SECURE_KEY,
+		self::IS_SUBSCRIPTION_KEY,
+		self::SUBSCRIPTION_INTERVAL_VALUE_KEY,
+		self::SUBSCRIPTION_INTERVAL_UNIT_KEY,
+		self::SCHEME_REFERENCE_TRANSACTION_ID_KEY
 	];
 
 	/**

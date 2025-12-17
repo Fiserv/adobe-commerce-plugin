@@ -7,7 +7,7 @@ namespace Fiserv\Payments\Gateway\Request\CommerceHub;
 
 use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use Fiserv\Payments\Lib\CommerceHub\Model\TransactionDetails;
-use Fiserv\Payments\Gateway\Config\CommerceHub\Config; 
+use Fiserv\Payments\Gateway\Config\CommerceHub\Config;
 use Fiserv\Payments\Model\Source\CommerceHub\TokenizationStrategy;
 use Magento\Payment\Gateway\Request\BuilderInterface;
 use Magento\Vault\Model\Ui\VaultConfigProvider;
@@ -27,7 +27,7 @@ abstract class TransactionDetailsDataBuilder implements BuilderInterface
 	 * @var MultiLevelLogger
 	 */
 	private $logger;
-	
+
 	/**
 	 * @var SubjectReader
 	 */
@@ -73,7 +73,7 @@ abstract class TransactionDetailsDataBuilder implements BuilderInterface
 		}
 
 		$captureFlag = $this->getCaptureFlag();
-		
+
 		$txnDetails->setCaptureFlag($captureFlag);
 		$txnDetails->setMerchantOrderId($orderDO->getOrderIncrementId());
 		$txnDetails->setMerchantTransactionId(uniqid());

@@ -60,17 +60,12 @@ class VaultDetailsHandler implements HandlerInterface
 	 */
 	private $serializer;
 	
-	/**
-	** @var MultiLevelLogger
-	**/
+	/** @var MultiLevelLogger**/
 	private $logger;
-
 	private $paymentTokenRepository;
-
 	private $paymentTokenManager;
-	
 	private $encryptor;
-	
+
 	/**
 	 * VaultDetailsHandler constructor.
 	 *
@@ -110,27 +105,27 @@ class VaultDetailsHandler implements HandlerInterface
 	 */
 	public function handle(array $handlingSubject, array $response)
 	{
-		
+
 		$paymentDO = $this->subjectReader->readPayment($handlingSubject);
 		$chResponse = $this->subjectReader->readChResponse($response)[\Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient::RESPONSE_KEY];
 		$payment = $paymentDO->getPayment();
-		
+
 		$tokenStrat = $this->config->getTokenStrategy();
-		$storeToken = $payment->getStoreVault() === TransactionDetailsDataBuilder::KEY_CREATE_TOKEN || 
+		$storeToken = $payment->getStoreVault() === TransactionDetailsDataBuilder::KEY_CREATE_TOKEN ||
 			$tokenStrat === TokenizationStrategy::ALWAYS;
-		
+
 		$visible = $payment->getStoreVault() === TransactionDetailsDataBuilder::KEY_CREATE_TOKEN;
-				
+
 		if($storeToken && $this->wasTokenRequestSuccessful($chResponse)) {
 			$existingToken = $this->vaultPaymentTokenUtils->doesTokenExist(
-				$chResponse["paymentTokens"][0]["tokenData"], 
-				$payment->getMethodInstance()->getCode(),  
+				$chResponse["paymentTokens"][0]["tokenData"],
+				$payment->getMethodInstance()->getCode(),
 				$payment->getOrder()->getCustomerId(),
 				$chResponse["source"]["card"]["expirationMonth"],
 				$chResponse["source"]["card"]["expirationYear"]);
 
 			if ($existingToken === false || (isset($existingToken["is_visible"]) && $existingToken["is_visible"] != $visible))
-			{	
+			{
 				$paymentToken = $this->getVaultCardToken($chResponse, $visible);
 				$extensionAttributes = $this->getExtensionAttributes($payment);
 				$extensionAttributes->setVaultPaymentToken($paymentToken);
@@ -147,7 +142,7 @@ class VaultDetailsHandler implements HandlerInterface
 	public function getVaultCardToken($chResponse, $visible)
 	{
 		$paymentToken = $this->paymentTokenFactory->create(PaymentTokenFactoryInterface::TOKEN_TYPE_CREDIT_CARD);
-		
+
 		$cardArray = $chResponse["source"]["card"];
 		$tokenArray = $chResponse["paymentTokens"][0];
 
@@ -155,13 +150,13 @@ class VaultDetailsHandler implements HandlerInterface
 		// basically checking two places for the scheme:
 		// 1. source.card.scheme
 		// 2. cardDetails[0].detailedCardProduct
-		$rawScheme = isset($cardArray["scheme"]) ? $cardArray["scheme"] : 
-			( 
-				(
-					(!isset($chResponse["cardDetails"])) || 
-					(!isset($chResponse["cardDetails"][0])) ||
-					(!isset($chResponse["cardDetails"][0]["detailedCardProduct"])) 
-				) ? "" : $chResponse["cardDetails"][0]["detailedCardProduct"]
+		$rawScheme = isset($cardArray["scheme"]) ? $cardArray["scheme"] :
+			(
+			(
+				(!isset($chResponse["cardDetails"])) ||
+				(!isset($chResponse["cardDetails"][0])) ||
+				(!isset($chResponse["cardDetails"][0]["detailedCardProduct"]))
+			) ? "" : $chResponse["cardDetails"][0]["detailedCardProduct"]
 			);
 
 		$details = $this->convertDetailsToJSON([
@@ -171,7 +166,8 @@ class VaultDetailsHandler implements HandlerInterface
 			"tokenSource" => $tokenArray["tokenSource"],
 			"tokenResponseCode" => $tokenArray["tokenResponseCode"],
 			"tokenResponseDescription" => $tokenArray["tokenResponseDescription"],
-			"nameOnCard" => $cardArray["nameOnCard"] ?? ''
+			"nameOnCard" => $cardArray["nameOnCard"] ?? '',
+			"merchantId" => (string)($this->config->getMerchantId() ?? '')
 		]);
 		$paymentToken->setGatewayToken(PaymentTokenUtil::formatTokenDataForPersistence($tokenArray["tokenData"]));
 		$paymentToken->setExpiresAt($this->getExpirationDate($cardArray));
@@ -183,7 +179,7 @@ class VaultDetailsHandler implements HandlerInterface
 
 		return $paymentToken;
 	}
-	
+
 	private function getCreditCardType($type)
 	{
 		$replaced = str_replace(' ', '-', strtolower($type));
@@ -199,18 +195,18 @@ class VaultDetailsHandler implements HandlerInterface
 	private function getExpirationDate($cardArray)
 	{
 		$expDate = new \DateTime(
-            $cardArray["expirationYear"]
-            . '-'
-            . $cardArray["expirationMonth"]
-            . '-'
-            . '01'
-            . ' '
-            . '00:00:00',
-            new \DateTimeZone('UTC')
-        );
-        $expDate->add(new \DateInterval('P1M'));
+			$cardArray["expirationYear"]
+			. '-'
+			. $cardArray["expirationMonth"]
+			. '-'
+			. '01'
+			. ' '
+			. '00:00:00',
+			new \DateTimeZone('UTC')
+		);
+		$expDate->add(new \DateInterval('P1M'));
 
-        return $expDate->format('Y-m-d 00:00:00');
+		return $expDate->format('Y-m-d 00:00:00');
 	}
 
 	/**
@@ -241,14 +237,14 @@ class VaultDetailsHandler implements HandlerInterface
 
 	private function wasTokenRequestSuccessful($chResponse) {
 		return (
-			isset($chResponse["paymentTokens"]) && 
+			isset($chResponse["paymentTokens"]) &&
 			$chResponse["paymentTokens"][0] !== null &&
 			isset($chResponse["paymentTokens"][0]["tokenResponseDescription"]) &&
 			$chResponse["paymentTokens"][0]["tokenResponseDescription"] == "SUCCESS" &&
 			isset($chResponse["paymentTokens"][0]["tokenData"])
 		);
 	}
-	
+
 	public function generatePublicHash(\Magento\Vault\Model\PaymentToken $paymentToken)
 	{
 		$hashKey = $paymentToken->getGatewayToken();

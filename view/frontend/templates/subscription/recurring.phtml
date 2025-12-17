@@ -1,0 +1,470 @@
+<?php
+/**
+ * @var \Fiserv\Payments\Block\Subscription\Recurring $block
+ */
+
+// Always define $vaultListUrl first — it is referenced in the JS block at the bottom of this
+// file and must be set even on the order-view path which does an early return before line 85.
+$vaultListUrl = $block->getUrl('fiserv/subscription/getVaultTokens');
+
+$rows = method_exists($block, 'getPriorRecurringPayments') ? $block->getPriorRecurringPayments() : [];
+$vaultTokens = method_exists($block, 'getVaultTokens') ? (array)$block->getVaultTokens() : [];
+$isOrderViewPage = $block->getRequest()->getFullActionName() === 'sales_order_view';
+
+if ($isOrderViewPage):
+    $singleData = method_exists($block, 'getSingleOrderViewData') ? $block->getSingleOrderViewData() : null;
+?>
+    <div class="block block-order-details-view">
+        <div class="block-title"><strong><?= $block->escapeHtml(__('Recurring Payment Details')) ?></strong></div>
+        <div class="block-content">
+            <?php if ($singleData === null): ?>
+                <p><?= $block->escapeHtml(__('No recurring payment data found for this order.')) ?></p>
+            <?php else: ?>
+                <table style="width:100%; border-collapse:collapse; font-size:14px;">
+                    <thead>
+                        <tr style="background:#f5f5f5;">
+                            <th style="text-align:left; padding:8px; border-bottom:2px solid #ddd;"><?= $block->escapeHtml(__('Order')) ?></th>
+                            <th style="text-align:left; padding:8px; border-bottom:2px solid #ddd;"><?= $block->escapeHtml(__('Date')) ?></th>
+                            <th style="text-align:left; padding:8px; border-bottom:2px solid #ddd;"><?= $block->escapeHtml(__('Amount')) ?></th>
+                            <th style="text-align:left; padding:8px; border-bottom:2px solid #ddd;"><?= $block->escapeHtml(__('Transaction ID')) ?></th>
+                            <th style="text-align:left; padding:8px; border-bottom:2px solid #ddd;"><?= $block->escapeHtml(__('Payment Method')) ?></th>
+                            <th style="text-align:left; padding:8px; border-bottom:2px solid #ddd;"><?= $block->escapeHtml(__('Status')) ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding:8px; border-bottom:1px solid #eee;">
+                                <?= $block->escapeHtml($singleData['increment_id']) ?>
+                            </td>
+                            <td style="padding:8px; border-bottom:1px solid #eee;">
+                                <?= $block->escapeHtml($singleData['date']) ?>
+                            </td>
+                            <td style="padding:8px; border-bottom:1px solid #eee;">
+                                <?= $block->escapeHtml($singleData['amount']) ?>
+                            </td>
+                            <td style="padding:8px; border-bottom:1px solid #eee;">
+                                <?php if ($singleData['transaction_id'] !== ''): ?>
+                                    <code><?= $block->escapeHtml($singleData['transaction_id']) ?></code>
+                                <?php else: ?>
+                                    <span style="color:#999;"><?= $block->escapeHtml(__('N/A')) ?></span>
+                                <?php endif; ?>
+                            </td>
+                            <td style="padding:8px; border-bottom:1px solid #eee;">
+                                <?php if ($singleData['card_label'] !== ''): ?>
+                                    <?= $block->escapeHtml(__('Card used: %1', $singleData['card_label'])) ?>
+                                <?php else: ?>
+                                    <span style="color:#999;"><?= $block->escapeHtml(__('—')) ?></span>
+                                <?php endif; ?>
+                            </td>
+                            <td style="padding:8px; border-bottom:1px solid #eee;">
+                                <?php
+                                $statusDisplay = ucfirst((string)$singleData['status']);
+                                $statusColor = match(strtolower((string)$singleData['status'])) {
+                                    'processed' => '#2d7d2d',
+                                    'active' => '#1a6eaf',
+                                    'cancelled', 'canceled' => '#b00020',
+                                    default => '#555',
+                                };
+                                ?>
+                                <span style="color:<?= $block->escapeHtmlAttr($statusColor) ?>; font-weight:600;">
+                                    <?= $block->escapeHtml($statusDisplay) ?>
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+        </div>
+    </div>
+<?php return; endif; ?>
+
+<?php
+/* Use block-provided label/public_hash (array-first). Falls back to object getters if necessary. */
+$tokenLabel = function ($token) {
+    if (is_array($token) && !empty($token['label'])) {
+        return (string)$token['label'];
+    }
+    if (is_object($token) && method_exists($token, 'getLabel')) {
+        return (string)$token->getLabel();
+    }
+    return (string)__('Saved card');
+};
+
+$getPublicHash = function ($token) {
+    if (is_array($token) && !empty($token['public_hash'])) {
+        return (string)$token['public_hash'];
+    }
+    if (is_object($token) && method_exists($token, 'getPublicHash')) {
+        return (string)$token->getPublicHash();
+    }
+    return '';
+};
+
+$validVaultTokens = [];
+foreach ($vaultTokens as $tok) {
+    $ph = $getPublicHash($tok);
+    if ($ph !== '') {
+        $validVaultTokens[] = $tok;
+    }
+}
+
+// Build inline snapshot for JS (array of {public_hash,label})
+$initialVaultTokens = [];
+foreach ($validVaultTokens as $tok) {
+    $ph = $getPublicHash($tok);
+    if ($ph === '') continue;
+    $initialVaultTokens[] = ['public_hash' => $ph, 'label' => $tokenLabel($tok)];
+}
+$initialVaultTokensJson = json_encode(
+        $initialVaultTokens,
+        JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP
+);
+?>
+<div style="display:none;"><?= $block->getBlockHtml('formkey') ?></div>
+
+<div class="search-pagination-container" style="padding:16px;">
+    <div class="filter-wrapper" style="display:flex; gap:12px; align-items:center; margin-bottom:12px;">
+        <div class="filter-item">
+            <input type="text" id="searchInput"
+                   placeholder="<?= $block->escapeHtml(__('Search by order, amount, interval, sequence, status')) ?>" />
+        </div>
+
+        <div class="actionContainer" style="display:flex; align-items:center; gap:12px; margin-left:auto;">
+            <div class="paginationContainerTop" style="display:flex; align-items:center; gap:8px;">
+                <label for="rowsPerPage"><?= $block->escapeHtml(__('Limit:')) ?></label>
+                <select id="rowsPerPage" style="margin-left:4px;">
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="15">15</option>
+                    <option value="20" selected>20</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <?php if (empty($rows)): ?>
+        <p><?= $block->escapeHtml(__('No prior recurring payments were found on your account.')) ?></p>
+    <?php else: ?>
+        <table id="recurringTable" class="data-table" style="width:100%; border-collapse:collapse;">
+            <thead>
+            <tr>
+                <th style="text-align:left; padding:8px; border-bottom:1px solid #eee;"><?= $block->escapeHtml(__('Order')) ?></th>
+                <th style="text-align:left; padding:8px; border-bottom:1px solid #eee;"><?= $block->escapeHtml(__('Date')) ?></th>
+                <th style="text-align:left; padding:8px; border-bottom:1px solid #eee;"><?= $block->escapeHtml(__('Amount')) ?></th>
+                <th style="text-align:left; padding:8px; border-bottom:1px solid #eee;"><?= $block->escapeHtml(__('Interval')) ?></th>
+                <th style="text-align:left; padding:8px; border-bottom:1px solid #eee;"><?= $block->escapeHtml(__('Status')) ?></th>
+                <th style="text-align:left; padding:8px; border-bottom:1px solid #eee;"><?= $block->escapeHtml(__('Payment method')) ?></th>
+                <th style="text-align:left; padding:8px; border-bottom:1px solid #eee;"><?= $block->escapeHtml(__('Next Billing')) ?></th>
+                <th style="text-align:left; padding:8px; border-bottom:1px solid #eee;"><?= $block->escapeHtml(__('Cancel subscription')) ?></th>
+            </tr>
+            </thead>
+            <tbody id="tableBody">
+            <?php foreach ($rows as $row):
+                $sub = $row['subscription'];
+                $order = $row['order'];
+
+                $inc = (string)($sub->getOrderIncrementId() ?? '');
+                // NEW: determine parent vs child by increment id suffix
+                $isChildOrder = ($inc !== '' && preg_match('/-\d+$/', $inc));
+                $isParentOrder = !$isChildOrder;
+
+                $date = $order ? $order->getCreatedAt() : ($sub->getCreatedAt() ?: null);
+                $amount = $order ? (float)$order->getGrandTotal() : null;
+
+                $intervalValue = (string)($sub->getIntervalValue() ?? '');
+                $intervalUnit = (string)($sub->getIntervalUnit() ?? '');
+                $interval = trim(($intervalValue !== '' ? $intervalValue : '') . ' ' . ($intervalUnit !== '' ? $intervalUnit : ''));
+
+                $status = (string)($sub->getStatus() ?? '');
+                $statusLower = strtolower($status);
+
+                $nextBilling = (string)($sub->getNextBillingDatetime() ?? '');
+                $sequence = (string)($sub->getSequence() ?? '');
+                $originalInc = (string)($sub->getOriginalOrderIncrement() ?? '');
+
+                $orderUrl = ($order && $order->getEntityId())
+                        ? $block->getUrl('sales/order/view', ['order_id' => $order->getEntityId()])
+                        : '';
+
+                $subId = (int)($sub->getEntityId() ?: 0);
+
+                $latestSubId = method_exists($block, 'getLatestSubscriptionIdByChain')
+                    ? (int)$block->getLatestSubscriptionIdByChain($sub)
+                    : 0;
+                $isLatestRow = ($latestSubId > 0 && $subId === $latestSubId);
+                $chainCancelled = method_exists($block, 'getChainCancelledForSubscription')
+                    ? (bool)$block->getChainCancelledForSubscription($sub)
+                    : false;
+
+                // Display logic:
+                // - If the chain is cancelled, leave status as-is (cancelled/processed).
+                // - The parent (FIRST) row shows 'Processed' once it has at least one child renewal,
+                //   because the original auth has completed. It only shows 'Active' when it is still
+                //   the newest row (i.e., no renewals have run yet).
+                // - The latest SUBSEQUENT row gets 'Active' to indicate the subscription is ongoing.
+                if (!$chainCancelled && $statusLower !== 'cancelled') {
+                    if ($isLatestRow && !$isParentOrder) {
+                        // Latest child row → show Active badge
+                        $statusLower = 'active';
+                    } elseif ($isLatestRow && $isParentOrder) {
+                        // Parent IS the latest (no children yet) → show Active to signal subscription is live
+                        $statusLower = 'active';
+                    } elseif (!$isLatestRow && $isParentOrder) {
+                        // Parent has children → its auth is done, show Processed
+                        $statusLower = 'processed';
+                    }
+                }
+
+                $headHash = '';
+                if (method_exists($block, 'getHeadPublicHashForSubscription')) {
+                    try {
+                        $headHash = (string)$block->getHeadPublicHashForSubscription($sub);
+                    } catch (\Exception $e) {
+                        $headHash = '';
+                    }
+                }
+                ?>
+                <tr class="recurring-row"
+                    data-subscription-id="<?= (int)$subId ?>"
+                    data-order-inc="<?= $block->escapeHtmlAttr($inc) ?>"
+                    data-root="<?= $block->escapeHtmlAttr($originalInc !== '' ? $originalInc : preg_replace('/-\d+$/', '', $inc)) ?>"
+                    data-head-hash="<?= $block->escapeHtmlAttr($headHash) ?>">
+                    <td style="padding:8px; border-bottom:1px solid #f5f5f5;">
+                        <?php if ($orderUrl): ?>
+                            <a href="<?= $block->escapeUrl($orderUrl) ?>"><?= $block->escapeHtml($inc ?: __('-')) ?></a>
+                        <?php else: ?>
+                            <?= $block->escapeHtml($inc ?: __('-')) ?>
+                        <?php endif; ?>
+                    </td>
+
+                    <td style="padding:8px; border-bottom:1px solid #f5f5f5;">
+                        <?= $date ? $block->escapeHtml($date) : $block->escapeHtml(__('Unknown')) ?>
+                    </td>
+
+                    <td style="padding:8px; border-bottom:1px solid #f5f5f5;">
+                        <?= $amount !== null ? $block->escapeHtml($block->formatPrice((float)$amount)) : $block->escapeHtml(__('N/A')) ?>
+                    </td>
+
+                    <td style="padding:8px; border-bottom:1px solid #f5f5f5;">
+                        <?= $block->escapeHtml($interval !== '' ? $interval : __('N/A')) ?>
+                    </td>
+
+                    <!-- Status -->
+                    <td style="padding:8px; border-bottom:1px solid #f5f5f5;">
+                        <?php if ($statusLower === 'processed'): ?>
+                            <span class="subscription-status-label" style="color:#28a745; font-weight:bold;"><?= $block->escapeHtml(__('Processed')) ?></span>
+                        <?php elseif ($statusLower === 'cancelled'): ?>
+                            <span class="subscription-status-label" style="color:#c00;"><?= $block->escapeHtml(__('Canceled')) ?></span>
+                        <?php elseif ($statusLower === 'active' && $subId > 0 && !$isParentOrder): ?>
+                            <select class="subscription-status-select"
+                                    data-subscription-id="<?= (int)$subId ?>"
+                                    aria-label="<?= $block->escapeHtmlAttr(__('Subscription status for %1', $inc)) ?>">
+                                <option value="active" selected><?= $block->escapeHtml(__('Active')) ?></option>
+                                <option value="cancelled"><?= $block->escapeHtml(__('Cancel')) ?></option>
+                            </select>
+                        <?php else: ?>
+                            <span class="subscription-status-label"><?= $block->escapeHtml(ucfirst($statusLower ?: 'N/A')) ?></span>
+                        <?php endif; ?>
+                    </td>
+
+                    <!-- Payment method + Update card -->
+                    <td style="padding:8px; border-bottom:1px solid #f5f5f5;">
+                        <?php
+                        // Resolve card label for ALL rows (active or not)
+                        $currentCardLabel = '';
+                        $txnLast4 = '';
+                        $rawToken = '';
+
+                        // 1) Prefer Magento order payment_token (only if the order exists)
+                        if ($order && $order->getPayment()) {
+                            $ai = (array)$order->getPayment()->getAdditionalInformation();
+                            $rawToken = (string)($ai['payment_token'] ?? '');
+                        }
+
+                        // 2) Fallback: subscription_order.payment_token
+                        if ($rawToken === '') {
+                            try {
+                                $rawToken = (string)($sub->getPaymentToken() ?? '');
+                            } catch (\Throwable $e) {
+                                $rawToken = '';
+                            }
+                        }
+
+                        if ($rawToken !== '') {
+                            $tokenPart = explode('$$TS$$=', $rawToken, 2)[0];
+                            $digits = preg_replace('/\D+/', '', $tokenPart);
+                            $txnLast4 = $digits ? substr($digits, -4) : '';
+                        }
+
+                        if ($txnLast4 !== '') {
+                            $currentCardLabel = '************' . $txnLast4;
+                        } elseif ($headHash !== '') {
+                            foreach ($validVaultTokens as $tokTmp) {
+                                if ($getPublicHash($tokTmp) === $headHash) {
+                                    $currentCardLabel = $tokenLabel($tokTmp);
+                                    break;
+                                }
+                            }
+                        }
+
+                        if ($currentCardLabel === '') {
+                            $currentCardLabel = '';
+                        }
+                        ?>
+                        <?php if ($statusLower === 'active' && $subId > 0): ?>
+                            <?php if (!empty($validVaultTokens)): ?>
+                                <div class="subscription-payment-wrapper"
+                                     style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;"
+                                     data-subscription-id="<?= (int)$subId ?>">
+
+                                    <span class="subscription-payment-current"
+                                          data-subscription-id="<?= (int)$subId ?>"
+                                          style="font-size:12px; color:#333;">
+                                        <?= $block->escapeHtml(__('Card used: %1', $currentCardLabel ?: __('Saved card'))) ?>
+                                    </span>
+
+                                    <button type="button"
+                                            class="subscription-update-btn action primary"
+                                            data-subscription-id="<?= (int)$subId ?>">
+                                        <?= $block->escapeHtml(__('Update card')) ?>
+                                    </button>
+
+                                    <div class="subscription-payment-editor"
+                                         data-subscription-id="<?= (int)$subId ?>"
+                                         style="display:none; gap:8px; align-items:center; flex-wrap:wrap;">
+
+                                        <select class="subscription-payment-select"
+                                                data-subscription-id="<?= (int)$subId ?>"
+                                                data-vault-loaded="true"
+                                                aria-label="<?= $block->escapeHtmlAttr(__('Select payment method for subscription %1', $inc)) ?>">
+                                            <option value=""><?= $block->escapeHtml(__('Select a saved card')) ?></option>
+                                            <?php foreach ($validVaultTokens as $tok):
+                                                $ph = $getPublicHash($tok);
+                                                if ($ph === '') continue;
+                                                ?>
+                                                <option value="<?= $block->escapeHtmlAttr($ph) ?>">
+                                                    <?= $block->escapeHtml($tokenLabel($tok)) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+
+                                        <button type="button"
+                                                class="subscription-save-btn action secondary"
+                                                data-subscription-id="<?= (int)$subId ?>">
+                                            <?= $block->escapeHtml(__('Save')) ?>
+                                        </button>
+
+                                        <button type="button"
+                                                class="subscription-cancel-edit-btn action secondary"
+                                                data-subscription-id="<?= (int)$subId ?>">
+                                            <?= $block->escapeHtml(__('Cancel')) ?>
+                                        </button>
+                                    </div>
+
+                                    <span class="subscription-update-feedback"
+                                          data-subscription-id="<?= (int)$subId ?>"
+                                          style="font-size:12px;<?php
+                                          // Show pending_card_label from the head row if set
+                                          // This is server-persisted so it's visible on both customer and admin pages
+                                          $headSub = method_exists($block, 'getHeadSubscriptionForSubscription')
+                                              ? $block->getHeadSubscriptionForSubscription($sub)
+                                              : null;
+                                          $pendingCardLabel = ($headSub && method_exists($headSub, 'getPendingCardLabel'))
+                                              ? (string)($headSub->getPendingCardLabel() ?? '')
+                                              : '';
+                                          echo $pendingCardLabel !== '' ? ' color:#0a7a0a;' : '';
+                                          ?>">
+                                        <?php if ($pendingCardLabel !== ''): ?>
+                                            <?= $block->escapeHtml(__('Updated. Future renewals will use this card.')) ?>
+                                            <?= $block->escapeHtml(__('Card number: %1', $pendingCardLabel)) ?>
+                                        <?php endif; ?>
+                                    </span>
+                                </div>
+                            <?php else: ?>
+                                <span style="font-size:12px; color:#333;">
+                                    <?= $currentCardLabel !== '' ? $block->escapeHtml(__('Card used: %1', $currentCardLabel)) : $block->escapeHtml(__('No saved cards found.')) ?>
+                                </span>
+                            <?php endif; ?>
+                        <?php else: ?>
+                            <span style="font-size:12px; color:#333;">
+                                <?= $currentCardLabel !== '' ? $block->escapeHtml(__('Card used: %1', $currentCardLabel)) : $block->escapeHtml(__('—')) ?>
+                            </span>
+                        <?php endif; ?>
+                    </td>
+
+                    <td style="padding:8px; border-bottom:1px solid #f5f5f5;">
+                        <?php
+                        // Parent (FIRST) rows: show created_at + interval (the original first scheduled time).
+                        // This is stable — it represents when -1 was first due.
+                        // Child rows: show their own next_billing_datetime (when their successor runs).
+                        if ($isParentOrder && method_exists($block, 'getFirstNextBillingForHead')) {
+                            $displayNextBilling = $block->getFirstNextBillingForHead($sub);
+                            if ($displayNextBilling === '') {
+                                $displayNextBilling = $nextBilling;
+                            }
+                        } else {
+                            $displayNextBilling = $nextBilling;
+                        }
+                        ?>
+                        <?= $displayNextBilling !== '' ? $block->escapeHtml($displayNextBilling . ' UTC') : $block->escapeHtml(__('N/A')) ?>
+                    </td>
+
+                    <td style="padding:8px; border-bottom:1px solid #f5f5f5;">
+                        <?php
+                        $rootSubId = method_exists($block, 'getHeadSubscriptionIdForSubscription')
+                                ? (int)$block->getHeadSubscriptionIdForSubscription($sub)
+                                : 0;
+                        if ($rootSubId <= 0) { $rootSubId = (int)$subId; }
+                        ?>
+                        <?php if ($chainCancelled): ?>
+                            <span style="color:#c00; font-size:12px; font-weight:bold;"><?= $block->escapeHtml(__('Subscription canceled')) ?></span>
+                        <?php elseif ($rootSubId > 0): ?>
+                            <button type="button"
+                                    class="subscription-cancel-chain-btn action secondary"
+                                    data-root-subscription-id="<?= (int)$rootSubId ?>">
+                                <?= $block->escapeHtml(__('Cancel subscription')) ?>
+                            </button>
+                        <?php else: ?>
+                            <span style="color:#777; font-size:12px;"><?= $block->escapeHtml(__('—')) ?></span>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+
+        <div id="noRecordsMessage" style="display:none; margin-top:12px;">
+            <?= $block->escapeHtml(__('No prior recurring payments were found on your account.')) ?>
+        </div>
+
+        <div id="paginationControls" style="margin-top:12px;" data-total="<?= (int)count($rows) ?>"></div>
+    <?php endif; ?>
+</div>
+
+<script type="text/x-magento-init">
+    {
+      "*": {
+        "Fiserv_Payments/js/subscription/recurring": {
+          "cancelUrl": "<?= $block->escapeJs($block->getUrl('fiserv/subscription/cancel')) ?>",
+      "updateUrl": "<?= $block->escapeJs($block->getUrl('fiserv/subscription/updatePayment')) ?>",
+      "dataUrl": "<?= $block->escapeJs($block->getUrl('fiserv/subscription/recurringData')) ?>",
+      "orderViewBaseUrl": "<?= $block->escapeJs($block->getUrl('sales/order/view', ['order_id' => 'ORDER_ID_PLACEHOLDER'])) ?>",
+      "vaultListUrl": "<?= $block->escapeJs($vaultListUrl) ?>",
+      "initialVaultTokens": <?= $initialVaultTokensJson ?: '[]' ?>,
+      "searchInputId": "searchInput",
+      "rowsPerPageId": "rowsPerPage",
+      "tableBodyId": "tableBody",
+      "noRecordsId": "noRecordsMessage",
+      "paginationId": "paginationControls",
+      "msgSelectCard": "<?= $block->escapeJs(__('Please select a saved card.')) ?>",
+      "msgSaving": "<?= $block->escapeJs(__('Saving...')) ?>",
+      "msgUpdated": "<?= $block->escapeJs(__('Updated. Future renewals will use this card.')) ?>",
+      "msgConfirmCancelLatest": "<?= $block->escapeJs(__('Cancel the latest renewal transaction? Recurring will continue.')) ?>",
+      "msgCancelling": "<?= $block->escapeJs(__('Cancelling...')) ?>",
+      "msgCancelFailedPrefix": "<?= $block->escapeJs(__('Failed to cancel:')) ?> ",
+      "msgConfirmCancelChain": "<?= $block->escapeJs(__('Cancel this subscription? Future renewals will stop.')) ?>",
+      "msgCancelFailedPrefix2": "<?= $block->escapeJs(__('Failed to cancel subscription:')) ?> "
+    }
+  }
+}
+</script>

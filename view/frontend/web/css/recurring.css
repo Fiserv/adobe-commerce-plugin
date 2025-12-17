@@ -1,0 +1,144 @@
+.search-pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+    padding: 16px;
+    box-sizing: border-box;
+    gap: 12px;
+}
+
+.filter-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+}
+
+.filter-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#searchInput {
+    padding: 0.5rem 0.75rem;
+    border: none;
+    border-bottom: 1px solid #cfcfcf;
+    background: transparent;
+    width: 340px;
+    box-sizing: border-box;
+    font-size: 14px;
+}
+
+.actionContainer {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.paginationContainerTop {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+#rowsPerPage {
+    padding: 6px 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #fff;
+    font-size: 14px;
+}
+
+/* Table */
+#recurringTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+    margin-bottom: 12px;
+    border: 1px solid #d3d3d3;
+    box-sizing: border-box;
+}
+
+#recurringTable thead {
+    background: #000;
+    color: #fff;
+}
+
+#recurringTable thead th {
+    font-weight: 400;
+    text-align: left;
+    padding: 10px 15px;
+}
+
+#recurringTable th, #recurringTable td {
+    padding: 10px 15px;
+    border-bottom: 1px solid #f5f5f5;
+    vertical-align: middle;
+    font-size: 14px;
+}
+
+#recurringTable tbody tr:hover {
+    background: #fafafa;
+}
+
+/* Small "no records" message */
+#noRecordsMessage {
+    color: #666;
+    font-size: 14px;
+}
+
+/* Export button / dropdown */
+.exportButton {
+    background: transparent;
+    border: 1px solid #ddd;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 40px;
+    width: max-content;
+    padding: 12px;
+    display: none;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+    z-index: 1000;
+}
+
+.dropdown-menu div {
+    padding: 6px 10px;
+    cursor: pointer;
+}
+
+.dropdown-menu div:hover {
+    background: #f0f0f0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .filter-wrapper {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+    #searchInput {
+        width: 100%;
+    }
+    .actionContainer {
+        width: 100%;
+        justify-content: flex-end;
+    }
+    #recurringTable th, #recurringTable td {
+        padding: 8px 10px;
+        font-size: 13px;
+    }
+}

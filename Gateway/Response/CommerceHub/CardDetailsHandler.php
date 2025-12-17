@@ -26,7 +26,7 @@ class CardDetailsHandler implements HandlerInterface
 	/**
 	 * @var SubjectReader
 	 */
-	private $subjectReader;
+	protected $subjectReader;
 
 	/**
 	 * Constructor

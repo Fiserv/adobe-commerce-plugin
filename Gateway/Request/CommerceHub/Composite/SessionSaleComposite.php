@@ -15,6 +15,8 @@ use Fiserv\Payments\Gateway\Request\CommerceHub\TransactionInteractionDataBuilde
 use Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder;
+use Fiserv\Payments\Gateway\Request\CommerceHub\StoredCredentialsDataBuilder;
+use Fiserv\Payments\Gateway\Request\CommerceHub\AdditionalDataCommonDataBuilder;
 use Magento\Framework\ObjectManager\TMapFactory;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 use Fiserv\Payments\Gateway\Config\CommerceHub\Config;
@@ -55,9 +57,7 @@ class SessionSaleComposite extends ChCompositeBase
 	public function build(array $buildSubject)
 	{
 		$this->logger->logInfo(1, "Initiating Sale Transaction");
-		
 		$result = parent::build($buildSubject);
-
 		$req = new ChargesRequest();
 		$req->setAmount($result[AmountDataBuilder::AMOUNT_KEY]);
 		$req->setSource($result[SessionSourceDataBuilder::SESSION_SOURCE_KEY]);
@@ -67,10 +67,18 @@ class SessionSaleComposite extends ChCompositeBase
 		$req->setBillingAddress($result[BillingAddressDataBuilder::BILLING_ADDRESS_KEY]);
 		$req->setCustomer($result[CustomerDataBuilder::CUSTOMER_KEY]);
 
-                // 3D Secure can be enabled but not run (e.g. admin panel order creation)
+		// 3D Secure can be enabled but not run (e.g. admin panel order creation)
 		if ($this->chConfig->isThreeDSEnabled() && isset($result[ThreeDSecureDataBuilder::KEY_3DS_DATA]))
 		{
 			$req->setAdditionalData3Ds($result[ThreeDSecureDataBuilder::KEY_3DS_DATA]);
+		}
+
+		if (isset($result[StoredCredentialsDataBuilder::STORED_CREDENTIALS_KEY])) {
+			$req->setStoredCredentials($result[StoredCredentialsDataBuilder::STORED_CREDENTIALS_KEY]);
+		}
+
+		if (isset($result[AdditionalDataCommonDataBuilder::ADDITIONAL_DATA_COMMON_KEY])) {
+			$req->setAdditionalDataCommon($result[AdditionalDataCommonDataBuilder::ADDITIONAL_DATA_COMMON_KEY]);
 		}
 
 		return [ 

@@ -33,6 +33,37 @@
             </each>
         </div>
         <div class="checkout-agreements-block">
+            <!-- Inline subscription option -->
+            <div class="fiserv-subscription-container">
+                <div class="field choice subscription-toggle">
+                    <input type="checkbox"
+                           class="checkbox"
+                           data-bind="checked: isSubscriptionEnabled,
+                                      attr: {'id': getId() + '_subscription_enabled'}"/>
+                    <label class="label"
+                           data-bind="attr: {'for': getId() + '_subscription_enabled'}">
+                        <span><!-- ko i18n: 'Subscribe' --><!-- /ko --></span>
+                    </label>
+                </div>
+                <!-- ko if: isSubscriptionEnabled -->
+                <div class="field subscription-frequency">
+                    <label class="label"
+                           data-bind="attr: {'for': getId() + '_subscription_frequency'}">
+                        <span><!-- ko i18n: 'Billing frequency' --><!-- /ko --></span>
+                    </label>
+                    <div class="control">
+                        <select class="select"
+                                data-bind="value: selectedFrequency,
+                                           options: frequencyOptions,
+                                           optionsValue: 'value',
+                                           optionsText: 'label',
+                                           attr: {'id': getId() + '_subscription_frequency'}">
+                        </select>
+                    </div>
+                </div>
+                <!-- /ko -->
+            </div>
+
             <!-- ko foreach: $parent.getRegion('before-place-order') -->
             <!-- ko template: getTemplate() --><!-- /ko -->
             <!--/ko-->

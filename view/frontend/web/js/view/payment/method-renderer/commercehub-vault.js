@@ -1,19 +1,34 @@
 define([
 	'jquery',
+	'underscore',
 	'Magento_Vault/js/view/payment/method-renderer/vault',
 	'Magento_Ui/js/model/messageList',
 	'Magento_Checkout/js/model/full-screen-loader',
 	'Fiserv_Payments/js/ch-adapter',
-	'Fiserv_Payments/js/action/create-commercehub-enriched-session'
+	'Fiserv_Payments/js/action/create-commercehub-enriched-session',
+	'ko'
 ], function(
 	$,
+	_,
 	VaultComponent,
 	globalMessageList,
 	fullScreenLoader,
 	chAdapter,
-	chSession
+	chSession,
+	ko
 ){
 	'use_strict';
+
+	var FREQUENCY_MAP = {
+		'minute': { value: 1,  unit: 'minute'},
+		'weekly': { value: 1,  unit: 'week'},
+		'biweekly': { value: 2,  unit: 'week'},
+		'monthly': { value: 1,  unit: 'month'},
+		'2months': { value: 2,  unit: 'month'},
+		'quarterly': { value: 3,  unit: 'month'},
+		'semiannual': { value: 6,  unit: 'month'},
+		'yearly': { value: 1,  unit: 'year'}
+	};
 
 	return VaultComponent.extend({
 		defaults: { 
@@ -21,6 +36,19 @@ define([
 			commercehubCode: "fiserv_commercehub",
 			additionalData: {}
 		},
+
+		isSubscriptionEnabled: ko.observable(false),
+		selectedFrequency: ko.observable('monthly'),
+		frequencyOptions: [
+			{ value: 'minute', label: 'Every Minute (test)'},
+			{ value: 'weekly', label: 'Weekly'},
+			{ value: 'biweekly', label: 'Every 2 Weeks'},
+			{ value: 'monthly', label: 'Monthly'},
+			{ value: '2months', label: 'Every 2 Months'},
+			{ value: 'quarterly', label: 'Every 3 Months'},
+			{ value: 'semiannual', label: 'Every 6 Months'},
+			{ value: 'yearly', label: 'Yearly'}
+		],
 
 		getMaskedCard: function () {
 			return this.details.maskedCC.toLowerCase();
@@ -145,7 +173,28 @@ define([
 
 			data['additional_data'] = _.extend(data['additional_data'], this.additionalData);
 
+			// Inject subscription data when the customer has opted in
+			if (this.isSubscriptionEnabled()) {
+				var freq = FREQUENCY_MAP[this.selectedFrequency()] || { value: 1, unit: 'month' };
+				data['additional_data']['is_subscription'] = true;
+				data['additional_data']['subscription_interval_value'] = freq.value;
+				data['additional_data']['subscription_interval_unit'] = freq.unit;
+			}
+
 			return data;
+		},
+
+		/**
+		 * Retrieve the fiserv_subscription child component if it exists.
+		 */
+		getSubscriptionComponent: function () {
+			try {
+				var region = this.getRegion('subscription');
+				if (region && region()) {
+					return region()[0] || null;
+				}
+			} catch (e) {}
+			return null;
 		},
 
 		/**

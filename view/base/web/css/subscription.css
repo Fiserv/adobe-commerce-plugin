@@ -1,0 +1,99 @@
+/* view/base/web/css/subscription.css */
+/* Make "Proceed to checkout" match "Go to Cart" sizing and layout */
+
+.block-subscription-actions .action.primary,
+.block-subscription-actions .action.primary.tocart,
+.subscription-cart-sidebar .action.primary,
+.subscription-cart-sidebar .action.primary.tocart {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    min-width: 160px;      /* match theme/cart button width; adjust if needed */
+    padding: 10px 16px;    /* horizontal padding like cart button */
+    height: 44px;          /* match height used elsewhere */
+    font-size: 14px;
+    line-height: 1;        /* use flex centering instead of line-height hacks */
+    text-align: center;
+    vertical-align: middle;
+    border-radius: 4px;
+}
+
+/* Some themes wrap the label in a span (tocart buttons) */
+.block-subscription-actions .action.primary > span,
+.block-subscription-actions .action.primary.tocart > span {
+    display: inline-block;
+    width: 100%;
+}
+
+/* Variant to match explicit tocart styling if your theme makes it larger */
+.block-subscription-actions .action.primary.tocart {
+    padding-left: 18px;
+    padding-right: 18px;
+}
+
+/* Ensure anchor looks like a button (if theme relies on button element styles) */
+.block-subscription-actions .action.primary,
+.block-subscription-actions .action.primary.tocart {
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* Responsive: full width on narrow viewports */
+@media (max-width: 480px) {
+    .block-subscription-actions .action.primary,
+    .block-subscription-actions .action.primary.tocart {
+        min-width: 0;
+        width: 100%;
+    }
+}
+
+/* ── Checkout inline subscription widget ─────────────────────────────────── */
+.fiserv-subscription-container {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.fiserv-subscription-container .subscription-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 0;
+}
+
+.fiserv-subscription-container .subscription-toggle .label {
+    font-weight: 600;
+    cursor: pointer;
+    margin: 0;
+}
+
+.fiserv-subscription-container .subscription-frequency {
+    margin-top: 10px;
+}
+
+.fiserv-subscription-container .subscription-frequency .label {
+    display: block;
+    font-size: 13px;
+    margin-bottom: 4px;
+    color: #555;
+}
+
+.fiserv-subscription-container .subscription-frequency .select {
+    width: 100%;
+    max-width: 280px;
+}
+
+/* Vault checkbox locked state when subscription is enabled */
+.subscription-vault-locked {
+    opacity: 0.7;
+    cursor: default;
+}
+
+.subscription-vault-note {
+    font-size: 11px;
+    color: #777;
+    margin-left: 4px;
+    font-style: italic;
+}
+

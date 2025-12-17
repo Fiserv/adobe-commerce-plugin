@@ -79,12 +79,49 @@
 				<input type="checkbox"
 					name="vault[is_enabled]"
 					class="checkbox"
-					data-bind="attr: {'id': getCode() + '_enable_vault'}, checked: vaultEnabler.isActivePaymentTokenEnabler"/>
-				<label class="label" data-bind="attr: {'for': getCode() + '_enable_vault'}">
+					data-bind="attr: {'id': getCode() + '_enable_vault', 'title': isSubscriptionEnabled() ? $t('Required for recurring subscription') : ''},
+					           checked: vaultEnabler.isActivePaymentTokenEnabler,
+					           disable: isSubscriptionEnabled"/>
+				<label class="label" data-bind="attr: {'for': getCode() + '_enable_vault'},
+				                                css: {'subscription-vault-locked': isSubscriptionEnabled}">
 					<span><!-- ko i18n: 'Save for later use.'--><!-- /ko --></span>
+					<!-- ko if: isSubscriptionEnabled -->
+					<span class="subscription-vault-note"><!-- ko i18n: '(required for subscription)' --><!-- /ko --></span>
+					<!-- /ko -->
 				</label>
 			</div>
 		<!-- /ko -->
+
+		<!-- Inline subscription option -->
+		<div class="fiserv-subscription-container">
+			<div class="field choice subscription-toggle">
+				<input type="checkbox"
+					   class="checkbox"
+					   data-bind="checked: isSubscriptionEnabled,
+					              attr: {'id': getCode() + '_subscription_enabled'}"/>
+				<label class="label"
+					   data-bind="attr: {'for': getCode() + '_subscription_enabled'}">
+					<span><!-- ko i18n: 'Subscribe' --><!-- /ko --></span>
+				</label>
+			</div>
+			<!-- ko if: isSubscriptionEnabled -->
+			<div class="field subscription-frequency">
+				<label class="label"
+					   data-bind="attr: {'for': getCode() + '_subscription_frequency'}">
+					<span><!-- ko i18n: 'Billing frequency' --><!-- /ko --></span>
+				</label>
+				<div class="control">
+					<select class="select"
+							data-bind="value: selectedFrequency,
+							           options: frequencyOptions,
+							           optionsValue: 'value',
+							           optionsText: 'label',
+							           attr: {'id': getCode() + '_subscription_frequency'}">
+					</select>
+				</div>
+			</div>
+			<!-- /ko -->
+		</div>
 
 		<div class="checkout-agreements-block">
 			<!-- ko foreach: $parent.getRegion('before-place-order') -->

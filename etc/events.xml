@@ -21,6 +21,7 @@
 	<event name="checkout_submit_all_after">
 		<observer name="fiserv_valuelink_sale_invoice" instance="Fiserv\Payments\Observer\Valuelink\ValuelinkOnlySaleCreateInvoice" />
 		<observer name="fiserv_valuelink_order_enrich" instance="Fiserv\Payments\Observer\Valuelink\EnrichValuelinkTransactionsWithOrderId" />
+		<observer name="fiserv_subscription_save" instance="Fiserv\Payments\Observer\SaveSubscriptionOrder" />
 	</event>
 	<event name="sales_order_payment_cancel">
         <observer name="fiserv_valuelink" instance="Fiserv\Payments\Observer\Valuelink\CancelValuelinkTransactions" />

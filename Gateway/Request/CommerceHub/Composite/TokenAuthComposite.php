@@ -14,6 +14,8 @@ use Fiserv\Payments\Gateway\Request\CommerceHub\TransactionInteractionDataBuilde
 use Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder;
+use Fiserv\Payments\Gateway\Request\CommerceHub\StoredCredentialsDataBuilder;
+use Fiserv\Payments\Gateway\Request\CommerceHub\AdditionalDataCommonDataBuilder;
 use Magento\Framework\ObjectManager\TMapFactory;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 use Fiserv\Payments\Gateway\Config\CommerceHub\Config;
@@ -23,24 +25,24 @@ use Fiserv\Payments\Gateway\Request\CommerceHub\ThreeDSecureDataBuilder;
  * Class TokenAuthComposite
  */
 class TokenAuthComposite extends ChCompositeBase
-{	
+{
 	const ENDPOINT = "payments/v1/charges";
 
 	/**
 	 * @var MultiLevelLogger
 	 */
 	private $logger;
-	
 	private $chConfig;
-	
+
 	/**
 	 * @param MultiLevelLogger $logger
 	 * @param TMapFactory $tmapFactory
+	 * @param Config $chConfig
 	 * @param array $builders
 	 */
 	public function __construct(
-		MultiLevelLogger $logger, 
-		TMapFactory $tmapFactory, 
+		MultiLevelLogger $logger,
+		TMapFactory $tmapFactory,
 		Config $chConfig,
 		array $builders = [])
 	{
@@ -54,7 +56,6 @@ class TokenAuthComposite extends ChCompositeBase
 	 */
 	public function build(array $buildSubject)
 	{
-
 		$result = parent::build($buildSubject);
 		$orderIncrementId = $result[TransactionDetailsDataBuilder::TXN_DETAILS_KEY]['merchant_order_id'] ?? null;
 		if ($orderIncrementId !== null) {
@@ -78,7 +79,16 @@ class TokenAuthComposite extends ChCompositeBase
 			$req->setAdditionalData3Ds($result[ThreeDSecureDataBuilder::KEY_3DS_DATA]);
 		}
 
-		return [ 
+		// Subscription-specific fields (only added when StoredCredentialsDataBuilder returns data)
+		if (isset($result[StoredCredentialsDataBuilder::STORED_CREDENTIALS_KEY])) {
+			$req->setStoredCredentials($result[StoredCredentialsDataBuilder::STORED_CREDENTIALS_KEY]);
+		}
+
+		if (isset($result[AdditionalDataCommonDataBuilder::ADDITIONAL_DATA_COMMON_KEY])) {
+			$req->setAdditionalDataCommon($result[AdditionalDataCommonDataBuilder::ADDITIONAL_DATA_COMMON_KEY]);
+		}
+
+		return [
 			self::REQUEST_KEY => $req,
 			self::ENDPOINT_KEY => self::ENDPOINT
 		];

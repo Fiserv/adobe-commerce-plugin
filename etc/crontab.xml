@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Cron:etc/crontab.xsd">
+    <group id="default">
+        <job name="fiserv_process_subscriptions"
+             instance="Fiserv\Payments\Cron\ProcessSubscriptions"
+             method="execute">
+            <schedule>* * * * *</schedule>
+        </job>
+    </group>
+</config>
+
+        <!--
+        Cron Job Explained
+        * * * * *
+        │ │ │ │ │
+        │ │ │ │ └─── Day of week (0-7, 0 and 7 = Sunday)
+        │ │ │ └───── Month (1-12)
+        │ │ └─────── Day of month (1-31)
+        │ └───────── Hour (0-23)
+        └─────────── Minute (0-59)
+         -->

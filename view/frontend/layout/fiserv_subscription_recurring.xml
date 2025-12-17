@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<page layout="1column"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <css src="Fiserv_Payments::css/subscription.css"/>
+        <css src="Fiserv_Payments::css/recurring.css"/> <!-- new frontend stylesheet for recurring page -->
+    </head>
+    <body>
+        <referenceContainer name="main">
+            <block class="Fiserv\Payments\Block\Subscription\Recurring"
+                   name="fiserv.subscription.recurring"
+                   template="Fiserv_Payments::subscription/recurring.phtml"
+                   cacheable="false"/>
+        </referenceContainer>
+
+        <!-- Page cleanup -->
+        <referenceContainer name="sidebar.main" remove="true"/>
+        <referenceContainer name="sidebar.additional" remove="true"/>
+        <referenceBlock name="catalog.compare.sidebar" remove="true"/>
+        <referenceBlock name="wishlist_sidebar" remove="true"/>
+        <referenceContainer name="footer-container" remove="true"/>
+        <referenceContainer name="footer" remove="true"/>
+    </body>
+</page>

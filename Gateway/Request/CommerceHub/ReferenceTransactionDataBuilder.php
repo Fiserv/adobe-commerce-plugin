@@ -50,14 +50,14 @@ class ReferenceTransactionDataBuilder implements BuilderInterface
 		$orderDO = $paymentDO->getOrder();
 		$orderIncrementId = $orderDO->getOrderIncrementId();
 
-
+		//This logic is used to cancel an entire Order by finding the original Auth Transaction.
 		$authTransaction = $payment->getAuthorizationTransaction();
 		if ($authTransaction == null) 
 		{
 			$this->logger->logError(2, "Reference transaction data builder was unable to find auth transaction" , "Order ID: $orderIncrementId");
 			throw new Exception("Unable to locate auth transaction for capture.");
 		}
-		$authTxnId = $authTransaction->getTxnId(); //NOTE: NOT "getTransactionId()", which seems to return primary key
+		$authTxnId = $authTransaction->getTxnId();
 		
 		$refTxn = new ReferenceTransactionDetails();
 		$refTxn->setReferenceTransactionId($authTxnId);

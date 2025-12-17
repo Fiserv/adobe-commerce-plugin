@@ -9,6 +9,13 @@
 			parent="Magento_Sales::sales"
 			action="fiserv/declines/preview"
 			resource="Fiserv_Payments::preview"/>
+
+		<add id="Fiserv_Payments::recurring_orders"
+			 title="Recurring Orders"
+			 module="Fiserv_Payments"
+			 sortOrder="110"
+			 parent="Magento_Sales::sales"
+			 action="fiserv/subscription/preview"
+			 resource="Fiserv_Payments::recurring_orders"/>
 	</menu>
 </config>
-

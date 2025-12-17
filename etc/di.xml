@@ -209,6 +209,8 @@
 				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
 				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
 				<item name="3ds_data" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\ThreeDSecureDataBuilder</item>
+				<item name="stored_credentials" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\StoredCredentialsDataBuilder</item>
+				<item name="additional_data" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AdditionalDataCommonDataBuilder</item>
 			</argument>
 		</arguments>
 	</virtualType>
@@ -224,6 +226,8 @@
 				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
 				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
 				<item name="3ds_data" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\ThreeDSecureDataBuilder</item>
+				<item name="stored_credentials" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\StoredCredentialsDataBuilder</item>
+				<item name="additional_data" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AdditionalDataCommonDataBuilder</item>
 			</argument>
 		</arguments>
 	</virtualType>
@@ -239,6 +243,8 @@
 				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
 				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
 				<item name="3ds_data" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\ThreeDSecureDataBuilder</item>
+				<item name="stored_credentials" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\StoredCredentialsDataBuilder</item>
+				<item name="additional_data" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AdditionalDataCommonDataBuilder</item>
 			</argument>
 		</arguments>
 	</virtualType>
@@ -254,6 +260,8 @@
 				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
 				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
 				<item name="3ds_data" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\ThreeDSecureDataBuilder</item>
+				<item name="stored_credentials" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\StoredCredentialsDataBuilder</item>
+				<item name="additional_data" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AdditionalDataCommonDataBuilder</item>
 			</argument>
 		</arguments>
 	</virtualType>
@@ -302,6 +310,7 @@
 				<!-- <item name="txn_id" xsi:type="string">Fiserv\Payments\Gateway\Response\CommerceHub\TransactionIdHandler</item> -->
 				<item name="card_details" xsi:type="string">Fiserv\Payments\Gateway\Response\CommerceHub\CardDetailsHandler</item>
 				<item name="vault_details" xsi:type="string">	Fiserv\Payments\Gateway\Response\CommerceHub\VaultDetailsHandler</item>
+				<item name="subscription_details" xsi:type="string">Fiserv\Payments\Gateway\Response\CommerceHub\SubscriptionDetailsHandler</item>
 			</argument>
 		</arguments>
 	</virtualType>
@@ -385,6 +394,7 @@
 	<type name = "Magento\Sales\Model\Order">
 		<plugin name = "commercehubFailedOrder" type="Fiserv\Payments\Model\Plugin\CommerceHub\OrderPlace" />
 	</type>
+
 	<type name = "Magento\Sales\Model\Service\CreditmemoService">
 		<plugin name = "refundFailedTransactionHandler" type="Fiserv\Payments\Model\Plugin\CommerceHub\CreditMemoServicePlugin" />
 	</type>
@@ -424,6 +434,74 @@
 	<preference for="Fiserv\Payments\Api\FailedTransaction\FailedTransactionRepositoryInterface" type="Fiserv\Payments\Model\FailedTransactionRepository"/>
 	<preference for="Fiserv\Payments\Api\FailedOrder\FailedOrderRepositoryInterface" type="Fiserv\Payments\Model\FailedOrderRepository"/>
 	<preference for="Fiserv\Payments\Api\Data\FailedOrder\FailedOrderSearchResultInterface" type="Fiserv\Payments\Model\FailedOrder\FailedOrderSearchResult"/>
+
+	<!-- Subscription Order Configuration -->
+	<preference for="Fiserv\Payments\Api\Data\SubscriptionOrder\SubscriptionOrderInterface" type="Fiserv\Payments\Model\Subscription\Order"/>
+	<preference for="Fiserv\Payments\Api\SubscriptionOrder\SubscriptionOrderRepositoryInterface" type="Fiserv\Payments\Model\SubscriptionOrder\SubscriptionOrderRepository"/>
+
+	<!-- Subscription Order Repository -->
+	<type name="Fiserv\Payments\Model\SubscriptionOrder\SubscriptionOrderRepository">
+		<arguments>
+			<argument name="collectionProcessor" xsi:type="object">Magento\Framework\Api\SearchCriteria\CollectionProcessorInterface</argument>
+		</arguments>
+	</type>
+
+	<!-- Subscription Services-->
+
+	<!-- Payment Processor (executes vault payments) -->
+	<type name="Fiserv\Payments\Service\PaymentProcessor">
+		<arguments>
+			<argument name="paymentTokenRepository" xsi:type="object">Magento\Vault\Api\PaymentTokenRepositoryInterface</argument>
+			<argument name="paymentTokenManagement" xsi:type="object">Magento\Vault\Api\PaymentTokenManagementInterface</argument>
+			<argument name="commandPool" xsi:type="object">FiservCommerceHubCommandPool</argument>
+			<argument name="paymentDataObjectFactory" xsi:type="object">Magento\Payment\Gateway\Data\PaymentDataObjectFactory</argument>
+			<argument name="logger" xsi:type="object">Fiserv\Payments\Logger\MultiLevelLogger</argument>
+			<argument name="extensionAttributesFactory" xsi:type="object">Magento\Framework\Api\ExtensionAttributesFactory</argument>
+			<argument name="orderFactory" xsi:type="object">Magento\Sales\Model\OrderFactory</argument>
+			<argument name="orderPaymentFactory" xsi:type="object">Magento\Sales\Model\Order\PaymentFactory</argument>
+			<argument name="orderAddressFactory" xsi:type="object">Magento\Sales\Model\Order\AddressFactory</argument>
+		</arguments>
+	</type>
+
+	<!-- Subscription Processor (orchestrates subscription billing) -->
+	<type name="Fiserv\Payments\Service\SubscriptionProcessor">
+		<arguments>
+			<argument name="subscriptionRepository" xsi:type="object">Fiserv\Payments\Model\SubscriptionOrder\SubscriptionOrderRepository</argument>
+			<argument name="orderRepository" xsi:type="object">Magento\Sales\Api\OrderRepositoryInterface</argument>
+
+			<!-- NEW: Magento core reorder service -->
+			<argument name="magentoReorder" xsi:type="object">Magento\Sales\Model\Reorder\Reorder</argument>
+
+			<argument name="paymentProcessor" xsi:type="object">Fiserv\Payments\Service\PaymentProcessor</argument>
+			<argument name="logger" xsi:type="object">Fiserv\Payments\Logger\MultiLevelLogger</argument>
+			<argument name="searchCriteriaBuilder" xsi:type="object">Magento\Framework\Api\SearchCriteriaBuilder</argument>
+			<argument name="paymentTokenManagement" xsi:type="object">Magento\Vault\Api\PaymentTokenManagementInterface</argument>
+			<argument name="quoteRepository" xsi:type="object">Magento\Quote\Api\CartRepositoryInterface</argument>
+			<argument name="extensionAttributesFactory" xsi:type="object">Magento\Framework\Api\ExtensionAttributesFactory</argument>
+			<argument name="subscriptionOrderFactory" xsi:type="object">Fiserv\Payments\Model\Subscription\OrderFactory</argument>
+			<!-- NEW: submit quote to order (replaces OrderReplicator::createOrderFromQuote) -->
+			<argument name="quoteManagement" xsi:type="object">Magento\Quote\Model\QuoteManagement</argument>
+		</arguments>
+	</type>
+
+	<!-- Subscription Response Handlers -->
+	<!-- Captures subscription data from initial order -->
+	<type name="Fiserv\Payments\Gateway\Response\CommerceHub\SubscriptionDetailsHandler">
+		<arguments>
+			<argument name="subscriptionOrderRepository" xsi:type="object">Fiserv\Payments\Api\SubscriptionOrder\SubscriptionOrderRepositoryInterface</argument>
+			<argument name="subscriptionOrderFactory" xsi:type="object">Fiserv\Payments\Model\Subscription\OrderFactory</argument>
+			<argument name="logger" xsi:type="object">Fiserv\Payments\Logger\MultiLevelLogger</argument>
+		</arguments>
+	</type>
+
+	<!-- Subscription Cron Job -->
+	<type name="Fiserv\Payments\Cron\ProcessSubscriptions">
+		<arguments>
+			<argument name="collectionFactory" xsi:type="object">Fiserv\Payments\Model\ResourceModel\Subscription\Order\CollectionFactory</argument>
+			<argument name="subscriptionProcessor" xsi:type="object">Fiserv\Payments\Service\SubscriptionProcessor</argument>
+			<argument name="logger" xsi:type="object">Fiserv\Payments\Logger\MultiLevelLogger</argument>
+		</arguments>
+	</type>
 
 	<!-- Config provider for PayPal -->
 	<type name="Magento\Checkout\Model\CompositeConfigProvider">
