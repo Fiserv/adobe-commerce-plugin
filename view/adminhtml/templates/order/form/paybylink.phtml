@@ -1,0 +1,24 @@
+<?php
+/*
+ * Pay by Link Payment Method Template
+ *
+ * @var \Magento\Backend\Block\Template $block
+ * @var \Magento\Framework\View\Element\BlockInterface $this
+ */
+?>
+<div class="admin__field">
+	<label class="admin__field-label" for="paybylink-note">
+		<?= __('Optional Note') ?>
+	</label>
+	<div class="admin__field-control">
+		<textarea id="paybylink-note" name="payment[paybylink_note]" class="admin__control-textarea"></textarea>
+	</div>
+</div>
+<div class="admin__field">
+	<label class="admin__field-label" for="paybylink-expiry">
+		<?= __('Expiry Time (Days:Hours:Minutes)') ?>
+	</label>
+	<div class="admin__field-control">
+		<input id="paybylink-expiry" name="payment[paybylink_expiry]" type="text" class="admin__control-text" placeholder="1:23:59" />
+	</div>
+</div>
