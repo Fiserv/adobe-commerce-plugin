@@ -269,7 +269,7 @@ define([
             const mappedAddress = {
                 street: streetArr[0] || undefined,
                 city: address.city || undefined,
-                stateOrProvince: address.region || address.region_id || undefined,
+                stateOrProvince: address.region_code || address.regionCode || address.region?.region_code || undefined,
                 postalCode: address.postcode || undefined,
                 country: address.country_id || address.countryId || address.country || undefined
             };
