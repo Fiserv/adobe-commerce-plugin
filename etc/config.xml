@@ -333,11 +333,14 @@
 				<optional_note>0</optional_note>
 				<order_status>pending</order_status>
 				<group>fiserv_group</group>
-				<model>FiservPayByLinkFacade</model>
+				<model>Fiserv\Payments\Model\PayByLink\Method</model>
 				<payment_action>AUTH</payment_action>
-				<is_gateway>1</is_gateway>
+				<is_gateway>0</is_gateway>
 				<can_use_internal>1</can_use_internal>
 				<can_use_checkout>0</can_use_checkout>
+				<can_authorize>0</can_authorize>
+				<can_capture>0</can_capture>
+				<can_void>0</can_void>
 				<order_status>pending</order_status>
 			</fiserv_pay_by_link>
 		</payment>

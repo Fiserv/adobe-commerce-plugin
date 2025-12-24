@@ -1,0 +1,63 @@
+
+<?php
+/** @var $block \Fiserv\Payments\Block\Adminhtml\PayByLink\PayByLinkForm */
+$method = method_exists($block, 'getMethod') ? $block->getMethod() : null;
+?>
+
+<div id="paybylink-selected-message" class="admin__field" style="display:none;">
+	<p style="margin:0; font-weight:600;">
+		<?= $block->escapeHtml(__('Pay By Link selected')) ?>
+	</p>
+</div>
+
+<script type="text/javascript">
+(function () {
+	var METHOD_CODE = 'fiserv_pay_by_link';
+	var MESSAGE_SELECTOR = '#paybylink-selected-message';
+	var PAYMENT_RADIO_SELECTOR = '[name="payment[method]"]';
+
+	function updateMessageVisibility(isActive) {
+		var el = document.querySelector(MESSAGE_SELECTOR);
+		if (!el) return;
+		el.style.display = isActive ? 'block' : 'none';
+		if (isActive) {
+			el.classList.remove('sdc-hidden');
+		} else {
+			el.classList.add('sdc-hidden');
+		}
+	}
+
+	function getSelectedPaymentMethodValue() {
+		var selected = null;
+		var radios = document.querySelectorAll(PAYMENT_RADIO_SELECTOR);
+		radios.forEach(function (r) {
+			if (r.checked) selected = r.value;
+		});
+		return selected;
+	}
+
+	if (typeof require === 'function') {
+		require(['jquery', 'domReady!'], function ($) {
+			var selected = $(PAYMENT_RADIO_SELECTOR + ':checked').val();
+			updateMessageVisibility(selected === METHOD_CODE);
+
+			$(document).off('change.paybylink', PAYMENT_RADIO_SELECTOR)
+				.on('change.paybylink', PAYMENT_RADIO_SELECTOR, function () {
+					updateMessageVisibility(this.value === METHOD_CODE);
+				});
+		});
+	} else {
+		document.addEventListener('DOMContentLoaded', function () {
+			updateMessageVisibility(getSelectedPaymentMethodValue() === METHOD_CODE);
+
+			var radios = document.querySelectorAll(PAYMENT_RADIO_SELECTOR);
+			radios.forEach(function (r) {
+				r.addEventListener('change', function () {
+					updateMessageVisibility(this.value === METHOD_CODE);
+				});
+			});
+		});
+	}
+})();
+</script>
+
