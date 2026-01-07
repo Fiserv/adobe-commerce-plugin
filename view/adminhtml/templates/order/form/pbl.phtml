@@ -1,0 +1,52 @@
+<?php
+	/** @var \Fiserv\Payments\Block\CommerceHub\Pbl\Form $block */
+	$code = $block->escapeHtml($block->getMethodCode());
+	$dayOptions = $block->getDayOptions();
+	$hourOptions = $block->getHourOptions();
+	$minuteOptions = $block->getMinuteOptions();
+	$notes = $block->areNotesEnabled();
+?>
+<link rel="stylesheet" type="text/css" href="<?= $block->escapeUrl($block->getViewFileUrl('Fiserv_Payments/css/ch-form-admin.css')); ?>">
+
+<fieldset class="admin__fieldset payment-method" id="payment_form_<?= /* @noEscape */ $code ?>_pbl"
+		style="display:none">
+	<div>
+		<div>
+			<div class="pbl-expr-picker" role="group" aria-label="Pay-by-Link Expiration Picker">
+				<div>Link Expiration</div>
+				<div class="duration-field">
+					<label for="pbl-expr_days">Days</label>
+					<select name="pbl-expr[days]" id="pbl_expr_days">
+						<?php foreach ($dayOptions as $option): ?>
+							<?= /* @noEscape */ $option ?>
+						<?php endforeach; ?>
+					</select>
+				</div>
+
+				<div class="duration-field">
+					<label for="pbl-expr_hours">Hours</label>
+					<select name="pbl-expr[hours]" id="pbl_expr_hours">
+						<?php foreach ($hourOptions as $option): ?>
+							<?= /* @noEscape */ $option ?>
+						<?php endforeach; ?>
+					</select>
+				</div>
+
+				<div class="duration-field">
+					<label for="pbl-expr_minutes_">Minutes</label>
+					<select name="pbl-expr[minutes]" id="pbl_expr_minutes">
+						<?php foreach ($minuteOptions as $option): ?>
+							<?= /* @noEscape */ $option ?>
+						<?php endforeach; ?>
+					</select>
+				</div>
+			</div>
+			<?php if($notes): ?>
+				<div>Notes</div>
+				<div id="notes_container">
+					<textarea id="pbl_notes_input" name="pbl_notes" rows="4" cols="50"></textarea>	
+				</div>
+			<?php endif; ?>
+		</div>
+	</div>
+</fieldset>
