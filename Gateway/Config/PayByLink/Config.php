@@ -23,6 +23,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      */
     private $serializer;
 
+    private $scopeConfig;
+
     /**
      * Config constructor
      *

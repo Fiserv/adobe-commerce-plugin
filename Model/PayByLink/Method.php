@@ -15,7 +15,7 @@ class Method extends AbstractMethod
 	 * Admin form block used when the radio button is selected
 	 * (render simple text)
 	 */
-	protected $_formBlockType = \Fiserv\Payments\Block\Adminhtml\PayByLink\PayByLinkForm::class;
+	protected $_formBlockType = \Fiserv\Payments\Block\CommerceHub\Pbl\Form::class;
 
 	/**
 	 * Optional info block (for order view)

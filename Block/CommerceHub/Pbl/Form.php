@@ -18,6 +18,8 @@ class Form extends Cc
 {
 	protected $pblConfig;
 
+	protected $_template = 'Fiserv_Payments::order/form/pbl.phtml';
+
 	/**
 	 * @param Context $context
 	 * @param Config $paymentConfig
@@ -33,7 +35,7 @@ class Form extends Cc
 		$this->pblConfig = $pblConfig;
 	}
 
-	public function areNotesEnabled(): boolean {
+	public function areNotesEnabled(): bool {
 		return $this->pblConfig->isOptionalNoteEnabled();	
 	}
 
