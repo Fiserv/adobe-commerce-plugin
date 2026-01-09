@@ -11,6 +11,9 @@
                 <value id="ch-prod-base" type="host">https://prod.api.fiservapps.com</value>
                 <value id="ch-cert-base" type="host">https://cert.api.fiservapps.com</value>
 				<value id="apple-pay-sdk" type="host">https://applepay.cdn-apple.com</value>
+                <value id="samsung-pay-sdk-img" type="host">https://img.mpay.samsung.com</value>
+                <value id="samsung-pay-sdk-button" type="host">https://resource.stg.samsungpay.com</value>
+                <value id="samsung-pay-sdk-cdn" type="host">https://samsungpay.cdn-samsung.com</value>
             </values>
         </policy>
         <policy id="connect-src">
@@ -23,6 +26,9 @@
                 <value id="ch-prod-base" type="host">https://prod.api.fiservapps.com</value>
                 <value id="ch-cert-base" type="host">https://cert.api.fiservapps.com</value>
 				<value id="apple-pay-sdk" type="host">https://applepay.cdn-apple.com</value>
+                <value id="samsung-pay-sdk-img" type="host">https://img.mpay.samsung.com</value>
+                <value id="samsung-pay-sdk-button" type="host">https://resource.stg.samsungpay.com</value>
+                <value id="samsung-pay-sdk-cdn" type="host">https://samsungpay.cdn-samsung.com</value>
             </values>
         </policy>
         <policy id="frame-src">
@@ -35,6 +41,16 @@
                 <value id="ch-prod-base" type="host">https://prod.api.fiservapps.com</value>
                 <value id="ch-cert-base" type="host">https://cert.api.fiservapps.com</value>
 				<value id="apple-pay-sdk" type="host">https://applepay.cdn-apple.com</value>
+                <value id="samsung-pay-sdk-img" type="host">https://img.mpay.samsung.com</value>
+                <value id="samsung-pay-sdk-button" type="host">https://resource.stg.samsungpay.com</value>
+                <value id="samsung-pay-sdk-cdn" type="host">https://samsungpay.cdn-samsung.com</value>
+            </values>
+        </policy>
+        <policy id="img-src">
+            <values>
+                <value id="samsung-pay-img-mpay" type="host">https://img.mpay.samsung.com</value>
+                <value id="samsung-pay-img-stg" type="host">https://resource.stg.samsungpay.com</value>
+                <value id="samsung-pay-img-cdn" type="host">https://samsungpay.cdn-samsung.com</value>
             </values>
         </policy>
         <policy id="form-action">
@@ -47,6 +63,9 @@
                 <value id="ch-prod-base" type="host">https://prod.api.fiservapps.com</value>
                 <value id="ch-cert-base" type="host">https://cert.api.fiservapps.com</value>
 				<value id="apple-pay-sdk" type="host">https://applepay.cdn-apple.com</value>
+                <value id="samsung-pay-sdk-img" type="host">https://img.mpay.samsung.com</value>
+                <value id="samsung-pay-sdk-button" type="host">https://resource.stg.samsungpay.com</value>
+                <value id="samsung-pay-sdk-cdn" type="host">https://samsungpay.cdn-samsung.com</value>
             </values>
         </policy>
     </policies>
