@@ -937,4 +937,12 @@
         </arguments>
     </type>
 
+	<!-- Payment Link Cancel Request Adapter -->
+	<type name="Fiserv\Payments\Model\Adapter\CommerceHub\PaymentLinkCancelRequest">
+		<arguments>
+			<argument name="chConfig" xsi:type="object">Fiserv\Payments\Gateway\Config\CommerceHub\Config</argument>
+			<argument name="httpAdapter" xsi:type="object">Fiserv\Payments\Model\Adapter\CommerceHub\ChHttpAdapter</argument>
+			<argument name="logger" xsi:type="object">Fiserv\Payments\Logger\MultiLevelLogger</argument>
+		</arguments>
+	</type>
 </config>
