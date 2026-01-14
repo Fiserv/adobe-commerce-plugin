@@ -35,7 +35,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      */
     public function __construct(
 		ScopeConfigInterface $scopeConfig,
-		?string $methodCode = null,
+		$methodCode = "fiserv_pay_by_link",
 		$pathPattern = self::DEFAULT_PATH_PATTERN,
 		?Json $serializer = null
 	) {
@@ -64,7 +64,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      */
     public function getExpiryTime($storeId = null)
     {
-        $expiryTimeValue = $this->getValue(self::KEY_EXPIRY_TIME, $storeId);
+	    $expiryTimeValue = $this->getValue(self::KEY_EXPIRY_TIME, $storeId);
         
         if (empty($expiryTimeValue)) {
             // Default: 4 hours = 240 minutes
@@ -109,7 +109,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * @param int|null $storeId
      * @return bool
      */    public function isOptionalNoteEnabled($storeId = null)
-    {
+     {
         return (bool) $this->getValue(self::KEY_OPTIONAL_NOTE, $storeId);
     }
 }

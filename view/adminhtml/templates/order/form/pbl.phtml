@@ -13,7 +13,7 @@
 	<div>
 		<div>
 			<div class="pbl-expr-picker" role="group" aria-label="Pay-by-Link Expiration Picker">
-				<div>Link Expiration</div>
+				<div class="section-heading">Link Expiration</div>
 				<div class="duration-field">
 					<label for="pbl-expr_days">Days</label>
 					<select name="pbl-expr[days]" id="pbl_expr_days">
@@ -50,3 +50,58 @@
 		</div>
 	</div>
 </fieldset>
+
+<script type="application/javascript">
+	(function () {
+		var METHOD_CODE = 'fiserv_pay_by_link';
+		var PAY_BY_LINK_SECTION = '#payment_form_fiserv_pay_by_link_pbl';
+		var PAYMENT_RADIO_SELECTOR = '[name="payment[method]"]';
+
+		function updateMessageVisibility(isActive) {
+			var el = document.querySelector(PAY_BY_LINK_SECTION);
+			if (!el) return;
+			el.style.display = isActive ? 'block' : 'none';
+			if (isActive) {
+				el.classList.remove('sdc-hidden');
+				el.querySelectorAll('select, textarea').forEach(function(input) {
+					input.removeAttribute('disabled');
+				});
+			} else {
+				el.classList.add('sdc-hidden');
+			}
+		}
+
+		function getSelectedPaymentMethodValue() {
+			var selected = null;
+			var radios = document.querySelectorAll(PAYMENT_RADIO_SELECTOR);
+			radios.forEach(function (r) {
+				if (r.checked) selected = r.value;
+			});
+			return selected;
+		}
+
+		if (typeof require === 'function') {
+			require(['jquery', 'domReady!'], function ($) {
+				var selected = $(PAYMENT_RADIO_SELECTOR + ':checked').val();
+				updateMessageVisibility(selected === METHOD_CODE);
+
+				$(document).off('change.paybylink', PAYMENT_RADIO_SELECTOR)
+					.on('change.paybylink', PAYMENT_RADIO_SELECTOR, function () {
+						updateMessageVisibility(this.value === METHOD_CODE);
+					});
+			});
+		} else {
+			document.addEventListener('DOMContentLoaded', function () {
+				updateMessageVisibility(getSelectedPaymentMethodValue() === METHOD_CODE);
+
+				var radios = document.querySelectorAll(PAYMENT_RADIO_SELECTOR);
+				radios.forEach(function (r) {
+					r.addEventListener('change', function () {
+						updateMessageVisibility(this.value === METHOD_CODE);
+					});
+				});
+			});
+		}
+	})();
+</script>
+

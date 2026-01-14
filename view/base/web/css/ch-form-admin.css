@@ -147,3 +147,15 @@
 #payment_form_fiserv_commercehub.admin__fieldset {
 	overflow-x: auto;
 }
+
+.pbl-expr-picker {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin-bottom: 20px;
+	margin-top: 10px;
+}
+
+.pbl-expr-picker .section-heading {
+	width: 100%;
+}
