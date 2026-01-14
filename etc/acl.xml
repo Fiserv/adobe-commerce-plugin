@@ -4,6 +4,9 @@
 		<resources>
 			<resource id="Magento_Backend::admin">
 				<resource id="Fiserv_Payments::fiserv" title="Fiserv" sortOrder="10">
+					<resource id="Fiserv_Payments::pbl" title="Pay-By-Link" sortOrder="20">
+						<resource id="Fiserv_Payments::transaction_inquiry" title="Transaction Inquiry" sortOrder="30"/>
+					</resource>
 					<resource id="Fiserv_Payments::declines" title="Declines" sortOrder="20">
 						<resource id="Fiserv_Payments::transaction" title="Transaction" sortOrder="30"/>
 						<resource id="Fiserv_Payments::failed_orders" title="Failed Orders" sortOrder="40"/>
