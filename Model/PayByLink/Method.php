@@ -17,11 +17,6 @@ class Method extends AbstractMethod
 	 */
 	protected $_formBlockType = \Fiserv\Payments\Block\CommerceHub\Pbl\Form::class;
 
-	/**
-	 * Optional info block (for order view)
-	 */
-	protected $_infoBlockType = \Fiserv\Payments\Block\Info\PayByLink::class;
-
 	/** Capabilities — align with config.xml flags */
 	protected $_isGateway               = false;
 	protected $_canAuthorize            = false;
