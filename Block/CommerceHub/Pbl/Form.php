@@ -1,8 +1,4 @@
 <?php
-/**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
- */
 namespace Fiserv\Payments\Block\CommerceHub\Pbl;
 
 use Fiserv\Payments\Block\CommerceHub\Form as ChForm;
@@ -39,11 +35,12 @@ class Form extends Cc
 		return $this->pblConfig->isOptionalNoteEnabled();	
 	}
 
-	public function getSelectOptions(int $start, int $end, bool $pad = false): array {
+	public function getSelectOptions(int $start, int $end, int $default, bool $pad = false): array {
 		$options = array();	
 		for ($i = $start; $i <= $end; $i++) {
+			$selected = ($i == $default) ? 'selected="true"' : '';
 	        $text = $pad ? str_pad((string)$i, 2, '0', STR_PAD_LEFT) : (string)$i;
-	        array_push($options, "<option value=\"{$i}\">{$text}</option>");
+	        array_push($options, "<option value=\"{$i}\" { $selected }>{$text}</option>");
 		}
 
 		return $options;
@@ -86,24 +83,45 @@ class Form extends Cc
 
 	public function getDayOptions(): array 
 	{
-		$expirationMinutes = (int) $this->pblConfig->getExpiryTime();
+		$expirationMinutes = (int) $this->pblConfig->getMaxExpiry();
 
 		$days = $this->getDaysInExpiration($expirationMinutes);
-		return $this->getSelectOptions(0, $days);  
+		$default = $this->getDayDefault();
+		return $this->getSelectOptions(0, $days, $default);  
 	}
 
 	public function getHourOptions(): array 
 	{
-		$expirationMinutes = (int) $this->pblConfig->getExpiryTime();
+		$expirationMinutes = (int) $this->pblConfig->getMaxExpiry();
 
 		$hours = $this->getHoursInExpiration($expirationMinutes);
-		return $this->getSelectOptions(0, $hours);  
+		$default = $this->getHourDefault();
+		return $this->getSelectOptions(0, $hours, $default);  
 	}
 
 	public function getMinuteOptions(): array {
-		$expirationMinutes = (int) $this->pblConfig->getExpiryTime();
+		$expirationMinutes = (int) $this->pblConfig->getMaxExpiry();
 
 		$minutes = $this->getMinutesInExpiration($expirationMinutes);
-		return $this->getSelectOptions(0, $minutes);	
+		$default = $this->getMinuteDefault();
+		return $this->getSelectOptions(0, $minutes, $default);	
+	}
+
+	private function getDayDefault(): string {
+		$defaultExpiryMinutes = (int) $this->pblConfig->getExpiryTime();
+		
+		return $this->getDaysInExpiration($defaultExpryMinutes);
+	}	
+	
+	private function getHourDefault(): string {
+		$defaultExpiryMinutes = (int) $this->pblConfig->getExpiryTime();
+		
+		return $this->getHoursInExpiration($defaultExpryMinutes);
+	}	
+	
+	private function getMinuteDefault(): string {
+		$defaultExpiryMinutes = (int) $this->pblConfig->getExpiryTime();
+		
+		return $this->getMinutesInExpiration($defaultExpryMinutes);
 	}
 }

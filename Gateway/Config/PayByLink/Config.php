@@ -14,6 +14,7 @@ use Magento\Framework\Serialize\Serializer\Json;
 class Config extends \Magento\Payment\Gateway\Config\Config
 {
     const KEY_ACTIVE = 'active';
+    const KEY_MAX_EXPIRY = 'max_expiry';
     const KEY_EXPIRY_TIME = 'expiry_time';
     const KEY_PAYMENT_PAGE_ID = 'payment_page_id';
     const KEY_OPTIONAL_NOTE = 'optional_note';
@@ -92,7 +93,12 @@ class Config extends \Magento\Payment\Gateway\Config\Config
         }
     }
 
-    /**
+	public function getMaxExpiry($storeId = null)
+	{
+		return $this->getValue(self::KEY_MAX_EXPIRY, $storeId);
+	}
+
+	/**
      * Get payment page ID
      *
      * @param int|null $storeId
