@@ -222,8 +222,12 @@ define([
 					this.showErrorMessage(this.emptyMessage);
 					return;
 				}
-				
-				this.setValuelinkCardAction(sessionId, balance);
+			
+				// need to recapture card form here
+				this.captureCardForm((newSessionId) => { 
+					this.cardCaptureSuccess(newSessionId);
+					this.setValuelinkCardAction(newSessionId, balance);
+				});
 			},
 
 			setValuelinkCardAction: function (sessionId, balance)
