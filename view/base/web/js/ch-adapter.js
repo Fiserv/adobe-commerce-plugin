@@ -163,6 +163,31 @@ define([
             return this.paypalComponent;
         },
 
+		/**
+         * Load Paze SDK (Step 4 of Paze documentation)
+         * @param {Object} options - { displayName, cspNonce }
+         * @returns {Promise<Object>} Paze component instance
+         */
+        async loadPazeComponent(options) {
+            if (!window.fiserv || typeof window.fiserv.components.paze !== 'function') {
+                throw new Error('Fiserv SDK not loaded or window.fiserv.components.paze not available');
+            }
+            
+            // Paze component initialization with displayName and optional cspNonce
+            const pazeOptions = {
+                displayName: options.displayName || 'My Site'
+            };
+            
+            // Add cspNonce if provided (for security/CSP compliance)
+            if (options.cspNonce) {
+                pazeOptions.cspNonce = options.cspNonce;
+            }
+            
+            console.log('[CH-Adapter] Loading Paze component with options:', pazeOptions);
+            this.pazeComponent = await window.fiserv.components.paze(pazeOptions);
+            return this.pazeComponent;
+        },
+
 		submitCardForm: function (
 			storeUrl,
 			runSuccessCb, 
