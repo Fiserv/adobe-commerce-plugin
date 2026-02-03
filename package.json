@@ -1,0 +1,26 @@
+{
+	"name": "adobecommerce-b2c-plugin",
+	"version": "1.0.0",
+	"description": "Adobe commerce B2C Commerce plugin for Fiserv",
+	"scripts": {
+		"lint:stylelint": "stylelint \"view/**/web/**/*.css\" --config stylelint.config.js",
+		"lint:stylelint:fix": "stylelint \"view/**/web/**/*.css\" --config stylelint.config.js --fix",
+		"lint:eslint": "eslint",
+		"lint:eslint:fix": "eslint --fix",
+		"lint": "npm run lint:eslint && npm run lint:stylelint",
+		"lint:fix": "npm run lint:eslint:fix && npm run lint:stylelint:fix"
+	},
+	"devDependencies": {
+		"@commercehub/frontend-node-tools": "0.2.1",
+		"eslint": "^9.10.0",
+		"stylelint": "^16.8.0",
+		"stylelint-config-standard": "^36.0.0",
+		"@stylistic/stylelint-config": "^2.0.0",
+		"@stylistic/stylelint-plugin": "^2.0.0",
+		"@stylistic/eslint-plugin": "^1.6.2",
+		"eslint-plugin-import": "^2.29.1"
+	},
+	"resolutions": {
+		"core-js": "3.46.0"
+	}
+}
