@@ -1,4 +1,4 @@
-import { getEslintConfig } from "@commercehub/frontend-node-tools/index.mjs";
+import {getEslintConfig} from "@commercehub/frontend-node-tools/index.mjs";
 
 export default getEslintConfig({
 	include: {
@@ -49,9 +49,10 @@ export default getEslintConfig({
 					"commercehub/repetitive-field-access": "off",
 					"commercehub/string-duplication": "off",
 					"commercehub/type-only-imports": "off",
-					"@stylistic/indent": ["error", 4],
+					"@stylistic/indent": ["error", "tab"],
+					"@stylistic/no-tabs": "off",
 					"@stylistic/operator-linebreak": ["error", "after"],
-					"@stylistic/brace-style": ["error", "1tbs", { allowSingleLine: true }]
+					"@stylistic/brace-style": ["error", "1tbs", {allowSingleLine: true}]
 				}
 			}
 		},

@@ -13,7 +13,7 @@ export default {
 		'selector-pseudo-class-no-unknown': undefined,
 		'font-family-no-missing-generic-family-keyword': undefined,
 		'@stylistic/max-line-length': undefined,
-		'@stylistic/indentation': [2],
+		'@stylistic/indentation': ['tab'],
 		'@stylistic/max-empty-lines': [1],
 		'@stylistic/no-empty-first-line': true,
 		'@stylistic/no-eol-whitespace': true,
