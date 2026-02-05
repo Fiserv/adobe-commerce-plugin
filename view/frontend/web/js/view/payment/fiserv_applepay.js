@@ -1,29 +1,27 @@
 define(
-    [
-        'uiComponent',
-        'Magento_Checkout/js/model/payment/renderer-list',
-    ],
-    function (
-        Component,
-        rendererList
-    ) {
-        'use strict';
+	[
+		'uiComponent',
+		'Magento_Checkout/js/model/payment/renderer-list',
+	],
+	(
+		Component,
+		rendererList,
+	) => {
+		'use strict';
 
+		const config = (globalThis.checkoutConfig && globalThis.checkoutConfig.payment) ? globalThis.checkoutConfig.payment : {};
 
-        let config = (window.checkoutConfig && window.checkoutConfig.payment) ? window.checkoutConfig.payment : {};
+		const applepayCode = 'fiserv_applepay';
 
-        let applepayCode = 'fiserv_applepay';
+		if (config[applepayCode] && config[applepayCode].isActive) {
+			rendererList.push(
+				{
+					type: applepayCode,
+					component: 'Fiserv_Payments/js/view/payment/method-renderer/commercehub-applepay',
+				},
+			);
+		}
 
-        if (config[applepayCode] && config[applepayCode].isActive) {
-            rendererList.push(
-                {
-                    type: applepayCode,
-                    component: 'Fiserv_Payments/js/view/payment/method-renderer/commercehub-applepay',
-                }
-            );
-        }
-
-        return Component.extend({});
-    }
+		return Component.extend({});
+	},
 );
-

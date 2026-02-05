@@ -1,12 +1,12 @@
-/*browser:true*/
-/*global define*/
+/* browser:true */
+/* global define */
 define([
 	'jquery',
 	'SDCv2Library',
-], function (
+], (
 	$,
 	sdcv2,
-) {
+) => {
 	'use strict';
 
 	// chAdapter requires:
@@ -17,94 +17,93 @@ define([
 	//		b. Public Key generated during initial credentials request
 	//		c. Symmetric Encryption Algorithm generated during initial credentials request
 	return {
-		credentialsErrorMsg: "Oops! Something went wrong...",	
-		credentialsUrl: "fiserv/commercehub/getcredentials",
-		clientScriptId: "commercehub",
-		configApiKeyKey: "apiKey",
-		configMerchantIdKey: "merchantId",
-		configTerminalIdKey: "terminalId",
-		configEncryptionAlgoKey: "asymmetricEncryptionAlgorithm",
-		formConfigKey: "formConfig",
-		environmentKey: "environment",
-		credentialsKey: "ch_credentials",
-		keyIdKey: "keyId",
-		accessTokenKey: "accessToken",
-		publicTokenKey: "publicKey",
-		sessionIdKey: "sessionId",
-		encryptionAlgoKey: "symmetricEncryptionAlgorithm",
-		prodEnv: "PROD",
-		certEnv: "CERT",
+		credentialsErrorMsg: 'Oops! Something went wrong...',
+		credentialsUrl: 'fiserv/commercehub/getcredentials',
+		clientScriptId: 'commercehub',
+		configApiKeyKey: 'apiKey',
+		configMerchantIdKey: 'merchantId',
+		configTerminalIdKey: 'terminalId',
+		configEncryptionAlgoKey: 'asymmetricEncryptionAlgorithm',
+		formConfigKey: 'formConfig',
+		environmentKey: 'environment',
+		credentialsKey: 'ch_credentials',
+		keyIdKey: 'keyId',
+		accessTokenKey: 'accessToken',
+		publicTokenKey: 'publicKey',
+		sessionIdKey: 'sessionId',
+		encryptionAlgoKey: 'symmetricEncryptionAlgorithm',
+		prodEnv: 'PROD',
+		certEnv: 'CERT',
 		forms: {},
 
-		initializeForm: function (config, iframeReadyCallback, iframeValidCallback, cardBrandChangeCallback, fieldValidityHandler, fieldFocusHandler) {
-			let idx = Object.keys(this.forms).length + 1;
+		initializeForm(config, iframeReadyCallback, iframeValidCallback, cardBrandChangeCallback, fieldValidityHandler, fieldFocusHandler) {
+			const index = Object.keys(this.forms).length + 1;
 
-			let formData = {};
+			const formData = {};
+
 			formData.config = config;
-			
+
 			formData.config = config;
 			formData.iframeReadyCallback = iframeReadyCallback;
 			formData.iframeValidCallback = iframeValidCallback;
 			formData.cardBrandChangeCallback = cardBrandChangeCallback;
 			formData.fieldValidityHandler = fieldValidityHandler;
 			formData.fieldFocusHandler = fieldFocusHandler;
-		
-			this.forms[idx] = formData;
 
-			return idx;
+			this.forms[index] = formData;
+
+			return index;
 		},
 
-		initAdapter: async function(config)
-		{
-			let promise = new Promise((resolve, reject) => {
+		async initAdapter(config) {
+			const promise = new Promise((resolve, reject) => {
 				this.getChCredentials(config.storeUrl, resolve, reject);
 			});
 
 			promise.then((data) => {
 				initSdk(config, data[this.accessTokenKey]);
 			})
-			.catch((data) => {
-				console.log("WHOOPS something went wrong: ", data);
-			});
-
+				.catch((error) => {
+					console.log('WHOOPS something went wrong:', error);
+				});
 		},
 
-		initSdk: async function(config, accessToken)
-		{
-			await window.fiserv.init({
+		async initSdk(config, accessToken) {
+			await globalThis.fiserv.init({
 				environment: config.environment,
-				accessToken: accessToken, 
+				accessToken,
 				apiKey: config.apiKey,
-				merchantId: config.merchantId
+				merchantId: config.merchantId,
 			});
 		},
 
-		getChCredentials: function (storeUrl, successCb, errorCb) {
-			let validateCb = this.validateCredentialsResponse.bind(this);
-			let parseResponseCb = this.parseChCredentialsResponse.bind(this);
-			let errorMsg = this.credentialsErrorMsg;
+		getChCredentials(storeUrl, successCallback, errorCallback) {
+			const validateCallback = this.validateCredentialsResponse.bind(this);
+			const parseResponseCallback = this.parseChCredentialsResponse.bind(this);
+			const errorMessage = this.credentialsErrorMsg;
 
 			$.ajax({
 				url: storeUrl + this.credentialsUrl,
 				cache: false,
 				dataType: 'json',
-				type: "POST",
-				success: function(response) {
-					if (!validateCb(response)) {
-						errorCb(errorMsg)
+				type: 'POST',
+				success(response) {
+					if (!validateCallback(response)) {
+						errorCallback(errorMessage);
 					}
 					console.log(response);
-					successCb(parseResponseCb(response));
+					successCallback(parseResponseCallback(response));
 				},
-				error: function(err) {
-					errorCb(errorMsg)
-					console.log(err);
-				}
+				error(error) {
+					errorCallback(errorMessage);
+					console.log(error);
+				},
 			});
 		},
 
-		validateCredentialsResponse: function (response) {
-			let credArray = response[this.credentialsKey];
+		validateCredentialsResponse(response) {
+			const credArray = response[this.credentialsKey];
+
 			if (credArray === undefined) {
 				return false;
 			}
@@ -124,8 +123,7 @@ define([
 			return true;
 		},
 
-
-		parseChCredentialsResponse: function (response) {
+		parseChCredentialsResponse(response) {
 			return response[this.credentialsKey];
 		},
 
@@ -137,127 +135,125 @@ define([
 		 * Instantiates CommerceHub iframe
 		 * from provide script element
 		 */
-		instantiateIframe: function (
+		instantiateIframe(
 			formKey,
 			paymentMethod,
-			loadSuccessCb, 
-			loadErrorCb
+			loadSuccessCallback,
+			loadErrorCallback,
 		) {
-			let formData = undefined;
+			let formData;
+
 			try {
 				formData = this.getSdcForm(formKey);
-			
-			} catch(err)
-			{
-				loadErrorCb(err);
+			} catch (error) {
+				loadErrorCallback(error);
+
 				return;
 			}
-			
-			let formConfig = this.buildFormConfig(formData, paymentMethod);
-						
-			window.fiserv.components.paymentFields(formConfig)
-				.then((next) => { 
-					formData.sdcv2Form = next; 
-					formData.iframeReadyCallback(); 
-					loadSuccessCb();
-				})
-				.catch((data) => {
-					console.log(data);
-					loadErrorCb(data);
-				});
 
+			const formConfig = this.buildFormConfig(formData, paymentMethod);
+
+			globalThis.fiserv.components.paymentFields(formConfig)
+				.then((next) => {
+					formData.sdcv2Form = next;
+					formData.iframeReadyCallback();
+					loadSuccessCallback();
+				})
+				.catch((error) => {
+					console.log(error);
+					loadErrorCallback(error);
+				});
 		},
 
-		submitCardForm: function (
+		submitCardForm(
 			formKey,
 			storeUrl,
-			runSuccessCb, 
-			runErrorCb
+			runSuccessCallback,
+			runErrorCallback,
 		) {
-			let formData = this.getSdcForm(formKey);
+			const formData = this.getSdcForm(formKey);
 
-			if (typeof(formData.sdcv2Form) !== "undefined") {
-				let promise = new Promise((resolve, reject) => {
-					this.getChCredentials(storeUrl, resolve, reject);	
+			if (formData.sdcv2Form !== undefined) {
+				const promise = new Promise((resolve, reject) => {
+					this.getChCredentials(storeUrl, resolve, reject);
 				});
 
 				promise.then((data) => {
-					let submitConfig = this.buildFormSubmitPayload(formData.config, data);
+					const submitConfig = this.buildFormSubmitPayload(formData.config, data);
+
 					formData.sdcv2Form.submit(submitConfig)
-						.then((next) => { 
-							let sessionId = data[this.sessionIdKey];
-							runSuccessCb(sessionId); 
+						.then((next) => {
+							const sessionId = data[this.sessionIdKey];
+
+							runSuccessCallback(sessionId);
 						})
-						.catch((data) => { console.log(data); runErrorCb(); });
+						.catch((error) => { console.log(error); runErrorCallback(); });
 				})
-				.catch((data) => {
-					runErrorCb(data);
-				});
-			};
+					.catch((error) => {
+						runErrorCallback(error);
+					});
+			}
 		},
 
-		buildFormSubmitPayload: function(config, data) 
-		{
-			let payload = {
-				"apiKey" : config[this.configApiKeyKey],
-				"accessToken" : data[this.accessTokenKey],
-				"createToken" : false,
-				"publicKey" : data[this.publicTokenKey],
-				"keyId" : data[this.keyIdKey],
-				"merchantId" : config[this.configMerchantIdKey],
-				"terminalId" : config[this.configTerminalIdKey]
+		buildFormSubmitPayload(config, data) {
+			const payload = {
+				apiKey: config[this.configApiKeyKey],
+				accessToken: data[this.accessTokenKey],
+				createToken: false,
+				publicKey: data[this.publicTokenKey],
+				keyId: data[this.keyIdKey],
+				merchantId: config[this.configMerchantIdKey],
+				terminalId: config[this.configTerminalIdKey],
 			};
 
 			return payload;
 		},
 
-		buildFormConfig: function (formData, paymentMethod) {
-			let formConfig = {
-				"data" : formData.config[this.formConfigKey], 
-				"hooks" : {
-					"onFormValid" : () => { formData.iframeValidCallback(true);  },
-					"onFormNoLongerValid" : () => { formData.iframeValidCallback(false);  },
-					"onCardBrandChange" : (data) => { formData.cardBrandChangeCallback(data); },
-					"onFieldValidityChange" : (data) => { formData.fieldValidityHandler(data); },
-					"onFocus" : (data) => { formData.fieldFocusHandler(data); },
-					"onLostFocus" : (data) => { formData.fieldFocusHandler(data); }
-				} 
+		buildFormConfig(formData, paymentMethod) {
+			const formConfig = {
+				data: formData.config[this.formConfigKey],
+				hooks: {
+					onFormValid: () => { formData.iframeValidCallback(true); },
+					onFormNoLongerValid: () => { formData.iframeValidCallback(false); },
+					onCardBrandChange: (data) => { formData.cardBrandChangeCallback(data); },
+					onFieldValidityChange: (data) => { formData.fieldValidityHandler(data); },
+					onFocus: (data) => { formData.fieldFocusHandler(data); },
+					onLostFocus: (data) => { formData.fieldFocusHandler(data); },
+				},
 
-			}; 
-			formConfig["data"]["environment"] =  formData.config[this.environmentKey];
-			formConfig["data"]["paymentMethod"] = paymentMethod;
+			};
+
+			formConfig.data.environment = formData.config[this.environmentKey];
+			formConfig.data.paymentMethod = paymentMethod;
 			// formConfig["data"]["supportedCardBrands"] = [];
 
 			return formConfig;
 		},
 
-		destroyIframe: function (formKey) {
-			let formData = this.getSdcForm(formKey);
+		destroyIframe(formKey) {
+			const formData = this.getSdcForm(formKey);
 
-			if (typeof(formData.sdcv2Form) !== "undefined")
-			{
+			if (formData.sdcv2Form !== undefined) {
 				formData.sdcv2Form.destroy();
 			}
 		},
 
-		resetIframe: function (formKey) {
-			let formData = this.getSdcForm(formKey);
+		resetIframe(formKey) {
+			const formData = this.getSdcForm(formKey);
 
-			if (typeof(formData.sdcv2Form) !== "undefined")
-			{
+			if (formData.sdcv2Form !== undefined) {
 				formData.sdcv2Form.reset();
 			}
 		},
 
-		getSdcForm: function (formId)
-		{
-			let formData = this.forms[formId];
-			if (typeof(formData) === "undefined")
-			{
-				throw new Error("SDC Form not form with id: " + formId + " not found");
+		getSdcForm(formId) {
+			const formData = this.forms[formId];
+
+			if (formData === undefined) {
+				throw new TypeError(`SDC Form not form with id: ${formId} not found`);
 			}
 
 			return formData;
-		}
+		},
 	};
 });

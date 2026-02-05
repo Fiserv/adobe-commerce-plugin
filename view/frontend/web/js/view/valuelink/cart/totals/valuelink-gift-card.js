@@ -4,50 +4,50 @@
  */
 
 define([
-    'jquery',
-    'Fiserv_Payments/js/view/valuelink/summary/valuelink-gift-card',
-    'mage/url',
-    'Magento_Checkout/js/model/totals'
-], function ($, Component, url, totals) {
-    'use strict';
+	'jquery',
+	'Fiserv_Payments/js/view/valuelink/summary/valuelink-gift-card',
+	'mage/url',
+	'Magento_Checkout/js/model/totals',
+], ($, Component, url, totals) => {
+	'use strict';
 
-    return Component.extend({
-        defaults: {
-            template: 'Fiserv_Payments/valuelink/cart/totals/valuelink-gift-card'
-        },
+	return Component.extend({
+		defaults: {
+			template: 'Fiserv_Payments/valuelink/cart/totals/valuelink-gift-card',
+		},
 
-        /**
+		/**
          * @return {*|Boolean|Object|jQuery}
          */
-        getRemoveUrl: function () {
-            return url.build('/fiserv/valuelink/removevaluelinkcard');
-        },
+		getRemoveUrl() {
+			return url.build('/fiserv/valuelink/removevaluelinkcard');
+		},
 
-        /**
+		/**
          * @override
          *
          * @returns {bool}
          */
-        isAvailable: function () {
-            return totals.getSegment('fiserv_valuelink') && totals.getSegment('fiserv_valuelink').value !== 0;
-        },
+		isAvailable() {
+			return totals.getSegment('fiserv_valuelink') && totals.getSegment('fiserv_valuelink').value !== 0;
+		},
 
-        /**
+		/**
          * @param {String} sessionId
          * @param {Object} event
          */
-        removeValuelinkCard: function (sessionId, event) {
-            event.preventDefault();
+		removeValuelinkCard(sessionId, event) {
+			event.preventDefault();
 
-            if (sessionId) {
-                $.post(this.getRemoveUrl(),
+			if (sessionId) {
+				$.post(this.getRemoveUrl(),
 					{
-						sessionId : sessionId
+						sessionId,
 					})
-				.always(function () {
-                    location.reload();
-                });
-            }
-        }
-    });
+					.always(() => {
+						location.reload();
+					});
+			}
+		},
+	});
 });

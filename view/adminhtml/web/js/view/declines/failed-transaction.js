@@ -1,21 +1,21 @@
 define([
 	'jquery',
-	'mage/url'
-], function ($, url) {
-	var currentPage = 1;
-	var rowsPerPage = 20;
-	var searchFilter = '';
-	var approvalStatus = '';
-	var orderState = '';
-	var transactionState = '';
-	var fromDate = '';
-	var toDate = '';
+	'mage/url',
+], ($, url) => {
+	let currentPage = 1;
+	let rowsPerPage = 20;
+	let searchFilter = '';
+	let approvalStatus = '';
+	let orderState = '';
+	let transactionState = '';
+	let fromDate = '';
+	let toDate = '';
 	let exportUrl = '';
 	let exportType = '';
 	let orderIncrementId = '';
 
 	function initializeExportType() {
-		if ($('.search-pagination-container.failed-transaction').length) {
+		if ($('.search-pagination-container.failed-transaction').length > 0) {
 			exportType = 'transactions';
 			console.log('Export type set to transactions');
 		} else {
@@ -27,33 +27,29 @@ define([
 	function fetchData(page) {
 		let actionUrl;
 
-		if (exportType === 'transactions') {
-			actionUrl = url.build('payments/declines/order');
-		} else {
-			actionUrl = url.build('payments/declines/preview');
-		}
+		actionUrl = exportType === 'transactions' ? url.build('payments/declines/order') : url.build('payments/declines/preview');
 
 		const filters = [searchFilter, approvalStatus, orderState, transactionState, fromDate, toDate];
 
-		$('#resetFilter').toggle(!filters.every(val => val === ''));
+		$('#resetFilter').toggle(!filters.every((value) => value === ''));
 
-		console.log('Fetching data with URL:', actionUrl, ' and filters:', filters);
+		console.log('Fetching data with URL:', actionUrl, 'and filters:', filters);
 
 		$.ajax({
 			url: actionUrl,
 			type: 'GET',
 			data: {
-				page: page,
+				page,
 				pageSize: rowsPerPage,
-				orderIncrementId: orderIncrementId,
-				searchFilter: searchFilter,
+				orderIncrementId,
+				searchFilter,
 				approvalStatus: encodeURIComponent(approvalStatus),
 				orderState: encodeURIComponent(orderState),
 				transactionState: encodeURIComponent(transactionState),
-				fromDate: fromDate,
-				toDate: toDate
+				fromDate,
+				toDate,
 			},
-			success: function (data) {
+			success(data) {
 				if (exportType === 'transactions') {
 					renderTransactionTable(data.transactions);
 				} else {
@@ -62,114 +58,124 @@ define([
 
 				setupPagination(data.totalPages);
 			},
-			error: function (jqXHR, textStatus, errorThrown) {
+			error(jqXHR, textStatus, errorThrown) {
 				console.error('Failed to fetch data', textStatus, errorThrown);
-			}
+			},
 		});
 	}
 
 	function renderOrderTable(orders) {
-		var tableBody = $('#tableBody');
+		const tableBody = $('#tableBody');
+
 		tableBody.empty();
 
-		var noRecordsMessage = $('#noRecordsMessage');
-		var paginationInfoTop = $('#paginationInfoTop');
-		var paginationControls = $('#paginationControls');
+		const noRecordsMessage = $('#noRecordsMessage');
+		const paginationInfoTop = $('#paginationInfoTop');
+		const paginationControls = $('#paginationControls');
 
 		if (!orders || orders.length === 0) {
 			noRecordsMessage.show();
 			paginationInfoTop.hide();
 			paginationControls.hide();
-			return;
-		} else {
-			noRecordsMessage.hide();
-			paginationInfoTop.show();
-			paginationControls.show();
-		}
 
-		orders.forEach(function (order) {
-			var row = '<tr>' +
-				'<td>' + (order.date_time || 'N/A') + '</td>' +
-				'<td>' + (order.order_increment_id || 'N/A') + '</td>' +
-				'<td>' + (order.customer_name || 'N/A') + '</td>' +
-				'<td>' + (order.order_state || 'N/A') + '</td>' +
-				'<td>' + (order.grandTotal || 'N/A') + '</td>' +
-				'<td>' + (order.approval_status || 'N/A') + '</td>' +
-				'<td>' + (order.remote_ip || 'N/A') + '</td>' +
-				'<td><a href="' + (order.orderViewUrl || '#') + '">View</a></td>' +
+			return;
+		}
+		noRecordsMessage.hide();
+		paginationInfoTop.show();
+		paginationControls.show();
+
+		for (const order of orders) {
+			const row = '<tr>' +
+				`<td>${order.date_time || 'N/A'}</td>` +
+				`<td>${order.order_increment_id || 'N/A'}</td>` +
+				`<td>${order.customer_name || 'N/A'}</td>` +
+				`<td>${order.order_state || 'N/A'}</td>` +
+				`<td>${order.grandTotal || 'N/A'}</td>` +
+				`<td>${order.approval_status || 'N/A'}</td>` +
+				`<td>${order.remote_ip || 'N/A'}</td>` +
+				`<td><a href="${order.orderViewUrl || '#'}">View</a></td>` +
 				'</tr>';
+
 			tableBody.append(row);
-		});
+		}
 	}
 
 	function renderTransactionTable(transactions) {
-		var tableBody = $('#tableBody');
+		const tableBody = $('#tableBody');
+
 		tableBody.empty();
 
-		var noRecordsMessage = $('#noRecordsMessage');
-		var paginationInfoTop = $('#paginationInfoTop');
-		var paginationControls = $('#paginationControls');
+		const noRecordsMessage = $('#noRecordsMessage');
+		const paginationInfoTop = $('#paginationInfoTop');
+		const paginationControls = $('#paginationControls');
 
 		if (!transactions || transactions.length === 0) {
 			noRecordsMessage.show();
 			paginationInfoTop.hide();
 			paginationControls.hide();
-			return;
-		} else {
-			noRecordsMessage.hide();
-			paginationInfoTop.show();
-			paginationControls.show();
-		}
 
-		transactions.forEach(function (transaction) {
-			var actionURL = transaction.transaction_url ? '<td><a href="' + transaction.transaction_url + '">View</a></td>' : '<td>N/A</td>';
-			var row = '<tr>' +
-				'<td>' + (transaction.date_time || 'N/A') + '</td>' +
-				'<td>' + (transaction.transaction_id || 'N/A') + '</td>' +
-				'<td>' + (transaction.transaction_state || 'N/A') + '</td>' +
-				'<td>' + (transaction.approval_status || 'N/A') + '</td>' +
-				'<td>' + (transaction.total_amount || 'N/A') + '</td>' +
-				'<td>' + (transaction.remote_ip || 'N/A') + '</td>' +
-				actionURL +
-				'</tr>';
+			return;
+		}
+		noRecordsMessage.hide();
+		paginationInfoTop.show();
+		paginationControls.show();
+
+		for (const transaction of transactions) {
+			const actionURL = transaction.transaction_url ? `<td><a href="${transaction.transaction_url}">View</a></td>` : '<td>N/A</td>';
+			const row = '<tr>' +
+				`<td>${transaction.date_time || 'N/A'}</td>` +
+				`<td>${transaction.transaction_id || 'N/A'}</td>` +
+				`<td>${transaction.transaction_state || 'N/A'}</td>` +
+				`<td>${transaction.approval_status || 'N/A'}</td>` +
+				`<td>${transaction.total_amount || 'N/A'}</td>` +
+				`<td>${transaction.remote_ip || 'N/A'}</td>${
+					actionURL
+				}</tr>`;
+
 			tableBody.append(row);
-		});
+		}
 	}
 
 	function setupPagination(totalPages) {
-		var $paginationControls = $('#paginationControls');
+		const $paginationControls = $('#paginationControls');
+
 		$paginationControls.empty();
 
-		var $prevButton = $('<span>').text('<').addClass('pagination-button').on('click', function () {
-			if (currentPage > 1) {
-				currentPage--;
-				fetchData(currentPage);
-			}
-		});
-		if (currentPage === 1) {
-			$prevButton.addClass('disabled');
-		}
-		$paginationControls.append($prevButton);
+		const $previousButton = $('<span>').text('<').addClass('pagination-button')
+			.on('click', () => {
+				if (currentPage > 1) {
+					currentPage--;
+					fetchData(currentPage);
+				}
+			});
 
-		var $pageInfo = $('<span>').text(currentPage + ' of ' + totalPages).addClass('pagination-info');
+		if (currentPage === 1) {
+			$previousButton.addClass('disabled');
+		}
+		$paginationControls.append($previousButton);
+
+		const $pageInfo = $('<span>').text(`${currentPage} of ${totalPages}`).addClass('pagination-info');
+
 		$paginationControls.append($pageInfo);
 
-		var $nextButton = $('<span>').text('>').addClass('pagination-button').on('click', function () {
-			if (currentPage < totalPages) {
-				currentPage++;
-				fetchData(currentPage);
-			}
-		});
+		const $nextButton = $('<span>').text('>').addClass('pagination-button')
+			.on('click', () => {
+				if (currentPage < totalPages) {
+					currentPage++;
+					fetchData(currentPage);
+				}
+			});
+
 		if (currentPage === totalPages) {
 			$nextButton.addClass('disabled');
 		}
 		$paginationControls.append($nextButton);
 
-		$('#paginationInfoTop').text(currentPage + ' of ' + totalPages);
+		$('#paginationInfoTop').text(`${currentPage} of ${totalPages}`);
 	}
 
 	function changeRowsPerPage() {
-		rowsPerPage = parseInt($('#rowsPerPage').val());
+		rowsPerPage = Number.parseInt($('#rowsPerPage').val());
 		currentPage = 1;
 		fetchData(currentPage);
 	}
@@ -225,12 +231,13 @@ define([
 		fetchData(currentPage);
 	}
 
-	$(document).ready(function () {
+	$(document).ready(() => {
 		// Fetch order increment ID from the page
-		orderIncrementId = $('.order-id').text().replace('Order ID: ', '').trim();
+		orderIncrementId = $('.order-id').text().replace('Order ID: ', '')
+			.trim();
 		console.log('Order Increment ID:', orderIncrementId);
 
-		$('#searchInput').on('keypress', function (event) {
+		$('#searchInput').on('keypress', (event) => {
 			if (event.which === 13) {
 				searchTable();
 			}
@@ -242,15 +249,17 @@ define([
 
 		$(document).on('mouseenter', '.tooltip-icon', function () {
 			const tooltipText = $(this).find('.tooltip-text');
+
 			tooltipText.css('visibility', 'visible').css('opacity', '1');
 		}).on('mouseleave', '.tooltip-icon', function () {
 			const tooltipText = $(this).find('.tooltip-text');
+
 			tooltipText.css('visibility', 'hidden').css('opacity', '0');
 		});
 
 		setupPagination($('#paginationControls').data('totalpage'));
 
-		if ($('.search-pagination-container.failed-transaction').length) {
+		if ($('.search-pagination-container.failed-transaction').length > 0) {
 			$('#transactionStateFilter').on('change', filterByTransactionState);
 		} else {
 			$('#orderState').on('change', filterByOrderState);
@@ -261,20 +270,21 @@ define([
 			$(this).toggleClass('open');
 		});
 
-		$('#exportDropdownButton').on('click', function () {
+		$('#exportDropdownButton').on('click', () => {
 			$('#exportDropdownMenu').toggle();
 			$('#exportArrow').toggle();
 			$('#exportArrowUp').toggle();
 		});
 
-		$('#cancelButton').on('click', function () {
+		$('#cancelButton').on('click', () => {
 			$('#exportDropdownMenu').hide();
 			$('#exportArrow').show();
 			$('#exportArrowUp').hide();
 		});
 
-		$('#exportButton').on('click', function () {
-			var format = $('input[name="exportFormat"]:checked').val();
+		$('#exportButton').on('click', () => {
+			const format = $('input[name="exportFormat"]:checked').val();
+
 			if (format) {
 				exportData(format);
 			}
@@ -285,18 +295,18 @@ define([
 
 	async function exportData(format) {
 		const filters = {
-			searchFilter: searchFilter,
-			approvalStatus: approvalStatus,
-			orderState: orderState,
-			transactionState: transactionState,
-			fromDate: fromDate,
-			toDate: toDate,
-			format: format,
+			searchFilter,
+			approvalStatus,
+			orderState,
+			transactionState,
+			fromDate,
+			toDate,
+			format,
 			type: exportType,
-			orderIncrementId: orderIncrementId // Added
+			orderIncrementId, // Added
 		};
 
-		let fileNamePrefix = $('.search-pagination-container.failed-transaction').length ? 'failed_transactions' : 'failed_orders';
+		const fileNamePrefix = $('.search-pagination-container.failed-transaction').length > 0 ? 'failed_transactions' : 'failed_orders';
 		let fileName = `${fileNamePrefix}.${format}`;
 
 		$.ajax({
@@ -304,43 +314,45 @@ define([
 			type: 'GET',
 			data: filters,
 			xhrFields: {
-				responseType: 'blob'
+				responseType: 'blob',
 			},
 			dataType: 'binary',
 			processData: true,
 			contentType: false,
 			converters: {
-				'* binary': function (response) {
+				'* binary'(response) {
 					return response;
-				}
+				},
 			},
-			success: function (blob, status, xhr) {
+			success(blob, status, xhr) {
 				const disposition = xhr.getResponseHeader('Content-Disposition');
-				if (disposition && disposition.indexOf('filename=') !== -1) {
+
+				if (disposition && disposition.includes('filename=')) {
 					const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
-					if (matches != null && matches[1]) {
-						fileName = decodeURIComponent(matches[1].replace(/['"]/g, ''));
+
+					if (matches != undefined && matches[1]) {
+						fileName = decodeURIComponent(matches[1].replaceAll(/['"]/g, ''));
 					}
 				}
 
-				const downloadUrl = window.URL.createObjectURL(blob);
+				const downloadUrl = globalThis.URL.createObjectURL(blob);
 				const a = document.createElement('a');
+
 				a.href = downloadUrl;
 				a.download = fileName;
-				document.body.appendChild(a);
+				document.body.append(a);
 				a.click();
-				window.URL.revokeObjectURL(downloadUrl);
-				document.body.removeChild(a);
+				globalThis.URL.revokeObjectURL(downloadUrl);
+				a.remove();
 			},
-			error: function (jqXHR, textStatus, errorThrown) {
+			error(jqXHR, textStatus, errorThrown) {
 				console.error('Failed to export file:', textStatus, errorThrown);
 				alert('Export failed. Please try again.');
-			}
+			},
 		});
-	};
-
-	return function(config)
-	{
-		exportUrl = config.exportUrl;
 	}
+
+	return function (config) {
+		exportUrl = config.exportUrl;
+	};
 });

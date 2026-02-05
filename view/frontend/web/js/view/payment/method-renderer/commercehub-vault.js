@@ -4,65 +4,68 @@ define([
 	'Magento_Ui/js/model/messageList',
 	'Magento_Checkout/js/model/full-screen-loader',
 	'Fiserv_Payments/js/ch-adapter',
-	'Fiserv_Payments/js/action/create-commercehub-enriched-session'
-], function(
+	'Fiserv_Payments/js/action/create-commercehub-enriched-session',
+], (
 	$,
 	VaultComponent,
 	globalMessageList,
 	fullScreenLoader,
 	chAdapter,
-	chSession
-){
+	chSession,
+) => {
 	'use_strict';
 
 	return VaultComponent.extend({
-		defaults: { 
+		defaults: {
 			template: 'Fiserv_Payments/payment/commercehub/vault-form',
-			commercehubCode: "fiserv_commercehub",
-			additionalData: {}
+			commercehubCode: 'fiserv_commercehub',
+			additionalData: {},
 		},
 
-		getMaskedCard: function () {
+		getMaskedCard() {
 			return this.details.maskedCC.toLowerCase();
 		},
 
-		getExpirationDate: function () {
+		getExpirationDate() {
 			return this.details.expirationDate;
 		},
 
-		getExpirationMonth: function() {
-			let idx = this.getExpirationDate().indexOf("/");
-			return this.getExpirationDate().substring(0, idx);
+		getExpirationMonth() {
+			const index = this.getExpirationDate().indexOf('/');
+
+			return this.getExpirationDate().slice(0, Math.max(0, index));
 		},
 
-		getExpirationYear: function() {
-			let idx = this.getExpirationDate().indexOf("/");
-			return this.getExpirationDate().substring(idx+1);
+		getExpirationYear() {
+			const index = this.getExpirationDate().indexOf('/');
+
+			return this.getExpirationDate().slice(Math.max(0, index + 1));
 		},
 
-		getTokenSource: function () {
+		getTokenSource() {
 			return this.details.tokenSource;
 		},
 
 		/**
 		 * Place order
 		 */
-		placeOrderClick: async function () {
+		async placeOrderClick() {
 			await this.getPaymentMethodToken();
 		},
 
 		/**
 		 * Send request to get payment method token
 		 */
-		getPaymentMethodToken: async function () {
-			var self = this;
+		async getPaymentMethodToken() {
+			const self = this;
+
 			$.getJSON(self.tokenUrl, {
-				'public_hash': self.publicHash
+				public_hash: self.publicHash,
 			})
 				.done(async (response) => {
-					let paymentToken = response.paymentToken;
-					if (this.is3DSecureEnabled())
-					{
+					const { paymentToken } = response;
+
+					if (this.is3DSecureEnabled()) {
 						try {
 							fullScreenLoader.startLoader();
 							await this.initChSdk(response.paymentToken);
@@ -70,80 +73,83 @@ define([
 							fullScreenLoader.stopLoader();
 						} catch (error) {
 							this.threeDSecureFail(error);
+
 							return;
 						}
 					}
-					self.additionalData['payment_token'] = paymentToken;
+					self.additionalData.payment_token = paymentToken;
 					self.placeOrder();
 				})
 				.fail((response) => {
-					this.placeOrderFail(response);	
+					this.placeOrderFail(response);
 				});
 		},
 
-		threeDSecureFail: function(error) {
+		threeDSecureFail(error) {
 			fullScreenLoader.stopLoader();
 			this.placeOrderFail(error);
 		},
 
-		placeOrderFail: function (errorResponse) {
-			let error = undefined;
+		placeOrderFail(errorResponse) {
+			let error;
+
 			try {
 				error = JSON.parse(errorResponse.responseText);
-			} catch (err) {
+			} catch {
 				error = errorResponse;
 			}
 			globalMessageList.addErrorMessage({
-				message: error.message
+				message: error.message,
 			});
 		},
 
-		is3DSecureEnabled: function () {
-			return window.checkoutConfig.payment[this.getCode()]["threeDSecure"] === '1'
+		is3DSecureEnabled() {
+			return globalThis.checkoutConfig.payment[this.getCode()].threeDSecure === '1';
 		},
 
-		initChSdk: async function(paymentToken) {
-			let credsResponse = await chSession({
-				"paymentToken" : paymentToken,
-				"threeDSecure" : this.is3DSecureEnabled() 
+		async initChSdk(paymentToken) {
+			const credsResponse = await chSession({
+				paymentToken,
+				threeDSecure: this.is3DSecureEnabled(),
 			});
-			let creds = credsResponse["ch_credentials"];
-			if (typeof(creds) === "undefined")
-			{
-				throw new Error("Failed to create payment session.");
+			const creds = credsResponse.ch_credentials;
+
+			if (creds === undefined) {
+				throw new TypeError('Failed to create payment session.');
 			}
-			await chAdapter.initSdk(window.checkoutConfig.payment[this.getCode()],creds);	
+			await chAdapter.initSdk(globalThis.checkoutConfig.payment[this.getCode()], creds);
 		},
 
-		run3DSecure: async function() {
-			const {transactionState, authenticationTransactionId} = await window.fiserv.components.threeDSecure();
-			if (transactionState.toUpperCase() === "DECLINED") {
-				throw new Error("3D-Secure authentication failure.");
+		async run3DSecure() {
+			const { transactionState, authenticationTransactionId } = await globalThis.fiserv.components.threeDSecure();
+
+			if (transactionState.toUpperCase() === 'DECLINED') {
+				throw new Error('3D-Secure authentication failure.');
 			}
 
 			this.handle3DSecureAuth(authenticationTransactionId);
 		},
 
-		handle3DSecureAuth: function (threeDSId) {
-			this.additionalData["3DSecureId"] = threeDSId;
+		handle3DSecureAuth(threeDSId) {
+			this.additionalData['3DSecureId'] = threeDSId;
 		},
 
 		/**
 		 * Get payment method data
 		 * @returns {Object}
 		 */
-		getData: function () {
-			var data = {
-				'method': this.code,
-				'additional_data': {
-					'public_hash': this.publicHash,
-					'token_source': this.getTokenSource(),
-					'expiration_month': this.getExpirationMonth(),
-					'expiration_year': this.getExpirationYear()
-				}
+		getData() {
+			const data = {
+				method: this.code,
+				additional_data: {
+					public_hash: this.publicHash,
+					token_source: this.getTokenSource(),
+					expiration_month: this.getExpirationMonth(),
+					expiration_year: this.getExpirationYear(),
+				},
 			};
 
-			data['additional_data'] = _.extend(data['additional_data'], this.additionalData);
+			data.additional_data = _.extend(data.additional_data, this.additionalData);
 
 			return data;
 		},
@@ -153,8 +159,8 @@ define([
 		 *
 		 * @returns {String}
 		 */
-		getCode: function () {
+		getCode() {
 			return this.commercehubCode;
-		}
+		},
 	});
 });

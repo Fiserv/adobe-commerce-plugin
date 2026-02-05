@@ -3,14 +3,14 @@ define(
 		'uiComponent',
 		'Magento_Checkout/js/model/payment/renderer-list',
 	],
-	function (
+	(
 		Component,
 		rendererList,
-	) {
+	) => {
 		'use strict';
 
-		let config = (window.checkoutConfig && window.checkoutConfig.payment) ? window.checkoutConfig.payment : {};
-		let paypalCode = 'fiserv_paypal';
+		const config = (globalThis.checkoutConfig && globalThis.checkoutConfig.payment) ? globalThis.checkoutConfig.payment : {};
+		const paypalCode = 'fiserv_paypal';
 
 		if (config[paypalCode] && config[paypalCode].isActive) {
 			rendererList.push({
@@ -20,6 +20,6 @@ define(
 		}
 
 		/** Add view logic here if needed */
-        	return Component.extend({});
-	}
+		return Component.extend({});
+	},
 );

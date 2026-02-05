@@ -2,8 +2,8 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-/*browser:true*/
-/*global define*/
+/* browser:true */
+/* global define */
 define(
 	[
 		'underscore',
@@ -20,9 +20,9 @@ define(
 		'Fiserv_Payments/js/action/modify-requirejs',
 		'ko',
 		'mage/translate',
-		'domReady!'
+		'domReady!',
 	],
-	function (
+	(
 		_,
 		$,
 		Component,
@@ -36,12 +36,12 @@ define(
 		additionalValidators,
 		modifyRequirejs,
 		ko,
-		$t
-	) {
+		$t,
+	) => {
 		'use strict';
 
 		return Component.extend({
-			isPlaceOrderActionAllowed: ko.observable(quote.billingAddress() != null),
+			isPlaceOrderActionAllowed: ko.observable(quote.billingAddress() != undefined),
 			defaults: {
 				template: 'Fiserv_Payments/payment/commercehub/form',
 				active: false,
@@ -49,86 +49,84 @@ define(
 				paymentPayload: {
 					sessionId: null,
 					type: null,
-					threeDSecureId: undefined
+					threeDSecureId: undefined,
 				},
 				additionalData: {},
 				paymentMethodName: '[name="payment[method]"',
 				isIframeValid: false,
-				credentials: undefined
+				credentials: undefined,
 			},
 
 			/**
 			 * @returns {exports.initialize}
 			 */
-			initialize: async function () {
-					quote.billingAddress.subscribe(function (address) {
+			async initialize() {
+				quote.billingAddress.subscribe(function (address) {
 					this.isPlaceOrderActionAllowed(address !== null);
-					this.checkoutValidHandler();	
+					this.checkoutValidHandler();
 				}, this);
-			
+
 				this.code = 'fiserv_commercehub';
 				this.initializeChAdapter();
 
 				this._super();
 				this.vaultEnabler = new VaultEnabler();
 				this.vaultEnabler.setPaymentCode(this.getVaultCode());
-			
-						return self;
+
+				return globalThis;
 			},
 
-			initializeChAdapter: function () 
-			{
+			initializeChAdapter() {
 				chAdapter.initialize(
-					window.checkoutConfig.payment[this.code],
+					globalThis.checkoutConfig.payment[this.code],
 					() => { this.iframeLoadSuccess(); },
 					(valid) => { this.iframeValidHandler(valid); },
 					(brand) => { this.cardBrandChangeHandler(brand); },
 					(data) => { this.fieldValidityHandler(data); },
-					(data) => { this.fieldFocusHandler(data); }
+					(data) => { this.fieldFocusHandler(data); },
 				);
 			},
 
-			loadSdcForm: function () {
+			loadSdcForm() {
 				if (this.isChecked() === this.code) {
 					this.loadIframe();
 				}
 			},
 
-			initCheckoutSdk: async function(credentials)
-			{
+			async initCheckoutSdk(credentials) {
 				await chAdapter.initSdk(
-					window.checkoutConfig.payment[this.code],
-					credentials
+					globalThis.checkoutConfig.payment[this.code],
+					credentials,
 				);
 			},
 
-			loadIframe: function () {
+			loadIframe() {
 				chAdapter.destroyIframe();
 				this.cardBrandChangeHandler(null);
 
-				var self = this;
-				let failureCb = this.iframeLoadFailure.bind(this);
+				const self = this;
+				const failureCallback = this.iframeLoadFailure.bind(this);
 
-				let iframePromise = new Promise((resolve, reject) => {
+				const iframePromise = new Promise((resolve, reject) => {
 					this.beginIframeFlow();
 					chAdapter.instantiateIframe(
-						resolve, 
+						resolve,
 						reject,
-					)
+					);
 				});
-				iframePromise.then((data) => {
-				}).catch((error) =>{
-					failureCb(error);
-				})
+
+				iframePromise.then((data) => {}).catch((error) => {
+					failureCallback(error);
+				});
 			},
 
-			iframeLoadSuccess: function (data) {
+			iframeLoadSuccess(data) {
 				this.endIframeFlow();
 			},
 
-			iframeRunSuccess: async function (sessionId) {
+			async iframeRunSuccess(sessionId) {
 				this.setPaymentPayload(sessionId);
-				
+
 				try {
 					if (this.is3DSecureEnabled()) {
 						await this.run3DSecure();
@@ -136,47 +134,48 @@ define(
 				} catch (error) {
 					this.iframeRunFailure(error.message);
 					this.endIframeFlow();
+
 					return;
 				}
 				this.endIframeFlow();
 				this.placeOrderClick();
 			},
 
-			run3DSecure: async function () {
-				const {transactionState, authenticationTransactionId} = await window.fiserv.components.threeDSecure();
-				if (transactionState.toUpperCase() === "DECLINED") {
-					throw new Error("3D-Secure authentication failure.");
+			async run3DSecure() {
+				const { transactionState, authenticationTransactionId } = await globalThis.fiserv.components.threeDSecure();
+
+				if (transactionState.toUpperCase() === 'DECLINED') {
+					throw new Error('3D-Secure authentication failure.');
 				}
 
 				this.handle3DSecureAuth(authenticationTransactionId);
 			},
 
-			handle3DSecureAuth: function (threeDSId) {
-				this.set3DSecurePayload(threeDSId);	
+			handle3DSecureAuth(threeDSId) {
+				this.set3DSecurePayload(threeDSId);
 			},
 
-			is3DSecureEnabled: function()
-			{
-				return window.checkoutConfig.payment[this.code]["threeDSecure"] === '1'
+			is3DSecureEnabled() {
+				return globalThis.checkoutConfig.payment[this.code].threeDSecure === '1';
 			},
 
-			iframeLoadFailure: function (message) {
+			iframeLoadFailure(message) {
 				this.endIframeFlow();
 				this.showError(message);
 			},
 
-			iframeRunFailure: function (message) {
-				this.showError(message ?? "Card capture failure. Please try again."); 
+			iframeRunFailure(message) {
+				this.showError(message ?? 'Card capture failure. Please try again.');
 				this.endIframeFlow();
 				this.cardBrandChangeHandler(null);
 				chAdapter.resetIframe();
 			},
 
-			beginIframeFlow: function () {
+			beginIframeFlow() {
 				fullScreenLoader.startLoader();
 			},
 
-			endIframeFlow: function () {
+			endIframeFlow() {
 				fullScreenLoader.stopLoader();
 			},
 
@@ -185,29 +184,28 @@ define(
 			 *
 			 * @returns {exports.initObservable}
 			 */
-			initObservable: function () {
-
+			initObservable() {
 				this._super()
 					.observe(['active']);
 
 				return this;
 			},
-	
-			setupPaymentMethod: function() {
+
+			setupPaymentMethod() {
 				this.watchPaymentMethods();
 				this.handleFastlaneConsent();
 			},
 
-			/** 
+			/**
 			 * Deactivates card form when fiserv_commercehub not checked.
 			 * isActive() not working with COD, for some reason.
 			 */
-			watchPaymentMethods: function () {
-				$(this.paymentMethodName).on("click", (event) => {
+			watchPaymentMethods() {
+				$(this.paymentMethodName).on('click', (event) => {
 					if (event.currentTarget.id === this.getCode()) {
 						// must re-init SDK if other Fiserv APMs exist
 						this.initializeChAdapter();
-						this.loadIframe();	
+						this.loadIframe();
 					} else {
 						this.cardBrandChangeHandler(null);
 						chAdapter.destroyIframe();
@@ -215,18 +213,17 @@ define(
 				});
 			},
 
-			handleFastlaneConsent: function() {
-				if (window.checkoutConfig.payment.fiserv_paypal_fastlane &&
-					window.checkoutConfig.payment.fiserv_paypal_fastlane.consent &&
-					window.checkoutConfig.payment.fiserv_paypal_fastlane.consent.render &&
-					$("#fiserv-paypal-consent-container").length &&
-					!$("fiserv-paypal-consent-container").children().length)
-				{
-					window.checkoutConfig.payment.fiserv_paypal_fastlane.consent.render("#fiserv-paypal-consent-container");
+			handleFastlaneConsent() {
+				if (globalThis.checkoutConfig.payment.fiserv_paypal_fastlane &&
+					globalThis.checkoutConfig.payment.fiserv_paypal_fastlane.consent &&
+					globalThis.checkoutConfig.payment.fiserv_paypal_fastlane.consent.render &&
+					$('#fiserv-paypal-consent-container').length > 0 &&
+					$('fiserv-paypal-consent-container').children().length === 0) {
+					globalThis.checkoutConfig.payment.fiserv_paypal_fastlane.consent.render('#fiserv-paypal-consent-container');
 				}
 			},
 
-			refreshBillingAddress: function () {
+			refreshBillingAddress() {
 				if (this.isAchActive() && quote.billingAddress()) {
 					shpfUtils.setBillingAddress(quote.billingAddress());
 					this.initAchIframe();
@@ -238,14 +235,14 @@ define(
 			 *
 			 * @returns {String}
 			 */
-			getCode: function () {
+			getCode() {
 				return this.code;
 			},
 
 			/**
 			 * @returns {Boolean}
 			 */
-			isVaultEnabled: function () {
+			isVaultEnabled() {
 				return this.vaultEnabler.isVaultEnabled();
 			},
 
@@ -254,12 +251,12 @@ define(
 			 *
 			 * @returns {String}
 			 */
-			getVaultCode: function () {
-				return window.checkoutConfig.payment[this.getCode()].vaultCode;
+			getVaultCode() {
+				return globalThis.checkoutConfig.payment[this.getCode()].vaultCode;
 			},
 
-			getInvalidFieldMessages: function() {
-				return window.checkoutConfig.payment[this.getCode()].invalidFields;
+			getInvalidFieldMessages() {
+				return globalThis.checkoutConfig.payment[this.getCode()].invalidFields;
 			},
 
 			/**
@@ -267,8 +264,8 @@ define(
 			 *
 			 * @returns {String}
 			 */
-			getEnvironment: function () {
-				return window.checkoutConfig.payment[this.getCode()].environment;
+			getEnvironment() {
+				return globalThis.checkoutConfig.payment[this.getCode()].environment;
 			},
 
 			/**
@@ -276,11 +273,13 @@ define(
 			 *
 			 * @returns {String}
 			 */
-			getBillingAddress: function () {
+			getBillingAddress() {
 				let billingAddress = checkoutData.getBillingAddressFromData();
+
 				if (!billingAddress) {
 					billingAddress = quote.billingAddress();
 				}
+
 				return billingAddress;
 			},
 
@@ -289,8 +288,8 @@ define(
 			 *
 			 * @returns {Boolean}
 			 */
-			isActive: function () {
-				let active = this.getCode() === this.isChecked();
+			isActive() {
+				const active = this.getCode() === this.isChecked();
 
 				this.active(active);
 
@@ -302,19 +301,19 @@ define(
 			 *
 			 * @returns {Object}
 			 */
-			getData: function () {
-				var data = {
-					'method': this.getCode(),
-					'additional_data': {
-						'payment_session': this.paymentPayload.sessionId
-					}
+			getData() {
+				const data = {
+					method: this.getCode(),
+					additional_data: {
+						payment_session: this.paymentPayload.sessionId,
+					},
 				};
 
-				if (typeof(this.paymentPayload.threeDSecureId) !== "undefined") {
-					data['additional_data']['3DSecureId'] = this.paymentPayload.threeDSecureId;
+				if (this.paymentPayload.threeDSecureId !== undefined) {
+					data.additional_data['3DSecureId'] = this.paymentPayload.threeDSecureId;
 				}
 
-				data['additional_data'] = _.extend(data['additional_data'], this.additionalData);
+				data.additional_data = _.extend(data.additional_data, this.additionalData);
 				this.vaultEnabler.visitAdditionalData(data);
 
 				return data;
@@ -325,26 +324,27 @@ define(
 			 *
 			 * @returns {Object}
 			 */
-			getCcAvailableTypes: function () {  
+			getCcAvailableTypes() {
 				return validator.getAvailableCardTypes();
 			},
 
 			/**
 			 * Action to place order
 			 */
-			placeOrder: function (key) {
-				var self = this;
+			placeOrder(key) {
+				const self = this;
 
 				if (key) {
 					// handle payment failure. Reinit Iframe
-					$(document).one("ajaxError", (ev,xhr) => { this.placeOrderFailureHandler(ev,xhr); } );
+					$(document).one('ajaxError', (event_, xhr) => { this.placeOrderFailureHandler(event_, xhr); });
+
 					return self._super();
 				}
-			
+
 				return false;
 			},
 
-			placeOrderFailureHandler: function (ev,xhr) {
+			placeOrderFailureHandler(event_, xhr) {
 				chAdapter.destroyIframe();
 				this.loadIframe();
 				this.cardBrandChangeHandler(null);
@@ -354,27 +354,28 @@ define(
 			/**
 			 * Trigger order placing
 			 */
-			placeOrderClick: function () {
+			placeOrderClick() {
 				if (this.paymentPayload.sessionId) {
 					this.placeOrder('parent');
 				}
 			},
 
-			setPaymentTokenInfo: function (token) {
+			setPaymentTokenInfo(token) {
 				this.setPaymentPayload(token);
 			},
 
-			validateCardType: function (brand) {
+			validateCardType(brand) {
 				let result = false;
-				let mapper = pjsAdapter.getCcTypesMapper();
-				if (Object.keys(mapper).length) {
-					let ccType = mapper[brand.toUpperCase()];
-					if (ccType) {
-						if (this.getCcAvailableTypes().include(ccType)) {
-							result = true;
-						}
+				const mapper = pjsAdapter.getCcTypesMapper();
+
+				if (Object.keys(mapper).length > 0) {
+					const ccType = mapper[brand.toUpperCase()];
+
+					if (ccType && this.getCcAvailableTypes().include(ccType)) {
+						result = true;
 					}
 				}
+
 				return result;
 			},
 
@@ -383,12 +384,12 @@ define(
 			 *
 			 * @param {Object} paymentToken
 			 * @private
-			 */	
-			setPaymentPayload: function (sessionId) {
+			 */
+			setPaymentPayload(sessionId) {
 				this.paymentPayload.sessionId = sessionId;
 			},
 
-			set3DSecurePayload: function (threeDSecureId) {
+			set3DSecurePayload(threeDSecureId) {
 				this.paymentPayload.threeDSecureId = threeDSecureId;
 			},
 
@@ -398,65 +399,66 @@ define(
 			 * @param {String} errorMessage
 			 * @private
 			 */
-			showError: function (errorMessage) {
+			showError(errorMessage) {
 				globalMessageList.addErrorMessage({
-					message: errorMessage
+					message: errorMessage,
 				});
 			},
 
-			enableSubmitButton: function() {
-				this.getSubmitButton().prop("disabled", false);
+			enableSubmitButton() {
+				this.getSubmitButton().prop('disabled', false);
 			},
 
-			disableSubmitButton: function() {
-				this.getSubmitButton().prop("disabled", true);
+			disableSubmitButton() {
+				this.getSubmitButton().prop('disabled', true);
 			},
 
-			getSubmitButton: function() {
+			getSubmitButton() {
 				return $('button#fiserv-checkout-submit');
 			},
 
-			submitIframe: async function() {
+			async submitIframe() {
 				if (this.isPlaceOrderActionAllowed() === true && additionalValidators.validate()) {
 					fullScreenLoader.startLoader();
-					let credsResponse = undefined;	
-					try {	
-						credsResponse = await chSession( { "threeDSecure" : this.is3DSecureEnabled() } );
+					let credsResponse;
+
+					try {
+						credsResponse = await chSession({ threeDSecure: this.is3DSecureEnabled() });
 					} catch (error) {
-						console.log("An error occurred while starting Commercehub payment session: ".concat(error));
+						console.log('An error occurred while starting Commercehub payment session: '.concat(error));
 						this.iframeRunFailure();
+
 						return;
 					}
-					let creds = credsResponse["ch_credentials"];
-					
+					const creds = credsResponse.ch_credentials;
+
 					// handle 3DS
-					if(this.is3DSecureEnabled())
-					{
+					if (this.is3DSecureEnabled()) {
 						await this.initCheckoutSdk(creds);
 					}
-						
+
 					chAdapter.submitCardForm(
-						window.checkoutConfig.payment.fiserv_payments['storeUrl'], 
+						globalThis.checkoutConfig.payment.fiserv_payments.storeUrl,
 						(sessionId) => { this.iframeRunSuccess(sessionId); },
 						() => { this.iframeRunFailure(); },
-						creds
+						creds,
 					);
 				}
 			},
 
-			getNumberUnmaskButton: function() {
+			getNumberUnmaskButton() {
 				return $('button#sdc-unmask-number');
 			},
 
-			getNumberMaskButton: function() {
+			getNumberMaskButton() {
 				return $('button#sdc-mask-number');
 			},
 
-			getSecurityUnmaskButton: function() {
+			getSecurityUnmaskButton() {
 				return $('button#sdc-unmask-security');
 			},
 
-			getSecurityMaskButton: function() {
+			getSecurityMaskButton() {
 				return $('button#sdc-mask-security');
 			},
 
@@ -465,62 +467,68 @@ define(
 			 *
 			 * @returns {Boolean}
 			 */
-			checkNumberMask: function() {
-				let maskingMode = window.checkoutConfig.payment[this.getCode()].formConfig["fields"]["cardNumber"]["masking"]["mode"];
-				if (maskingMode == "NO_MASKING") {
+			checkNumberMask() {
+				const maskingMode = globalThis.checkoutConfig.payment[this.getCode()].formConfig.fields.cardNumber.masking.mode;
+
+				if (maskingMode == 'NO_MASKING') {
 					return false;
-				} else {
-					return true;
 				}
+
+				return true;
 			},
 
-			checkSecurityMask: function() {
-				let maskingMode = window.checkoutConfig.payment[this.getCode()].formConfig["fields"]["securityCode"]["masking"]["mode"];
-				if (maskingMode == "NO_MASKING") {
+			checkSecurityMask() {
+				const maskingMode = globalThis.checkoutConfig.payment[this.getCode()].formConfig.fields.securityCode.masking.mode;
+
+				if (maskingMode == 'NO_MASKING') {
 					return false;
-				} else {
-					return true;
 				}
+
+				return true;
 			},
 
-			unmaskCardNumber: function() {
+			unmaskCardNumber() {
 				chAdapter.unmask('cardNumber');
-				let unmaskButton = this.getNumberUnmaskButton();
-				let maskButton = this.getNumberMaskButton();
+				const unmaskButton = this.getNumberUnmaskButton();
+				const maskButton = this.getNumberMaskButton();
+
 				unmaskButton.addClass('sdc-hidden');
 				maskButton.removeClass('sdc-hidden');
 			},
 
-			maskCardNumber: function() {
+			maskCardNumber() {
 				chAdapter.mask('cardNumber');
-				let unmaskButton = this.getNumberUnmaskButton();
-				let maskButton = this.getNumberMaskButton();
+				const unmaskButton = this.getNumberUnmaskButton();
+				const maskButton = this.getNumberMaskButton();
+
 				unmaskButton.removeClass('sdc-hidden');
 				maskButton.addClass('sdc-hidden');
 			},
 
-			unmaskSecurityCode: function() {
+			unmaskSecurityCode() {
 				chAdapter.unmask('securityCode');
-				let unmaskButton = this.getSecurityUnmaskButton();
-				let maskButton = this.getSecurityMaskButton();
+				const unmaskButton = this.getSecurityUnmaskButton();
+				const maskButton = this.getSecurityMaskButton();
+
 				unmaskButton.addClass('sdc-hidden');
 				maskButton.removeClass('sdc-hidden');
 			},
 
-			maskSecurityCode: function() {
+			maskSecurityCode() {
 				chAdapter.mask('securityCode');
-				let unmaskButton = this.getSecurityUnmaskButton();
-				let maskButton = this.getSecurityMaskButton();
+				const unmaskButton = this.getSecurityUnmaskButton();
+				const maskButton = this.getSecurityMaskButton();
+
 				unmaskButton.removeClass('sdc-hidden');
 				maskButton.addClass('sdc-hidden');
 			},
 
-			iframeValidHandler: function(valid) {
+			iframeValidHandler(valid) {
 				this.isIframeValid = valid;
 				this.checkoutValidHandler();
 			},
 
-			checkoutValidHandler: function() {
+			checkoutValidHandler() {
 				if (this.isIframeValid === true && this.isPlaceOrderActionAllowed() === true) {
 					this.enableSubmitButton();
 				} else {
@@ -528,148 +536,158 @@ define(
 				}
 			},
 
-			getCardBrandIcon: function() {
+			getCardBrandIcon() {
 				return $('#sdc-card-brand-icon');
 			},
 
-			setCardBrandIconClass: function(cssClass) {
-				let icon = this.getCardBrandIcon();
+			setCardBrandIconClass(cssClass) {
+				const icon = this.getCardBrandIcon();
+
 				icon.removeClass();
 				icon.addClass('sdc-card-brand-icon');
-				if (typeof(cssClass) !== "undefined")
-				{
+				if (cssClass !== undefined) {
 					icon.addClass(cssClass);
 				}
 			},
 
-			cardBrandChangeHandler: function(brand) {
-				let icon = this.getCardBrandIcon();
+			cardBrandChangeHandler(brand) {
+				const icon = this.getCardBrandIcon();
 
 				switch (brand) {
-					case null:
+					case null: {
 						this.setCardBrandIconClass();
 						break;
-					case 'visa':
+					}
+					case 'visa': {
 						this.setCardBrandIconClass('sdc-card-brand-icon-visa');
 						break;
-					case 'mastercard':
+					}
+					case 'mastercard': {
 						this.setCardBrandIconClass('sdc-card-brand-icon-mastercard');
 						break;
-					case 'american-express':
+					}
+					case 'american-express': {
 						this.setCardBrandIconClass('sdc-card-brand-icon-amex');
 						break;
-					case 'diners-club':
+					}
+					case 'diners-club': {
 						this.setCardBrandIconClass('sdc-card-brand-icon-diners');
 						break;
-					case 'discover':
+					}
+					case 'discover': {
 						this.setCardBrandIconClass('sdc-card-brand-icon-discover');
 						break;
-					case 'jcb':
+					}
+					case 'jcb': {
 						this.setCardBrandIconClass('sdc-card-brand-icon-jcb');
 						break;
-					case 'unionpay':
+					}
+					case 'unionpay': {
 						this.setCardBrandIconClass('sdc-card-brand-icon-union');
 						break;
-					case 'maeestro':
+					}
+					case 'maeestro': {
 						this.setCardBrandIconClass('sdc-card-brand-icon-maeestro');
 						break;
-					case 'elo':
+					}
+					case 'elo': {
 						this.setCardBrandIconClass('sdc-card-brand-icon-elo');
 						break;
+					}
 				}
 			},
 
-
-			getSdcFieldFrame: function(name) {
-				switch(name)
-				{
-					case "cardNumber":
+			getSdcFieldFrame(name) {
+				switch (name) {
+					case 'cardNumber': {
 						return $('#sdc-card-number-frame');
-					case "nameOnCard":
+					}
+					case 'nameOnCard': {
 						return $('#sdc-card-name-frame');
-					case "securityCode":
+					}
+					case 'securityCode': {
 						return $('#sdc-security-code-frame');
-					case "expirationMonth":
+					}
+					case 'expirationMonth': {
 						return $('#sdc-exp-month-frame');
-					case "expirationYear":
+					}
+					case 'expirationYear': {
 						return $('#sdc-exp-year-frame');
+					}
 				}
-
-				return undefined;
 			},
 
-			getSdcFieldInvalidMessageContainer: function(name) {
-				switch(name)
-				{
-					case "cardNumber":
+			getSdcFieldInvalidMessageContainer(name) {
+				switch (name) {
+					case 'cardNumber': {
 						return $('#sdc-card-number-invalid-message');
-					case "nameOnCard":
+					}
+					case 'nameOnCard': {
 						return $('#sdc-card-name-invalid-message');
-					case "securityCode":
+					}
+					case 'securityCode': {
 						return $('#sdc-security-code-invalid-message');
-					case "expirationMonth":
+					}
+					case 'expirationMonth': {
 						return $('#sdc-exp-month-invalid-message');
-					case "expirationYear":
+					}
+					case 'expirationYear': {
 						return $('#sdc-exp-year-invalid-message');
+					}
 				}
-
-				return undefined;
-				
 			},
 
-			getSdcInvalidFieldMessageText: function(name) {
-				switch(name)
-				{
-					case "cardNumber":
-						return this.getInvalidFieldMessages()["cardNumber"];
-					case "nameOnCard":
-						return this.getInvalidFieldMessages()["nameOnCard"];
-					case "securityCode":
-						return this.getInvalidFieldMessages()["securityCode"];
-					case "expirationMonth":
-						return this.getInvalidFieldMessages()["expirationMonth"];
-					case "expirationYear":
-						return this.getInvalidFieldMessages()["expirationYear"];
+			getSdcInvalidFieldMessageText(name) {
+				switch (name) {
+					case 'cardNumber': {
+						return this.getInvalidFieldMessages().cardNumber;
+					}
+					case 'nameOnCard': {
+						return this.getInvalidFieldMessages().nameOnCard;
+					}
+					case 'securityCode': {
+						return this.getInvalidFieldMessages().securityCode;
+					}
+					case 'expirationMonth': {
+						return this.getInvalidFieldMessages().expirationMonth;
+					}
+					case 'expirationYear': {
+						return this.getInvalidFieldMessages().expirationYear;
+					}
 				}
 
-				return "";
-	
+				return '';
 			},
 
-			getSdcFields: function() {
+			getSdcFields() {
 				return $('.sdc-field-frame');
 			},
 
-			resetFieldValidation : function() {
+			resetFieldValidation() {
+				const fields = this.getSdcFields();
 
-				let fields = this.getSdcFields();
-
-				fields.each (
-					function(index) {
+				fields.each(
+					function (index) {
 						$(this).removeClass('sdc-valid-field');
-					}
+					},
 				);
 			},
 
-			fieldValidityHandler: function(data) {
-				let frame = this.getSdcFieldFrame(data["field"]);
-				let mess = this.getSdcFieldInvalidMessageContainer(data["field"]);
+			fieldValidityHandler(data) {
+				const frame = this.getSdcFieldFrame(data.field);
+				const mess = this.getSdcFieldInvalidMessageContainer(data.field);
 
-				if (typeof(frame) !== "undefined")
-				{
-					if (data["isValid"] === true) 
-					{
+				if (frame !== undefined) {
+					if (data.isValid === true) {
 						frame.removeClass('sdc-error-field');
 						frame.addClass('sdc-valid-field');
 						mess.addClass('sdc-hidden');
-					} else if (data["shouldShowError"] === true)
-					{
-						mess.text(this.getSdcInvalidFieldMessageText(data["field"]));
+					} else if (data.shouldShowError === true) {
+						mess.text(this.getSdcInvalidFieldMessageText(data.field));
 						frame.removeClass('sdc-valid-field');
 						frame.addClass('sdc-error-field');
 						mess.removeClass('sdc-hidden');
-					} else
-					{
+					} else {
 						frame.removeClass('sdc-valid-field');
 						frame.removeClass('sdc-error-field');
 						mess.addClass('sdc-hidden');
@@ -677,18 +695,17 @@ define(
 				}
 			},
 
-			fieldFocusHandler: function(data) {
-				let frame = this.getSdcFieldFrame(data);
-				
-				if(typeof(frame) !== "undefined") {
-					if(frame[0].contains(document.activeElement) === true) {
+			fieldFocusHandler(data) {
+				const frame = this.getSdcFieldFrame(data);
+
+				if (frame !== undefined) {
+					if (frame[0].contains(document.activeElement) === true) {
 						frame.addClass('sdc-focused-field');
-					} else
-					{
+					} else {
 						frame.removeClass('sdc-focused-field');
 					}
 				}
-			}
+			},
 		});
-	}
+	},
 );

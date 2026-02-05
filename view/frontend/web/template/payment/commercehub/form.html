@@ -1,18 +1,22 @@
 <div class="payment-method" data-bind="css: {'_active': (getCode() == isChecked())}">
 	<div class="payment-method-title field choice">
-		<input type="radio"
-			   name="payment[method]"
-			   class="radio"
-			   data-bind="attr: {'id': getCode()}, value: getCode(), checked: isChecked, click: selectPaymentMethod, visible: isRadioButtonVisible(), afterRender: setupPaymentMethod"/>
+		<input
+			type="radio"
+			name="payment[method]"
+			class="radio"
+			data-bind="attr: {'id': getCode()}, value: getCode(), checked: isChecked, click: selectPaymentMethod, visible: isRadioButtonVisible(), afterRender: setupPaymentMethod"
+		>
 		<label data-bind="attr: {'for': getCode()}" class="label"><span data-bind="text: getTitle()"></span></label>
 	</div>
 	<div class="payment-method-content">
 		<!-- ko foreach: getRegion('messages') -->
-		<!-- ko template: getTemplate() --><!-- /ko -->
+		<!-- ko template: getTemplate() -->
+		<!-- /ko -->
 		<!--/ko-->
 		<div class="payment-method-billing-address">
 			<!-- ko foreach: $parent.getRegion(getBillingAddressFormName()) -->
-			<!-- ko template: getTemplate() --><!-- /ko -->
+			<!-- ko template: getTemplate() -->
+			<!-- /ko -->
 			<!--/ko-->
 		</div>
 
@@ -21,16 +25,18 @@
 				<div id="sdc-card-brand-icon" class="sdc-card-brand-icon"></div>
 				<div data-bind="attr: {'id': getCode() + '-card-number'}" class="sdc-field"></div>
 				<!-- ko if: (checkNumberMask())-->
-					<button 
-						id="sdc-unmask-number" 
-						class="sdc-unmasking-icon"
-						data-bind="click: unmaskCardNumber">
-					</button>
+				<button
+					id="sdc-unmask-number"
+					class="sdc-unmasking-icon"
+					data-bind="click: unmaskCardNumber"
+				>
+				</button>
 				<!-- /ko -->
 				<button
 					id="sdc-mask-number"
 					class="sdc-masking-icon sdc-hidden"
-					data-bind="click: maskCardNumber">
+					data-bind="click: maskCardNumber"
+				>
 				</button>
 			</div>
 			<span id="sdc-card-number-invalid-message" class="sdc-error-message sdc-hidden"></span>
@@ -45,16 +51,18 @@
 			<div id="sdc-security-code-frame" class="sdc-field-frame sdc-text">
 				<div data-bind="attr: {'id': getCode() + '-security-code'}" class="sdc-field"></div>
 				<!-- ko if: (checkSecurityMask())-->
-					<button
-						id="sdc-unmask-security"
-						class="sdc-unmasking-icon"
-						data-bind="click: unmaskSecurityCode">
-					</button>
+				<button
+					id="sdc-unmask-security"
+					class="sdc-unmasking-icon"
+					data-bind="click: unmaskSecurityCode"
+				>
+				</button>
 				<!-- /ko -->
 				<button
 					id="sdc-mask-security"
 					class="sdc-masking-icon sdc-hidden"
-					data-bind="click: maskSecurityCode">
+					data-bind="click: maskSecurityCode"
+				>
 				</button>
 			</div>
 			<span id="sdc-security-code-invalid-message" class="sdc-error-message sdc-hidden"></span>
@@ -75,41 +83,48 @@
 		</div>
 
 		<!-- ko if: (isVaultEnabled())-->
-			<div class="field choice">
-				<input type="checkbox"
-					name="vault[is_enabled]"
-					class="checkbox"
-					data-bind="attr: {'id': getCode() + '_enable_vault'}, checked: vaultEnabler.isActivePaymentTokenEnabler"/>
-				<label class="label" data-bind="attr: {'for': getCode() + '_enable_vault'}">
-					<span><!-- ko i18n: 'Save for later use.'--><!-- /ko --></span>
-				</label>
-			</div>
+		<div class="field choice">
+			<input
+				type="checkbox"
+				name="vault[is_enabled]"
+				class="checkbox"
+				data-bind="attr: {'id': getCode() + '_enable_vault'}, checked: vaultEnabler.isActivePaymentTokenEnabler"
+			>
+			<label class="label" data-bind="attr: {'for': getCode() + '_enable_vault'}">
+				<span>
+					<!-- ko i18n: 'Save for later use.'-->
+					<!-- /ko -->
+				</span>
+			</label>
+		</div>
 		<!-- /ko -->
 
 		<div class="checkout-agreements-block">
 			<!-- ko foreach: $parent.getRegion('before-place-order') -->
-			<!-- ko template: getTemplate() --><!-- /ko -->
+			<!-- ko template: getTemplate() -->
+			<!-- /ko -->
 			<!--/ko-->
 		</div>
 		
 		<div id="fiserv-paypal-consent-container"></div>
 
 		<div class="actions-toolbar">
-            <div class="primary">
-				<button 
-					class="action primary checkout" 
+			<div class="primary">
+				<button
+					class="action primary checkout"
 					type="submit"
-					data-bind="click: submitIframe" 
-					id="fiserv-checkout-submit" 
-					disabled="true">
+					data-bind="click: submitIframe"
+					id="fiserv-checkout-submit"
+					disabled="true"
+				>
 					<span translate="'Place Order'"></span>
 				</button>
-            </div>
-        </div>
+			</div>
+		</div>
 
-	<div class="privacyPolicy">
-		<span></span>Payments Powered by Fiserv.&nbsp; <a target="_blank" href="http://www.fiserv.com/privacy">Privacy Notice</a>.
-	</div>
+		<div class="privacyPolicy">
+			<span></span>Payments Powered by Fiserv.&nbsp; <a target="_blank" href="http://www.fiserv.com/privacy">Privacy Notice</a>.
+		</div>
 
 
 	</div>

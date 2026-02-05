@@ -20,4 +20,3 @@ export default {
 		'@stylistic/no-extra-semicolons': true,
 	},
 };
-

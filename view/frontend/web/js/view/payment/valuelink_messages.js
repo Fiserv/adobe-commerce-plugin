@@ -4,15 +4,15 @@
  */
 
 define([
-    'Magento_Ui/js/view/messages',
-    'Fiserv_Payments/js/model/valuelink/valuelink-messages'
-], function (Component, messageContainer) {
-    'use strict';
+	'Magento_Ui/js/view/messages',
+	'Fiserv_Payments/js/model/valuelink/valuelink-messages',
+], (Component, messageContainer) => {
+	'use strict';
 
-    return Component.extend({
-        /** @inheritdoc */
-        initialize: function (config) {
-            return this._super(config, messageContainer);
-        }
-    });
+	return Component.extend({
+		/** @inheritdoc */
+		initialize(config) {
+			return this._super(config, messageContainer);
+		},
+	});
 });

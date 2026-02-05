@@ -3,14 +3,14 @@ define(
 		'uiComponent',
 		'Magento_Checkout/js/model/payment/renderer-list',
 	],
-	function (
+	(
 		Component,
 		rendererList,
-	) {
+	) => {
 		'use strict';
 
-		let config = (window.checkoutConfig && window.checkoutConfig.payment) ? window.checkoutConfig.payment : {};
-		let venmoCode = 'fiserv_venmo';
+		const config = (globalThis.checkoutConfig && globalThis.checkoutConfig.payment) ? globalThis.checkoutConfig.payment : {};
+		const venmoCode = 'fiserv_venmo';
 
 		if (config[venmoCode] && config[venmoCode].isActive) {
 			rendererList.push({
@@ -20,6 +20,6 @@ define(
 		}
 
 		/** Add view logic here if needed */
-        	return Component.extend({});
-	}
+		return Component.extend({});
+	},
 );

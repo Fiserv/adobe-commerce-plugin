@@ -7,8 +7,8 @@ define([
 	'Magento_Checkout/js/model/full-screen-loader',
 	'Magento_Checkout/js/model/new-customer-address',
 	'Magento_Checkout/js/action/select-billing-address',
-	'Magento_Checkout/js/model/payment/method-list'
-], function (
+	'Magento_Checkout/js/model/payment/method-list',
+], (
 	$,
 	ko,
 	chAdapter,
@@ -17,8 +17,8 @@ define([
 	fullScreenLoader,
 	newAddress,
 	selectBillingAddress,
-	methodList
-) {
+	methodList,
+) => {
 	'use strict';
 
 	return {
@@ -27,132 +27,139 @@ define([
 		authenticateResult: undefined,
 
 		addressComponent: undefined,
-		
+
 		isEngaged: ko.observable(false),
-		customerId: ko.observable(undefined),
-		sessionId: ko.observable(undefined),
-		cardId: ko.observable(undefined),
-		maskedCardNumber: ko.observable(undefined),
-		nameOnCard: ko.observable(undefined),
-		cardBrand: ko.observable(undefined),
-		cardExpiry: ko.observable(undefined),
+		customerId: ko.observable(),
+		sessionId: ko.observable(),
+		cardId: ko.observable(),
+		maskedCardNumber: ko.observable(),
+		nameOnCard: ko.observable(),
+		cardBrand: ko.observable(),
+		cardExpiry: ko.observable(),
 
 		watermarkElementID: 'fiserv-paypal-watermark-container',
 
 		consentElementID: 'fiserv-paypal-consent-container',
 
-		fastlaneInit: async function() {
+		async fastlaneInit() {
+			const self = this;
 
-			var self = this;
 			fullScreenLoader.startLoader();
 
 			try {
-				const paypal = await window.fiserv.components.paypal();
+				const paypal = await globalThis.fiserv.components.paypal();
 
-				window.braintree = window.braintree || {};
-				window.braintree.client = chBraintreeClient;
-				window.braintree.hostedFields = chBraintreeHostedFields;
+				globalThis.braintree = globalThis.braintree || {};
+				globalThis.braintree.client = chBraintreeClient;
+				globalThis.braintree.hostedFields = chBraintreeHostedFields;
 
 				this.fastlane = await paypal.fastlane();
 				this.addressComponent = await this.getAddressComponent();
-			
+
 				fullScreenLoader.stopLoader();
-	
+
 				return this.fastlane;
-			}
-			catch(e) {
-				console.log("unable to load PayPal Fastlane component.");
+			} catch {
+				console.log('unable to load PayPal Fastlane component.');
 				fullScreenLoader.stopLoader();
-				return undefined;
 			}
 		},
 
-		renderFastlaneWatermark: async function() {
+		async renderFastlaneWatermark() {
 			try {
-				await this.fastlane.renderWatermark("fiserv-paypal-watermark-container");
+				await this.fastlane.renderWatermark('fiserv-paypal-watermark-container');
 			} catch (error) {
 				fullScreenLoader.stopLoader();
-				console.error("Watermark rendering failed:", error);
+				console.error('Watermark rendering failed:', error);
 			}
 		},
 
-		getAddressComponent: async function() {
+		async getAddressComponent() {
 			const inputNames = [
-				"firstname",
-				"lastname",
-				"street[0]",
-				"street[1]",
-				"country_id",
-				"region_id",
-				"city",
-				"postcode",
-				"telephone"
+				'firstname',
+				'lastname',
+				'street[0]',
+				'street[1]',
+				'country_id',
+				'region_id',
+				'city',
+				'postcode',
+				'telephone',
 			];
 
 			const fields = [];
 
-			$.each(inputNames, function(_, name) {
-				const $input = $('input[name="' + name + '"]');
+			$.each(inputNames, (_, name) => {
+				const $input = $(`input[name="${name}"]`);
 				const id = $input.attr('id');
 
 				if (id) {
 					switch (name) {
-						case "firstname":
+						case 'firstname': {
 							fields.firstName = { elementId: id };
 							break;
-						case "lastname":
+						}
+						case 'lastname': {
 							fields.lastName = { elementId: id };
 							break;
-						case "street[0]":
+						}
+						case 'street[0]': {
 							fields.houseNumberOrName = { elementId: id };
 							break;
-						case "street[1]":
+						}
+						case 'street[1]': {
 							fields.street = { elementId: id };
 							break;
-						case "city":
+						}
+						case 'city': {
 							fields.city = { elementId: id };
 							break;
-						case "region_id":
+						}
+						case 'region_id': {
 							fields.stateOrProvince = { elementId: id };
 							break;
-						case "postcode":
+						}
+						case 'postcode': {
 							fields.postalCode = { elementId: id };
 							break;
-						case "country_id":
+						}
+						case 'country_id': {
 							fields.country = { elementId: id };
 							break;
+						}
 					}
 				}
 			});
 
-			return await window.fiserv.components.address({
-				fields: fields,
-				hooks: {}
+			return await globalThis.fiserv.components.address({
+				fields,
+				hooks: {},
 			});
 		},
 
-		authenticateEmailForFastlane: async function () {
-
-			const emailInputValue = $("#customer-email").val();
+		async authenticateEmailForFastlane() {
+			const emailInputValue = $('#customer-email').val();
 
 			try {
 				this.authenticateResult = await this.fastlane.authenticate({
-					email: emailInputValue
+					email: emailInputValue,
 				});
-				
 			} catch (error) {
 				fullScreenLoader.stopLoader();
-				console.error("Authentication failed:", error);
+				console.error('Authentication failed:', error);
 			}
 		},
 
-		processAuthResult: function() {
+		processAuthResult() {
 			try {
 				const symbolKey = Object.getOwnPropertySymbols(this.authenticateResult)[0];
 				const symbolData = this.authenticateResult[symbolKey];
-				window.checkoutConfig.payment.fiserv_paypal_fastlane.consent = symbolData.consentComponent; 
 
-				if( ! this.authenticateResult.isGuestCheckout) {
+				globalThis.checkoutConfig.payment.fiserv_paypal_fastlane.consent = symbolData.consentComponent;
+
+				if (this.authenticateResult.isGuestCheckout) {
+					this.unengageFastlane();
+				} else {
 					const profileData = symbolData.profile;
 
 					const magentoAddress = {
@@ -160,11 +167,11 @@ define([
 						lastname: profileData.shippingAddress.name.lastName,
 						street: [profileData.shippingAddress.address.addressLine1, profileData.shippingAddress.address.addressLine2],
 						city: profileData.shippingAddress.address.adminArea2,
-						region: window.checkoutConfig.payment.fiserv_paypal.regionsData[profileData.shippingAddress.address.countryCode][profileData.shippingAddress.address.adminArea1],
+						region: globalThis.checkoutConfig.payment.fiserv_paypal.regionsData[profileData.shippingAddress.address.countryCode][profileData.shippingAddress.address.adminArea1],
 						postcode: profileData.shippingAddress.address.postalCode,
 						countryId: profileData.shippingAddress.address.countryCode,
 						telephone: profileData.shippingAddress.phoneNumber.nationalNumber,
-						email: symbolData.email
+						email: symbolData.email,
 					};
 
 					$('input[name="firstname"]').val(magentoAddress.firstname).trigger('change');
@@ -188,54 +195,51 @@ define([
 					this.nameOnCard(symbolData.profile.card.paymentSource.card.name);
 					this.cardBrand(symbolData.profile.card.paymentSource.card.brand);
 					this.cardExpiry(symbolData.profile.card.paymentSource.card.expiry);
-	
-					let currentMethods = methodList();
+
+					const currentMethods = methodList();
+
 					methodList([]);
 					methodList(currentMethods);
 				}
-				else {
-					this.unengageFastlane();
+				if ($('#fiserv-paypal-consent-container').length > 0 &&
+					$('fiserv-paypal-consent-container').children().length === 0) {
+					globalThis.checkoutConfig.payment.fiserv_paypal_fastlane.consent.render('#fiserv-paypal-consent-container');
 				}
-				if ($("#fiserv-paypal-consent-container").length &&
-					!$("fiserv-paypal-consent-container").children().length)
-				{
-					window.checkoutConfig.payment.fiserv_paypal_fastlane.consent.render("#fiserv-paypal-consent-container");
-				}
-			} catch (err)
-			{
-				console.log(err);
+			} catch (error) {
+				console.log(error);
 				this.unengageFastlane();
 			}
 		},
 
-		unengageFastlane: function() {
+		unengageFastlane() {
 			this.isEngaged(false);
-			this.sessionId(undefined);
-			this.cardId(undefined);
-			this.customerId(undefined);
-			this.maskedCardNumber(undefined);
-			this.nameOnCard(undefined);
-			this.cardBrand(undefined);
-			this.cardExpiry(undefined);
+			this.sessionId();
+			this.cardId();
+			this.customerId();
+			this.maskedCardNumber();
+			this.nameOnCard();
+			this.cardBrand();
+			this.cardExpiry();
 		},
 
-		getConfigData: function() {
-			var self = this;
-			let formConfig = {};
-			if(this.fastlane) {
+		getConfigData() {
+			const self = this;
+			const formConfig = {};
+
+			if (this.fastlane) {
 				formConfig.paypalFastlane = {
 					component: this.fastlane,
 					consent: {
-						parentElementId: this.consentElementID
-					}
-				}
+						parentElementId: this.consentElementID,
+					},
+				};
 			}
 
-			if(this.addressComponent) {
+			if (this.addressComponent) {
 				formConfig.billingAddress = this.addressComponent;
 			}
 
 			return formConfig;
-		}
+		},
 	};
 });
