@@ -1,4 +1,7 @@
 import {getEslintConfig} from "@commercehub/frontend-node-tools/index.mjs";
+import typescript from "typescript-eslint";
+import htmlParser from "@html-eslint/parser";
+import htmlPlugin from "@html-eslint/eslint-plugin";
 
 export default getEslintConfig({
 	include: {
@@ -64,6 +67,22 @@ export default getEslintConfig({
 			config: {
 				rules: {
 					"import/no-unused-modules": "off"
+				}
+			}
+		},
+		{
+			include: ["view/**/templates/**/*.html", "**/*.html"],
+			config: {
+				languageOptions: {
+					parser: htmlParser
+				},
+				plugins: {
+					html: htmlPlugin
+				},
+				rules: {
+					"html/indent": ["error", "tab"],
+					"html/require-closing-tags": "error",
+					"html/require-img-alt": "error"
 				}
 			}
 		}
