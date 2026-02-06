@@ -14,7 +14,7 @@ export default {
 		'font-family-no-missing-generic-family-keyword': undefined,
 		'@stylistic/max-line-length': undefined,
 		'@stylistic/indentation': ['tab'],
-		'@stylistic/max-empty-lines': [1],
+		'@stylistic/max-empty-lines': [2],
 		'@stylistic/no-empty-first-line': true,
 		'@stylistic/no-eol-whitespace': true,
 		'@stylistic/no-extra-semicolons': true,

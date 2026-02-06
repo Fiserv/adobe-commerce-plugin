@@ -1,5 +1,4 @@
 import {getEslintConfig} from "@commercehub/frontend-node-tools/index.mjs";
-import typescript from "typescript-eslint";
 import htmlParser from "@html-eslint/parser";
 import htmlPlugin from "@html-eslint/eslint-plugin";
 
