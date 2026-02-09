@@ -25,6 +25,7 @@ class CredentialsRequest
 	const KEY_CUSTOMER_ID_PAYPAL = "providerCustomerId";
 	const KEY_AMOUNT = "amount";
 	const KEY_BILLING_ADDRESS = "billingAddress";
+	const KEY_SHIPPING_ADDRESS = "shippingAddress";
 	const KEY_PAYMENT_TOKEN = "paymentToken";
 	const KEY_SOURCE = "source";
 	const KEY_3DS = "threeDSecure";
@@ -190,6 +191,10 @@ class CredentialsRequest
 
 		if (isset($sessionData[self::KEY_BILLING_ADDRESS])) {
 			$payload[self::KEY_BILLING_ADDRESS] = $sessionData[self::KEY_BILLING_ADDRESS];
+		}
+
+		if (isset($sessionData[self::KEY_SHIPPING_ADDRESS])) {
+			$payload[self::KEY_SHIPPING_ADDRESS] = $sessionData[self::KEY_SHIPPING_ADDRESS];
 		}
 
 		if (isset($sessionData[self::KEY_PAYMENT_TOKEN])) {
