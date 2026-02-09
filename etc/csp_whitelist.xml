@@ -11,6 +11,8 @@
                 <value id="ch-prod-base" type="host">https://prod.api.fiservapps.com</value>
                 <value id="ch-cert-base" type="host">https://cert.api.fiservapps.com</value>
 				<value id="apple-pay-sdk" type="host">https://applepay.cdn-apple.com</value>
+                <value id="affirm-sdk" type="host">https://cdn1.sandbox.affirm.com</value>
+                <value id="affirm-sdk-2" type="host">https://cdn1-sandbox.affirm.com</value>
             </values>
         </policy>
         <policy id="connect-src">
@@ -23,6 +25,8 @@
                 <value id="ch-prod-base" type="host">https://prod.api.fiservapps.com</value>
                 <value id="ch-cert-base" type="host">https://cert.api.fiservapps.com</value>
 				<value id="apple-pay-sdk" type="host">https://applepay.cdn-apple.com</value>
+                <value id="affirm-sdk" type="host">https://cdn1.sandbox.affirm.com</value>
+                <value id="affirm-sdk-2" type="host">https://cdn1-sandbox.affirm.com</value>
             </values>
         </policy>
         <policy id="frame-src">
@@ -35,6 +39,8 @@
                 <value id="ch-prod-base" type="host">https://prod.api.fiservapps.com</value>
                 <value id="ch-cert-base" type="host">https://cert.api.fiservapps.com</value>
 				<value id="apple-pay-sdk" type="host">https://applepay.cdn-apple.com</value>
+                <value id="affirm-sdk" type="host">https://cdn1.sandbox.affirm.com</value>
+                <value id="affirm-sdk-2" type="host">https://cdn1-sandbox.affirm.com</value>
             </values>
         </policy>
         <policy id="form-action">
@@ -47,6 +53,8 @@
                 <value id="ch-prod-base" type="host">https://prod.api.fiservapps.com</value>
                 <value id="ch-cert-base" type="host">https://cert.api.fiservapps.com</value>
 				<value id="apple-pay-sdk" type="host">https://applepay.cdn-apple.com</value>
+                <value id="affirm-sdk" type="host">https://cdn1.sandbox.affirm.com</value>
+                <value id="affirm-sdk-2" type="host">https://cdn1-sandbox.affirm.com</value>
             </values>
         </policy>
     </policies>

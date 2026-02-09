@@ -641,11 +641,19 @@
         </arguments>
     </virtualType>
 
+	  <!-- Validator for Affirm -->
+    <virtualType name="FiservAffirmCountryValidator" type="Magento\Payment\Gateway\Validator\CountryValidator">
+        <arguments>
+            <argument name="config" xsi:type="object">Fiserv\Payments\Gateway\Config\Affirm\Config</argument>
+        </arguments>
+    </virtualType>
+
     <virtualType name="FiservOrderApiValidatorPool" type="Magento\Payment\Gateway\Validator\ValidatorPool">
         <arguments>
             <argument name="validators" xsi:type="array">
                 <item name="paypal_country" xsi:type="string">FiservPayPalCountryValidator</item>
                 <item name="venmo_country" xsi:type="string">FiservVenmoCountryValidator</item>
+                <item name="affirm_country" xsi:type="string">FiservAffirmCountryValidator</item>
             </argument>
         </arguments>
     </virtualType>
@@ -686,7 +694,13 @@
             </argument>
         </arguments>
     </type>
-
+	<type name="Magento\Payment\Gateway\Command\CommandManagerPool">
+        <arguments>
+            <argument name="executors" xsi:type="array">
+                <item name="fiserv_affirm" xsi:type="string">FiservOrderApiCommandManager</item>
+            </argument>
+        </arguments>
+    </type>
     <virtualType name="FiservOrderApiAuthorizeCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
 		<arguments>
 			<argument name="requestBuilder" xsi:type="object">FiservOrderApiAuthorizeRequest</argument>
@@ -860,8 +874,11 @@
             <argument name="methodCode" xsi:type="const">Fiserv\Payments\Model\Config\Venmo\ConfigProvider::CODE</argument>
         </arguments>
     </type>
-
-
+    <type name="Fiserv\Payments\Gateway\Config\Affirm\Config">
+        <arguments>
+            <argument name="methodCode" xsi:type="const">Fiserv\Payments\Model\Config\Affirm\ConfigProvider::CODE</argument>
+        </arguments>
+    </type>
 	<type name="Magento\Payment\Model\Method\Adapter">
 		<plugin name="fiservPayPalAvailability" type="Fiserv\Payments\Model\Plugin\CommerceHub\PaymentMethodAvailable" />
 	</type>
@@ -881,6 +898,7 @@
 		<arguments>
 			<argument name="paypal_config" xsi:type="object">Fiserv\Payments\Gateway\Config\PayPal\Config</argument>
 			<argument name="Venmo_config" xsi:type="object">Fiserv\Payments\Gateway\Config\Venmo\Config</argument>
+			<argument name="affirm_config" xsi:type="object">Fiserv\Payments\Gateway\Config\Affirm\Config</argument>
 		</arguments>
 	</virtualType>
 
@@ -936,5 +954,42 @@
             <argument name="methodCode" xsi:type="const">Fiserv\Payments\Model\Config\ApplePay\ConfigProvider::CODE</argument>
         </arguments>
     </type>
+
+	<type name="Magento\Checkout\Model\CompositeConfigProvider">
+        <arguments>
+            <argument name="configProviders" xsi:type="array">
+                <item name="fiserv_affirm" xsi:type="object">Fiserv\Payments\Model\Config\Affirm\ConfigProvider</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <!-- Affirm Payment Method Facade configuration -->
+    <virtualType name="FiservAffirmFacade" type="Magento\Payment\Model\Method\Adapter">
+        <arguments>
+            <argument name="code" xsi:type="const">Fiserv\Payments\Model\Config\Affirm\ConfigProvider::CODE</argument>
+            <argument name="formBlockType" xsi:type="string">Fiserv\Payments\Block\CommerceHub\Form</argument>
+            <argument name="infoBlockType" xsi:type="string">Fiserv\Payments\Block\PayPal\PayPalInfo</argument>
+            <argument name="valueHandlerPool" xsi:type="object">FiservAffirmValueHandlerPool</argument>
+            <argument name="validatorPool" xsi:type="object">FiservOrderApiValidatorPool</argument>
+            <argument name="commandPool" xsi:type="object">FiservOrderApiCommandPool</argument>
+        </arguments>
+    </virtualType>
+
+		<virtualType name="FiservAffirmValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+		<arguments>
+			<argument name="handlers" xsi:type="array">
+				<item name="default" xsi:type="string">FiservAffirmValueHandler</item>
+				<item name="can_void" xsi:type="string">Fiserv\Payments\Gateway\Config\CanVoidHandler</item>
+				<item name="can_refund" xsi:type="string">Fiserv\Payments\Gateway\Config\CanRefundHandler</item>
+ 				<item name="can_cancel" xsi:type="string">Fiserv\Payments\Gateway\Config\CanVoidHandler</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservAffirmValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+		<arguments>
+			<argument name="configInterface" xsi:type="object">Fiserv\Payments\Gateway\Config\Affirm\Config</argument>
+		</arguments>
+	</virtualType>
 
 </config>
