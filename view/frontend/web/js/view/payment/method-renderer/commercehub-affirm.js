@@ -35,15 +35,20 @@ define([
                 publicKeyHash: null
             },
             isPlaceOrderActionAllowed: ko.observable(false),
-			initializedAmount: 0.00,
-			reloadOnRender: false
+            initializedAmount: 0.00,
+            reloadOnRender: false,
+            isInitializing: false,
+            reloadTimer: null,
+            lastBillingAddressKey: ''
         },
 
-    	initialize: async function () {
-    		this._super();
+        initialize: async function () {
+            this._super();
             this.observeBillingAddress();
-		
-		    return this;
+            this.observeShippingAddress();
+            this.observeTotals();
+
+            return this;
         },
 
         afterRenderInit: function () {
@@ -62,11 +67,36 @@ define([
             }
 
             this.watchPaymentMethods();
+
+            if (this.getCode() === this.isChecked()) {
+                if (this.reloadOnRender) {
+                    this.reloadOnRender = false;
+                }
+                this.loadAffirmForm();
+            }
         },
 
         observeBillingAddress: function () {
             quote.billingAddress.subscribe((address) => {
                 this.isPlaceOrderActionAllowed(address !== null);
+
+                const currentKey = this.getBillingAddressKey(address);
+                if (currentKey !== this.lastBillingAddressKey) {
+                    this.lastBillingAddressKey = currentKey;
+                    this.scheduleAffirmReload('billing-address');
+                }
+            });
+        },
+
+        observeShippingAddress: function () {
+            if (!quote.shippingAddress || !quote.shippingAddress.subscribe) {
+                return;
+            }
+            quote.shippingAddress.subscribe((address) => {
+                const currentKey = this.getBillingAddressKey(address);
+                if (currentKey) {
+                    this.scheduleAffirmReload('shipping-address');
+                }
             });
         },
 
@@ -80,13 +110,50 @@ define([
 				totals && 
 				totals['grand_total'] && 
 				totals['grand_total'] != this.initializedAmount) {
-				location.reload();
+				this.scheduleAffirmReload('totals');
 			}
 		});
 	},
+
+        getBillingAddressKey: function (address) {
+            if (!address) {
+                return '';
+            }
+            const street = Array.isArray(address.street) ? address.street.join(' ') : (address.street || '');
+            return [
+                address.firstname,
+                address.lastname,
+                street,
+                address.city,
+                address.region_id,
+                address.region,
+                address.postcode,
+                address.countryId,
+                address.telephone
+            ].filter(Boolean).join('|');
+        },
+
+        scheduleAffirmReload: function (reason) {
+            if (this.getCode() !== this.isChecked()) {
+                return;
+            }
+
+            if (this.reloadTimer) {
+                clearTimeout(this.reloadTimer);
+            }
+
+            this.reloadTimer = setTimeout(() => {
+                this.reloadTimer = null;
+                this.initializeAffirm();
+            }, 300);
+        },
 	    
     initializeAffirm: async function () {
  		const config = window.checkoutConfig.payment[this.getCode()];
+        if (this.isInitializing) {
+            return;
+        }
+        this.isInitializing = true;
 		try {
 			fullScreenLoader.startLoader();
 			$('#affirm-button-container').empty();
@@ -160,7 +227,8 @@ define([
 			globalMessageList.addErrorMessage({
 				message: $t('Affirm error: ') + error.message
 			});
-		} finally {
+        } finally {
+            this.isInitializing = false;
 			fullScreenLoader.stopLoader();
 		}
 	},
@@ -181,14 +249,11 @@ define([
         watchPaymentMethods: function () {
             $(`[name="payment[method]"]`).on("click", (event) => {
                 if (event.currentTarget.id === this.getCode()) {
-			if (this.reloadOnRender)
-			{
-				this.reloadOnRender = false;
-				location.reload();
-			} else
-			{
-				this.loadAffirmForm();
-			}
+            if (this.reloadOnRender)
+            {
+                this.reloadOnRender = false;
+            }
+            this.loadAffirmForm();
                 }
             });
         },

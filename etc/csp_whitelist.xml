@@ -13,6 +13,7 @@
 				<value id="apple-pay-sdk" type="host">https://applepay.cdn-apple.com</value>
                 <value id="affirm-sdk" type="host">https://cdn1.sandbox.affirm.com</value>
                 <value id="affirm-sdk-2" type="host">https://cdn1-sandbox.affirm.com</value>
+                <value id="affirm-sdk-3" type="host">https://sandbox.affirm.com</value>
             </values>
         </policy>
         <policy id="connect-src">
@@ -27,6 +28,7 @@
 				<value id="apple-pay-sdk" type="host">https://applepay.cdn-apple.com</value>
                 <value id="affirm-sdk" type="host">https://cdn1.sandbox.affirm.com</value>
                 <value id="affirm-sdk-2" type="host">https://cdn1-sandbox.affirm.com</value>
+                <value id="affirm-sdk-3" type="host">https://sandbox.affirm.com</value>
             </values>
         </policy>
         <policy id="frame-src">
@@ -41,6 +43,7 @@
 				<value id="apple-pay-sdk" type="host">https://applepay.cdn-apple.com</value>
                 <value id="affirm-sdk" type="host">https://cdn1.sandbox.affirm.com</value>
                 <value id="affirm-sdk-2" type="host">https://cdn1-sandbox.affirm.com</value>
+                <value id="affirm-sdk-3" type="host">https://sandbox.affirm.com</value>
             </values>
         </policy>
         <policy id="form-action">
@@ -55,6 +58,7 @@
 				<value id="apple-pay-sdk" type="host">https://applepay.cdn-apple.com</value>
                 <value id="affirm-sdk" type="host">https://cdn1.sandbox.affirm.com</value>
                 <value id="affirm-sdk-2" type="host">https://cdn1-sandbox.affirm.com</value>
+                <value id="affirm-sdk-3" type="host">https://sandbox.affirm.com</value>
             </values>
         </policy>
     </policies>
