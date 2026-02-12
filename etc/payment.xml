@@ -22,6 +22,9 @@
         <method name="fiserv_venmo">
             <allow_multiple_address>0</allow_multiple_address>
         </method>
+		<method name="fiserv_affirm">
+			<allow_multiple_address>0</allow_multiple_address>
+		</method>
 		<method name="fiserv_samsung_pay">
 			<allow_multiple_address>0</allow_multiple_address>
 		</method>

@@ -1092,6 +1092,32 @@
                         <config_path>payment/fiserv_venmo/payment_action</config_path>
                     </field>
                 </group>
+				<group id="fiserv_affirm" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="8">
+						<label>Affirm</label>
+						<attribute type="expanded">0</attribute>
+						<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+						<field id="active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+							<label>Enable Affirm Pay</label>
+							<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+							<config_path>payment/fiserv_affirm/active</config_path>
+							<comment>Choose Yes to enable Affirm Pay as a payment method. No to disable.</comment>
+						</field>
+						<field id="title" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+							<label>Payment Method Title</label>
+							<config_path>payment/fiserv_affirm/title</config_path>
+						</field>
+						<field id="payment_action" translate="label" type="select" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
+							<label>Charge Type</label>
+							<source_model>Fiserv\Payments\Model\Source\CommerceHub\TransactionType</source_model>
+							<config_path>payment/fiserv_affirm/payment_action</config_path>
+						</field>
+						<field id="affirm_button_color" translate="label" type="select" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="0">
+							<label>Affirm Button Color</label>
+							<config_path>payment/fiserv_affirm/affirm_button_color</config_path>
+							<source_model>Fiserv\Payments\Model\Source\Affirm\ButtonColor</source_model>
+						</field>
+				</group>
+		</group>
 				<group id="fiserv_samsung_pay" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="10">
 					<label>Samsung Pay</label>
 					<attribute type="expanded">0</attribute>

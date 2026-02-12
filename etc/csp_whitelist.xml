@@ -11,6 +11,9 @@
                 <value id="ch-prod-base" type="host">https://prod.api.fiservapps.com</value>
                 <value id="ch-cert-base" type="host">https://cert.api.fiservapps.com</value>
 				<value id="apple-pay-sdk" type="host">https://applepay.cdn-apple.com</value>
+                <value id="affirm-sdk" type="host">https://cdn1.sandbox.affirm.com</value>
+                <value id="affirm-sdk-2" type="host">https://cdn1-sandbox.affirm.com</value>
+                <value id="affirm-sdk-3" type="host">https://sandbox.affirm.com</value>
                 <value id="samsung-pay-sdk-img" type="host">https://img.mpay.samsung.com</value>
                 <value id="samsung-pay-sdk-button" type="host">https://resource.stg.samsungpay.com</value>
                 <value id="samsung-pay-sdk-cdn" type="host">https://samsungpay.cdn-samsung.com</value>
@@ -26,6 +29,9 @@
                 <value id="ch-prod-base" type="host">https://prod.api.fiservapps.com</value>
                 <value id="ch-cert-base" type="host">https://cert.api.fiservapps.com</value>
 				<value id="apple-pay-sdk" type="host">https://applepay.cdn-apple.com</value>
+                <value id="affirm-sdk" type="host">https://cdn1.sandbox.affirm.com</value>
+                <value id="affirm-sdk-2" type="host">https://cdn1-sandbox.affirm.com</value>
+                <value id="affirm-sdk-3" type="host">https://sandbox.affirm.com</value>
                 <value id="samsung-pay-sdk-img" type="host">https://img.mpay.samsung.com</value>
                 <value id="samsung-pay-sdk-button" type="host">https://resource.stg.samsungpay.com</value>
                 <value id="samsung-pay-sdk-cdn" type="host">https://samsungpay.cdn-samsung.com</value>
@@ -41,6 +47,9 @@
                 <value id="ch-prod-base" type="host">https://prod.api.fiservapps.com</value>
                 <value id="ch-cert-base" type="host">https://cert.api.fiservapps.com</value>
 				<value id="apple-pay-sdk" type="host">https://applepay.cdn-apple.com</value>
+                <value id="affirm-sdk" type="host">https://cdn1.sandbox.affirm.com</value>
+                <value id="affirm-sdk-2" type="host">https://cdn1-sandbox.affirm.com</value>
+                <value id="affirm-sdk-3" type="host">https://sandbox.affirm.com</value>
                 <value id="samsung-pay-sdk-img" type="host">https://img.mpay.samsung.com</value>
                 <value id="samsung-pay-sdk-button" type="host">https://resource.stg.samsungpay.com</value>
                 <value id="samsung-pay-sdk-cdn" type="host">https://samsungpay.cdn-samsung.com</value>
@@ -63,6 +72,9 @@
                 <value id="ch-prod-base" type="host">https://prod.api.fiservapps.com</value>
                 <value id="ch-cert-base" type="host">https://cert.api.fiservapps.com</value>
 				<value id="apple-pay-sdk" type="host">https://applepay.cdn-apple.com</value>
+                <value id="affirm-sdk" type="host">https://cdn1.sandbox.affirm.com</value>
+                <value id="affirm-sdk-2" type="host">https://cdn1-sandbox.affirm.com</value>
+                <value id="affirm-sdk-3" type="host">https://sandbox.affirm.com</value>
                 <value id="samsung-pay-sdk-img" type="host">https://img.mpay.samsung.com</value>
                 <value id="samsung-pay-sdk-button" type="host">https://resource.stg.samsungpay.com</value>
                 <value id="samsung-pay-sdk-cdn" type="host">https://samsungpay.cdn-samsung.com</value>
