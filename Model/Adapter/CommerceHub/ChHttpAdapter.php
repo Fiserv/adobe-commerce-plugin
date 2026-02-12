@@ -39,7 +39,7 @@ class ChHttpAdapter
 	/**
 	 * @var bool
 	 */
-	private $isPayPal = false;
+	private $isOrder = false;
 
 	/**
 	 * @var string
@@ -67,7 +67,7 @@ class ChHttpAdapter
 		$this->logger = $logger;
 		if ($paypalConfig !== null) {
 			$this->paypalConfig = $paypalConfig;
-			$this->isPayPal = true;
+			$this->isOrder = true;
 		}
 	}
 
@@ -139,7 +139,7 @@ class ChHttpAdapter
 			]
 		);
 		
-		$inquiryEndpoint = $this->isPayPal ? self::INQUIRY_ENDPOINT_PAYPAL : self::INQUIRY_ENDPOINT_COMMERCEHUB;
+		$inquiryEndpoint = $this->isOrder ? self::INQUIRY_ENDPOINT_PAYPAL : self::INQUIRY_ENDPOINT_COMMERCEHUB;
 		$inquiryUrl = $this->getServiceUrl() . '/' . $inquiryEndpoint;
 		$inquiryCurl = $this->generateNakedBaseCurl($inquiryUrl, $payload, 2);
 		$inquiryResponseFull = curl_exec($inquiryCurl);
@@ -167,8 +167,8 @@ class ChHttpAdapter
 		$this->logger->logCritical(1, "Transaction inquiry failure. Continuing recovery process...");
 
 		// Step 3: Critical Recovery (Deal with transaction specific response flows if issue with inquiry occurred)
-		$chargesEndpoint = $this->isPayPal ? "checkouts/v1/orders" : "payments/v1/charges";
-		$cancelsEndpoint = $this->isPayPal ? self::CANCELS_ENDPOINT_PAYPAL : self::CANCELS_ENDPOINT_COMMERCEHUB;
+		$chargesEndpoint = $this->isOrder ? "checkouts/v1/orders" : "payments/v1/charges";
+		$cancelsEndpoint = $this->isOrder ? self::CANCELS_ENDPOINT_PAYPAL : self::CANCELS_ENDPOINT_COMMERCEHUB;
 		if($endpoint === $chargesEndpoint && $data["transactionDetails"]["captureFlag"] === false)
 		{
 			// Attempt cancel transaction of initial Auth
