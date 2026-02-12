@@ -38,7 +38,7 @@ class CancelsRequest
 	/**
 	 * @var bool
 	 */
-	private $isPayPal = false;
+	private $isOrder = false;
 
 	/**
 	 * @var ChHttpAdapter
@@ -68,7 +68,7 @@ class CancelsRequest
 		$this->logger = $logger;
 		if ($payPalConfig !== null) {
 			$this->payPalConfig = $payPalConfig;
-			$this->isPayPal = true;
+			$this->isOrder = true;
 		}
 	}
 
@@ -76,7 +76,7 @@ class CancelsRequest
 	{
 		$this->logger->logInfo(1, "Initiating Cancel Request");
 		$data = $this->getCancelsPayload($this->getMerchantId(), $this->getTerminalId(), $referenceTransactionId);
-		$endpoint = $this->isPayPal ? self::CANCELS_ENDPOINT_PAYPAL : self::CANCELS_ENDPOINT_COMMERCEHUB;
+		$endpoint = $this->isOrder ? self::CANCELS_ENDPOINT_PAYPAL : self::CANCELS_ENDPOINT_COMMERCEHUB;
 		$response = $this->httpAdapter->sendRequest($data, $endpoint);
 		return $this->parseCancelsResponse($response);
 	}
@@ -113,14 +113,14 @@ class CancelsRequest
 	}
 
 	private function getMerchantId() {
-		if ($this->isPayPal) {
+		if ($this->isOrder) {
 			return $this->payPalConfig->getMerchantId();
 		}
 		return $this->chConfig->getMerchantId();
 	}
 
 	private function getTerminalId() {
-		if ($this->isPayPal) {
+		if ($this->isOrder) {
 			return $this->payPalConfig->getTerminalId();
 		}
 		return $this->chConfig->getTerminalId();
