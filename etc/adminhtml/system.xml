@@ -1117,7 +1117,6 @@
 							<source_model>Fiserv\Payments\Model\Source\Affirm\ButtonColor</source_model>
 						</field>
 				</group>
-		</group>
 				<group id="fiserv_samsung_pay" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="10">
 					<label>Samsung Pay</label>
 					<attribute type="expanded">0</attribute>
