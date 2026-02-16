@@ -17,10 +17,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     // Config keys (adjust as needed for Samsung Pay)
     const KEY_ACTIVE = 'active';
     const KEY_TITLE = 'samsung_pay';
-    const KEY_SORT_ORDER = 'sort_order';
     const SAMSUNG_PAY_BUTTON_COLOR_KEY = 'samsung_pay_button_color';
-	const KEY_MERCHANT_INTEGRATOR = 'merchant_integrator';
-	const KEY_STANDALONE_SPA = 'standalone_spa';
 	const KEY_PAYMENT_ACTION = 'payment_action';
 
     /**
@@ -58,15 +55,6 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     public function getSamsungPayButtonColor($storeId = null)
     {
         return $this->getValue(self::SAMSUNG_PAY_BUTTON_COLOR_KEY, $storeId) ?: null;
-    }
-
-    public function getMerchantIntegrator($storeId = null)
-    {
-        return $this->getValue(self::KEY_MERCHANT_INTEGRATOR, $storeId);
-    }
-    public function isStandaloneSpa($storeId = null)
-    {
-        return (bool)$this->getValue(self::KEY_STANDALONE_SPA, $storeId);
     }
 
     public function getPaymentAction($storeId = null)

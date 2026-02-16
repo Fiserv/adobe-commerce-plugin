@@ -1061,7 +1061,6 @@
         </arguments>
     </virtualType>
 
-
     <!-- Pending Inquiry Processor configuration -->
     <type name="Fiserv\Payments\Cron\PendingInquiryProcessor">
         <arguments>
@@ -1073,8 +1072,8 @@
             <argument name="logger" xsi:type="object">Fiserv\Payments\Logger\MultiLevelLogger</argument>
         </arguments>
     </type>
-</config>
-    <!-- Samsung Pay payment facade, value/validator pools, commands, handlers -->
+	
+	<!-- Samsung Pay payment facade, value/validator pools, commands, handlers -->
     <virtualType name="FiservSamsungPayFacade" type="Magento\Payment\Model\Method\Adapter">
         <arguments>
             <argument name="code" xsi:type="const">Fiserv\Payments\Model\Config\SamsungPay\ConfigProvider::CODE</argument>

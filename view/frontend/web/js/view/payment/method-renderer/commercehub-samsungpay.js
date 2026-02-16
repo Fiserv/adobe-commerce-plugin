@@ -33,9 +33,8 @@ define([
                 publicKeyHash: null
             },
             isPlaceOrderActionAllowed: ko.observable(false),
-		initializedAmount: 0.00,
-		reloadOnRender: false,
-		samsungPayInitialized: false
+        initializedAmount: 0.00,
+        samsungPayInitialized: false
         },
 
     	initialize: async function () {
@@ -47,17 +46,6 @@ define([
 
     	initializeSamsungPay: async function () 
     	{
-		// stop-gap until checkouts team fixes amount caching issue
-		let fastlaneAmount = window.checkoutConfig?.payment?.fiserv_paypal_fastlane?.initializedAmount;
-		if (fastlaneAmount)
-		{
-			let grandTotal = quote.totals()['grand_total'];
-			if (fastlaneAmount != grandTotal)
-			{
-				window.checkoutConfig.payment.fiserv_paypal_fastlane.initializedAmount = undefined
-				this.reloadOnRender = true;
-			}
-		}
 
             if (this.getCode() === this.isChecked())
             {
@@ -196,16 +184,8 @@ define([
             const self = this;
             $(`[name="payment[method]"]`).on("click", (event) => {
                 if (event.currentTarget.id === this.getCode()) {
-                    if (this.reloadOnRender)
-                    {
-                        this.reloadOnRender = false;
-                        this.samsungPayInitialized = false;
-                        location.reload();
-                    } else
-                    {
-                        this.samsungPayInitialized = false;
-                        this.loadSamsungPayForm();
-                    }
+                    this.samsungPayInitialized = false;
+                    this.loadSamsungPayForm();
                 } else {
                     this.samsungPayInitialized = false;
                 }
