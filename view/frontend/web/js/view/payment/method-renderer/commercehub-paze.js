@@ -117,9 +117,11 @@ define([
         getAmount: function () {
             let rawGrandTotal = quote.totals() ? quote.totals().grand_total : 0;
             let grandTotal = Math.round(rawGrandTotal * 100) / 100;
+		let grandTotalNum = Number(rawGrandTotal) || 0;
+		let grandTotalStr = grandTotalNum.toFixed(2);
             let currency = quote.totals() ? quote.totals().quote_currency_code : "USD";
             return {
-                total: grandTotal,
+                total: grandTotalStr,
                 currency: currency
             };
         },
@@ -157,22 +159,10 @@ define([
          * @returns {Object}
          */
         buildPazeSelectParams: function () {
-            const email = this.getCustomerEmail();
             const amount = this.getAmount();
-            const shippingAddress = this.getPazeShippingAddress();
 
             return {
-                customer: {
-                    email: email
-                },
                 amount: amount,
-                ecom: {
-                    cartContainsGiftCard: false,
-                    orderForPickup: false,
-                    orderQuantity: 1,
-                    orderHighestCost: amount.total,
-                    shippingAddress: shippingAddress
-                }
             };
         },
 
