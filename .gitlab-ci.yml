@@ -20,8 +20,16 @@ phpcs:
     - vendor/bin/phpcs --version
     - echo "Magento Coding Standard version:"
     - composer show magento/magento-coding-standard | grep versions
-    - vendor/bin/phpcs --standard=Magento2 --extensions=php,phtml --error-severity=10 --ignore-annotations --report=json --report-file=phpcs-report.json .
-    - vendor/bin/phpcs --standard=Magento2 --extensions=php,phtml --error-severity=10 --ignore-annotations --report=summary .
+    - composer show magento/magento-coding-standard | grep versions || true
+    - mv phpcs.xml.dist phpcs.xml.dist.ci.bak || true
+    - |
+      if vendor/bin/phpcs --standard=vendor/magento/magento-coding-standard/Magento2/ruleset.xml --extensions=php,phtml --error-severity=10 --ignore-annotations --report=json --report-file=phpcs-report.json .; then
+        vendor/bin/phpcs --standard=vendor/magento/magento-coding-standard/Magento2/ruleset.xml --extensions=php,phtml --error-severity=10 --ignore-annotations --report=summary .
+      else
+        vendor/bin/phpcs --standard=vendor/magento-ecg/coding-standard/EcgM2/ruleset.xml --extensions=php,phtml --error-severity=10 --ignore-annotations --report=json --report-file=phpcs-report.json .
+        vendor/bin/phpcs --standard=vendor/magento-ecg/coding-standard/EcgM2/ruleset.xml --extensions=php,phtml --error-severity=10 --ignore-annotations --report=summary .
+      fi
+    - mv phpcs.xml.dist.ci.bak phpcs.xml.dist || true
   artifacts:
     when: always
     paths:

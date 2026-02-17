@@ -24,7 +24,7 @@
 	},
 	"require-dev": {
 		"squizlabs/php_codesniffer": "^3.10",
-		"magento-ecg/coding-standard": "*"
+		"magento/magento-coding-standard": "*"
 	},
 	"authors": [
 		{

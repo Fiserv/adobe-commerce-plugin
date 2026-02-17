@@ -20,8 +20,8 @@
     <exclude-pattern>*/node_modules/*</exclude-pattern>
     <exclude-pattern>*/.git/*</exclude-pattern>
 
-    <!-- Use Magento2 Coding Standard -->
-    <rule ref="Magento2">
+    <!-- Use Magento2 Coding Standard from vendor if available -->
+    <rule ref="vendor/magento/magento-coding-standard/Magento2/ruleset.xml">
         <!-- Ignore annotations as per EQP requirements -->
         <exclude name="Magento2.Annotation"/>
     </rule>
