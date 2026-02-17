@@ -4,7 +4,7 @@ include:
     ref: COM-18980-v2
     file: '/template-php.yml'
 variables:
-  ARTIFACT_TYPE : "React"
+  ARTIFACT_TYPE: "React"
   APM_ID: "0011801"
 
 # PHP CodeSniffer job - Aligned with Adobe EQP requirements
