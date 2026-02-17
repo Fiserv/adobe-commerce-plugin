@@ -71,7 +71,8 @@ define(
 			return {
 				"amount" : amount,
 				"customer" : customer,
-				"billingAddress" : billingAddress
+				"billingAddress" : billingAddress,
+				"country" : "US"
 			};
 		}
 
