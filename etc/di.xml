@@ -111,6 +111,8 @@
 		<arguments>
 			<argument name="executors" xsi:type="array">
 				<item name="fiserv_commercehub" xsi:type="string">FiservCommerceHubCommandManager</item>
+				<item name="fiserv_applepay" xsi:type="string">FiservCommerceHubCommandManager</item>
+				<item name="fiserv_samsung_pay" xsi:type="string">FiservCommerceHubCommandManager</item>
 			</argument>
 		</arguments>
 	</type>
@@ -1059,7 +1061,6 @@
         </arguments>
     </virtualType>
 
-
     <!-- Pending Inquiry Processor configuration -->
     <type name="Fiserv\Payments\Cron\PendingInquiryProcessor">
         <arguments>
@@ -1071,4 +1072,41 @@
             <argument name="logger" xsi:type="object">Fiserv\Payments\Logger\MultiLevelLogger</argument>
         </arguments>
     </type>
+	
+	<!-- Samsung Pay payment facade, value/validator pools, commands, handlers -->
+    <virtualType name="FiservSamsungPayFacade" type="Magento\Payment\Model\Method\Adapter">
+        <arguments>
+            <argument name="code" xsi:type="const">Fiserv\Payments\Model\Config\SamsungPay\ConfigProvider::CODE</argument>
+            <argument name="formBlockType" xsi:type="string">Fiserv\Payments\Block\CommerceHub\Form</argument>
+            <argument name="infoBlockType" xsi:type="string">Fiserv\Payments\Block\ApplePay\ApplePayInfo</argument>
+            <argument name="valueHandlerPool" xsi:type="object">FiservSamsungPayValueHandlerPool</argument>
+            <argument name="validatorPool" xsi:type="object">FiservCommerceHubValidatorPool</argument>
+            <argument name="commandPool" xsi:type="object">FiservCommerceHubCommandPool</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="FiservSamsungPayValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="default" xsi:type="string">FiservSamsungPayValueHandler</item>
+                <item name="can_void" xsi:type="string">Fiserv\Payments\Gateway\Config\CanVoidHandler</item>
+                <item name="can_refund" xsi:type="string">Fiserv\Payments\Gateway\Config\CanRefundHandler</item>
+                <item name="can_cancel" xsi:type="string">Fiserv\Payments\Gateway\Config\CanVoidHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="FiservSamsungPayValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+        <arguments>
+            <argument name="configInterface" xsi:type="object">Fiserv\Payments\Gateway\Config\SamsungPay\Config</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Config objects for Samsung Pay -->
+    <type name="Fiserv\Payments\Gateway\Config\SamsungPay\Config">
+        <arguments>
+            <argument name="methodCode" xsi:type="const">Fiserv\Payments\Model\Config\SamsungPay\ConfigProvider::CODE</argument>
+        </arguments>
+    </type>
+
 </config>
