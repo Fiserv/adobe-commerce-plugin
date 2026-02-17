@@ -23,7 +23,3 @@ phpcs:
       - report.json
     expire_in: 1 week
   allow_failure: false
-  only:
-    - merge_requests
-    - main
-    - develop
