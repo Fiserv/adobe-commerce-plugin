@@ -77,8 +77,33 @@ class PendingInquiryHandler implements HandlerInterface
     {
         $paymentDO = $this->subjectReader->readPayment($handlingSubject);
         $payment = $paymentDO->getPayment();
-        $order = $paymentDO->getOrder();
-        $orderIncrementId = $order->getOrderIncrementId();
+        $paymentOrder = $payment->getOrder();
+
+        $orderIncrementId = null;
+        if (is_object($paymentOrder) && method_exists($paymentOrder, 'getIncrementId')) {
+            try {
+                $orderIncrementId = $paymentOrder->getIncrementId();
+            } catch (\Throwable $e) {
+                $orderIncrementId = null;
+            }
+        }
+
+        if (!$orderIncrementId) {
+            $adapterOrder = $paymentDO->getOrder();
+            if (is_object($adapterOrder) && method_exists($adapterOrder, 'getOrderIncrementId')) {
+                try {
+                    $orderIncrementId = $adapterOrder->getOrderIncrementId();
+                } catch (\Throwable $e) {
+                    $orderIncrementId = null;
+                }
+            }
+        }
+
+        if (!$orderIncrementId) {
+            $this->logger->logError(2, 'PendingInquiryHandler: missing order increment id, cannot create inquiry job');
+            return;
+        }
+
         $logIdentifier = 'Order ID: ' . $orderIncrementId;
 
         $chResponse = $this->subjectReader->readChResponse($response);
@@ -104,8 +129,20 @@ class PendingInquiryHandler implements HandlerInterface
 
         try {
             $paymentMethod = $payment->getMethod();
-            $orderId = $order->getId();
-            
+
+            // Resolve order id safely across gateway adapter/model differences
+            $orderId = null;
+            if (is_object($paymentOrder) && method_exists($paymentOrder, 'getId')) {
+                try {
+                    $paymentOrderId = $paymentOrder->getId();
+                } catch (\Throwable $e) {
+                    $paymentOrderId = null;
+                }
+                if ($paymentOrderId) {
+                    $orderId = (int)$paymentOrderId;
+                }
+            }
+
             // Try to resolve order ID if not yet available
             if (empty($orderId)) {
                 try {
@@ -117,22 +154,27 @@ class PendingInquiryHandler implements HandlerInterface
                         $orderModel = reset($orders);
                         $orderId = $orderModel->getId();
                     }
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                     // Order not saved yet
                 }
             }
 
             // Create inquiry job - first run in 60 seconds
-            $job = $this->jobRepository->createJob(
-                $orderId ? (int)$orderId : null,
-                $orderIncrementId,
-                $referenceOrderId,
-                $paymentMethod,
-                self::FIRST_RETRY_SECONDS
-            );
-
-        } catch (\Exception $e) {
-            $this->logger->logError(2, "Failed to create inquiry job: " . $e->getMessage(), $logIdentifier);
+            try {
+                $this->logger->logInfo(1, 'About to create inquiry job', $logIdentifier);
+                $job = $this->jobRepository->createJob(
+                    $orderId ? (int)$orderId : null,
+                    $orderIncrementId,
+                    $referenceOrderId,
+                    $paymentMethod,
+                    self::FIRST_RETRY_SECONDS
+                );
+            } catch (\Throwable $e) {
+                $this->logger->logError(2, "Failed to create inquiry job: " . $e->getMessage() . " in " . $e->getFile() . ':' . $e->getLine(), $logIdentifier);
+                $this->logger->logError(2, "Trace: " . $e->getTraceAsString(), $logIdentifier);
+            }
+        } catch (\Throwable $e) {
+            $this->logger->logError(2, "Failed to prepare inquiry job: " . $e->getMessage(), $logIdentifier);
             // Don't throw - we don't want to fail the order, just log the error
         }
     }
