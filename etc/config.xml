@@ -341,6 +341,10 @@
 				<can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
 				<can_void>1</can_void>
 				<order_status>pending</order_status>
+				<button_color>pazeblue</button_color>
+				<button_shape>default</button_shape>
+				<disable_max_height>0</disable_max_height>
+				<button_label>checkout</button_label>
 				<group>fiserv_group</group>
 			</fiserv_paze>
 		</payment>

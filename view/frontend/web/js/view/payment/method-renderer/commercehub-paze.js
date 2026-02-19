@@ -210,7 +210,7 @@ define([
         },
 
         /**
-         * Renders Paze payment button
+         * Renders Paze payment button with admin-selected attributes
          * @returns {Promise}
          */
         renderPazeButton: async function () {
@@ -222,13 +222,24 @@ define([
                     }
                 }
 
-                // Create Paze payment button
-                const pazeButton = document.createElement('button');
-                pazeButton.type = 'button';
+                const buttonConfig = this.getPazeButtonConfig();
+
+                const pazeButton = document.createElement('paze-button');
                 pazeButton.className = 'action primary paze-pay-button';
                 pazeButton.id = 'paze-pay-button';
-                pazeButton.textContent = $t('Pay with Paze');
-                pazeButton.style.cssText = 'background-color: #0066b2; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%;';
+
+                if (buttonConfig.color) {
+                    pazeButton.setAttribute('color', buttonConfig.color);
+                }
+                if (buttonConfig.shape) {
+                    pazeButton.setAttribute('shape', buttonConfig.shape);
+                }
+                if (buttonConfig.disableMaxHeight) {
+                    pazeButton.setAttribute('disableMaxHeight', 'true');
+                }
+                if (buttonConfig.label) {
+                    pazeButton.setAttribute('label', buttonConfig.label);
+                }
 
                 pazeButton.addEventListener('click', async () => {
                     try {
@@ -245,6 +256,19 @@ define([
             } catch (error) {
                 console.error('[Paze] Error rendering Paze button:', error);
             }
+        },
+
+        getPazeButtonConfig: function () {
+            const config = window.checkoutConfig?.payment?.[this.getCode()] || {};
+
+            const normalize = (value) => (value || '').toString().trim();
+
+            return {
+                color: normalize(config.button_color) || 'pazeblue',
+                shape: normalize(config.button_shape) || 'default',
+                disableMaxHeight: config.disable_max_height === true || config.disable_max_height === '1' || config.disable_max_height === 1,
+                label: normalize(config.button_label) || 'checkout'
+            };
         },
 
         /**
