@@ -10,9 +10,8 @@ use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient;
 use Fiserv\Payments\Model\PendingInquiryJobRepository;
 use Fiserv\Payments\Logger\MultiLevelLogger;
+use Fiserv\Payments\Helper\OrderIdHelper;
 use Magento\Payment\Gateway\Response\HandlerInterface;
-use Magento\Sales\Api\OrderRepositoryInterface;
-use Magento\Framework\Api\SearchCriteriaBuilder;
 
 class PendingInquiryHandler implements HandlerInterface
 {
@@ -31,14 +30,9 @@ class PendingInquiryHandler implements HandlerInterface
     private $jobRepository;
 
     /**
-     * @var OrderRepositoryInterface
+    * @var OrderIdHelper
      */
-    private $orderRepository;
-
-    /**
-     * @var SearchCriteriaBuilder
-     */
-    private $searchCriteriaBuilder;
+    private $orderIdHelper;
 
     /**
      * @var MultiLevelLogger
@@ -48,21 +42,18 @@ class PendingInquiryHandler implements HandlerInterface
     /**
      * @param SubjectReader $subjectReader
      * @param PendingInquiryJobRepository $jobRepository
-     * @param OrderRepositoryInterface $orderRepository
-     * @param SearchCriteriaBuilder $searchCriteriaBuilder
+     * @param OrderIdHelper $orderIdHelper
      * @param MultiLevelLogger $logger
      */
     public function __construct(
         SubjectReader $subjectReader,
         PendingInquiryJobRepository $jobRepository,
-        OrderRepositoryInterface $orderRepository,
-        SearchCriteriaBuilder $searchCriteriaBuilder,
+        OrderIdHelper $orderIdHelper,
         MultiLevelLogger $logger
     ) {
         $this->subjectReader = $subjectReader;
         $this->jobRepository = $jobRepository;
-        $this->orderRepository = $orderRepository;
-        $this->searchCriteriaBuilder = $searchCriteriaBuilder;
+        $this->orderIdHelper = $orderIdHelper;
         $this->logger = $logger;
     }
 
@@ -105,7 +96,7 @@ class PendingInquiryHandler implements HandlerInterface
             $this->logger->logInfo(1, 'Order scheduled for async inquiry processing', $logIdentifier);
 
             $paymentMethod = $payment->getMethod();
-            $orderId = $this->resolveOrderId($payment->getOrder(), $orderIncrementId);
+            $orderId = $this->orderIdHelper->resolveOrderId($paymentDO, $payment);
 
             $this->createInquiryJob($orderId, $orderIncrementId, $referenceOrderId, $paymentMethod, $logIdentifier);
         } catch (\Throwable $e) {
@@ -131,49 +122,6 @@ class PendingInquiryHandler implements HandlerInterface
         }
 
         return $incrementId;
-    }
-
-    /**
-     * Resolve order entity ID from payment order or repository search
-     *
-     * @param mixed $paymentOrder
-     * @param string $orderIncrementId
-     * @return int|null
-     */
-    private function resolveOrderId($paymentOrder, string $orderIncrementId): ?int
-    {
-        $orderId = $this->safeCall($paymentOrder, 'getId');
-        
-        if (!$orderId) {
-            $orderId = $this->lookupOrderIdByIncrementId($orderIncrementId);
-        }
-
-        return $orderId ? (int)$orderId : null;
-    }
-
-    /**
-     * Lookup order ID by increment ID via repository
-     *
-     * @param string $incrementId
-     * @return int|null
-     */
-    private function lookupOrderIdByIncrementId(string $incrementId): ?int
-    {
-        try {
-            $searchCriteria = $this->searchCriteriaBuilder
-                ->addFilter('increment_id', $incrementId)
-                ->create();
-            $orders = $this->orderRepository->getList($searchCriteria)->getItems();
-            
-            if (!empty($orders)) {
-                $orderModel = reset($orders);
-                return $orderModel->getId();
-            }
-        } catch (\Throwable $e) {
-            // Order not saved yet or lookup failed
-        }
-
-        return null;
     }
 
     /**

@@ -8,11 +8,10 @@ namespace Fiserv\Payments\Gateway\Response\CommerceHub;
 use Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient;
 use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use Fiserv\Payments\Logger\MultiLevelLogger;
+use Fiserv\Payments\Helper\OrderIdHelper;
 use Magento\Payment\Gateway\Response\HandlerInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order;
-use Magento\Framework\Api\SearchCriteriaBuilder;
-use Magento\Framework\Api\FilterBuilder;
 
 class AsyncOrderPendingHandler implements HandlerInterface
 {
@@ -28,31 +27,25 @@ class AsyncOrderPendingHandler implements HandlerInterface
     /** @var MultiLevelLogger */
     private $logger;
 
-    /** @var SearchCriteriaBuilder */
-    private $searchCriteriaBuilder;
-
-    /** @var FilterBuilder */
-    private $filterBuilder;
+    /** @var OrderIdHelper */
+    private $orderIdHelper;
 
     /**
      * @param SubjectReader $subjectReader
      * @param OrderRepositoryInterface $orderRepository
      * @param MultiLevelLogger $logger
-     * @param SearchCriteriaBuilder $searchCriteriaBuilder
-     * @param FilterBuilder $filterBuilder
+     * @param OrderIdHelper $orderIdHelper
      */
     public function __construct(
         SubjectReader $subjectReader,
         OrderRepositoryInterface $orderRepository,
         MultiLevelLogger $logger,
-        SearchCriteriaBuilder $searchCriteriaBuilder,
-        FilterBuilder $filterBuilder
+        OrderIdHelper $orderIdHelper
     ) {
         $this->subjectReader = $subjectReader;
         $this->orderRepository = $orderRepository;
         $this->logger = $logger;
-        $this->searchCriteriaBuilder = $searchCriteriaBuilder;
-        $this->filterBuilder = $filterBuilder;
+        $this->orderIdHelper = $orderIdHelper;
     }
 
     /**
@@ -107,7 +100,8 @@ class AsyncOrderPendingHandler implements HandlerInterface
     private function updateOrderToPendingPayment($paymentDO, $payment): void
     {
         try {
-            $orderModel = $this->resolveOrderModel($paymentDO, $payment);
+            $orderId = $this->orderIdHelper->resolveOrderId($paymentDO, $payment);
+            $orderModel = $orderId ? $this->orderRepository->get($orderId) : null;
             
             if (!$orderModel) {
                 return;
@@ -123,82 +117,6 @@ class AsyncOrderPendingHandler implements HandlerInterface
             }
         } catch (\Throwable $e) {
             $this->logger->debug('AsyncOrderPendingHandler: failed to update order state', ['error' => $e->getMessage()]);
-        }
-    }
-
-    /**
-     * Resolve order model from payment data object or payment order
-     *
-     * @param \Magento\Payment\Gateway\Data\PaymentDataObjectInterface $paymentDO
-     * @param \Magento\Sales\Api\Data\OrderPaymentInterface $payment
-     * @return \Magento\Sales\Model\Order|null
-     */
-    private function resolveOrderModel($paymentDO, $payment): ?Order
-    {
-        $adapterOrder = $paymentDO->getOrder();
-        $paymentOrder = $payment->getOrder();
-
-        // Try to get order ID from payment order or adapter
-        $orderId = $this->safeCall($paymentOrder, 'getId') ?: $this->safeCall($adapterOrder, 'getId');
-
-        if ($orderId) {
-            return $this->orderRepository->get($orderId);
-        }
-
-        // Fallback: lookup by increment ID
-        $incrementId = $this->safeCall($paymentOrder, 'getIncrementId');
-        if ($incrementId) {
-            return $this->lookupOrderByIncrementId($incrementId);
-        }
-
-        return null;
-    }
-
-    /**
-     * Lookup order by increment ID via repository
-     *
-     * @param string $incrementId
-     * @return \Magento\Sales\Model\Order|null
-     */
-    private function lookupOrderByIncrementId(string $incrementId): ?Order
-    {
-        try {
-            $filter = $this->filterBuilder
-                ->setField('increment_id')
-                ->setValue($incrementId)
-                ->setConditionType('eq')
-                ->create();
-            
-            $searchCriteria = $this->searchCriteriaBuilder
-                ->addFilters([$filter])
-                ->create();
-            
-            $searchResult = $this->orderRepository->getList($searchCriteria);
-            $items = $searchResult->getItems();
-            
-            return !empty($items) ? array_shift($items) : null;
-        } catch (\Throwable $e) {
-            return null;
-        }
-    }
-
-    /**
-     * Safely call a method on an object, catching TypeError and other exceptions
-     *
-     * @param mixed $object
-     * @param string $method
-     * @return mixed|null
-     */
-    private function safeCall($object, string $method)
-    {
-        if (!is_object($object) || !method_exists($object, $method)) {
-            return null;
-        }
-
-        try {
-            return $object->$method();
-        } catch (\Throwable $e) {
-            return null;
         }
     }
 }

@@ -1079,8 +1079,7 @@
             <argument name="subjectReader" xsi:type="object">Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader</argument>
             <argument name="orderRepository" xsi:type="object">Magento\Sales\Api\OrderRepositoryInterface</argument>
             <argument name="logger" xsi:type="object">Fiserv\Payments\Logger\MultiLevelLogger</argument>
-            <argument name="searchCriteriaBuilder" xsi:type="object">Magento\Framework\Api\SearchCriteriaBuilder</argument>
-            <argument name="filterBuilder" xsi:type="object">Magento\Framework\Api\FilterBuilder</argument>
+			<argument name="orderIdHelper" xsi:type="object">Fiserv\Payments\Helper\OrderIdHelper</argument>
         </arguments>
     </type>
 	
