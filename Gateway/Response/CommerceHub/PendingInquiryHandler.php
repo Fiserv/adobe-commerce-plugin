@@ -75,107 +75,153 @@ class PendingInquiryHandler implements HandlerInterface
      */
     public function handle(array $handlingSubject, array $response): void
     {
-        $paymentDO = $this->subjectReader->readPayment($handlingSubject);
-        $payment = $paymentDO->getPayment();
-        $paymentOrder = $payment->getOrder();
-
-        $orderIncrementId = null;
-        if (is_object($paymentOrder) && method_exists($paymentOrder, 'getIncrementId')) {
-            try {
-                $orderIncrementId = $paymentOrder->getIncrementId();
-            } catch (\Throwable $e) {
-                $orderIncrementId = null;
-            }
-        }
-
-        if (!$orderIncrementId) {
-            $adapterOrder = $paymentDO->getOrder();
-            if (is_object($adapterOrder) && method_exists($adapterOrder, 'getOrderIncrementId')) {
-                try {
-                    $orderIncrementId = $adapterOrder->getOrderIncrementId();
-                } catch (\Throwable $e) {
-                    $orderIncrementId = null;
-                }
-            }
-        }
-
-        if (!$orderIncrementId) {
-            $this->logger->logError(2, 'PendingInquiryHandler: missing order increment id, cannot create inquiry job');
-            return;
-        }
-
-        $logIdentifier = 'Order ID: ' . $orderIncrementId;
-
-        $chResponse = $this->subjectReader->readChResponse($response);
-        $statusCode = $chResponse[HttpClient::STATUS_CODE_KEY] ?? 200;
-        $responseBody = $chResponse[HttpClient::RESPONSE_KEY] ?? [];
-        
-        $gatewayResponse = $responseBody['gatewayResponse'] ?? [];
-        $transactionState = $gatewayResponse['transactionState'] ?? null;
-        $transactionProcessingDetails = $gatewayResponse['transactionProcessingDetails'] ?? [];
-        $referenceOrderId = $transactionProcessingDetails['orderId'] ?? null;
-
-        // Check if this is an async PROCESSING response
-        $isAsync = ($statusCode == self::HTTP_ACCEPTED) || ($transactionState === self::STATE_PROCESSING);
-        if (!$isAsync) {
-            return;
-        }
-
-        if (empty($referenceOrderId)) {
-            return;
-        }
-
-        $this->logger->logInfo(1, 'Order scheduled for async inquiry processing', $logIdentifier);
-
         try {
+            $paymentDO = $this->subjectReader->readPayment($handlingSubject);
+            $payment = $paymentDO->getPayment();
+            
+            $orderIncrementId = $this->resolveOrderIncrementId($paymentDO, $payment);
+            if (!$orderIncrementId) {
+                $this->logger->logError(2, 'PendingInquiryHandler: missing order increment id, cannot create inquiry job');
+                return;
+            }
+
+            $logIdentifier = 'Order ID: ' . $orderIncrementId;
+
+            $chResponse = $this->subjectReader->readChResponse($response);
+            $statusCode = $chResponse[HttpClient::STATUS_CODE_KEY] ?? 200;
+            $responseBody = $chResponse[HttpClient::RESPONSE_KEY] ?? [];
+            
+            $gatewayResponse = $responseBody['gatewayResponse'] ?? [];
+            $transactionState = $gatewayResponse['transactionState'] ?? null;
+            $transactionProcessingDetails = $gatewayResponse['transactionProcessingDetails'] ?? [];
+            $referenceOrderId = $transactionProcessingDetails['orderId'] ?? null;
+
+            // Check if this is an async PROCESSING response
+            $isAsync = ($statusCode == self::HTTP_ACCEPTED) || ($transactionState === self::STATE_PROCESSING);
+            if (!$isAsync || empty($referenceOrderId)) {
+                return;
+            }
+
+            $this->logger->logInfo(1, 'Order scheduled for async inquiry processing', $logIdentifier);
+
             $paymentMethod = $payment->getMethod();
+            $orderId = $this->resolveOrderId($payment->getOrder(), $orderIncrementId);
 
-            // Resolve order id safely across gateway adapter/model differences
-            $orderId = null;
-            if (is_object($paymentOrder) && method_exists($paymentOrder, 'getId')) {
-                try {
-                    $paymentOrderId = $paymentOrder->getId();
-                } catch (\Throwable $e) {
-                    $paymentOrderId = null;
-                }
-                if ($paymentOrderId) {
-                    $orderId = (int)$paymentOrderId;
-                }
-            }
+            $this->createInquiryJob($orderId, $orderIncrementId, $referenceOrderId, $paymentMethod, $logIdentifier);
+        } catch (\Throwable $e) {
+            $this->logger->logError(2, "Failed to handle inquiry: " . $e->getMessage(), $orderIncrementId ?? 'unknown');
+        }
+    }
 
-            // Try to resolve order ID if not yet available
-            if (empty($orderId)) {
-                try {
-                    $searchCriteria = $this->searchCriteriaBuilder
-                        ->addFilter('increment_id', $orderIncrementId)
-                        ->create();
-                    $orders = $this->orderRepository->getList($searchCriteria)->getItems();
-                    if (!empty($orders)) {
-                        $orderModel = reset($orders);
-                        $orderId = $orderModel->getId();
-                    }
-                } catch (\Throwable $e) {
-                    // Order not saved yet
-                }
-            }
+    /**
+     * Resolve order increment ID from payment or adapter order
+     *
+     * @param \Magento\Payment\Gateway\Data\PaymentDataObjectInterface $paymentDO
+     * @param \Magento\Sales\Api\Data\OrderPaymentInterface $payment
+     * @return string|null
+     */
+    private function resolveOrderIncrementId($paymentDO, $payment): ?string
+    {
+        $paymentOrder = $payment->getOrder();
+        $incrementId = $this->safeCall($paymentOrder, 'getIncrementId');
+        
+        if (!$incrementId) {
+            $adapterOrder = $paymentDO->getOrder();
+            $incrementId = $this->safeCall($adapterOrder, 'getOrderIncrementId');
+        }
 
-            // Create inquiry job - first run in 60 seconds
-            try {
-                $this->logger->logInfo(1, 'About to create inquiry job', $logIdentifier);
-                $job = $this->jobRepository->createJob(
-                    $orderId ? (int)$orderId : null,
-                    $orderIncrementId,
-                    $referenceOrderId,
-                    $paymentMethod,
-                    self::FIRST_RETRY_SECONDS
-                );
-            } catch (\Throwable $e) {
-                $this->logger->logError(2, "Failed to create inquiry job: " . $e->getMessage() . " in " . $e->getFile() . ':' . $e->getLine(), $logIdentifier);
-                $this->logger->logError(2, "Trace: " . $e->getTraceAsString(), $logIdentifier);
+        return $incrementId;
+    }
+
+    /**
+     * Resolve order entity ID from payment order or repository search
+     *
+     * @param mixed $paymentOrder
+     * @param string $orderIncrementId
+     * @return int|null
+     */
+    private function resolveOrderId($paymentOrder, string $orderIncrementId): ?int
+    {
+        $orderId = $this->safeCall($paymentOrder, 'getId');
+        
+        if (!$orderId) {
+            $orderId = $this->lookupOrderIdByIncrementId($orderIncrementId);
+        }
+
+        return $orderId ? (int)$orderId : null;
+    }
+
+    /**
+     * Lookup order ID by increment ID via repository
+     *
+     * @param string $incrementId
+     * @return int|null
+     */
+    private function lookupOrderIdByIncrementId(string $incrementId): ?int
+    {
+        try {
+            $searchCriteria = $this->searchCriteriaBuilder
+                ->addFilter('increment_id', $incrementId)
+                ->create();
+            $orders = $this->orderRepository->getList($searchCriteria)->getItems();
+            
+            if (!empty($orders)) {
+                $orderModel = reset($orders);
+                return $orderModel->getId();
             }
         } catch (\Throwable $e) {
-            $this->logger->logError(2, "Failed to prepare inquiry job: " . $e->getMessage(), $logIdentifier);
-            // Don't throw - we don't want to fail the order, just log the error
+            // Order not saved yet or lookup failed
+        }
+
+        return null;
+    }
+
+    /**
+     * Create inquiry job with error handling
+     *
+     * @param int|null $orderId
+     * @param string $orderIncrementId
+     * @param string $referenceOrderId
+     * @param string $paymentMethod
+     * @param string $logIdentifier
+     * @return void
+     */
+    private function createInquiryJob(?int $orderId, string $orderIncrementId, string $referenceOrderId, string $paymentMethod, string $logIdentifier): void
+    {
+        try {
+            $this->jobRepository->createJob(
+                $orderId,
+                $orderIncrementId,
+                $referenceOrderId,
+                $paymentMethod,
+                self::FIRST_RETRY_SECONDS
+            );
+        } catch (\Throwable $e) {
+            $this->logger->logError(
+                2,
+                sprintf("Failed to create inquiry job: %s in %s:%d", $e->getMessage(), $e->getFile(), $e->getLine()),
+                $logIdentifier
+            );
+        }
+    }
+
+    /**
+     * Safely call a method on an object, catching TypeError and other exceptions
+     *
+     * @param mixed $object
+     * @param string $method
+     * @return mixed|null
+     */
+    private function safeCall($object, string $method)
+    {
+        if (!is_object($object) || !method_exists($object, $method)) {
+            return null;
+        }
+
+        try {
+            return $object->$method();
+        } catch (\Throwable $e) {
+            return null;
         }
     }
 
