@@ -117,8 +117,8 @@ define([
         getAmount: function () {
             let rawGrandTotal = quote.totals() ? quote.totals().grand_total : 0;
             let grandTotal = Math.round(rawGrandTotal * 100) / 100;
-		let grandTotalNum = Number(rawGrandTotal) || 0;
-		let grandTotalStr = grandTotalNum.toFixed(2);
+		    let grandTotalNum = Number(rawGrandTotal) || 0;
+		    let grandTotalStr = grandTotalNum.toFixed(2);
             let currency = quote.totals() ? quote.totals().quote_currency_code : "USD";
             return {
                 total: grandTotalStr,
@@ -225,7 +225,7 @@ define([
                 const buttonConfig = this.getPazeButtonConfig();
 
                 const pazeButton = document.createElement('paze-button');
-                pazeButton.className = 'action primary paze-pay-button';
+                pazeButton.className = 'action paze-pay-button';
                 pazeButton.id = 'paze-pay-button';
 
                 if (buttonConfig.color) {
@@ -267,7 +267,7 @@ define([
                 color: normalize(config.button_color) || 'pazeblue',
                 shape: normalize(config.button_shape) || 'default',
                 disableMaxHeight: config.disable_max_height === true || config.disable_max_height === '1' || config.disable_max_height === 1,
-                label: normalize(config.button_label) || 'checkout'
+                label: normalize(config.button_label) || 'Checkout'
             };
         },
 
