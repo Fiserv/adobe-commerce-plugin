@@ -1072,6 +1072,16 @@
             <argument name="logger" xsi:type="object">Fiserv\Payments\Logger\MultiLevelLogger</argument>
         </arguments>
     </type>
+
+    <!-- Async Order Pending Handler configuration -->
+    <type name="Fiserv\Payments\Gateway\Response\CommerceHub\AsyncOrderPendingHandler">
+        <arguments>
+            <argument name="subjectReader" xsi:type="object">Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader</argument>
+            <argument name="orderRepository" xsi:type="object">Magento\Sales\Api\OrderRepositoryInterface</argument>
+            <argument name="logger" xsi:type="object">Fiserv\Payments\Logger\MultiLevelLogger</argument>
+			<argument name="orderIdHelper" xsi:type="object">Fiserv\Payments\Helper\OrderIdHelper</argument>
+        </arguments>
+    </type>
 	
 	<!-- Samsung Pay payment facade, value/validator pools, commands, handlers -->
     <virtualType name="FiservSamsungPayFacade" type="Magento\Payment\Model\Method\Adapter">

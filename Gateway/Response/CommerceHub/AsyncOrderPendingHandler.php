@@ -8,6 +8,7 @@ namespace Fiserv\Payments\Gateway\Response\CommerceHub;
 use Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient;
 use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use Fiserv\Payments\Logger\MultiLevelLogger;
+use Fiserv\Payments\Helper\OrderIdHelper;
 use Magento\Payment\Gateway\Response\HandlerInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order;
@@ -26,19 +27,25 @@ class AsyncOrderPendingHandler implements HandlerInterface
     /** @var MultiLevelLogger */
     private $logger;
 
+    /** @var OrderIdHelper */
+    private $orderIdHelper;
+
     /**
      * @param SubjectReader $subjectReader
      * @param OrderRepositoryInterface $orderRepository
      * @param MultiLevelLogger $logger
+     * @param OrderIdHelper $orderIdHelper
      */
     public function __construct(
         SubjectReader $subjectReader,
         OrderRepositoryInterface $orderRepository,
-        MultiLevelLogger $logger
+        MultiLevelLogger $logger,
+        OrderIdHelper $orderIdHelper
     ) {
         $this->subjectReader = $subjectReader;
         $this->orderRepository = $orderRepository;
         $this->logger = $logger;
+        $this->orderIdHelper = $orderIdHelper;
     }
 
     /**
@@ -52,7 +59,6 @@ class AsyncOrderPendingHandler implements HandlerInterface
     {
         $paymentDO = $this->subjectReader->readPayment($handlingSubject);
         $payment = $paymentDO->getPayment();
-        $order = $paymentDO->getOrder();
 
         $chResponse = $this->subjectReader->readChResponse($response);
         $statusCode = $chResponse[HttpClient::STATUS_CODE_KEY] ?? 200;
@@ -81,18 +87,36 @@ class AsyncOrderPendingHandler implements HandlerInterface
         }
 
         // Set order to Pending Payment state
+        $this->updateOrderToPendingPayment($paymentDO, $payment);
+    }
+
+    /**
+     * Update order to pending payment state
+     *
+     * @param \Magento\Payment\Gateway\Data\PaymentDataObjectInterface $paymentDO
+     * @param \Magento\Sales\Api\Data\OrderPaymentInterface $payment
+     * @return void
+     */
+    private function updateOrderToPendingPayment($paymentDO, $payment): void
+    {
         try {
-            $orderModel = $this->orderRepository->get($order->getId());
-            $currentState = $orderModel->getState();
+            $orderId = $this->orderIdHelper->resolveOrderId($paymentDO, $payment);
+            $orderModel = $orderId ? $this->orderRepository->get($orderId) : null;
             
+            if (!$orderModel) {
+                return;
+            }
+
+            $currentState = $orderModel->getState();
+
             // Only update if order is not in a final state
             if (!in_array($currentState, [Order::STATE_CANCELED, Order::STATE_COMPLETE, Order::STATE_CLOSED], true)) {
                 $orderModel->setState(Order::STATE_PENDING_PAYMENT);
                 $orderModel->setStatus($orderModel->getConfig()->getStateDefaultStatus(Order::STATE_PENDING_PAYMENT));
                 $this->orderRepository->save($orderModel);
             }
-        } catch (\Exception $e) {
-            // Order may not be saved yet, that's ok
+        } catch (\Throwable $e) {
+            $this->logger->debug('AsyncOrderPendingHandler: failed to update order state', ['error' => $e->getMessage()]);
         }
     }
 }
