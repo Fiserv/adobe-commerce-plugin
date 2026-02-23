@@ -111,7 +111,11 @@ class ConfigProvider implements ConfigProviderInterface
 		$fieldsConfig = array();
 		$fieldsConfig["fields"] = $this->buildFormFieldsConfig($formId, $storeId);
 		$fieldsConfig["css"] = json_decode($this->config->cssFormConfig($formId, $storeId) ?? "{}");
-		$fieldsConfig["font"] = $this->config->fontFormConfig($formId, $storeId) ?? array();
+
+		$fontConfig = $this->config->fontFormConfig($formId, $storeId) ?? array();
+		if ($this->hasRequiredFontConfig($fontConfig)) {
+			$fieldsConfig["font"] = $fontConfig;
+		}
 
 		return $fieldsConfig;
 	}
@@ -121,10 +125,22 @@ class ConfigProvider implements ConfigProviderInterface
 		$fieldsConfig = array();
 		$fieldsConfig["fields"] = $this->buildValuelinkFormFieldsConfig($formId, $storeId);
 		$fieldsConfig["css"] = json_decode($this->config->cssFormConfig($formId, $storeId, true) ?? "{}");
-		$fieldsConfig["font"] = $this->config->fontFormConfig($formId, $storeId, true) ?? array();
+
+		$fontConfig = $this->config->fontFormConfig($formId, $storeId, true) ?? array();
+		if ($this->hasRequiredFontConfig($fontConfig)) {
+			$fieldsConfig["font"] = $fontConfig;
+		}
 
 		return $fieldsConfig;
 	}	
+
+	private function hasRequiredFontConfig($fontConfig)
+	{
+		return
+			!empty(trim((string)($fontConfig[Config::KEY_FONT_DATA] ?? ''))) &&
+			!empty(trim((string)($fontConfig[Config::KEY_FONT_FAMILY] ?? ''))) &&
+			!empty(trim((string)($fontConfig[Config::KEY_FONT_FORMAT] ?? '')));
+	}
 
 	private function buildValuelinkFormFieldsConfig($formId, $storeId)
 	{
