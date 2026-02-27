@@ -1091,9 +1091,86 @@
             <argument name="infoBlockType" xsi:type="string">Fiserv\Payments\Block\ApplePay\ApplePayInfo</argument>
             <argument name="valueHandlerPool" xsi:type="object">FiservSamsungPayValueHandlerPool</argument>
             <argument name="validatorPool" xsi:type="object">FiservCommerceHubValidatorPool</argument>
-            <argument name="commandPool" xsi:type="object">FiservCommerceHubCommandPool</argument>
+            <argument name="commandPool" xsi:type="object">FiservSamsungPayCommandPool</argument>
         </arguments>
     </virtualType>
+
+	<virtualType name="FiservSamsungPayCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
+		<arguments>
+			<argument name="commands" xsi:type="array">
+				<item name="authorize" xsi:type="string">FiservSamsungPayAuthorizeCommand</item>
+				<item name="capture" xsi:type="string">FiservCommerceHubCaptureCommand</item>
+				<item name="sale" xsi:type="string">FiservSamsungPaySaleCommand</item>
+				<item name="settle" xsi:type="string">FiservCommerceHubSettleCommand</item>
+				<item name="vault_authorize" xsi:type="string">FiservCommerceHubVaultAuthorizeCommand</item>
+				<item name="vault_sale" xsi:type="string">FiservCommerceHubVaultSaleCommand</item>
+				<item name="refund" xsi:type="string">FiservCommerceHubRefundCommand</item>
+				<item name="void" xsi:type="string">FiservCommerceHubCancelCommand</item>
+				<item name="cancel" xsi:type="string">FiservCommerceHubCancelCommand</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservSamsungPayAuthorizeCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+		<arguments>
+			<argument name="requestBuilder" xsi:type="object">FiservSamsungPayAuthorizeRequest</argument>
+			<argument name="transferFactory" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\TransferFactory</argument>
+			<argument name="client" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient</argument>
+			<argument name="handler" xsi:type="object">FiservSamsungPayAuthorizeHandler</argument>
+			<argument name="validator" xsi:type="object">Fiserv\Payments\Gateway\Validator\CommerceHub\AuthorizeResponseValidator</argument>
+			<argument name="errorMessageMapper" xsi:type="object">Fiserv\Payments\Gateway\ErrorMapper\CommerceHub\VirtualErrorMessageMapper</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservSamsungPaySaleCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+		<arguments>
+			<argument name="requestBuilder" xsi:type="object">FiservSamsungPaySaleRequest</argument>
+			<argument name="transferFactory" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\TransferFactory</argument>
+			<argument name="client" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient</argument>
+			<argument name="handler" xsi:type="object">FiservSamsungPayAuthorizeHandler</argument>
+			<argument name="validator" xsi:type="object">Fiserv\Payments\Gateway\Validator\CommerceHub\SaleResponseValidator</argument>
+			<argument name="errorMessageMapper" xsi:type="object">Fiserv\Payments\Gateway\ErrorMapper\CommerceHub\VirtualErrorMessageMapper</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservSamsungPayAuthorizeRequest" type="Fiserv\Payments\Gateway\Request\CommerceHub\Composite\SessionAuthComposite">
+		<arguments>
+			<argument name="builders" xsi:type="array">
+				<item name="amount" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder</item>
+				<item name="source" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\SessionSourceDataBuilder</item>
+				<item name="auth_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AuthDetailsDataBuilder</item>
+				<item name="txn_interaction" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\TransactionInteractionDataBuilder</item>
+				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
+				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
+				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
+				<item name="3ds_data" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\ThreeDSecureDataBuilder</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservSamsungPaySaleRequest" type="Fiserv\Payments\Gateway\Request\CommerceHub\Composite\SessionSaleComposite">
+		<arguments>
+			<argument name="builders" xsi:type="array">
+				<item name="amount" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder</item>
+				<item name="source" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\SessionSourceDataBuilder</item>
+				<item name="sale_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\SaleDetailsDataBuilder</item>
+				<item name="txn_interaction" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\TransactionInteractionDataBuilder</item>
+				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
+				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
+				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
+				<item name="3ds_data" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\ThreeDSecureDataBuilder</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservSamsungPayAuthorizeHandler" type="Magento\Payment\Gateway\Response\HandlerChain">
+		<arguments>
+			<argument name="handlers" xsi:type="array">
+				<item name="payment_details" xsi:type="string">Fiserv\Payments\Gateway\Response\CommerceHub\PaymentDetailsHandler</item>
+				<item name="card_details" xsi:type="string">Fiserv\Payments\Gateway\Response\CommerceHub\CardDetailsHandler</item>
+			</argument>
+		</arguments>
+	</virtualType>
 
     <virtualType name="FiservSamsungPayValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
         <arguments>
@@ -1118,5 +1195,4 @@
             <argument name="methodCode" xsi:type="const">Fiserv\Payments\Model\Config\SamsungPay\ConfigProvider::CODE</argument>
         </arguments>
     </type>
-
 </config>
