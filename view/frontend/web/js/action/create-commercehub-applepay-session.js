@@ -10,7 +10,8 @@ define(
 		'use strict';
 		
         function getOrderData() {
-            const items = quote.getItems().map((item, index) => {
+			const quoteItems = quote.getItems() || [];
+			const items = quoteItems.map((item, index) => {
                 return {
                     itemNumber: index + 1,
                     itemName: item.name,
@@ -33,13 +34,31 @@ define(
             return { itemDetails: items, itemCount: itemCount };
         }
 
+		function getCountry()
+		{
+			const billingAddress = quote.billingAddress();
+			if (billingAddress)
+			{
+				return billingAddress.country_id || billingAddress.countryId || "US";
+			}
+
+			const shippingAddress = quote.shippingAddress();
+			if (shippingAddress)
+			{
+				return shippingAddress.country_id || shippingAddress.countryId || "US";
+			}
+
+			return "US";
+		}
+
 		function buildPayload()
 		{
             let orderData = getOrderData();
+            let country = getCountry();
 
 			return {
 				orderData: orderData,
-                country: "US"
+				country: country
 			};
 		}
 
@@ -47,13 +66,14 @@ define(
 			let payload = buildPayload();
 			if (params)
 			{
-				payload = { ...params, ...payload };
+				payload = { ...payload, ...params };
 			}
 
 			try {
 				return await session(payload);
 			} catch (error) {
-				throw new Error("An error occurred while creating Commercehub Apple Pay payment session.");
+				const details = error instanceof Error && error.message ? ` ${error.message}` : "";
+				throw new Error(`An error occurred while creating Commercehub Apple Pay payment session.${details}`);
 			}
 		};
 	}

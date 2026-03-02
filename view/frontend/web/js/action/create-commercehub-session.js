@@ -86,10 +86,24 @@ define(
                     });
                     
                     if (!response.ok) {
-                        throw new Error("Credentials request failure");
+                        let responseText = '';
+                        try {
+                            responseText = await response.text();
+                        } catch (readError) {
+                            responseText = '';
+                        }
+
+                        const message = responseText
+                            ? `Credentials request failure (${response.status}): ${responseText}`
+                            : `Credentials request failure (${response.status})`;
+                        throw new Error(message);
                     }
                     return await response.json();
                 } catch (error) {
+                    if (error instanceof Error) {
+                        throw error;
+                    }
+
                     throw new Error("An error occurred while creating Commercehub payment session.");
                 }
             }
