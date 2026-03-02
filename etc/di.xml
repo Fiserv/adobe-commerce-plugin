@@ -929,7 +929,7 @@
 			<argument name="infoBlockType" xsi:type="string">Fiserv\Payments\Block\ApplePay\ApplePayInfo</argument>
 			<argument name="valueHandlerPool" xsi:type="object">FiservApplePayValueHandlerPool</argument>
 			<argument name="validatorPool" xsi:type="object">FiservCommerceHubValidatorPool</argument>
-			<argument name="commandPool" xsi:type="object">FiservCommerceHubCommandPool</argument>
+			<argument name="commandPool" xsi:type="object">FiservSamsungPayCommandPool</argument>
 		</arguments>
 	</virtualType>
 
