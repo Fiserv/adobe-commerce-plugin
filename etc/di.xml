@@ -1099,18 +1099,20 @@
 		<arguments>
 			<argument name="commands" xsi:type="array">
 				<item name="authorize" xsi:type="string">FiservSamsungPayAuthorizeCommand</item>
-				<item name="capture" xsi:type="string">FiservCommerceHubCaptureCommand</item>
+				<item name="capture" xsi:type="string">FiservSamsungPayCaptureCommand</item>
 				<item name="sale" xsi:type="string">FiservSamsungPaySaleCommand</item>
 				<item name="settle" xsi:type="string">FiservCommerceHubSettleCommand</item>
-				<item name="vault_authorize" xsi:type="string">FiservCommerceHubVaultAuthorizeCommand</item>
-				<item name="vault_sale" xsi:type="string">FiservCommerceHubVaultSaleCommand</item>
 				<item name="refund" xsi:type="string">FiservCommerceHubRefundCommand</item>
 				<item name="void" xsi:type="string">FiservCommerceHubCancelCommand</item>
 				<item name="cancel" xsi:type="string">FiservCommerceHubCancelCommand</item>
 			</argument>
 		</arguments>
 	</virtualType>
-
+		<virtualType name="FiservSamsungPayCaptureCommand" type="Fiserv\Payments\Gateway\Command\CommerceHub\CaptureStrategyCommand">
+		<arguments>
+			<argument name="commandPool" xsi:type="object">FiservSamsungPayCommandPool</argument>
+		</arguments>
+	</virtualType>
 	<virtualType name="FiservSamsungPayAuthorizeCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
 		<arguments>
 			<argument name="requestBuilder" xsi:type="object">FiservSamsungPayAuthorizeRequest</argument>
@@ -1143,7 +1145,6 @@
 				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
 				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
 				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
-				<item name="3ds_data" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\ThreeDSecureDataBuilder</item>
 			</argument>
 		</arguments>
 	</virtualType>
@@ -1158,7 +1159,6 @@
 				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
 				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
 				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
-				<item name="3ds_data" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\ThreeDSecureDataBuilder</item>
 			</argument>
 		</arguments>
 	</virtualType>
