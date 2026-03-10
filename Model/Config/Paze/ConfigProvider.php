@@ -8,7 +8,6 @@ use Magento\Framework\Session\SessionManagerInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 use Fiserv\Payments\Model\Config\CommerceHub\ConfigProvider as ChConfigProvider;
-use Fiserv\Payments\Model\Source\Paze\ButtonLabel as ButtonLabelSource;
 /**
  * Paze ConfigProvider
  */
@@ -33,8 +32,6 @@ class ConfigProvider implements ConfigProviderInterface
 
 	private $chConfig;
 
-	private $buttonLabelSource;
-
 	/**
 	 * Constructor
 	 *
@@ -47,27 +44,13 @@ class ConfigProvider implements ConfigProviderInterface
 		SessionManagerInterface $session,
 		StoreManagerInterface $storeManager,
 		ChConfig $chConfig,
-		MultiLevelLogger $logger,
-		ButtonLabelSource $buttonLabelSource
+		MultiLevelLogger $logger
 	) {
 		$this->config = $config;
 		$this->session = $session;
 		$this->storeManager = $storeManager;
 		$this->chConfig = $chConfig;
 		$this->logger = $logger;
-		$this->buttonLabelSource = $buttonLabelSource;
-	}
-
-	private function resolveButtonLabel($value): string
-	{
-		$label = (string) $value;
-		foreach ($this->buttonLabelSource->toOptionArray() as $option) {
-			if (isset($option['value']) && (string) $option['value'] === (string) $value) {
-				$label = (string) __($option['label']);
-				break;
-			}
-		}
-		return $label ?: 'Checkout';
 	}
 
 	/**
@@ -79,9 +62,6 @@ class ConfigProvider implements ConfigProviderInterface
 	{
 		$storeId = $this->session->getStoreId();
 
-		$buttonLabelValue = $this->config->getButtonLabel($storeId);
-		$buttonLabel = $this->resolveButtonLabel($buttonLabelValue);
-
 		$config = [
 			ChConfigProvider::IS_ACTIVE_KEY => $this->config->isActive($storeId),
 			ChConfigProvider::PAYMENT_ACTION_KEY => $this->config->getPaymentAction($storeId),
@@ -89,11 +69,7 @@ class ConfigProvider implements ConfigProviderInterface
 			ChConfigProvider::MERCHANT_ID_KEY => $this->chConfig->getMerchantId($storeId),
 			ChConfigProvider::TERMINAL_ID_KEY => $this->chConfig->getTerminalId($storeId),
 			ChConfigProvider::ENV_KEY => $this->chConfig->getApiEnvironment($storeId),
-			ChConfigProvider::API_KEY_KEY => $this->chConfig->getApiKey($storeId),
-			PazeConfig::KEY_BUTTON_COLOR => $this->config->getButtonColor($storeId),
-			PazeConfig::KEY_BUTTON_SHAPE => $this->config->getButtonShape($storeId),
-			PazeConfig::KEY_DISABLE_MAX_HEIGHT => $this->config->isDisableMaxHeight($storeId),
-			PazeConfig::KEY_BUTTON_LABEL => $buttonLabel
+			ChConfigProvider::API_KEY_KEY => $this->chConfig->getApiKey($storeId)
 		];
 		return ['payment' => [self::CODE => $config]];
 	}

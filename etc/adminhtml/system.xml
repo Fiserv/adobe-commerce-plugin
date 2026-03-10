@@ -1106,30 +1106,6 @@
 							<source_model>Fiserv\Payments\Model\Source\CommerceHub\TransactionType</source_model>
 							<config_path>payment/fiserv_paze/payment_action</config_path>
 						</field>
-						<field id="button_color" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
-							<label>Paze Button Color</label>
-							<comment>The background color of the button.</comment>
-							<source_model>Fiserv\Payments\Model\Source\Paze\ButtonColor</source_model>
-							<config_path>payment/fiserv_paze/button_color</config_path>
-						</field>
-						<field id="button_shape" translate="label comment" type="select" sortOrder="11" showInDefault="1" showInWebsite="1" showInStore="1">
-							<label>Paze Button Shape</label>
-							<comment>The shape of the button.</comment>
-							<source_model>Fiserv\Payments\Model\Source\Paze\ButtonShape</source_model>
-							<config_path>payment/fiserv_paze/button_shape</config_path>
-						</field>
-						<field id="disable_max_height" translate="label comment" type="select" sortOrder="12" showInDefault="1" showInWebsite="1" showInStore="1">
-							<label>Disable Max Height</label>
-							<comment>Disables the button default max-height.</comment>
-							<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-							<config_path>payment/fiserv_paze/disable_max_height</config_path>
-						</field>
-						<field id="button_label" translate="label comment" type="select" sortOrder="13" showInDefault="1" showInWebsite="1" showInStore="1">
-							<label>Paze Button Label</label>
-							<comment>The text displayed with the Paze logo.</comment>
-							<source_model>Fiserv\Payments\Model\Source\Paze\ButtonLabel</source_model>
-							<config_path>payment/fiserv_paze/button_label</config_path>
-						</field>
 				</group>
 			</group>
 		</section>

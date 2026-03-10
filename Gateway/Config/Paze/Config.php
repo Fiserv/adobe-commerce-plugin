@@ -7,10 +7,6 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	const KEY_ACTIVE = 'active';
 	const KEY_TITLE = 'title';
 	const KEY_PAYMENT_ACTION = 'payment_action';
-	const KEY_BUTTON_COLOR = 'button_color';
-	const KEY_BUTTON_SHAPE = 'button_shape';
-	const KEY_DISABLE_MAX_HEIGHT = 'disable_max_height';
-	const KEY_BUTTON_LABEL = 'button_label';
 
 
 	/**
@@ -59,47 +55,4 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 		return (string) $this->getValue(self::KEY_PAYMENT_ACTION, $storeId);
 	}
 
-	/**
-	 * Get Paze button color
-	 *
-	 * @param int|null $storeId
-	 * @return string
-	 */
-	public function getButtonColor($storeId = null): string
-	{
-		return (string) $this->getValue(self::KEY_BUTTON_COLOR, $storeId);
-	}
-
-	/**
-	 * Get Paze button shape
-	 *
-	 * @param int|null $storeId
-	 * @return string
-	 */
-	public function getButtonShape($storeId = null): string
-	{
-		return (string) $this->getValue(self::KEY_BUTTON_SHAPE, $storeId);
-	}
-
-	/**
-	 * Is disable max height
-	 *
-	 * @param int|null $storeId
-	 * @return bool
-	 */
-	public function isDisableMaxHeight($storeId = null): bool
-	{
-		return (bool) $this->getValue(self::KEY_DISABLE_MAX_HEIGHT, $storeId);
-	}
-
-	/**
-	 * Get Paze button label
-	 *
-	 * @param int|null $storeId
-	 * @return string
-	 */
-	public function getButtonLabel($storeId = null): string
-	{
-		return (string) $this->getValue(self::KEY_BUTTON_LABEL, $storeId);
-	}
 }
