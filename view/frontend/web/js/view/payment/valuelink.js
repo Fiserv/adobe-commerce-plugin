@@ -112,9 +112,12 @@ define([
 					return;
 				}
 
+				// sessionId must be refreshed 
+				sessionId = await this.captureCardFormAsync();
 				setGiftCardAction(sessionId, balance);
 
 				sdcv2.resetIframe(this.formKey);
+				this.endIframeFlow();
 				this.resetFormPanel();
 			} catch (error) {
 				console.error("Error setting gift card:", error);

@@ -55,7 +55,7 @@ class ReferenceTransactionDataBuilder implements BuilderInterface
 		if ($authTransaction == null) 
 		{
 			$this->logger->logError(2, "Reference transaction data builder was unable to find auth transaction" , "Order ID: $orderIncrementId");
-			throw new Exception("Unable to locate auth transaction for capture.");
+			throw new \Exception("Unable to locate auth transaction for capture.");
 		}
 		$authTxnId = $authTransaction->getTxnId(); //NOTE: NOT "getTransactionId()", which seems to return primary key
 		

@@ -18,6 +18,12 @@
 	<event name="payment_method_assign_data_fiserv_affirm">
 		<observer name="fiserv_affirm_data_assign" instance="Fiserv\Payments\Observer\PayPal\DataAssignObserver" />
 	</event>
+	<event name="controller_action_predispatch">
+        <observer name="fiserv_process_pending_inquiries" instance="Fiserv\Payments\Observer\CommerceHub\ProcessPendingInquiriesObserver"/>
+    </event>
+	<event name="payment_method_assign_data_fiserv_samsung_pay">
+		<observer name="fiserv_samsung_pay_data_assign" instance="Fiserv\Payments\Observer\CommerceHub\DataAssignObserver" />
+	</event>
 	<event name="adminhtml_sales_order_create_process_data">
         <observer name="fiserv_valuelink" instance="Fiserv\Payments\Observer\Valuelink\ProcessOrderCreationData" />
     </event>

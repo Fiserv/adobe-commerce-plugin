@@ -3,7 +3,7 @@
     <policies>
         <policy id="script-src">
             <values>
-				<value id="ch-sdcv2-lib" type="host">https://commercehub-secure-data-capture.fiservapps.com</value>
+				<value id="ch-sdcv2-lib" type="host">https://commercehub-checkout.fiservapps.com</value>
 				<value id="ch-sdk-cert" type="host">https://connect-cert.fiservapis.com</value>
 				<value id="ch-sdk-prod" type="host">https://connect.fiservapis.com</value>
                 <value id="ch-prod-lib-base" type="host">https://prod.api.fiservapps.com</value>
@@ -13,11 +13,15 @@
 				<value id="apple-pay-sdk" type="host">https://applepay.cdn-apple.com</value>
                 <value id="affirm-sdk" type="host">https://cdn1.sandbox.affirm.com</value>
                 <value id="affirm-sdk-2" type="host">https://cdn1-sandbox.affirm.com</value>
+                <value id="affirm-sdk-3" type="host">https://sandbox.affirm.com</value>
+                <value id="samsung-pay-sdk-img" type="host">https://img.mpay.samsung.com</value>
+                <value id="samsung-pay-sdk-button" type="host">https://resource.stg.samsungpay.com</value>
+                <value id="samsung-pay-sdk-cdn" type="host">https://samsungpay.cdn-samsung.com</value>
             </values>
         </policy>
         <policy id="connect-src">
             <values>
-				<value id="ch-sdcv2-lib" type="host">https://commercehub-secure-data-capture.fiservapps.com</value>
+				<value id="ch-sdcv2-lib" type="host">https://commercehub-checkout.fiservapps.com</value>
 				<value id="ch-sdk-cert" type="host">https://connect-cert.fiservapis.com</value>
 				<value id="ch-sdk-prod" type="host">https://connect.fiservapis.com</value>
                 <value id="ch-prod-lib-base" type="host">https://prod.api.fiservapps.com</value>
@@ -27,11 +31,15 @@
 				<value id="apple-pay-sdk" type="host">https://applepay.cdn-apple.com</value>
                 <value id="affirm-sdk" type="host">https://cdn1.sandbox.affirm.com</value>
                 <value id="affirm-sdk-2" type="host">https://cdn1-sandbox.affirm.com</value>
+                <value id="affirm-sdk-3" type="host">https://sandbox.affirm.com</value>
+                <value id="samsung-pay-sdk-img" type="host">https://img.mpay.samsung.com</value>
+                <value id="samsung-pay-sdk-button" type="host">https://resource.stg.samsungpay.com</value>
+                <value id="samsung-pay-sdk-cdn" type="host">https://samsungpay.cdn-samsung.com</value>
             </values>
         </policy>
         <policy id="frame-src">
             <values>
-				<value id="ch-sdcv2-lib" type="host">https://commercehub-secure-data-capture.fiservapps.com</value>
+				<value id="ch-sdcv2-lib" type="host">https://commercehub-checkout.fiservapps.com</value>
 				<value id="ch-sdk-cert" type="host">https://connect-cert.fiservapis.com</value>
 				<value id="ch-sdk-prod" type="host">https://connect.fiservapis.com</value>
                 <value id="ch-prod-lib-base" type="host">https://prod.api.fiservapps.com</value>
@@ -41,11 +49,22 @@
 				<value id="apple-pay-sdk" type="host">https://applepay.cdn-apple.com</value>
                 <value id="affirm-sdk" type="host">https://cdn1.sandbox.affirm.com</value>
                 <value id="affirm-sdk-2" type="host">https://cdn1-sandbox.affirm.com</value>
+                <value id="affirm-sdk-3" type="host">https://sandbox.affirm.com</value>
+                <value id="samsung-pay-sdk-img" type="host">https://img.mpay.samsung.com</value>
+                <value id="samsung-pay-sdk-button" type="host">https://resource.stg.samsungpay.com</value>
+                <value id="samsung-pay-sdk-cdn" type="host">https://samsungpay.cdn-samsung.com</value>
+            </values>
+        </policy>
+        <policy id="img-src">
+            <values>
+                <value id="samsung-pay-img-mpay" type="host">https://img.mpay.samsung.com</value>
+                <value id="samsung-pay-img-stg" type="host">https://resource.stg.samsungpay.com</value>
+                <value id="samsung-pay-img-cdn" type="host">https://samsungpay.cdn-samsung.com</value>
             </values>
         </policy>
         <policy id="form-action">
             <values>
-				<value id="ch-sdcv2-lib" type="host">https://commercehub-secure-data-capture.fiservapps.com</value>
+				<value id="ch-sdcv2-lib" type="host">https://commercehub-checkout.fiservapps.com</value>
 				<value id="ch-sdk-cert" type="host">https://connect-cert.fiservapis.com</value>
 				<value id="ch-sdk-prod" type="host">https://connect.fiservapis.com</value>
                 <value id="ch-prod-lib-base" type="host">https://prod.api.fiservapps.com</value>
@@ -55,6 +74,10 @@
 				<value id="apple-pay-sdk" type="host">https://applepay.cdn-apple.com</value>
                 <value id="affirm-sdk" type="host">https://cdn1.sandbox.affirm.com</value>
                 <value id="affirm-sdk-2" type="host">https://cdn1-sandbox.affirm.com</value>
+                <value id="affirm-sdk-3" type="host">https://sandbox.affirm.com</value>
+                <value id="samsung-pay-sdk-img" type="host">https://img.mpay.samsung.com</value>
+                <value id="samsung-pay-sdk-button" type="host">https://resource.stg.samsungpay.com</value>
+                <value id="samsung-pay-sdk-cdn" type="host">https://samsungpay.cdn-samsung.com</value>
             </values>
         </policy>
     </policies>

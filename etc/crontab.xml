@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Cron job configuration for Fiserv Payments
+ * This cron is essential for processing async transaction inquiries (Affirm, etc.)
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Cron:etc/crontab.xsd">
+    <group id="default">
+        <!-- Process pending transaction inquiries every minute -->
+        <job name="fiserv_pending_inquiry_processor" instance="Fiserv\Payments\Cron\PendingInquiryProcessor" method="execute">
+            <schedule>* * * * *</schedule>
+        </job>
+    </group>
+</config>

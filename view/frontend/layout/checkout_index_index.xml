@@ -4,6 +4,7 @@
 <css src="Fiserv_Payments::css/ch-form.css"/>
 <css src="Fiserv_Payments::css/paypal-styles.css"/>
            <css src="Fiserv_Payments::css/applepay-styles.css"/>
+		   <css src="Fiserv_Payments::css/affirm-styles.css"/>
 
 <css src="Fiserv_Payments::css/fastlane-styles.css"/>
 <link src="Fiserv_Payments::js/view/payment/fastlane-script.js" />
@@ -72,6 +73,14 @@
 																	<item name="component" xsi:type="string">Fiserv_Payments/js/view/payment/fiserv_affirm</item>
 																	<item name="methods" xsi:type="array">
 																		<item name="fiserv_affirm" xsi:type="array">
+																			<item name="isBillingAddressRequired" xsi:type="boolean">true</item>
+																		</item>
+																	</item>
+																</item>
+																<item name="fiserv_samsung_pay" xsi:type="array">
+																	<item name="component" xsi:type="string">Fiserv_Payments/js/view/payment/fiserv_samsung_pay</item>
+																	<item name="methods" xsi:type="array">
+																		<item name="fiserv_samsung_pay" xsi:type="array">
 																			<item name="isBillingAddressRequired" xsi:type="boolean">true</item>
 																		</item>
 																	</item>

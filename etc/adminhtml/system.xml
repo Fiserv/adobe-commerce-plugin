@@ -1117,6 +1117,27 @@
 							<source_model>Fiserv\Payments\Model\Source\Affirm\ButtonColor</source_model>
 						</field>
 				</group>
+				<group id="fiserv_samsung_pay" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="10">
+					<label>Samsung Pay</label>
+					<attribute type="expanded">0</attribute>
+					<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+					<field id="enabled" translate="label" type="select" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Enable Samsung Pay</label>
+						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+						<config_path>payment/fiserv_samsung_pay/active</config_path>
+					</field>
+					<field id="payment_action" translate="label" type="select" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="1">
+						<label>Charge Type</label>
+						<source_model>Fiserv\Payments\Model\Source\CommerceHub\TransactionType</source_model>
+						<config_path>payment/fiserv_samsung_pay/payment_action</config_path>
+					</field>
+					<field id="samsung_pay_button_color" translate="label" type="select" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Samsung Pay Button Color</label>
+						<comment>Set the color for the Samsung Pay button (e.g., black, white).</comment>
+						<source_model>Fiserv\Payments\Model\Source\SamsungPay\ButtonColor</source_model>
+						<config_path>payment/fiserv_samsung_pay/samsung_pay_button_color</config_path>
+					</field>
+			</group>
 		</group>
 		</section>
 		<section id="three_d_secure" translate="label" type="text" sortOrder="410" showInDefault="1" showInWebsite="1" showInStore="1">
