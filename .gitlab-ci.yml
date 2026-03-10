@@ -1,25 +1,63 @@
 # Default SCM CI Template for All commerceHub Applications
 include:
   - project: 'na/gbs/carat-digital-ecommerce/commercehub/SRE/gitlab-ci'
-    ref: COM-18980-v2
+    ref: MCH-24518
     file: '/template-php.yml'
 variables:
-  ARTIFACT_TYPE: "React"
+  ARTIFACT_TYPE : "JavaScript"
   APM_ID: "0011801"
+  NPM_REGISTRY_URL: "https://nexus-ci.onefiserv.net/repository/npm-registry/"
 
-# PHP CodeSniffer job - runs only the two requested commands
-phpcs:
-  stage: test
-  image: php:8.1-cli
+js_lint:
+  stage: .pre
+  image: mirror.gcr.io/library/node:20
+  retry: 2
+  allow_failure: true
+  rules:
+    - when: on_success
   before_script:
-    - apt-get update && apt-get install -y git zip unzip
-    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+    - |
+      echo "[]" > eslint-report.json
+      REGISTRY_URL="${NPM_REGISTRY_URL%/}/"
+      REGISTRY_KEY="//${REGISTRY_URL#https://}"
+
+      npm config set registry "$REGISTRY_URL"
+      npm config set @commercehub:registry "$REGISTRY_URL"
+
+      if [ -n "$NEXUS_NPM_USER" ] && [ -n "$NEXUS_NPM_PASSWORD" ]; then
+        PASS_B64=$(printf "%s" "$NEXUS_NPM_PASSWORD" | base64 | tr -d '\n')
+        npm config set "${REGISTRY_KEY}:username" "$NEXUS_NPM_USER"
+        npm config set "${REGISTRY_KEY}:_password" "$PASS_B64"
+        npm config set "${REGISTRY_KEY}:email" "ci@onefiserv.local"
+        echo "✅ Using Nexus BASIC auth."
+      else
+        echo "⚠️ Nexus creds missing — skipping JS lint. Set NEXUS_NPM_USER and NEXUS_NPM_PASSWORD to enable it."
+        touch .skip_js_lint
+      fi
   script:
-    - composer global require magento/magento-coding-standard
-    - ~/.composer/vendor/bin/phpcs -d memory_limit=-1 --standard=Magento2 --extensions=php --error-severity=10 --ignore-annotations --report=json --report-file=report.json .
+    - |
+      if [ -f .skip_js_lint ]; then
+        echo "JS lint skipped due to missing Nexus credentials."
+      else
+        npm install
+        npm exec -- eslint "view/**/web/**/*.js" "*.js" --no-error-on-unmatched-pattern --format json --output-file eslint-report.json
+        npm exec -- eslint "view/**/web/**/*.js" "*.js" --no-error-on-unmatched-pattern
+      fi
   artifacts:
     when: always
     paths:
-      - report.json
-    expire_in: 1 week
-  allow_failure: false
+      - eslint-report.json
+    expire_in: 7 days
+
+magento_phpcs:
+  stage: .pre
+  image: mirror.gcr.io/library/composer:2
+  retry: 2
+  allow_failure: true
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "merge_request_event"'
+  before_script:
+    - composer global config --no-plugins allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
+    - composer global require --dev --ignore-platform-req=php squizlabs/php_codesniffer:^3.10 magento/magento-coding-standard:^37
+  script:
+    - composer global exec -- phpcs --standard=Magento2 --extensions=php --ignore='*/generated/*,*/vendor/*,*/node_modules/*,.gitlab/*' --error-severity=10 --warning-severity=0 .
