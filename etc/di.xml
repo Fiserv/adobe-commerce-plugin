@@ -376,9 +376,10 @@
 		</arguments>
 	</type>
 
-	<!-- Payment option enable/disable -->
+	<!-- Payment option enable/disable: covers all Fiserv methods (CommerceHub, PayPal, Venmo, Affirm, ApplePay, SamsungPay, Fastlane). -->
+	<!-- Allows in-flight transactions to complete if the method is disabled by admin mid-checkout. -->
 	<type name="Magento\Payment\Model\Method\Adapter">
-		<plugin name="fiservCommerceHubAvailability" type="Fiserv\Payments\Model\Plugin\CommerceHub\PaymentMethodAvailable" />
+		<plugin name="fiservPaymentMethodAvailability" type="Fiserv\Payments\Model\Plugin\CommerceHub\PaymentMethodAvailable" />
 	</type>
 	<type name="Magento\Sales\Model\Order\RefundAdapter">
 		<plugin name="paymentCardCreditmemoRefund" type="Fiserv\Payments\Model\Plugin\CommerceHub\CreditMemoRefund" sortOrder="100"/>
@@ -881,10 +882,6 @@
             <argument name="methodCode" xsi:type="const">Fiserv\Payments\Model\Config\Affirm\ConfigProvider::CODE</argument>
         </arguments>
     </type>
-	<type name="Magento\Payment\Model\Method\Adapter">
-		<plugin name="fiservPayPalAvailability" type="Fiserv\Payments\Model\Plugin\CommerceHub\PaymentMethodAvailable" />
-	</type>
-	
 	<type name="Magento\Sales\Model\Order\RefundAdapter">
 		<plugin name="paypalCardCreditmemoRefund" type="Fiserv\Payments\Model\Plugin\PayPal\CreditMemoRefund" sortOrder="100"/>
 	</type>
