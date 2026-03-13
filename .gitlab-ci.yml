@@ -4,5 +4,51 @@ include:
     ref: MCH-24518
     file: '/template-php.yml'
 variables:
-  ARTIFACT_TYPE : "React"
+  ARTIFACT_TYPE : "JavaScript"
   APM_ID: "0011801"
+
+# js.lint:
+#   variables:
+#     #NEXUS_REGISTRY_URL: "https://nexus-appdev.1dc.com"
+#     #MY_NPM_REGISTRY: "${NEXUS_REGISTRY_URL}/repository/npm-group/"  # use group for build/install
+#     NEXUS_REGISTRY_URL: "https://nexus.onefiserv.net"
+#     NEXUS_AUTH_URL: "//nexus.onefiserv.net/repository/npm-gbs-group/"
+#     MY_NPM_REGISTRY: "${NEXUS_REGISTRY_URL}/repository/npm-gbs-group/"
+#     GITLAB_URL: "https://gitlab.onefiserv.net/"
+#     TOKEN: $CILINT_GITLAB_API_TOKEN
+#   stage: .pre
+#   image: fmk.nexus.onefiserv.net/fmk/node/node22:FMK-25-02-22
+#   cache:
+#     key: "${CI_PROJECT_PATH_SLUG}"
+#     paths:
+#       - node_modules/
+#     when: 'always'
+#   before_script:
+#     - echo "Before Script -- Start"
+#     - npm -v
+#     - npm config set registry "$MY_NPM_REGISTRY"
+#     - npm config get registry
+#     - NEXUS_APPREPO_TOKEN_B64=$(printf "%s" "$CH_NEXUS_USER:$CH_NEXUS_PASSWORD" | base64 | tr -d '\n')
+#     - npm config set -- "${NEXUS_AUTH_URL}:_auth" "$NEXUS_APPREPO_TOKEN_B64" || echo "ERROR set _auth not possible"
+#     - npm install
+#     - echo "Before Script  -- End"
+#   script:
+#     - echo "Script --- Start"
+#     - npm run lint
+#     - echo "Validation Successful"
+#   allow_failure: false
+#   rules:
+#     - if: '$CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "merge_request_event"'
+
+magento_phpcs:
+  stage: .pre
+  image: mirror.gcr.io/library/composer:2
+  retry: 2
+  allow_failure: true
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "merge_request_event"'
+  before_script:
+    - composer global config --no-plugins allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
+    - composer global require --dev --ignore-platform-req=php squizlabs/php_codesniffer:^3.10 magento/magento-coding-standard:^37
+  script:
+    - composer global exec -- phpcs --standard=Magento2 --extensions=php  --ignore='*/generated/*,*/vendor/*,*/node_modules/*,.gitlab/*' --error-severity=10 --warning-severity=0 .
