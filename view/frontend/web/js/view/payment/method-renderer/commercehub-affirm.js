@@ -126,7 +126,7 @@ define([
 					grandTotal &&
 					grandTotal !== this.initializedAmount
 				) {
-					this.scheduleAffirmReload();
+					location.reload();
 				}
 			});
 		},
