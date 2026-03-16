@@ -28,7 +28,6 @@
 				<tokenization>1</tokenization>
 				<standalone_spa>1</standalone_spa>
 				<order_status>pending</order_status>
-				<debug>1</debug>
 				<logging_level>2</logging_level>
 				<currency>USD</currency>
 				<allowspecific>1</allowspecific>
