@@ -115,7 +115,7 @@ define([
 					},
 					onCancel: function () {},
 					onError: () => {
-						this.showError($t('Samsung Pay error occurred.'));
+						this.showError($t('Error during Samsung Pay checkout'));
 					}
 				}
 			});
