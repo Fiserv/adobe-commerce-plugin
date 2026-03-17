@@ -221,7 +221,7 @@ define([
 						},
 						onError: (error) => {
 							globalMessageList.addErrorMessage({
-								message: $t('Affirm error: ') + (error && error.message ? error.message : error),
+								message: $t('Error during Affirm checkout')
 							});
 						},
 					},
@@ -236,7 +236,7 @@ define([
 				config.initializedAmount = grandTotal;
 			} catch (error) {
 				globalMessageList.addErrorMessage({
-					message: $t('Affirm error: ') + (error && error.message ? error.message : error),
+					message: $t('Error during Affirm checkout')
 				});
 			} finally {
 				this.isInitializing = false;

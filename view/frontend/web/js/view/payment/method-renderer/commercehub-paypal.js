@@ -176,7 +176,7 @@ define([
                             console.log('on cancel called');
                         },
                         onError: error => {
-                            console.log('on error called', error);
+                            console.error('Error during PayPal checkout');
                         }
                     }
                 });
