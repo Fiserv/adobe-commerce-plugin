@@ -8,6 +8,7 @@
 			<fiserv_commercehub>
 				<active>1</active>
 				<three_d_secure>0</three_d_secure>
+				<surcharge_enabled>0</surcharge_enabled>
 				<payment_active>1</payment_active>
 				<title>Credit/Debit Card</title>
 				<model>FiservCommerceHubFacade</model>

@@ -40,18 +40,16 @@ define([
 		cardBrandChangeCallback: undefined,
 		fieldValidityHandler: undefined,
 		fieldFocusHandler: undefined,
-		fieldValueChangeHandler: undefined,
 		sdcv2Form: undefined,
 		credentials: undefined,
 
-		initialize: function (config, iframeReadyCallback, iframeValidCallback, cardBrandChangeCallback, fieldValidityHandler, fieldFocusHandler, fieldValueChangeHandler) {
+		initialize: function (config, iframeReadyCallback, iframeValidCallback, cardBrandChangeCallback, fieldValidityHandler, fieldFocusHandler) {
 			this.config = config;
 			this.iframeReadyCallback = iframeReadyCallback;
 			this.iframeValidCallback = iframeValidCallback;
 			this.cardBrandChangeCallback = cardBrandChangeCallback;
 			this.fieldValidityHandler = fieldValidityHandler;
 			this.fieldFocusHandler = fieldFocusHandler;
-			this.fieldValueChangeHandler = fieldValueChangeHandler;
 		},
 
   		initSdk: async function(config, creds)
@@ -119,49 +117,6 @@ define([
 			return response[this.credentialsKey];
 		},
 
-		createBillingAddressComponent: async function (billingAddress) {
-			if (!billingAddress || typeof billingAddress !== 'object') {
-				return null;
-			}
-
-			let containerId = 'fiserv-ach-billing-address-container';
-			let container = document.getElementById(containerId);
-
-			if (!container) {
-				container = document.createElement('div');
-				container.id = containerId;
-				container.style.display = 'none';
-				document.body.append(container);
-			}
-
-			container.innerHTML = '';
-
-			let address = billingAddress.address || {};
-			let fieldMap = {
-				firstName: billingAddress.firstName || '',
-				lastName: billingAddress.lastName || '',
-				street: address.street || '',
-				city: address.city || '',
-				stateOrProvince: address.stateOrProvince || '',
-				postalCode: address.postalCode || '',
-				country: address.country || '',
-			};
-
-			let addressFields = {};
-
-			for (let key in fieldMap) {
-				let inputId = 'fiserv-ach-billing-' + key;
-				let input = document.createElement('input');
-				input.type = 'text';
-				input.id = inputId;
-				input.value = fieldMap[key];
-				container.append(input);
-				addressFields[key] = { elementId: inputId };
-			}
-
-			return await window.fiserv.components.address({ fields: addressFields });
-		},
-
 		/**
 		 * Instantiates CommerceHub iframe
 		 * from provide script element
@@ -173,65 +128,22 @@ define([
 		instantiateIframe: function (
 			loadSuccessCb, 
 			loadErrorCb,
-			configData = undefined,
-			billingAddress = undefined
+			configData = undefined
 		) {
 			let formConfig = this.buildFormConfig();
 
-			if (configData) {
-				formConfig = {
-					...formConfig,
-					...configData,
-					data: {
-						...(formConfig.data || {}),
-						...((configData && configData.data) || {}),
-					},
-				};
+			if (configData)
+			{
+				formConfig = { ...configData, ...formConfig };
 			}
 
-			if (!formConfig.data) {
-				formConfig.data = {};
-			}
-
-			if (!formConfig.data.environment) {
-				formConfig.data.environment =
-					this.config[this.environmentKey] ||
-					(window.checkoutConfig && window.checkoutConfig.payment && window.checkoutConfig.payment.fiserv_payments ?
-						window.checkoutConfig.payment.fiserv_payments.environment :
-						undefined);
-			}
-
-			let initPromise = Promise.resolve();
-
-			if (billingAddress && typeof billingAddress === 'object') {
-				initPromise = new Promise((resolve, reject) => {
-					let storeUrl = window.checkoutConfig && window.checkoutConfig.payment && window.checkoutConfig.payment.fiserv_payments ?
-						window.checkoutConfig.payment.fiserv_payments.storeUrl :
-						'';
-
-					this.getChCredentials(storeUrl, resolve, reject);
+			this.attachBillingAddressComponent(formConfig)
+				.then((config) => {
+					return window.fiserv.components.paymentFields(config);
 				})
-					.then((creds) => {
-						return this.initSdk(this.config, creds)
-							.then(() => this.createBillingAddressComponent(billingAddress))
-							.then((billingAddressComponent) => {
-								if (billingAddressComponent) {
-									formConfig.billingAddress = billingAddressComponent;
-								}
-							});
-					})
-					.catch((error) => {
-						console.warn('[CH-Adapter] SDK init or billingAddress component failed, continuing without address component.', error);
-					});
-			}
-
-			initPromise
-				.then(() => {
-					return window.fiserv.components.paymentFields(formConfig);
-				})
-				.then((next) => {
-					this.sdcv2Form = next;
-					this.iframeReadyCallback();
+				.then((next) => { 
+					this.sdcv2Form = next; 
+					this.iframeReadyCallback(); 
 					loadSuccessCb();
 				})
 				.catch((data) => {
@@ -252,31 +164,6 @@ define([
             }
             this.paypalComponent = await window.fiserv.components.paypal(options);
             return this.paypalComponent;
-        },
-
-		/**
-         * Load Paze SDK (Step 4 of Paze documentation)
-         * @param {Object} options - { displayName, cspNonce }
-         * @returns {Promise<Object>} Paze component instance
-         */
-        async loadPazeComponent(options) {
-            if (!window.fiserv || typeof window.fiserv.components.paze !== 'function') {
-                throw new Error('Fiserv SDK not loaded or window.fiserv.components.paze not available');
-            }
-            
-            // Paze component initialization with displayName and optional cspNonce
-            const pazeOptions = {
-                displayName: options.displayName || 'My Site'
-            };
-            
-            // Add cspNonce if provided (for security/CSP compliance)
-            if (options.cspNonce) {
-                pazeOptions.cspNonce = options.cspNonce;
-            }
-            
-            console.log('[CH-Adapter] Loading Paze component with options:', pazeOptions);
-            this.pazeComponent = await window.fiserv.components.paze(pazeOptions);
-            return this.pazeComponent;
         },
 
 		submitCardForm: function (
@@ -316,23 +203,6 @@ define([
 			};
 		},
 
-		submitAchForm: function (
-			storeUrl,
-			runSuccessCb,
-			runErrorCb,
-			creds
-		) {
-			this.submitCardForm(storeUrl, runSuccessCb, runErrorCb, creds);
-		},
-
-		getAchLegalText: async function () {
-			if (this.sdcv2Form === undefined || typeof this.sdcv2Form.getAchLegalText !== 'function') {
-				return '';
-			}
-
-			return await this.sdcv2Form.getAchLegalText();
-		},
-
 		unmask: function (
 			field
 		) {
@@ -362,43 +232,14 @@ define([
 
 		buildFormConfig: function (data) {
 			let formConfig = {
-				"data" : { ...(this.config[this.formConfigKey] || {}) }, 
+				"data" : this.config[this.formConfigKey], 
 				"hooks" : {
-					"onFormValid" : () => {
-						if (typeof this.iframeValidCallback === 'function') {
-							this.iframeValidCallback(true);
-						}
-					},
-					"onFormNoLongerValid" : () => {
-						if (typeof this.iframeValidCallback === 'function') {
-							this.iframeValidCallback(false);
-						}
-					},
-					"onCardBrandChange" : (data) => {
-						if (typeof this.cardBrandChangeCallback === 'function') {
-							this.cardBrandChangeCallback(data);
-						}
-					},
-					"onFieldValidityChange" : (data) => {
-						if (typeof this.fieldValidityHandler === 'function') {
-							this.fieldValidityHandler(data);
-						}
-					},
-					"onFocus" : (data) => {
-						if (typeof this.fieldFocusHandler === 'function') {
-							this.fieldFocusHandler(data);
-						}
-					},
-					"onLostFocus" : (data) => {
-						if (typeof this.fieldFocusHandler === 'function') {
-							this.fieldFocusHandler(data);
-						}
-					},
-					"onFieldValueChange" : (data) => {
-						if (typeof this.fieldValueChangeHandler === 'function') {
-							this.fieldValueChangeHandler(data);
-						}
-					}
+					"onFormValid" : () => { this.iframeValidCallback(true);  },
+					"onFormNoLongerValid" : () => { this.iframeValidCallback(false);  },
+					"onCardBrandChange" : (data) => { this.cardBrandChangeCallback(data); },
+					"onFieldValidityChange" : (data) => { this.fieldValidityHandler(data); },
+					"onFocus" : (data) => { this.fieldFocusHandler(data); },
+					"onLostFocus" : (data) => { this.fieldFocusHandler(data); }
 				} 
 
 			}; 
@@ -419,6 +260,56 @@ define([
 			{
 				this.sdcv2Form.reset();
 			}
+		},
+
+		attachBillingAddressComponent: async function (formConfig) {
+			if (!window.fiserv || !window.fiserv.components || !window.fiserv.components.address) {
+				return formConfig;
+			}
+
+			try {
+				var fields = {};
+				var fieldMap = {
+					'firstname': 'firstName',
+					'lastname': 'lastName',
+					'street[0]': 'street',
+					'street[1]': 'houseNumberOrName',
+					'city': 'city',
+					'region_id': 'stateOrProvince',
+					'postcode': 'postalCode',
+					'country_id': 'country'
+				};
+
+				var billingContainer = document.querySelector('.payment-method._active .billing-address-form')
+					|| document.querySelector('.billing-address-form')
+					|| document;
+
+				Object.keys(fieldMap).forEach(function (name) {
+					var input = billingContainer.querySelector('input[name="' + name + '"], select[name="' + name + '"]');
+					if (input && input.id) {
+						fields[fieldMap[name]] = { elementId: input.id };
+					}
+				});
+
+				if (Object.keys(fields).length > 0) {
+					var addressComponent = await window.fiserv.components.address({
+						fields: fields,
+						hooks: {}
+					});
+					formConfig.billingAddress = addressComponent;
+				}
+			} catch (e) {
+				// Billing address component creation failed; surcharge will proceed without it.
+			}
+
+			return formConfig;
+		},
+
+		getSurchargeEstimate: async function () {
+			if (typeof(this.sdcv2Form) === "undefined") {
+				throw new Error("Payment form not initialized.");
+			}
+			return await this.sdcv2Form.getSurchargeEstimate();
 		}
 	};
 });

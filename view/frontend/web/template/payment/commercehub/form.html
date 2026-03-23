@@ -96,10 +96,18 @@
 
 		<div class="actions-toolbar">
             <div class="primary">
+				<button
+					class="action primary checkout"
+					type="button"
+					data-bind="click: handleContinue, visible: isSurchargeEnabled() && !surchargeConfirmed()"
+					id="fiserv-checkout-continue"
+					disabled="true">
+					<span translate="'Continue'"></span>
+				</button>
 				<button 
 					class="action primary checkout" 
 					type="submit"
-					data-bind="click: submitIframe" 
+					data-bind="click: submitIframe, visible: !isSurchargeEnabled() || surchargeConfirmed()" 
 					id="fiserv-checkout-submit" 
 					disabled="true">
 					<span translate="'Place Order'"></span>
