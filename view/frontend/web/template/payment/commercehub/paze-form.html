@@ -1,0 +1,35 @@
+<div class="payment-method" data-bind="css: {'_active': (getCode() == isChecked())}">
+	<div class="payment-method-title field choice">
+			 <input type="radio"
+				 name="payment[method]"
+				 class="radio"
+				 data-bind="attr: {'id': getCode()}, value: getCode(), checked: isChecked, click: selectPaymentMethod, visible: isRadioButtonVisible(), afterRender: initializePaze"/>
+		<img data-bind="attr: {src: require.toUrl('Fiserv_Payments/images/paze_logo.png')}" alt="Paze" style="height: 14px; display: inline-block; vertical-align: middle;"/>
+	</div>
+
+	<div class="payment-method-content">
+		<!-- ko foreach: getRegion('messages') -->
+		<!-- ko template: getTemplate() --><!-- /ko -->
+		<!--/ko-->
+
+		<div class="payment-method-billing-address">
+			<!-- ko foreach: $parent.getRegion(getBillingAddressFormName()) -->
+			<!-- ko template: getTemplate() --><!-- /ko -->
+			<!--/ko-->
+		</div>
+
+		<!-- Buttons -->
+		<div data-bind="visible: isPlaceOrderActionAllowed" id="paze-button-container"></div>
+
+		<div class="checkout-agreements-block">
+			<!-- ko foreach: $parent.getRegion('before-place-order') -->
+			<!-- ko template: getTemplate() --><!-- /ko -->
+			<!--/ko-->
+		</div>
+
+		<div class="privacyPolicy">
+			<span></span>Payments Powered by Fiserv.&nbsp; <a target="_blank" href="http://www.fiserv.com/privacy">Privacy Notice</a>.
+		</div>
+
+	</div>
+</div>
