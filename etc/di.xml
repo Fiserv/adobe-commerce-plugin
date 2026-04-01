@@ -957,6 +957,35 @@
         </arguments>
     </type>
 
+	<!-- Paze payment facade, value/validator pools, commands, handlers -->
+	<virtualType name="FiservPazeFacade" type="Magento\Payment\Model\Method\Adapter">
+		<arguments>
+			<argument name="code" xsi:type="const">Fiserv\Payments\Model\Config\Paze\ConfigProvider::CODE</argument>
+			<argument name="formBlockType" xsi:type="string">Fiserv\Payments\Block\CommerceHub\Form</argument>
+			<argument name="infoBlockType" xsi:type="string">Fiserv\Payments\Block\ApplePay\ApplePayInfo</argument>
+			<argument name="valueHandlerPool" xsi:type="object">FiservPazeValueHandlerPool</argument>
+			<argument name="validatorPool" xsi:type="object">FiservCommerceHubValidatorPool</argument>
+			<argument name="commandPool" xsi:type="object">FiservSamsungPayCommandPool</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservPazeValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+		<arguments>
+			<argument name="handlers" xsi:type="array">
+				<item name="default" xsi:type="string">FiservPazeValueHandler</item>
+				<item name="can_void" xsi:type="string">Fiserv\Payments\Gateway\Config\CanVoidHandler</item>
+				<item name="can_refund" xsi:type="string">Fiserv\Payments\Gateway\Config\CanRefundHandler</item>
+				<item name="can_cancel" xsi:type="string">Fiserv\Payments\Gateway\Config\CanVoidHandler</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservPazeValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+		<arguments>
+			<argument name="configInterface" xsi:type="object">Fiserv\Payments\Gateway\Config\Paze\Config</argument>
+		</arguments>
+	</virtualType>
+
 	<type name="Magento\Checkout\Model\CompositeConfigProvider">
         <arguments>
             <argument name="configProviders" xsi:type="array">
@@ -1195,4 +1224,11 @@
             <argument name="methodCode" xsi:type="const">Fiserv\Payments\Model\Config\SamsungPay\ConfigProvider::CODE</argument>
         </arguments>
     </type>
+
+	<!-- Config objects for Paze -->
+	<type name="Fiserv\Payments\Gateway\Config\Paze\Config">
+		<arguments>
+			<argument name="methodCode" xsi:type="const">Fiserv\Payments\Model\Config\Paze\ConfigProvider::CODE</argument>
+		</arguments>
+	</type>
 </config>
