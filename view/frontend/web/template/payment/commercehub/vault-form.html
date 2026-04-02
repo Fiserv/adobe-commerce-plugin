@@ -34,7 +34,7 @@
         </div>
         <div class="sdc-row">
             <div data-bind="attr: {'id': getId() + '-sdc-security-code-frame'}" class="sdc-field-frame sdc-text">
-                <div data-bind="attr: {'id': getId() + '-security-code'}, afterRender: initSecurityIframe" class="sdc-field"></div>
+                <div data-bind="attr: {'id': 'fiserv_commercehub-security-code'}, afterRender: initSecurityIframe" class="sdc-field"></div>
                 <!-- ko if: (checkSecurityMask())-->
                 <button
                     class="sdc-unmasking-icon"

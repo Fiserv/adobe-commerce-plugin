@@ -23,7 +23,7 @@ define([
 			commercehubCode: "fiserv_commercehub",
 			additionalData: {},
 			paymentPayload: { sessionId: null },
-			paymentMethodName: '[name="payment[method]"',
+			paymentMethodName: '[name="payment[method]"]',
 			isIframeValid: false,
 			securityIframeInitialized: false
 		},
@@ -57,7 +57,7 @@ define([
 		},
 
 		setupPaymentMethodWatcher: function () {
-			$(this.paymentMethodName).on("click", (event) => {
+			$(document).on("click", this.paymentMethodName, (event) => {
 				if (event.currentTarget.id === this.getId()) {
 					this.loadSecurityIframe();
 				} else {
