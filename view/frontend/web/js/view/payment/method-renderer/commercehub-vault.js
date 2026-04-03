@@ -1,6 +1,7 @@
 define([
 	'underscore',
 	'jquery',
+	'ko',
 	'Magento_Vault/js/view/payment/method-renderer/vault',
 	'Magento_Ui/js/model/messageList',
 	'Magento_Checkout/js/model/full-screen-loader',
@@ -9,6 +10,7 @@ define([
 ], function(
 	_,
 	$,
+	ko,
 	VaultComponent,
 	globalMessageList,
 	fullScreenLoader,
@@ -24,12 +26,13 @@ define([
 			additionalData: {},
 			paymentPayload: { sessionId: null },
 			paymentMethodName: '[name="payment[method]"]',
-			isIframeValid: false,
+			isIframeValid: null, // will be set as observable in initialize
 			securityIframeInitialized: false
 		},
 
 		initialize: function () {
 			this._super();
+			this.isIframeValid = ko.observable(false);
 			this.setupPaymentMethodWatcher();
 			return this;
 		},
@@ -98,6 +101,10 @@ define([
 		},
 
 		loadSecurityIframe: function () {
+			if (this.securityIframeInitialized) {
+				return;
+			}
+			this.securityIframeInitialized = true;
 			this.prepareChAdapter();
 			const frameConfig = { data: this.buildSecurityCodeFormConfig() };
 			this.beginIframeFlow();
@@ -111,7 +118,7 @@ define([
 
 		destroySecurityIframe: function () {
 			chAdapter.destroyIframe();
-			this.isIframeValid = false;
+			this.isIframeValid(false);
 		},
 
 		checkSecurityMask: function() {
@@ -144,7 +151,7 @@ define([
 		},
 
 		iframeValidHandler: function(valid) {
-			this.isIframeValid = valid;
+			this.isIframeValid(valid);
 		},
 
 		getSdcFieldFrame: function() {
@@ -241,7 +248,7 @@ define([
 		},
 
 		isButtonActive: function () {
-			return this.isIframeValid && this._super();
+			return this.isIframeValid() && this._super();
 		},
 
 		/**
