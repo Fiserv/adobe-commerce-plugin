@@ -76,7 +76,6 @@ define([
 			if (this.isChecked() === this.getId()) {
 				this.loadSecurityIframe();
 			}
-			this.securityIframeInitialized = true;
 		},
 
 		prepareChAdapter: function () {
@@ -101,9 +100,14 @@ define([
 		},
 
 		loadSecurityIframe: function () {
-			if (this.securityIframeInitialized) {
+			window.fiservVaultIframeGuards = window.fiservVaultIframeGuards || {};
+			var guardKey = this.getId();
+			console.log('[commercehub-vault] loadSecurityIframe called for', guardKey);
+			if (window.fiservVaultIframeGuards[guardKey]) {
+				console.log('[commercehub-vault] Iframe already initialized for', guardKey);
 				return;
 			}
+			window.fiservVaultIframeGuards[guardKey] = true;
 			this.securityIframeInitialized = true;
 			this.prepareChAdapter();
 			const frameConfig = { data: this.buildSecurityCodeFormConfig() };
@@ -119,6 +123,9 @@ define([
 		destroySecurityIframe: function () {
 			chAdapter.destroyIframe();
 			this.isIframeValid(false);
+			if (window.fiservVaultIframeGuards) {
+				delete window.fiservVaultIframeGuards[this.getId()];
+			}
 		},
 
 		checkSecurityMask: function() {
