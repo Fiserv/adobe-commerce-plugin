@@ -57,10 +57,10 @@
             <div class="primary">
                 <button class="action primary checkout"
                         type="submit"
+			disabled="disabled"
                         data-bind="
                             click: placeOrderClick,
-                            attr: {title: $t('Place Order')},
-                            enable: isButtonActive()
+                            attr: {title: $t('Place Order'), id: getId() + '-place-order'},
                         ">
                     <span translate="'Place Order'"></span>
                 </button>

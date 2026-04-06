@@ -37,6 +37,23 @@ define([
 			return this;
 		},
 
+		initObservable: function () {
+			this._super()
+			.observe(['isIframeValid']);
+			return this;
+		},
+
+		getPlaceOrderButton: function () {
+			return $('#' + this.getId() + '-place-order');
+		},
+
+		updatePlaceOrderState: function (isEnabled) {
+			let button = this.getPlaceOrderButton();
+			if (button.length) {
+				button.prop('disabled', !isEnabled);
+			}
+		},
+
 		getMaskedCard: function () {
 			return this.details.maskedCC.toLowerCase();
 		},
@@ -109,6 +126,7 @@ define([
 			}
 			window.fiservVaultIframeGuards[guardKey] = true;
 			this.securityIframeInitialized = true;
+			this.updatePlaceOrderState(false);
 			this.prepareChAdapter();
 			const frameConfig = { data: this.buildSecurityCodeFormConfig() };
 			this.beginIframeFlow();
@@ -123,6 +141,7 @@ define([
 		destroySecurityIframe: function () {
 			chAdapter.destroyIframe();
 			this.isIframeValid(false);
+			this.updatePlaceOrderState(false);
 			if (window.fiservVaultIframeGuards) {
 				delete window.fiservVaultIframeGuards[this.getId()];
 			}
@@ -159,6 +178,7 @@ define([
 
 		iframeValidHandler: function(valid) {
 			this.isIframeValid(valid);
+			this.updatePlaceOrderState(valid);
 		},
 
 		getSdcFieldFrame: function() {
@@ -184,15 +204,21 @@ define([
 			let frame = this.getSdcFieldFrame();
 			let mess = this.getSdcFieldInvalidMessageContainer();
 			if (data["isValid"] === true) {
+				this.isIframeValid(true);
+				this.updatePlaceOrderState(true);
 				frame.removeClass('sdc-error-field');
 				frame.addClass('sdc-valid-field');
 				mess.addClass('sdc-hidden');
 			} else if (data["shouldShowError"] === true) {
+				this.isIframeValid(false);
+				this.updatePlaceOrderState(false);
 				mess.text(this.getSdcInvalidFieldMessageText());
 				frame.removeClass('sdc-valid-field');
 				frame.addClass('sdc-error-field');
 				mess.removeClass('sdc-hidden');
 			} else {
+				this.isIframeValid(false);
+				this.updatePlaceOrderState(false);
 				frame.removeClass('sdc-valid-field');
 				frame.removeClass('sdc-error-field');
 				mess.addClass('sdc-hidden');
@@ -241,6 +267,7 @@ define([
 			this.showError(message || "Card capture failure. Please try again.");
 			this.endIframeFlow();
 			this.isIframeValid = false;
+			this.updatePlaceOrderState(false);
 		},
 
 		submitSecurityCode: async function () {
