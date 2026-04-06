@@ -80,7 +80,7 @@ define(
 			let payload = buildPayload();
 			if (params)
 			{
-				payload = { ...params, ...payload };
+				payload = { ...payload, ...params };
 			}
 
 			try {

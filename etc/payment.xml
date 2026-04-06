@@ -28,7 +28,10 @@
 		<method name="fiserv_samsung_pay">
 			<allow_multiple_address>0</allow_multiple_address>
 		</method>
-		 <method name="fiserv_paze">
+		<method name="fiserv_ach">
+			<allow_multiple_address>0</allow_multiple_address>
+		</method>
+		<method name="fiserv_paze">
             <allow_multiple_address>0</allow_multiple_address>
         </method>
     </methods>

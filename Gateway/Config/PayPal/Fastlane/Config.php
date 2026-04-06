@@ -13,7 +13,7 @@ use Magento\Framework\Serialize\Serializer\Json;
  */
 class Config extends \Magento\Payment\Gateway\Config\Config
 {
-    const KEY_ACTIVE = 'active';
+    const KEY_ACTIVE = 'payment_active';
 
     /**
      * @var \Magento\Framework\Serialize\Serializer\Json

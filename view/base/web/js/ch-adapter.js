@@ -40,16 +40,18 @@ define([
 		cardBrandChangeCallback: undefined,
 		fieldValidityHandler: undefined,
 		fieldFocusHandler: undefined,
+		fieldValueChangeHandler: undefined,
 		sdcv2Form: undefined,
 		credentials: undefined,
 
-		initialize: function (config, iframeReadyCallback, iframeValidCallback, cardBrandChangeCallback, fieldValidityHandler, fieldFocusHandler) {
+		initialize: function (config, iframeReadyCallback, iframeValidCallback, cardBrandChangeCallback, fieldValidityHandler, fieldFocusHandler, fieldValueChangeHandler) {
 			this.config = config;
 			this.iframeReadyCallback = iframeReadyCallback;
 			this.iframeValidCallback = iframeValidCallback;
 			this.cardBrandChangeCallback = cardBrandChangeCallback;
 			this.fieldValidityHandler = fieldValidityHandler;
 			this.fieldFocusHandler = fieldFocusHandler;
+			this.fieldValueChangeHandler = fieldValueChangeHandler;
 		},
 
   		initSdk: async function(config, creds)
@@ -117,6 +119,49 @@ define([
 			return response[this.credentialsKey];
 		},
 
+		createBillingAddressComponent: async function (billingAddress) {
+			if (!billingAddress || typeof billingAddress !== 'object') {
+				return null;
+			}
+
+			let containerId = 'fiserv-ach-billing-address-container';
+			let container = document.getElementById(containerId);
+
+			if (!container) {
+				container = document.createElement('div');
+				container.id = containerId;
+				container.style.display = 'none';
+				document.body.append(container);
+			}
+
+			container.innerHTML = '';
+
+			let address = billingAddress.address || {};
+			let fieldMap = {
+				firstName: billingAddress.firstName || '',
+				lastName: billingAddress.lastName || '',
+				street: address.street || '',
+				city: address.city || '',
+				stateOrProvince: address.stateOrProvince || '',
+				postalCode: address.postalCode || '',
+				country: address.country || '',
+			};
+
+			let addressFields = {};
+
+			for (let key in fieldMap) {
+				let inputId = 'fiserv-ach-billing-' + key;
+				let input = document.createElement('input');
+				input.type = 'text';
+				input.id = inputId;
+				input.value = fieldMap[key];
+				container.append(input);
+				addressFields[key] = { elementId: inputId };
+			}
+
+			return await window.fiserv.components.address({ fields: addressFields });
+		},
+
 		/**
 		 * Instantiates CommerceHub iframe
 		 * from provide script element
@@ -128,19 +173,65 @@ define([
 		instantiateIframe: function (
 			loadSuccessCb, 
 			loadErrorCb,
-			configData = undefined
+			configData = undefined,
+			billingAddress = undefined
 		) {
 			let formConfig = this.buildFormConfig();
 
-			if (configData)
-			{
-				formConfig = { ...configData, ...formConfig };
+			if (configData) {
+				formConfig = {
+					...formConfig,
+					...configData,
+					data: {
+						...(formConfig.data || {}),
+						...((configData && configData.data) || {}),
+					},
+				};
 			}
 
-			window.fiserv.components.paymentFields(formConfig)
-				.then((next) => { 
-					this.sdcv2Form = next; 
-					this.iframeReadyCallback(); 
+			if (!formConfig.data) {
+				formConfig.data = {};
+			}
+
+			if (!formConfig.data.environment) {
+				formConfig.data.environment =
+					this.config[this.environmentKey] ||
+					(window.checkoutConfig && window.checkoutConfig.payment && window.checkoutConfig.payment.fiserv_payments ?
+						window.checkoutConfig.payment.fiserv_payments.environment :
+						undefined);
+			}
+
+			let initPromise = Promise.resolve();
+
+			if (billingAddress && typeof billingAddress === 'object') {
+				initPromise = new Promise((resolve, reject) => {
+					let storeUrl = window.checkoutConfig && window.checkoutConfig.payment && window.checkoutConfig.payment.fiserv_payments ?
+						window.checkoutConfig.payment.fiserv_payments.storeUrl :
+						'';
+
+					this.getChCredentials(storeUrl, resolve, reject);
+				})
+					.then((creds) => {
+						return this.initSdk(this.config, creds)
+							.then(() => this.createBillingAddressComponent(billingAddress))
+							.then((billingAddressComponent) => {
+								if (billingAddressComponent) {
+									formConfig.billingAddress = billingAddressComponent;
+								}
+							});
+					})
+					.catch((error) => {
+						console.warn('[CH-Adapter] SDK init or billingAddress component failed, continuing without address component.', error);
+					});
+			}
+
+			initPromise
+				.then(() => {
+					return window.fiserv.components.paymentFields(formConfig);
+				})
+				.then((next) => {
+					this.sdcv2Form = next;
+					this.iframeReadyCallback();
 					loadSuccessCb();
 				})
 				.catch((data) => {
@@ -225,6 +316,23 @@ define([
 			};
 		},
 
+		submitAchForm: function (
+			storeUrl,
+			runSuccessCb,
+			runErrorCb,
+			creds
+		) {
+			this.submitCardForm(storeUrl, runSuccessCb, runErrorCb, creds);
+		},
+
+		getAchLegalText: async function () {
+			if (this.sdcv2Form === undefined || typeof this.sdcv2Form.getAchLegalText !== 'function') {
+				return '';
+			}
+
+			return await this.sdcv2Form.getAchLegalText();
+		},
+
 		unmask: function (
 			field
 		) {
@@ -254,14 +362,43 @@ define([
 
 		buildFormConfig: function (data) {
 			let formConfig = {
-				"data" : this.config[this.formConfigKey], 
+				"data" : { ...(this.config[this.formConfigKey] || {}) }, 
 				"hooks" : {
-					"onFormValid" : () => { this.iframeValidCallback(true);  },
-					"onFormNoLongerValid" : () => { this.iframeValidCallback(false);  },
-					"onCardBrandChange" : (data) => { this.cardBrandChangeCallback(data); },
-					"onFieldValidityChange" : (data) => { this.fieldValidityHandler(data); },
-					"onFocus" : (data) => { this.fieldFocusHandler(data); },
-					"onLostFocus" : (data) => { this.fieldFocusHandler(data); }
+					"onFormValid" : () => {
+						if (typeof this.iframeValidCallback === 'function') {
+							this.iframeValidCallback(true);
+						}
+					},
+					"onFormNoLongerValid" : () => {
+						if (typeof this.iframeValidCallback === 'function') {
+							this.iframeValidCallback(false);
+						}
+					},
+					"onCardBrandChange" : (data) => {
+						if (typeof this.cardBrandChangeCallback === 'function') {
+							this.cardBrandChangeCallback(data);
+						}
+					},
+					"onFieldValidityChange" : (data) => {
+						if (typeof this.fieldValidityHandler === 'function') {
+							this.fieldValidityHandler(data);
+						}
+					},
+					"onFocus" : (data) => {
+						if (typeof this.fieldFocusHandler === 'function') {
+							this.fieldFocusHandler(data);
+						}
+					},
+					"onLostFocus" : (data) => {
+						if (typeof this.fieldFocusHandler === 'function') {
+							this.fieldFocusHandler(data);
+						}
+					},
+					"onFieldValueChange" : (data) => {
+						if (typeof this.fieldValueChangeHandler === 'function') {
+							this.fieldValueChangeHandler(data);
+						}
+					}
 				} 
 
 			}; 

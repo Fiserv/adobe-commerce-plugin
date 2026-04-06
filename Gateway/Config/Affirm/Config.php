@@ -5,7 +5,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 {
 	const CODE = 'fiserv_affirm';
 
-	const KEY_ACTIVE = 'active';
+	const KEY_ACTIVE = 'payment_active';
 	const KEY_TITLE = 'title';
 	const KEY_PAYMENT_ACTION = 'payment_action';
 	const AFFIRM_BUTTON_STYLE_KEY = 'affirm_button_color';

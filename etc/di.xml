@@ -113,6 +113,7 @@
 				<item name="fiserv_commercehub" xsi:type="string">FiservCommerceHubCommandManager</item>
 				<item name="fiserv_applepay" xsi:type="string">FiservCommerceHubCommandManager</item>
 				<item name="fiserv_samsung_pay" xsi:type="string">FiservCommerceHubCommandManager</item>
+				<item name="fiserv_ach" xsi:type="string">FiservAchCommandManager</item>
 			</argument>
 		</arguments>
 	</type>
@@ -1222,6 +1223,139 @@
     <type name="Fiserv\Payments\Gateway\Config\SamsungPay\Config">
         <arguments>
             <argument name="methodCode" xsi:type="const">Fiserv\Payments\Model\Config\SamsungPay\ConfigProvider::CODE</argument>
+        </arguments>
+    </type>
+
+    <!-- ACH Payment Method Facade - reuses CommerceHub command pool -->
+    <virtualType name="FiservAchFacade" type="Magento\Payment\Model\Method\Adapter">
+        <arguments>
+            <argument name="code" xsi:type="const">Fiserv\Payments\Model\Config\Ach\ConfigProvider::CODE</argument>
+            <argument name="formBlockType" xsi:type="string">Fiserv\Payments\Block\CommerceHub\Form</argument>
+			<argument name="infoBlockType" xsi:type="string">Fiserv\Payments\Block\Ach\Info</argument>
+            <argument name="valueHandlerPool" xsi:type="object">FiservAchValueHandlerPool</argument>
+            <argument name="validatorPool" xsi:type="object">FiservCommerceHubValidatorPool</argument>
+			<argument name="commandPool" xsi:type="object">FiservAchCommandPool</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="FiservAchValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="default" xsi:type="string">FiservAchValueHandler</item>
+                <item name="can_void" xsi:type="string">Fiserv\Payments\Gateway\Config\CanVoidHandler</item>
+                <item name="can_refund" xsi:type="string">Fiserv\Payments\Gateway\Config\CanRefundHandler</item>
+                <item name="can_cancel" xsi:type="string">Fiserv\Payments\Gateway\Config\CanVoidHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="FiservAchValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+        <arguments>
+            <argument name="configInterface" xsi:type="object">Fiserv\Payments\Gateway\Config\Ach\Config</argument>
+        </arguments>
+    </virtualType>
+
+	<!-- ACH command manager/pool and handlers (isolated from card/vault handlers) -->
+	<virtualType name="FiservAchCommandManager" type="Magento\Payment\Gateway\Command\CommandManager">
+		<arguments>
+			<argument name="commandPool" xsi:type="object">FiservAchCommandPool</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservAchCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
+		<arguments>
+			<argument name="commands" xsi:type="array">
+				<item name="authorize" xsi:type="string">FiservAchAuthorizeCommand</item>
+				<item name="capture" xsi:type="string">FiservAchCaptureCommand</item>
+				<item name="sale" xsi:type="string">FiservAchSaleCommand</item>
+				<item name="settle" xsi:type="string">FiservAchSettleCommand</item>
+				<item name="refund" xsi:type="string">FiservAchRefundCommand</item>
+				<item name="void" xsi:type="string">FiservAchCancelCommand</item>
+				<item name="cancel" xsi:type="string">FiservAchCancelCommand</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservAchAuthorizeCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+		<arguments>
+			<argument name="requestBuilder" xsi:type="object">FiservCommerceHubAuthorizeRequest</argument>
+			<argument name="transferFactory" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\TransferFactory</argument>
+			<argument name="client" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient</argument>
+			<argument name="handler" xsi:type="object">FiservAchAuthorizeHandler</argument>
+			<argument name="validator" xsi:type="object">Fiserv\Payments\Gateway\Validator\CommerceHub\AuthorizeResponseValidator</argument>
+			<argument name="errorMessageMapper" xsi:type="object">Fiserv\Payments\Gateway\ErrorMapper\CommerceHub\VirtualErrorMessageMapper</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservAchCaptureCommand" type="Fiserv\Payments\Gateway\Command\CommerceHub\CaptureStrategyCommand">
+		<arguments>
+			<argument name="commandPool" xsi:type="object">FiservAchCommandPool</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservAchSaleCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+		<arguments>
+			<argument name="requestBuilder" xsi:type="object">FiservCommerceHubSaleRequest</argument>
+			<argument name="transferFactory" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\TransferFactory</argument>
+			<argument name="client" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient</argument>
+			<argument name="handler" xsi:type="object">FiservAchAuthorizeHandler</argument>
+			<argument name="validator" xsi:type="object">Fiserv\Payments\Gateway\Validator\CommerceHub\SaleResponseValidator</argument>
+			<argument name="errorMessageMapper" xsi:type="object">Fiserv\Payments\Gateway\ErrorMapper\CommerceHub\VirtualErrorMessageMapper</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservAchSettleCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+		<arguments>
+			<argument name="requestBuilder" xsi:type="object">FiservCommerceHubSettleRequest</argument>
+			<argument name="transferFactory" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\TransferFactory</argument>
+			<argument name="client" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient</argument>
+			<argument name="handler" xsi:type="object">FiservAchSettleHandler</argument>
+			<argument name="validator" xsi:type="object">Fiserv\Payments\Gateway\Validator\CommerceHub\CaptureResponseValidator</argument>
+			<argument name="errorMessageMapper" xsi:type="object">Fiserv\Payments\Gateway\ErrorMapper\CommerceHub\VirtualErrorMessageMapper</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservAchCancelCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+		<arguments>
+			<argument name="requestBuilder" xsi:type="object">FiservCommerceHubCancelRequest</argument>
+			<argument name="transferFactory" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\TransferFactory</argument>
+			<argument name="client" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient</argument>
+			<argument name="handler" xsi:type="object">FiservCommerceHubCancelHandler</argument>
+			<argument name="validator" xsi:type="object">Fiserv\Payments\Gateway\Validator\CommerceHub\CancelResponseValidator</argument>
+			<argument name="errorMessageMapper" xsi:type="object">Fiserv\Payments\Gateway\ErrorMapper\CommerceHub\VirtualErrorMessageMapper</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservAchRefundCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+		<arguments>
+			<argument name="requestBuilder" xsi:type="object">FiservCommerceHubRefundRequest</argument>
+			<argument name="transferFactory" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\TransferFactory</argument>
+			<argument name="client" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient</argument>
+			<argument name="handler" xsi:type="object">FiservCommerceHubRefundHandler</argument>
+			<argument name="validator" xsi:type="object">Fiserv\Payments\Gateway\Validator\CommerceHub\RefundResponseValidator</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservAchAuthorizeHandler" type="Magento\Payment\Gateway\Response\HandlerChain">
+		<arguments>
+			<argument name="handlers" xsi:type="array">
+				<item name="payment_details" xsi:type="string">Fiserv\Payments\Gateway\Response\CommerceHub\PaymentDetailsHandler</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservAchSettleHandler" type="Magento\Payment\Gateway\Response\HandlerChain">
+		<arguments>
+			<argument name="handlers" xsi:type="array">
+				<item name="payment_details" xsi:type="string">Fiserv\Payments\Gateway\Response\CommerceHub\PaymentDetailsHandler</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+    <!-- Config objects for ACH -->
+    <type name="Fiserv\Payments\Gateway\Config\Ach\Config">
+        <arguments>
+            <argument name="methodCode" xsi:type="const">Fiserv\Payments\Model\Config\Ach\ConfigProvider::CODE</argument>
         </arguments>
     </type>
 
