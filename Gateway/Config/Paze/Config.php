@@ -4,7 +4,7 @@ namespace Fiserv\Payments\Gateway\Config\Paze;
 class Config extends \Magento\Payment\Gateway\Config\Config
 {
 	const CODE = 'fiserv_paze';
-	const KEY_ACTIVE = 'active';
+	const KEY_ACTIVE = 'payment_active';
 	const KEY_TITLE = 'title';
 	const KEY_PAYMENT_ACTION = 'payment_action';
 

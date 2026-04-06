@@ -15,7 +15,7 @@ use Magento\Framework\Serialize\Serializer\Json;
 class Config extends \Magento\Payment\Gateway\Config\Config
 {
     // Config keys (adjust as needed for Samsung Pay)
-    const KEY_ACTIVE = 'active';
+    const KEY_ACTIVE = 'payment_active';
     const KEY_TITLE = 'samsung_pay';
     const SAMSUNG_PAY_BUTTON_COLOR_KEY = 'samsung_pay_button_color';
 	const KEY_PAYMENT_ACTION = 'payment_action';

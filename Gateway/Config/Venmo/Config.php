@@ -15,7 +15,7 @@ use Magento\Framework\Serialize\Serializer\Json;
 class Config extends \Magento\Payment\Gateway\Config\Config
 {
 	// Config keys (adjust as needed for venmo)
-	const KEY_ACTIVE = 'active';
+	const KEY_ACTIVE = 'payment_active';
 	const KEY_TITLE = 'venmo';
 	const KEY_SORT_ORDER = 'sort_order';
 	const VENMO_BUTTON_SHAPE_KEY = 'venmo_button_shape';

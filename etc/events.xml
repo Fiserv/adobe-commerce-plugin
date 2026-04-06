@@ -24,6 +24,9 @@
 	<event name="payment_method_assign_data_fiserv_samsung_pay">
 		<observer name="fiserv_samsung_pay_data_assign" instance="Fiserv\Payments\Observer\CommerceHub\DataAssignObserver" />
 	</event>
+	<event name="payment_method_assign_data_fiserv_ach">
+		<observer name="fiserv_ach_data_assign" instance="Fiserv\Payments\Observer\CommerceHub\DataAssignObserver" />
+	</event>
 	<event name="payment_method_assign_data_fiserv_paze">
         <observer name="fiserv_paze_data_assign" instance="Fiserv\Payments\Observer\CommerceHub\DataAssignObserver" />
     </event>

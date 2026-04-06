@@ -15,7 +15,7 @@ use Magento\Framework\Serialize\Serializer\Json;
 class Config extends \Magento\Payment\Gateway\Config\Config
 {
     // Config keys (adjust as needed for PayPal)
-    const KEY_ACTIVE = 'active';
+    const KEY_ACTIVE = 'payment_active';
     const KEY_TITLE = 'paypal';
     const KEY_SORT_ORDER = 'sort_order';
 	const PAYPAL_BUTTON_COLOR_KEY = 'paypal_button_color';
