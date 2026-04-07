@@ -33,8 +33,20 @@ define([
 		initialize: function () {
 			this._super();
 			this.isIframeValid = ko.observable(false);
+			if (!this.shouldRequireVaultCvv()) {
+				this.isIframeValid(true);
+				this.updatePlaceOrderState(true);
+			}
 			this.setupPaymentMethodWatcher();
 			return this;
+		},
+
+		shouldRequireVaultCvv: function () {
+			const paymentCfg = window.checkoutConfig && window.checkoutConfig.payment && window.checkoutConfig.payment[this.getCode()];
+			if (!paymentCfg || typeof paymentCfg.vaultUseCcv === 'undefined') {
+				return true;
+			}
+			return paymentCfg.vaultUseCcv === true || paymentCfg.vaultUseCcv === '1' || paymentCfg.vaultUseCcv === 1;
 		},
 
 		initObservable: function () {
@@ -90,6 +102,11 @@ define([
 			if (this.securityIframeInitialized) {
 				return;
 			}
+
+			if (!this.shouldRequireVaultCvv()) {
+				return;
+			}
+
 			if (this.isChecked() === this.getId()) {
 				this.loadSecurityIframe();
 			}
@@ -117,6 +134,11 @@ define([
 		},
 
 		loadSecurityIframe: function () {
+			if (!this.shouldRequireVaultCvv()) {
+				this.isIframeValid(true);
+				this.updatePlaceOrderState(true);
+				return;
+			}
 			window.fiservVaultIframeGuards = window.fiservVaultIframeGuards || {};
 			var guardKey = this.getId();
 			console.log('[commercehub-vault] loadSecurityIframe called for', guardKey);
@@ -266,7 +288,7 @@ define([
 		iframeRunFailure: function (message) {
 			this.showError(message || "Card capture failure. Please try again.");
 			this.endIframeFlow();
-			this.isIframeValid = false;
+			this.isIframeValid(false);
 			this.updatePlaceOrderState(false);
 		},
 
@@ -289,15 +311,23 @@ define([
 		 * Place order
 		 */
 		placeOrderClick: async function () {
+
+			if (!this.shouldRequireVaultCvv()) {
+				await this.getPaymentMethodToken();
+				return;
+			}
+
 			if (!this.isIframeValid) {
 				this.showError("Please enter a valid security code.");
 				return;
 			}
+
 			try {
 				await this.submitSecurityCode();
 			} catch (error) {
 				return;
 			}
+
 			await this.getPaymentMethodToken();
 		},
 
@@ -392,7 +422,7 @@ define([
 					'expiration_year': this.getExpirationYear()
 				}
 			};
-			if (this.paymentPayload.sessionId) {
+			if (this.shouldRequireVaultCvv() && this.paymentPayload.sessionId) {
 				data['additional_data']['payment_session'] = this.paymentPayload.sessionId;
 			}
 

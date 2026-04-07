@@ -38,6 +38,7 @@ class ConfigProvider implements ConfigProviderInterface
 	const CARD_FORM_CONFIG_KEY = 'formConfig';
 	const TERMINAL_ID_KEY = 'terminalId';
 	const THREE_D_SECURE_KEY = 'threeDSecure';
+	const VAULT_USE_CCV_KEY = 'vaultUseCcv';
 
 	const INVALID_FIELDS_KEY = 'invalidFields';
 	const CARD_NUMBER_KEY = 'cardNumber';
@@ -88,6 +89,7 @@ class ConfigProvider implements ConfigProviderInterface
 			self::PAYMENT_ACTION_KEY => $this->config->getPaymentAction($storeId),
 			self::AVAILABLE_CC_KEY => $this->config->getAvailableCardTypes($storeId),
 			self::USE_CCV_KEY => $this->config->isCcvEnabled($storeId),
+			self::VAULT_USE_CCV_KEY => $this->config->isVaultCvvEnabled($storeId),
 			self::LOGGING_LEVEL_KEY => $this->config->getLoggingLevel($storeId),
 			self::CURRENCY_KEY => $this->config->getCurrency($storeId),
 			self::PROD_CLIENT_KEY => $this->config->getProdClientUrl(),
