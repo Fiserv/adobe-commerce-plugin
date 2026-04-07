@@ -246,6 +246,7 @@
 				<active>1</active>
 			</fiserv_commercehub_vault>
 			<fiserv_paypal>
+				<active>1</active>
 				<payment_active>0</payment_active>
 				<title>PayPal</title>
 				<model>FiservPayPalFacade</model>
@@ -266,6 +267,7 @@
 				<group>fiserv_group</group>
 			</fiserv_paypal>
             <fiserv_venmo>
+				<active>1</active>
 				<payment_active>0</payment_active>
                 <title>Venmo</title>
                 <model>FiservVenmoFacade</model>
@@ -285,6 +287,7 @@
 				<group>fiserv_group</group>
             </fiserv_venmo>
             <fiserv_paypal_fastlane>
+				<active>1</active>
 				<payment_active>0</payment_active>
 				<title>PayPal Fastlane</title>
 				<model>FiservPayPalFastlaneFacade</model>
@@ -302,6 +305,7 @@
 				<group>fiserv_group</group>
 			</fiserv_paypal_fastlane>
             <fiserv_applepay>
+				<active>1</active>
 				<payment_active>0</payment_active>
                 <title>ApplePay</title>
                 <model>FiservApplePayFacade</model>
@@ -321,6 +325,7 @@
                 <group>fiserv_group</group>
             </fiserv_applepay>
 			<fiserv_affirm>
+				<active>1</active>
 				<payment_active>0</payment_active>
 				<title>Affirm</title>
 				<model>FiservAffirmFacade</model>
@@ -347,6 +352,7 @@
 				<inquiry_auto_process_enabled>1</inquiry_auto_process_enabled>
 			</fiserv_affirm>
 			<fiserv_samsung_pay>
+				<active>1</active>
 				<payment_active>0</payment_active>
 				<title>SamsungPay</title>
 				<model>FiservSamsungPayFacade</model>
@@ -365,6 +371,7 @@
 				<group>fiserv_group</group>
 			</fiserv_samsung_pay>
 			<fiserv_ach>
+				<active>1</active>
 				<payment_active>0</payment_active>
 				<title>ACH/Bank Transfer</title>
 				<model>FiservAchFacade</model>
@@ -413,6 +420,7 @@
 				<sdc_custom_checkout_business_name_placeholder>Business Name</sdc_custom_checkout_business_name_placeholder>
 			</fiserv_ach>
 			<fiserv_paze>
+				<active>1</active>
 				<payment_active>0</payment_active>
 				<title>Paze</title>
 				<model>FiservPazeFacade</model>
