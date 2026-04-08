@@ -496,6 +496,8 @@ define(
 
 			destroyAchIframe(resetFlags) {
 				chAdapter.destroyIframe();
+				this.isIframeValid = false;
+				this.disableSubmitButton();
 				this.clearAchFieldContainers();
 
 				if (resetFlags === true) {
@@ -503,6 +505,12 @@ define(
 					this.isIframeReady = false;
 					this.pendingIframeReload = false;
 				}
+			},
+
+			canSubmitIframe() {
+				const isBillingReady = this.hasAvailableBillingAddress();
+
+				return this.isIframeValid === true && this.isIframeReady === true && isBillingReady === true;
 			},
 
 			clearAchFieldContainers() {
@@ -670,7 +678,13 @@ define(
 
 				this.isPlaceOrderActionAllowed(isBillingReady);
 
-				if (isBillingReady === true && additionalValidators.validate()) {
+				if (this.canSubmitIframe() !== true) {
+					this.disableSubmitButton();
+
+					return;
+				}
+
+				if (additionalValidators.validate()) {
 					fullScreenLoader.startLoader();
 					let credsResponse;
 
@@ -892,7 +906,7 @@ define(
 
 				this.isPlaceOrderActionAllowed(isBillingReady);
 
-				if (this.isIframeValid === true && isBillingReady === true) {
+				if (this.canSubmitIframe() === true) {
 					this.enableSubmitButton();
 				} else {
 					this.disableSubmitButton();
