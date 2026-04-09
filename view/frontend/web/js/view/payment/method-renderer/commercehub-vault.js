@@ -341,12 +341,15 @@ define([
 			})
 				.done(async (response) => {
 					let paymentToken = response.paymentToken;
-					if (this.is3DSecureEnabled())
-					{
+					const shouldInitSdk = this.shouldRequireVaultCvv() || this.is3DSecureEnabled();
+					if (shouldInitSdk) {
+
 						try {
 							fullScreenLoader.startLoader();
 							await this.initChSdk(response.paymentToken);
-							await this.run3DSecure();
+							if (this.is3DSecureEnabled()) {
+								await this.run3DSecure();
+							}
 							fullScreenLoader.stopLoader();
 						} catch (error) {
 							this.threeDSecureFail(error);
