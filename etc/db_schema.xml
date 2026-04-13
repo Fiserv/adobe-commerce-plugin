@@ -136,7 +136,7 @@
 		<column xsi:type="varchar" name="customer_name" nullable="true" length="255" comment="Customer name (convenience)"/>
 		<column xsi:type="varchar" name="last_gateway_transaction_id" nullable="true" length="64" comment="CommerceHub gateway transaction id for all txns associated to an order"/>
 		<column xsi:type="smallint" name="is_active" unsigned="true" nullable="false" default="1" comment="1 = recurring payment still active, 0 = recurring payment ended"/>
-		<column xsi:type="varchar" name="pending_card_label" nullable="true" length="32" comment="Masked card label for pending payment method update (e.g. ************1111), cleared after next renewal"/>
+		<column xsi:type="varchar" name="change_payment_card" nullable="true" length="32" comment="Masked card label for pending payment method update (e.g. ************1111), cleared after next renewal"/>
 		<constraint xsi:type="unique" referenceId="UNQ_SUBSCRIPTION_ORDER_ORDER_INCREMENT_ID">
 			<column name="order_increment_id"/>
 		</constraint>

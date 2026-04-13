@@ -152,11 +152,11 @@ class VaultDetailsHandler implements HandlerInterface
 		// 2. cardDetails[0].detailedCardProduct
 		$rawScheme = isset($cardArray["scheme"]) ? $cardArray["scheme"] :
 			(
-			(
+				(
 				(!isset($chResponse["cardDetails"])) ||
 				(!isset($chResponse["cardDetails"][0])) ||
 				(!isset($chResponse["cardDetails"][0]["detailedCardProduct"]))
-			) ? "" : $chResponse["cardDetails"][0]["detailedCardProduct"]
+				) ? "" : $chResponse["cardDetails"][0]["detailedCardProduct"]
 			);
 
 		$details = $this->convertDetailsToJSON([

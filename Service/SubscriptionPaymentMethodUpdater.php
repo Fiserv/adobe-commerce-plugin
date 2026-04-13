@@ -5,6 +5,7 @@ namespace Fiserv\Payments\Service;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 use Fiserv\Payments\Model\SubscriptionOrder\SubscriptionOrderRepository;
 use Fiserv\Payments\Model\System\Utils\PaymentTokenUtil;
+use Fiserv\Payments\Service\VaultTokenDetailsParser;
 use Magento\Vault\Api\Data\PaymentTokenInterface;
 use Magento\Vault\Api\PaymentTokenManagementInterface;
 
@@ -13,7 +14,8 @@ class SubscriptionPaymentMethodUpdater
 	public function __construct(
 		private readonly SubscriptionOrderRepository $subscriptionRepo,
 		private readonly PaymentTokenManagementInterface $tokenManagement,
-		private readonly MultiLevelLogger $logger
+		private readonly MultiLevelLogger $logger,
+		private readonly VaultTokenDetailsParser $tokenDetailsParser
 	) {}
 
 	/**
@@ -87,7 +89,7 @@ class SubscriptionPaymentMethodUpdater
 		// Persist the masked card so both customer and admin UIs reflect the change
 		// without requiring a full page reload. Cleared automatically after the next renewal.
 		$maskedCard = $this->getMaskedCardFromToken($token);
-		$head->setPendingCardLabel($maskedCard ?: null);
+		$head->setChangePaymentCard($maskedCard ?: null);
 
 		$this->subscriptionRepo->save($head);
 
@@ -110,17 +112,7 @@ class SubscriptionPaymentMethodUpdater
 	private function getMaskedCardFromToken(PaymentTokenInterface $token): string
 	{
 		try {
-			$detailsRaw = $token->getTokenDetails();
-			$details = is_string($detailsRaw)
-				? @json_decode($detailsRaw, true)
-				: (is_array($detailsRaw) ? $detailsRaw : null);
-
-			if (!is_array($details)) {
-				return '';
-			}
-
-			// maskedCC is stored by VaultDetailsHandler as e.g. "************1111"
-			return (string)($details['maskedCC'] ?? '');
+			return $this->tokenDetailsParser->extractMaskedCC($token->getTokenDetails());
 		} catch (\Throwable) {
 			return '';
 		}
@@ -129,39 +121,12 @@ class SubscriptionPaymentMethodUpdater
 	private function tryUpdateExpiryFromVault($subscription, PaymentTokenInterface $token): void
 	{
 		try {
-			$detailsRaw = $token->getTokenDetails();
-			$details = is_string($detailsRaw) ? @json_decode($detailsRaw, true) : (is_array($detailsRaw) ? $detailsRaw : null);
-			if (!is_array($details)) {
-				return;
-			}
-
-			$expirationMonth = null;
-			$expirationYear = null;
-
-			// VaultDetailsHandler stores expiry as a combined "MM/YYYY" string in expirationDate.
-			// Fall back to separate month/year keys if the combined field is absent.
-			$combinedDate = $details['expirationDate'] ?? $details['expiration_date'] ?? null;
-			if (is_string($combinedDate) && $combinedDate !== '') {
-				$dateParts = preg_split('/[\/\-]/', $combinedDate);
-				if (count($dateParts) >= 2) {
-					$expirationMonth = $dateParts[0];
-					$expirationYear = $dateParts[1];
-				}
-			}
-
-			// Separate key fallback (other token sources)
-			if ($expirationMonth === null) {
-				$expirationMonth = $details['expirationMonth'] ?? $details['expMonth'] ?? $details['expiration_month'] ?? $details['exp_month'] ?? null;
-			}
-			if ($expirationYear === null) {
-				$expirationYear = $details['expirationYear'] ?? $details['expYear'] ?? $details['expiration_year'] ?? $details['exp_year'] ?? null;
-			}
-
+			[$expirationMonth, $expirationYear] = $this->tokenDetailsParser->extractExpiry($token->getTokenDetails());
 			if ($expirationMonth !== null) {
-				$subscription->setExpirationMonth(str_pad((string)((int)$expirationMonth), 2, '0', STR_PAD_LEFT));
+				$subscription->setExpirationMonth($expirationMonth);
 			}
 			if ($expirationYear !== null) {
-				$subscription->setExpirationYear((string)$expirationYear);
+				$subscription->setExpirationYear($expirationYear);
 			}
 		} catch (\Throwable $e) {
 			$this->logger->logDebug(2, 'UpdatePayment: failed to parse vault expiry: ' . $e->getMessage());

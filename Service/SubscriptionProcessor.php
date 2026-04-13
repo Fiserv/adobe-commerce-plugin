@@ -9,6 +9,7 @@ use Fiserv\Payments\Logger\MultiLevelLogger;
 use Fiserv\Payments\Model\Subscription\Order;
 use Fiserv\Payments\Model\SubscriptionOrder\SubscriptionOrderRepository;
 use Fiserv\Payments\Observer\CommerceHub\DataAssignObserver;
+use Fiserv\Payments\Service\CronScheduler;
 use Magento\Framework\Api\ExtensionAttributesFactory;
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Framework\App\ResourceConnection;
@@ -43,7 +44,8 @@ class SubscriptionProcessor
 		private readonly CartRepositoryInterface         $quoteRepository,
 		private readonly ExtensionAttributesFactory      $extensionAttributesFactory,
 		private readonly QuoteManagement                 $quoteManagement,
-		private readonly ResourceConnection              $resource
+		private readonly ResourceConnection              $resource,
+		private readonly CronScheduler                   $cronScheduler
 	)
 	{
 	}
@@ -236,7 +238,7 @@ class SubscriptionProcessor
 			}
 
 			try {
-				$this->scheduleCronAt($nextBillingDatetime, $intervalUnit ?? 'minute');
+				$this->cronScheduler->scheduleCronAt($nextBillingDatetime, $intervalUnit ?? 'minute');
 			} catch (Throwable $e) {
 				$this->logger->logError(1, 'Failed to schedule next cron', $e->getMessage());
 			}
@@ -278,12 +280,12 @@ class SubscriptionProcessor
 
 			// Restore head row: keep status=active and lock next_billing_datetime to its original value.
 			// Raw SQL restore is intentional — the ORM save above may have dirtied the column.
-			// Also clear pending_card_label so the "Updated" notice disappears from both UIs.
+			// Also clear change_payment_card so the "Updated" notice disappears from both UIs.
 			try {
 				$subscriptionChainHead = $this->subscriptionRepository->getChainHead($subscription);
 				$originalHeadNextBillingDatetime = (string)($subscriptionChainHead->getNextBillingDatetime() ?? '');
 				$subscriptionChainHead->setStatus(Order::STATUS_ACTIVE)->setIsActive(1);
-				$subscriptionChainHead->setPendingCardLabel(null);
+				$subscriptionChainHead->setChangePaymentCard(null);
 				$this->subscriptionRepository->save($subscriptionChainHead);
 				if ($originalHeadNextBillingDatetime !== '') {
 					$this->resource->getConnection()->update(
@@ -377,64 +379,6 @@ class SubscriptionProcessor
 		}
 	}
 
-	/**
-	 * Insert a pending cron_schedule entry for fiserv_process_subscriptions at the given UTC time.
-	 *
-	 * Only inserts for minute-level intervals. For day/week/month/year the regular
-	 * per-minute sweeper + next_billing_datetime <= NOW() filter handles processing
-	 * correctly, and Magento purges cron_schedule entries older than a few days so
-	 * a future entry for a 2-week interval would be deleted before it ever fires.
-	 *
-	 * @param string $nextBillingDatetime UTC datetime (Y-m-d H:i:s).
-	 * @param string $intervalUnit minute | day | week | month | year
-	 */
-	private function scheduleCronAt(string $nextBillingDatetime, string $intervalUnit = 'minute'): void
-	{
-		// For non-minute intervals the sweeper is sufficient — no cron entry needed.
-		if ($intervalUnit !== 'minute') {
-			$this->logger->logInfo(1, 'scheduleCronAt: sweeper handles next billing', "next_billing_datetime: {$nextBillingDatetime}");
-			return;
-		}
-
-		try {
-			$currentUtcTime = new DateTime('now', new DateTimeZone('UTC'));
-			$billingDateTime = new DateTime($nextBillingDatetime, new DateTimeZone('UTC'));
-			if ($billingDateTime < $currentUtcTime) {
-				$billingDateTime = clone $currentUtcTime;
-			}
-
-			$secondsIntoMinute = (int)$billingDateTime->format('s');
-			$billingDateTime->setTime((int)$billingDateTime->format('H'), (int)$billingDateTime->format('i'), 0);
-			if ($secondsIntoMinute >= 30) {
-				$billingDateTime->modify('+1 minute');
-			}
-			$scheduledAt = $billingDateTime->format('Y-m-d H:i:s');
-
-			$connection = $this->resource->getConnection();
-			$cronTable = $this->resource->getTableName('cron_schedule');
-
-			$existingCount = (int)$connection->fetchOne(
-				"SELECT COUNT(*) FROM `{$cronTable}`
-                 WHERE job_code = 'fiserv_process_subscriptions'
-                   AND scheduled_at = :sat AND status IN ('pending','running')",
-				[':sat' => $scheduledAt]
-			);
-			if ($existingCount > 0) {
-				return;
-			}
-
-			$connection->insert($cronTable, [
-				'job_code' => 'fiserv_process_subscriptions',
-				'status' => 'pending',
-				'messages' => '',
-				'created_at' => $currentUtcTime->format('Y-m-d H:i:s'),
-				'scheduled_at' => $scheduledAt,
-			]);
-			$this->logger->logInfo(1, 'scheduleCronAt: inserted entry', "scheduled_at: {$scheduledAt}");
-		} catch (Throwable $e) {
-			$this->logger->logError(1, 'scheduleCronAt failed', $e->getMessage());
-		}
-	}
 
 	/**
 	 * Return the next available child-order suffix integer for a root increment.

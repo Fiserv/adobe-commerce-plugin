@@ -24,7 +24,7 @@ interface SubscriptionOrderInterface
 	const CUSTOMER_EMAIL = 'customer_email';
 	const LAST_GATEWAY_TRANSACTION_ID = 'last_gateway_transaction_id';
 	const IS_ACTIVE = 'is_active';
-	const PENDING_CARD_LABEL = 'pending_card_label';
+	const CHANGE_PAYMENT_CARD = 'change_payment_card';
 
 	/** @return int|null */
 	public function getEntityId();
@@ -203,11 +203,11 @@ interface SubscriptionOrderInterface
 	 * Cleared automatically after the next successful renewal.
 	 * @return string|null
 	 */
-	public function getPendingCardLabel(): ?string;
+	public function getChangePaymentCard(): ?string;
 
 	/**
 	 * @param string|null $label
 	 * @return $this
 	 */
-	public function setPendingCardLabel(?string $label);
+	public function setChangePaymentCard(?string $label);
 }

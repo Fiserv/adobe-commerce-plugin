@@ -210,7 +210,7 @@ class Recurring extends Template
 
     /**
      * Returns the chain-head (FIRST) subscription model row for the given subscription.
-     * Used by the phtml to read pending_card_label for the "Updated" feedback message.
+     * Used by the phtml to read change_payment_card for the "Updated" feedback message.
      *
      * @param  \Fiserv\Payments\Model\Subscription\Order $subscription
      * @return \Fiserv\Payments\Model\Subscription\Order|null
@@ -305,6 +305,111 @@ class Recurring extends Template
     public function formatPrice(float $amount): string
     {
         return (string)$this->priceHelper->currency($amount, true, false);
+    }
+
+    /**
+     * Return a CSS colour hex string for a subscription status value.
+     * Used by the order-view single-row template.
+     */
+    public function getStatusColor(string $status): string
+    {
+        return match (strtolower($status)) {
+            'processed'            => '#2d7d2d',
+            'active'               => '#1a6eaf',
+            'cancelled', 'canceled' => '#b00020',
+            default                => '#555',
+        };
+    }
+
+    /**
+     * Compute the display status string for one subscription row.
+     *
+     * Business rules (same as the AJAX renderer in admin-recurring.js):
+     *   - Cancelled chain / row → keep 'cancelled'.
+     *   - Latest row in the chain → 'active'  (parent or child).
+     *   - Non-latest parent row (has children) → 'processed'.
+     *   - Anything else → raw DB status unchanged.
+     *
+     * @param \Fiserv\Payments\Model\Subscription\Order $subscription
+     */
+    public function getDisplayStatus($subscription, bool $isLatestRow, bool $isParentOrder, bool $chainCancelled): string
+    {
+        $statusLower = strtolower((string)($subscription->getStatus() ?? ''));
+
+        if ($chainCancelled || $statusLower === 'cancelled') {
+            return 'cancelled';
+        }
+        if ($isLatestRow) {
+            return 'active';
+        }
+        if ($isParentOrder) {
+            // Parent has at least one child renewal — its original auth is done.
+            return 'processed';
+        }
+        return $statusLower;
+    }
+
+    /**
+     * Resolve a masked card label (e.g. "************1111") for a subscription row.
+     *
+     * Prefers the payment_token on the Magento sales order; falls back to the
+     * payment_token stored on the subscription_order row.
+     *
+     * @param \Fiserv\Payments\Model\Subscription\Order   $subscription
+     * @param \Magento\Sales\Model\Order|null              $order
+     */
+    public function getCardLabel($subscription, $order): string
+    {
+        $rawToken = '';
+
+        if ($order && $order->getPayment()) {
+            $ai = (array)$order->getPayment()->getAdditionalInformation();
+            $rawToken = (string)($ai['payment_token'] ?? '');
+        }
+
+        if ($rawToken === '') {
+            try {
+                $rawToken = (string)($subscription->getPaymentToken() ?? '');
+            } catch (\Throwable) {
+                $rawToken = '';
+            }
+        }
+
+        return $this->buildCardLabel($rawToken);
+    }
+
+    /**
+     * Return the display label for a vault token entry.
+     * Accepts both array entries (from getVaultTokens()) and PaymentTokenInterface objects.
+     *
+     * @param array|object $token
+     */
+    public function getTokenLabel($token): string
+    {
+        if (is_array($token) && !empty($token['label'])) {
+            return (string)$token['label'];
+        }
+        if (is_object($token) && method_exists($token, 'getLabel')) {
+            return (string)$token->getLabel();
+        }
+        return (string)__('Saved card');
+    }
+
+    /**
+     * Return the public_hash for a vault token entry.
+     * Accepts both array entries (from getVaultTokens()) and PaymentTokenInterface objects.
+     *
+     * @param array|object $token
+     */
+    public function getTokenPublicHash($token): string
+    {
+        if (is_array($token) && !empty($token['public_hash'])) {
+            return (string)$token['public_hash'];
+        }
+        if (is_object($token) && method_exists($token, 'getPublicHash')) {
+            return (string)$token->getPublicHash();
+        }
+        return '';
     }
 
     /**
@@ -569,7 +674,7 @@ class Recurring extends Template
      * Converts a raw payment token string into a masked card label (e.g. ************1111).
      * Delegates $$TS$$= suffix stripping to PaymentTokenUtil, then derives the last 4 digits.
      */
-    private function buildCardLabel(string $rawToken): string
+    public function buildCardLabel(string $rawToken): string
     {
         if ($rawToken === '') {
             return '';

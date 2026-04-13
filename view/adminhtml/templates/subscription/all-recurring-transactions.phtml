@@ -69,13 +69,9 @@ $subs = $block->getSubscriptions();
                     $statusLower = strtolower($status);
                     $adminOrderUrl = $inc !== '' ? $block->getAdminOrderUrlByIncrement($inc) : '';
 
-                    $latestSubId = method_exists($block, 'getLatestSubscriptionIdByChain')
-                        ? (int)$block->getLatestSubscriptionIdByChain($sub)
-                        : 0;
+                    $latestSubId = (int)$block->getLatestSubscriptionIdByChain($sub);
                     $isLatestRow = ($latestSubId > 0 && (int)$id === $latestSubId);
-                    $chainCancelled = method_exists($block, 'getChainCancelledForSubscription')
-                        ? (bool)$block->getChainCancelledForSubscription($sub)
-                        : false;
+                    $chainCancelled = (bool)$block->getChainCancelledForSubscription($sub);
 
                     // Display logic:
                     // - Parent (FIRST) row shows 'Processed' once it has children (original auth is done).
@@ -206,17 +202,15 @@ $subs = $block->getSubscriptions();
 
                                     <span class="subscription-update-feedback"
                                           data-subscription-id="<?= (int)$id ?>"
-                                          style="font-size:12px;<?php
-                                          // Show pending_card_label from the head row if set
-                                          // Server-persisted so it reflects changes from both customer and admin pages
-                                          $pendingCardLabel = method_exists($block, 'getPendingCardLabelForSubscription')
-                                              ? (string)$block->getPendingCardLabelForSubscription($sub)
-                                              : '';
-                                          echo $pendingCardLabel !== '' ? ' color:#0a7a0a;' : '';
-                                          ?>">
-                                        <?php if ($pendingCardLabel !== ''): ?>
+                                           style="font-size:12px;<?php
+                                           // Show change_payment_card from the head row if set
+                                           // Server-persisted so it reflects changes from both customer and admin pages
+                                           $changePaymentCard = (string)$block->getChangePaymentCardForSubscription($sub);
+                                           echo $changePaymentCard !== '' ? ' color:#0a7a0a;' : '';
+                                           ?>"
+                                        <?php if ($changePaymentCard !== ''): ?>
                                             <?= $block->escapeHtml(__('Updated. Future renewals will use this card.')) ?>
-                                            <?= $block->escapeHtml(__('Card number: %1', $pendingCardLabel)) ?>
+                                            <?= $block->escapeHtml(__('Card number: %1', $changePaymentCard)) ?>
                                         <?php endif; ?>
                                     </span>
                                 </div>
@@ -230,7 +224,7 @@ $subs = $block->getSubscriptions();
                         <td><?php
                             // Parent (FIRST) rows: show created_at + interval (the original first scheduled time).
                             // Child rows: show their own next_billing_datetime (when their successor runs).
-                            if ($isParentOrder && method_exists($block, 'getFirstNextBillingForHead')) {
+                            if ($isParentOrder) {
                                 $displayNext = $block->getFirstNextBillingForHead($sub);
                                 if ($displayNext === '') {
                                     $displayNext = $next;
@@ -244,11 +238,7 @@ $subs = $block->getSubscriptions();
                         <!-- Cancel subscription column -->
                         <td>
                             <?php
-                            if (method_exists($block, 'getHeadSubscriptionIdForSubscription')) {
-                                $rootSubId = (int)$block->getHeadSubscriptionIdForSubscription($sub);
-                            } else {
-                                $rootSubId = (int)$id;
-                            }
+                            $rootSubId = (int)$block->getHeadSubscriptionIdForSubscription($sub);
                             if ($rootSubId <= 0) { $rootSubId = (int)$id; }
                             ?>
                             <?php if ($chainCancelled): ?>
@@ -277,7 +267,7 @@ $subs = $block->getSubscriptions();
             {
               "*": {
                 "Fiserv_Payments/js/view/subscription/admin-recurring": {
-                   "cancelUrl": "<?= $block->escapeJs(method_exists($block, 'getAdminCancelUrl') ? $block->getAdminCancelUrl() : $block->getUrl('fiserv/subscription/cancel')) ?>",
+                   "cancelUrl": "<?= $block->escapeJs($block->getAdminCancelUrl()) ?>",
                    "updateUrl": "<?= $block->escapeJs($block->getUrl('fiserv/subscription/updatePayment')) ?>",
                    "dataUrl": "<?= $block->escapeJs($block->getUrl('fiserv/subscription/recurringData')) ?>",
                   "searchInputId": "searchInput",

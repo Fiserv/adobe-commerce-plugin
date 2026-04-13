@@ -6,6 +6,7 @@ define([
 	'Magento_Checkout/js/model/full-screen-loader',
 	'Fiserv_Payments/js/ch-adapter',
 	'Fiserv_Payments/js/action/create-commercehub-enriched-session',
+	'Fiserv_Payments/js/model/subscription-frequency',
 	'ko'
 ], function(
 	$,
@@ -15,20 +16,10 @@ define([
 	fullScreenLoader,
 	chAdapter,
 	chSession,
+	FREQUENCY_MAP,
 	ko
 ){
-	'use_strict';
-
-	var FREQUENCY_MAP = {
-		'minute': { value: 1,  unit: 'minute'},
-		'weekly': { value: 1,  unit: 'week'},
-		'biweekly': { value: 2,  unit: 'week'},
-		'monthly': { value: 1,  unit: 'month'},
-		'2months': { value: 2,  unit: 'month'},
-		'quarterly': { value: 3,  unit: 'month'},
-		'semiannual': { value: 6,  unit: 'month'},
-		'yearly': { value: 1,  unit: 'year'}
-	};
+	'use strict';
 
 	return VaultComponent.extend({
 		defaults: { 

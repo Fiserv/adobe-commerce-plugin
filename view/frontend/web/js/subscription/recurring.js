@@ -386,7 +386,7 @@ define(['jquery', 'mage/translate'], function ($, $t) {
 
                 // Do NOT overwrite "Card used" — that always reflects the card on the transaction.
                 // The feedback message (above) shows the new pending card.
-                // The server has persisted pending_card_label to the DB so the admin page
+                // The server has persisted change_payment_card to the DB so the admin page
                 // will also see this message on its next AJAX refresh without any localStorage.
             }).catch(function (err) {
                 setFeedback(subId, (err && err.message) ? err.message : String(err), 'error');
@@ -575,10 +575,10 @@ define(['jquery', 'mage/translate'], function ($, $t) {
 
                 // ---- Payment method cell ----
                 // Latest/active row with vault tokens → full Update-card editor (matches phtml)
-                // pending_card_label (from server) drives the "Updated" feedback message —
+                // change_payment_card (from server) drives the "Updated" feedback message —
                 // server-persisted so both customer and admin pages reflect it without localStorage.
                 var paymentHtml = '';
-                var pendingLabel = (r.pending_card_label && r.is_latest) ? String(r.pending_card_label) : '';
+                var pendingLabel = (r.change_payment_card && r.is_latest) ? String(r.change_payment_card) : '';
                 if (r.status === 'active' && r.is_latest && !r.chain_cancelled && hasVaultTokens) {
                     var feedbackText = pendingLabel
                         ? (MSG.updated + ' Card number: ' + pendingLabel)

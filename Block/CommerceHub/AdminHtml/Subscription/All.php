@@ -373,12 +373,12 @@ class All extends Template
 	}
 
 	/**
-	 * Returns the pending_card_label stored on the chain-head row, or empty string.
+	 * Returns the change_payment_card stored on the chain-head row, or empty string.
 	 * Used in the admin phtml to show "Updated. Future renewals will use this card."
 	 * on initial server-render — server-persisted so it reflects changes from
 	 * both the customer and admin pages.
 	 */
-	public function getPendingCardLabelForSubscription($subscriptionRow): string
+	public function getChangePaymentCardForSubscription($subscriptionRow): string
 	{
 		if (!$subscriptionRow) {
 			return '';
@@ -405,7 +405,7 @@ class All extends Template
 				return '';
 			}
 
-			return (string)($headRow->getData('pending_card_label') ?? '');
+			return (string)($headRow->getData('change_payment_card') ?? '');
 		} catch (\Throwable) {
 			return '';
 		}

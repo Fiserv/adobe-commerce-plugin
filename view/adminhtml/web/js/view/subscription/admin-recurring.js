@@ -159,12 +159,6 @@ define(['jquery', 'mage/translate'], function ($, $t) {
             selectEl.setAttribute('data-vault-loaded', 'true');
         }
 
-        function fetchVaultTokensThenPopulate(selectEl) {
-            if (!selectEl) return;
-            // Vault tokens are server-rendered into data-vault-tokens on the select element.
-            // No AJAX needed.
-            populateVaultSelectFromData(selectEl, []);
-        }
 
         function onStatusChange(ev) {
             var sel = ev.target;
@@ -272,8 +266,8 @@ define(['jquery', 'mage/translate'], function ($, $t) {
             var selectEl = document.querySelector('.subscription-payment-select[data-subscription-id="' + subId + '"]');
             if (!selectEl) return;
 
-            if (selectEl.getAttribute('data-vault-loaded') === 'true') return;
-            fetchVaultTokensThenPopulate(selectEl);
+            // Vault tokens are server-rendered into data-vault-loaded="true" on initial page load
+            // and rebuilt from r.vault_tokens on every AJAX refresh — no additional fetch needed.
         }
 
         function onSaveCardClick(ev) {
@@ -303,7 +297,7 @@ define(['jquery', 'mage/translate'], function ($, $t) {
                 togglePaymentEditor(subId, false);
 
                 // Do NOT overwrite "Card used" — that always reflects the card on the transaction.
-                // The server has persisted pending_card_label to the DB so the customer page
+                // The server has persisted change_payment_card to the DB so the customer page
                 // will also see this message on its next AJAX refresh without any localStorage.
             }).catch(function (err) {
                 setFeedback(subId, (err && err.message) ? err.message : String(err), 'error');
@@ -509,11 +503,11 @@ define(['jquery', 'mage/translate'], function ($, $t) {
                 }
 
                 // Payment method — for the latest active row, show "Card used" plus
-                // pending_card_label feedback if the admin or customer has updated the card.
-                // pending_card_label is server-persisted so it reflects changes made on
+                // change_payment_card feedback if the admin or customer has updated the card.
+                // change_payment_card is server-persisted so it reflects changes made on
                 // either page without any localStorage.
                 var paymentHtml = '';
-                var pendingLabel = (r.pending_card_label && r.is_latest) ? String(r.pending_card_label) : '';
+                var pendingLabel = (r.change_payment_card && r.is_latest) ? String(r.change_payment_card) : '';
                 if (cardLabel !== 'N/A') {
                     paymentHtml = '<span class="subscription-payment-current"'
                         + ' data-subscription-id="' + r.subscription_id + '"'

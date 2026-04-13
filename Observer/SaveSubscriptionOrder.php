@@ -5,23 +5,22 @@ namespace Fiserv\Payments\Observer;
 
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
-use Magento\Framework\App\ResourceConnection;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 use Fiserv\Payments\Model\Subscription\Order as SubscriptionOrderModel;
 use Fiserv\Payments\Model\Subscription\OrderFactory;
 use Fiserv\Payments\Model\SubscriptionOrder\SubscriptionOrderRepository;
 use Fiserv\Payments\Observer\CommerceHub\DataAssignObserver as Keys;
+use Fiserv\Payments\Service\CronScheduler;
 
 class SaveSubscriptionOrder implements ObserverInterface
 {
 	private const SKIP_RECURRING_FLAG_KEY = 'is_recurring_order';
-	private const JOB_CODE = 'fiserv_process_subscriptions';
 
 	public function __construct(
 		private readonly OrderFactory $subscriptionOrderFactory,
 		private readonly SubscriptionOrderRepository $subscriptionOrderRepository,
 		private readonly MultiLevelLogger $logger,
-		private readonly ResourceConnection $resource
+		private readonly CronScheduler $cronScheduler
 	) {}
 
 	public function execute(Observer $observer): void
@@ -109,7 +108,7 @@ class SaveSubscriptionOrder implements ObserverInterface
 
 			// Insert a precise cron_schedule entry so ProcessSubscriptions fires
 			// exactly at next_billing_datetime — not on a constant polling loop.
-			$this->scheduleCronAt($subscription->getNextBillingDatetime(), $intervalUnit);
+			$this->cronScheduler->scheduleCronAt($subscription->getNextBillingDatetime(), $intervalUnit);
 		} catch (\Throwable $exception) {
 			$this->logger->logError(1, 'Failed creating subscription', $exception->getMessage());
 		}
@@ -118,8 +117,7 @@ class SaveSubscriptionOrder implements ObserverInterface
 	private function loadByOrderIncrement(string $orderIncrement): ?SubscriptionOrderModel
 	{
 		try {
-			$model = $this->subscriptionOrderFactory->create()->load($orderIncrement, 'order_increment_id');
-			return ($model && $model->getEntityId()) ? $model : null;
+			return $this->subscriptionOrderRepository->getByOrderIncrementId($orderIncrement) ?: null;
 		} catch (\Throwable) {
 			return null;
 		}
@@ -173,70 +171,5 @@ class SaveSubscriptionOrder implements ObserverInterface
 		return $nowUtc->format('Y-m-d H:i:s');
 	}
 
-	/**
-	 * Insert a precise cron_schedule row so ProcessSubscriptions fires at exactly
-	 * the subscription's next_billing_datetime rather than waiting for a polling sweep.
-	 *
-	 * Only done for minute-level intervals — for day/week/month/year the regular
-	 * sweeper (crontab * * * * *) combined with the next_billing_datetime <= NOW()
-	 * filter is sufficient, and Magento purges cron_schedule entries older than a
-	 * few days so a 2-week entry would be deleted before it ever fires.
-	 */
-	private function scheduleCronAt(string $nextBillingDatetime, string $intervalUnit = 'minute'): void
-	{
-		// For non-minute intervals, the per-minute sweeper handles it — skip.
-		if ($intervalUnit !== 'minute') {
-			$this->logger->logInfo(1, 'Scheduled subscription billing run (sweeper)', "next_billing_datetime: {$nextBillingDatetime}");
-			return;
-		}
-
-		try {
-			$currentUtcTime = new \DateTime('now', new \DateTimeZone('UTC'));
-			$billingDateTime = new \DateTime($nextBillingDatetime, new \DateTimeZone('UTC'));
-
-			// If already past-due (e.g. server was down), fire as soon as possible
-			if ($billingDateTime < $currentUtcTime) {
-				$billingDateTime = clone $currentUtcTime;
-			}
-
-			// Truncate to the minute floor.
-			// Only bump +1 minute if seconds >= 30 — meaning the cron runner for
-			// that minute has very likely already fired (~:03), so we'd miss it.
-			$secondsIntoMinute = (int)$billingDateTime->format('s');
-			$billingDateTime->setTime((int)$billingDateTime->format('H'), (int)$billingDateTime->format('i'), 0);
-			if ($secondsIntoMinute >= 30) {
-				$billingDateTime->modify('+1 minute');
-			}
-			$scheduledAt = $billingDateTime->format('Y-m-d H:i:s');
-
-			$connection = $this->resource->getConnection();
-			$cronTable = $this->resource->getTableName('cron_schedule');
-
-			// Guard: don't insert a duplicate for the same minute
-			$existingCount = (int)$connection->fetchOne(
-				"SELECT COUNT(*) FROM `{$cronTable}`
-				 WHERE job_code = :job_code
-				   AND scheduled_at = :scheduled_at
-				   AND status IN ('pending', 'running')",
-				[':job_code' => self::JOB_CODE, ':scheduled_at' => $scheduledAt]
-			);
-
-			if ($existingCount > 0) {
-				$this->logger->logInfo(2, 'Subscription cron entry already exists', "scheduled_at: {$scheduledAt}");
-				return;
-			}
-
-			$connection->insert($cronTable, [
-				'job_code' => self::JOB_CODE,
-				'status' => 'pending',
-				'messages' => '',
-				'created_at' => $currentUtcTime->format('Y-m-d H:i:s'),
-				'scheduled_at' => $scheduledAt,
-			]);
-
-			$this->logger->logInfo(1, 'Scheduled subscription billing run', "scheduled_at: {$scheduledAt}");
-		} catch (\Throwable $exception) {
-			$this->logger->logError(1, 'Failed to schedule subscription cron entry', $exception->getMessage());
-		}
-	}
 }
+

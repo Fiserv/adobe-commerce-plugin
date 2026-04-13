@@ -7,6 +7,7 @@ use Fiserv\Payments\Service\SubscriptionProcessor;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 use Fiserv\Payments\Model\Subscription\Order;
 use Fiserv\Payments\Model\Subscription\OrderFactory;
+use Magento\Framework\App\ResourceConnection;
 use DateTime;
 use DateTimeZone;
 use Throwable;
@@ -27,7 +28,8 @@ class ProcessSubscriptions
         private readonly CollectionFactory $collectionFactory,
         private readonly SubscriptionProcessor $subscriptionProcessor,
         private readonly MultiLevelLogger $logger,
-        private readonly OrderFactory $orderFactory
+        private readonly OrderFactory $orderFactory,
+        private readonly ResourceConnection $resource
     ) {}
 
     public function execute(): void
@@ -101,28 +103,27 @@ class ProcessSubscriptions
         }
     }
 
-    /**
-     * Silently resets any subscription rows stuck in 'processing' for more than
-     * 15 minutes back to 'active' so they can be retried on the next cron run.
-     * Runs on every execution but produces no log output unless a row is actually reset.
-     */
-    private function resetStaleProcessingRows(): void
-    {
-        try {
-            $cutoff = (new DateTime('-15 minutes', new DateTimeZone('UTC')))->format('Y-m-d H:i:s');
-            $collection = $this->collectionFactory->create();
-            $collection->addFieldToFilter('status', 'processing');
-            $collection->addFieldToFilter('updated_at', ['lt' => $cutoff]);
+	/**
+	 * Resets subscription rows stuck in 'processing' for more than 15 minutes back
+	 * to 'active' so they can be retried on the next cron run.
+	 * Uses a single SQL UPDATE instead of an ORM per-row loop for efficiency.
+	 */
+	private function resetStaleProcessingRows(): void
+	{
+		try {
+			$cutoff = (new DateTime('-15 minutes', new DateTimeZone('UTC')))->format('Y-m-d H:i:s');
+			$connection = $this->resource->getConnection();
+			$table = $this->resource->getTableName('subscription_order');
 
-            foreach ($collection as $staleSubscription) {
-                try {
-                    $this->orderFactory->create()
-                        ->load($staleSubscription->getEntityId())
-                        ->setStatus(Order::STATUS_ACTIVE)
-                        ->save();
-                    $this->logger->logInfo(2, "Reset stuck subscription to active", "ID: {$staleSubscription->getId()}");
-                } catch (Throwable $ignored) {}
-            }
-        } catch (Throwable $ignored) {}
-    }
+			$rowsReset = (int)$connection->update(
+				$table,
+				['status' => Order::STATUS_ACTIVE],
+				['status = ?' => 'processing', 'updated_at < ?' => $cutoff]
+			);
+
+			if ($rowsReset > 0) {
+				$this->logger->logInfo(2, 'Reset stuck subscriptions to active', "Count: {$rowsReset}");
+			}
+		} catch (Throwable $ignored) {}
+	}
 }

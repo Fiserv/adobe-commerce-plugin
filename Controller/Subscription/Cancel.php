@@ -119,7 +119,7 @@ class Cancel implements HttpPostActionInterface
 							) {
 								$chainRow->setStatus(SubscriptionModel::STATUS_PROCESSED);
 							}
-							$chainRow->setData('pending_card_label', null);
+							$chainRow->setData('change_payment_card', null);
 							$chainRow->save();
 							continue;
 						}

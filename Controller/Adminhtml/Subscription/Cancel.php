@@ -95,7 +95,7 @@ class Cancel extends Action implements HttpPostActionInterface
 						// Clear any pending card update label on the head row — the "Updated" notice
 						// must not remain visible once the subscription has been cancelled.
 						if ($chainRowIncrementId === $rootIncrementId) {
-							$chainRow->setData('pending_card_label', null);
+							$chainRow->setData('change_payment_card', null);
 						}
 
 						// Only cancel rows that have not already been processed or cancelled

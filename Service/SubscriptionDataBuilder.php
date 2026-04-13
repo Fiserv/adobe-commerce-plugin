@@ -87,7 +87,7 @@ class SubscriptionDataBuilder
                         $headStatusMap[$headChainKey] = (string)$headSubscription->getStatus();
                         $headIdMap[$headChainKey] = (int)$headSubscription->getId();
                         $headIsActiveMap[$headChainKey] = (int)$headSubscription->getData('is_active');
-                        $headPendingCardMap[$headChainKey] = (string)($headSubscription->getData('pending_card_label') ?? '');
+                        $headPendingCardMap[$headChainKey] = (string)($headSubscription->getData('change_payment_card') ?? '');
                     }
                 }
 
@@ -192,7 +192,7 @@ class SubscriptionDataBuilder
                 }
                 $rootSubscriptionId = $headIdMap[$normalizedChainKey] ?? $subscriptionId;
 
-                // pending_card_label: only meaningful on the chain head; propagate to all rows in the chain
+                // change_payment_card: only meaningful on the chain head; propagate to all rows in the chain
                 // so the JS can show "Updated. Future renewals will use..." on the relevant row.
                 // Clear it when the chain has been cancelled — the notice must never appear on a
                 // terminated subscription.
@@ -211,7 +211,7 @@ class SubscriptionDataBuilder
                     'is_latest' => $isLatest,
                     'is_parent' => $isParent,
                     'root_sub_id' => $rootSubscriptionId,
-                    'pending_card_label' => $pendingCardLabel,
+                    'change_payment_card' => $pendingCardLabel,
                 ];
 
                 // Admin-only fields

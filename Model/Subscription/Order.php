@@ -238,14 +238,14 @@ class Order extends AbstractModel implements SubscriptionOrderInterface
 		return $this->setData(self::IS_ACTIVE, $isActive ? 1 : 0);
 	}
 
-	public function getPendingCardLabel(): ?string
+	public function getChangePaymentCard(): ?string
 	{
-		$val = $this->getData(self::PENDING_CARD_LABEL);
+		$val = $this->getData(self::CHANGE_PAYMENT_CARD);
 		return $val !== null ? (string)$val : null;
 	}
 
-	public function setPendingCardLabel(?string $label)
+	public function setChangePaymentCard(?string $label)
 	{
-		return $this->setData(self::PENDING_CARD_LABEL, $label);
+		return $this->setData(self::CHANGE_PAYMENT_CARD, $label);
 	}
 }

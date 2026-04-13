@@ -7,12 +7,12 @@
 // file and must be set even on the order-view path which does an early return before line 85.
 $vaultListUrl = $block->getUrl('fiserv/subscription/getVaultTokens');
 
-$rows = method_exists($block, 'getPriorRecurringPayments') ? $block->getPriorRecurringPayments() : [];
-$vaultTokens = method_exists($block, 'getVaultTokens') ? (array)$block->getVaultTokens() : [];
+$rows        = $block->getPriorRecurringPayments();
+$vaultTokens = (array)$block->getVaultTokens();
 $isOrderViewPage = $block->getRequest()->getFullActionName() === 'sales_order_view';
 
 if ($isOrderViewPage):
-    $singleData = method_exists($block, 'getSingleOrderViewData') ? $block->getSingleOrderViewData() : null;
+    $singleData = $block->getSingleOrderViewData();
 ?>
     <div class="block block-order-details-view">
         <div class="block-title"><strong><?= $block->escapeHtml(__('Recurring Payment Details')) ?></strong></div>
@@ -59,12 +59,7 @@ if ($isOrderViewPage):
                             <td style="padding:8px; border-bottom:1px solid #eee;">
                                 <?php
                                 $statusDisplay = ucfirst((string)$singleData['status']);
-                                $statusColor = match(strtolower((string)$singleData['status'])) {
-                                    'processed' => '#2d7d2d',
-                                    'active' => '#1a6eaf',
-                                    'cancelled', 'canceled' => '#b00020',
-                                    default => '#555',
-                                };
+                                $statusColor   = $block->getStatusColor((string)$singleData['status']);
                                 ?>
                                 <span style="color:<?= $block->escapeHtmlAttr($statusColor) ?>; font-weight:600;">
                                     <?= $block->escapeHtml($statusDisplay) ?>
@@ -79,42 +74,17 @@ if ($isOrderViewPage):
 <?php return; endif; ?>
 
 <?php
-/* Use block-provided label/public_hash (array-first). Falls back to object getters if necessary. */
-$tokenLabel = function ($token) {
-    if (is_array($token) && !empty($token['label'])) {
-        return (string)$token['label'];
-    }
-    if (is_object($token) && method_exists($token, 'getLabel')) {
-        return (string)$token->getLabel();
-    }
-    return (string)__('Saved card');
-};
-
-$getPublicHash = function ($token) {
-    if (is_array($token) && !empty($token['public_hash'])) {
-        return (string)$token['public_hash'];
-    }
-    if (is_object($token) && method_exists($token, 'getPublicHash')) {
-        return (string)$token->getPublicHash();
-    }
-    return '';
-};
-
-$validVaultTokens = [];
-foreach ($vaultTokens as $tok) {
-    $ph = $getPublicHash($tok);
-    if ($ph !== '') {
-        $validVaultTokens[] = $tok;
-    }
-}
+// Build a filtered list of tokens that have a non-empty public_hash.
+$validVaultTokens = array_filter(
+    $vaultTokens,
+    fn($tok) => $block->getTokenPublicHash($tok) !== ''
+);
 
 // Build inline snapshot for JS (array of {public_hash,label})
-$initialVaultTokens = [];
-foreach ($validVaultTokens as $tok) {
-    $ph = $getPublicHash($tok);
-    if ($ph === '') continue;
-    $initialVaultTokens[] = ['public_hash' => $ph, 'label' => $tokenLabel($tok)];
-}
+$initialVaultTokens = array_values(array_map(
+    fn($tok) => ['public_hash' => $block->getTokenPublicHash($tok), 'label' => $block->getTokenLabel($tok)],
+    $validVaultTokens
+));
 $initialVaultTokensJson = json_encode(
         $initialVaultTokens,
         JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP
@@ -188,41 +158,17 @@ $initialVaultTokensJson = json_encode(
 
                 $subId = (int)($sub->getEntityId() ?: 0);
 
-                $latestSubId = method_exists($block, 'getLatestSubscriptionIdByChain')
-                    ? (int)$block->getLatestSubscriptionIdByChain($sub)
-                    : 0;
-                $isLatestRow = ($latestSubId > 0 && $subId === $latestSubId);
-                $chainCancelled = method_exists($block, 'getChainCancelledForSubscription')
-                    ? (bool)$block->getChainCancelledForSubscription($sub)
-                    : false;
+                $latestSubId  = (int)$block->getLatestSubscriptionIdByChain($sub);
+                $isLatestRow  = ($latestSubId > 0 && $subId === $latestSubId);
+                $chainCancelled = (bool)$block->getChainCancelledForSubscription($sub);
 
-                // Display logic:
-                // - If the chain is cancelled, leave status as-is (cancelled/processed).
-                // - The parent (FIRST) row shows 'Processed' once it has at least one child renewal,
-                //   because the original auth has completed. It only shows 'Active' when it is still
-                //   the newest row (i.e., no renewals have run yet).
-                // - The latest SUBSEQUENT row gets 'Active' to indicate the subscription is ongoing.
-                if (!$chainCancelled && $statusLower !== 'cancelled') {
-                    if ($isLatestRow && !$isParentOrder) {
-                        // Latest child row → show Active badge
-                        $statusLower = 'active';
-                    } elseif ($isLatestRow && $isParentOrder) {
-                        // Parent IS the latest (no children yet) → show Active to signal subscription is live
-                        $statusLower = 'active';
-                    } elseif (!$isLatestRow && $isParentOrder) {
-                        // Parent has children → its auth is done, show Processed
-                        $statusLower = 'processed';
-                    }
-                }
+                // Display status — business rule lives in the Block, not the template.
+                $statusLower = $block->getDisplayStatus($sub, $isLatestRow, $isParentOrder, $chainCancelled);
 
-                $headHash = '';
-                if (method_exists($block, 'getHeadPublicHashForSubscription')) {
-                    try {
-                        $headHash = (string)$block->getHeadPublicHashForSubscription($sub);
-                    } catch (\Exception $e) {
-                        $headHash = '';
-                    }
-                }
+                $headHash      = (string)$block->getHeadPublicHashForSubscription($sub);
+
+                // Card label — token parsing logic lives in the Block, not the template.
+                $currentCardLabel = $block->getCardLabel($sub, $order);
                 ?>
                 <tr class="recurring-row"
                     data-subscription-id="<?= (int)$subId ?>"
@@ -269,48 +215,6 @@ $initialVaultTokensJson = json_encode(
 
                     <!-- Payment method + Update card -->
                     <td style="padding:8px; border-bottom:1px solid #f5f5f5;">
-                        <?php
-                        // Resolve card label for ALL rows (active or not)
-                        $currentCardLabel = '';
-                        $txnLast4 = '';
-                        $rawToken = '';
-
-                        // 1) Prefer Magento order payment_token (only if the order exists)
-                        if ($order && $order->getPayment()) {
-                            $ai = (array)$order->getPayment()->getAdditionalInformation();
-                            $rawToken = (string)($ai['payment_token'] ?? '');
-                        }
-
-                        // 2) Fallback: subscription_order.payment_token
-                        if ($rawToken === '') {
-                            try {
-                                $rawToken = (string)($sub->getPaymentToken() ?? '');
-                            } catch (\Throwable $e) {
-                                $rawToken = '';
-                            }
-                        }
-
-                        if ($rawToken !== '') {
-                            $tokenPart = explode('$$TS$$=', $rawToken, 2)[0];
-                            $digits = preg_replace('/\D+/', '', $tokenPart);
-                            $txnLast4 = $digits ? substr($digits, -4) : '';
-                        }
-
-                        if ($txnLast4 !== '') {
-                            $currentCardLabel = '************' . $txnLast4;
-                        } elseif ($headHash !== '') {
-                            foreach ($validVaultTokens as $tokTmp) {
-                                if ($getPublicHash($tokTmp) === $headHash) {
-                                    $currentCardLabel = $tokenLabel($tokTmp);
-                                    break;
-                                }
-                            }
-                        }
-
-                        if ($currentCardLabel === '') {
-                            $currentCardLabel = '';
-                        }
-                        ?>
                         <?php if ($statusLower === 'active' && $subId > 0): ?>
                             <?php if (!empty($validVaultTokens)): ?>
                                 <div class="subscription-payment-wrapper"
@@ -339,11 +243,11 @@ $initialVaultTokensJson = json_encode(
                                                 aria-label="<?= $block->escapeHtmlAttr(__('Select payment method for subscription %1', $inc)) ?>">
                                             <option value=""><?= $block->escapeHtml(__('Select a saved card')) ?></option>
                                             <?php foreach ($validVaultTokens as $tok):
-                                                $ph = $getPublicHash($tok);
+                                                $ph = $block->getTokenPublicHash($tok);
                                                 if ($ph === '') continue;
                                                 ?>
                                                 <option value="<?= $block->escapeHtmlAttr($ph) ?>">
-                                                    <?= $block->escapeHtml($tokenLabel($tok)) ?>
+                                                    <?= $block->escapeHtml($block->getTokenLabel($tok)) ?>
                                                 </option>
                                             <?php endforeach; ?>
                                         </select>
@@ -363,20 +267,16 @@ $initialVaultTokensJson = json_encode(
 
                                     <span class="subscription-update-feedback"
                                           data-subscription-id="<?= (int)$subId ?>"
-                                          style="font-size:12px;<?php
-                                          // Show pending_card_label from the head row if set
-                                          // This is server-persisted so it's visible on both customer and admin pages
-                                          $headSub = method_exists($block, 'getHeadSubscriptionForSubscription')
-                                              ? $block->getHeadSubscriptionForSubscription($sub)
-                                              : null;
-                                          $pendingCardLabel = ($headSub && method_exists($headSub, 'getPendingCardLabel'))
-                                              ? (string)($headSub->getPendingCardLabel() ?? '')
+                                          <?php
+                                          $headSub = $block->getHeadSubscriptionForSubscription($sub);
+                                          $changePaymentCard = ($headSub && method_exists($headSub, 'getChangePaymentCard'))
+                                              ? (string)($headSub->getChangePaymentCard() ?? '')
                                               : '';
-                                          echo $pendingCardLabel !== '' ? ' color:#0a7a0a;' : '';
-                                          ?>">
-                                        <?php if ($pendingCardLabel !== ''): ?>
+                                          echo $changePaymentCard !== '' ? ' color:#0a7a0a;' : '';
+                                          ?>
+                                        <?php if ($changePaymentCard !== ''): ?>
                                             <?= $block->escapeHtml(__('Updated. Future renewals will use this card.')) ?>
-                                            <?= $block->escapeHtml(__('Card number: %1', $pendingCardLabel)) ?>
+                                            <?= $block->escapeHtml(__('Card number: %1', $changePaymentCard)) ?>
                                         <?php endif; ?>
                                     </span>
                                 </div>
@@ -394,10 +294,7 @@ $initialVaultTokensJson = json_encode(
 
                     <td style="padding:8px; border-bottom:1px solid #f5f5f5;">
                         <?php
-                        // Parent (FIRST) rows: show created_at + interval (the original first scheduled time).
-                        // This is stable — it represents when -1 was first due.
-                        // Child rows: show their own next_billing_datetime (when their successor runs).
-                        if ($isParentOrder && method_exists($block, 'getFirstNextBillingForHead')) {
+                        if ($isParentOrder) {
                             $displayNextBilling = $block->getFirstNextBillingForHead($sub);
                             if ($displayNextBilling === '') {
                                 $displayNextBilling = $nextBilling;
@@ -411,9 +308,7 @@ $initialVaultTokensJson = json_encode(
 
                     <td style="padding:8px; border-bottom:1px solid #f5f5f5;">
                         <?php
-                        $rootSubId = method_exists($block, 'getHeadSubscriptionIdForSubscription')
-                                ? (int)$block->getHeadSubscriptionIdForSubscription($sub)
-                                : 0;
+                        $rootSubId = (int)$block->getHeadSubscriptionIdForSubscription($sub);
                         if ($rootSubId <= 0) { $rootSubId = (int)$subId; }
                         ?>
                         <?php if ($chainCancelled): ?>

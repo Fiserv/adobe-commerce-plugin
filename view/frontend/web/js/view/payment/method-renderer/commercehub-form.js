@@ -18,6 +18,7 @@ define(
 		'Magento_Checkout/js/model/full-screen-loader',
 		'Magento_Checkout/js/model/payment/additional-validators',
 		'Fiserv_Payments/js/action/modify-requirejs',
+		'Fiserv_Payments/js/model/subscription-frequency',
 		'ko',
 		'mage/translate',
 		'domReady!'
@@ -35,20 +36,10 @@ define(
 		fullScreenLoader,
 		additionalValidators,
 		modifyRequirejs,
+		FREQUENCY_MAP,
 		ko,
 		$t
 	) {
-
-		var FREQUENCY_MAP = {
-			'minute': { value: 1,  unit: 'minute' },
-			'weekly': { value: 1,  unit: 'week'   },
-			'biweekly': { value: 2,  unit: 'week'   },
-			'monthly': { value: 1,  unit: 'month'  },
-			'2months': { value: 2,  unit: 'month'  },
-			'quarterly': { value: 3,  unit: 'month'  },
-			'semiannual': { value: 6,  unit: 'month'  },
-			'yearly': { value: 1,  unit: 'year'   }
-		};
 		'use strict';
 
 		return Component.extend({
@@ -330,16 +321,21 @@ define(
 					data['additional_data']['3DSecureId'] = this.paymentPayload.threeDSecureId;
 				}
 
-				data['additional_data'] = _.extend(data['additional_data'], this.additionalData);
-				this.vaultEnabler.visitAdditionalData(data);
+					data['additional_data'] = _.extend(data['additional_data'], this.additionalData);
 
-				// Inject subscription data when the customer has opted in
+				// Inject subscription data when the customer has opted in.
+				// Must happen BEFORE visitAdditionalData so the vault enabler sees
+				// isActivePaymentTokenEnabler = true when it writes the tokenization flag.
 				if (this.isSubscriptionEnabled()) {
 					var freq = FREQUENCY_MAP[this.selectedFrequency()] || { value: 1, unit: 'month' };
 					data['additional_data']['is_subscription'] = true;
 					data['additional_data']['subscription_interval_value'] = freq.value;
 					data['additional_data']['subscription_interval_unit'] = freq.unit;
+					// Guarantee vault is enabled so the card is tokenized for future renewals.
+					this.vaultEnabler.isActivePaymentTokenEnabler(true);
 				}
+
+				this.vaultEnabler.visitAdditionalData(data);
 
 				return data;
 			},

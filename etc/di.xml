@@ -456,10 +456,9 @@
 			<argument name="commandPool" xsi:type="object">FiservCommerceHubCommandPool</argument>
 			<argument name="paymentDataObjectFactory" xsi:type="object">Magento\Payment\Gateway\Data\PaymentDataObjectFactory</argument>
 			<argument name="logger" xsi:type="object">Fiserv\Payments\Logger\MultiLevelLogger</argument>
+			<argument name="orderPaymentContextBuilder" xsi:type="object">Fiserv\Payments\Service\OrderPaymentContextBuilder</argument>
 			<argument name="extensionAttributesFactory" xsi:type="object">Magento\Framework\Api\ExtensionAttributesFactory</argument>
-			<argument name="orderFactory" xsi:type="object">Magento\Sales\Model\OrderFactory</argument>
-			<argument name="orderPaymentFactory" xsi:type="object">Magento\Sales\Model\Order\PaymentFactory</argument>
-			<argument name="orderAddressFactory" xsi:type="object">Magento\Sales\Model\Order\AddressFactory</argument>
+			<argument name="tokenDetailsParser" xsi:type="object">Fiserv\Payments\Service\VaultTokenDetailsParser</argument>
 		</arguments>
 	</type>
 
@@ -468,19 +467,17 @@
 		<arguments>
 			<argument name="subscriptionRepository" xsi:type="object">Fiserv\Payments\Model\SubscriptionOrder\SubscriptionOrderRepository</argument>
 			<argument name="orderRepository" xsi:type="object">Magento\Sales\Api\OrderRepositoryInterface</argument>
-
-			<!-- NEW: Magento core reorder service -->
 			<argument name="magentoReorder" xsi:type="object">Magento\Sales\Model\Reorder\Reorder</argument>
-
 			<argument name="paymentProcessor" xsi:type="object">Fiserv\Payments\Service\PaymentProcessor</argument>
 			<argument name="logger" xsi:type="object">Fiserv\Payments\Logger\MultiLevelLogger</argument>
 			<argument name="searchCriteriaBuilder" xsi:type="object">Magento\Framework\Api\SearchCriteriaBuilder</argument>
 			<argument name="paymentTokenManagement" xsi:type="object">Magento\Vault\Api\PaymentTokenManagementInterface</argument>
 			<argument name="quoteRepository" xsi:type="object">Magento\Quote\Api\CartRepositoryInterface</argument>
 			<argument name="extensionAttributesFactory" xsi:type="object">Magento\Framework\Api\ExtensionAttributesFactory</argument>
-			<argument name="subscriptionOrderFactory" xsi:type="object">Fiserv\Payments\Model\Subscription\OrderFactory</argument>
-			<!-- NEW: submit quote to order (replaces OrderReplicator::createOrderFromQuote) -->
 			<argument name="quoteManagement" xsi:type="object">Magento\Quote\Model\QuoteManagement</argument>
+			<argument name="resource" xsi:type="object">Magento\Framework\App\ResourceConnection</argument>
+			<argument name="cronScheduler" xsi:type="object">Fiserv\Payments\Service\CronScheduler</argument>
+			<argument name="tokenDetailsParser" xsi:type="object">Fiserv\Payments\Service\VaultTokenDetailsParser</argument>
 		</arguments>
 	</type>
 
@@ -500,6 +497,8 @@
 			<argument name="collectionFactory" xsi:type="object">Fiserv\Payments\Model\ResourceModel\Subscription\Order\CollectionFactory</argument>
 			<argument name="subscriptionProcessor" xsi:type="object">Fiserv\Payments\Service\SubscriptionProcessor</argument>
 			<argument name="logger" xsi:type="object">Fiserv\Payments\Logger\MultiLevelLogger</argument>
+			<argument name="orderFactory" xsi:type="object">Fiserv\Payments\Model\Subscription\OrderFactory</argument>
+			<argument name="resource" xsi:type="object">Magento\Framework\App\ResourceConnection</argument>
 		</arguments>
 	</type>
 
