@@ -285,8 +285,9 @@ define([
                 this.onPazeSuccess(result, submitResult);
 
             } catch (error) {
-                console.error('[Paze] Error in Paze payment flow:', error);
-                globalMessageList.addErrorMessage({ message: $t('Paze payment error: ') + (error.message || error) });
+                if (error?.message !== 'INCOMPLETE' && error?.description !== 'Paze operation cancelled') {
+			globalMessageList.addErrorMessage({ message: $t('Paze payment error: ') + (error.message || error) });
+		}
             } finally {
                 fullScreenLoader.stopLoader();
             }
