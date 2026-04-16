@@ -9,7 +9,7 @@
 			<argument name="infoBlockType" xsi:type="string">Fiserv\Payments\Block\CommerceHub\Info</argument>
 			<argument name="valueHandlerPool" xsi:type="object">FiservCommerceHubValueHandlerPool</argument>
 			<argument name="validatorPool" xsi:type="object">FiservCommerceHubValidatorPool</argument>
-			<argument name="commandPool" xsi:type="object">FiservCommerceHubCommandPool</argument>
+			<argument name="commandPool" xsi:type="object">FiservCommerceHubCardCommandPool</argument>
 		</arguments>
 	</virtualType>
 
@@ -100,6 +100,22 @@
 		</arguments>
 	</virtualType>
 
+	<virtualType name="FiservCommerceHubCardCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
+		<arguments>
+			<argument name="commands" xsi:type="array">
+				<item name="authorize" xsi:type="string">FiservCommerceHubCardAuthorizeCommand</item>
+				<item name="capture" xsi:type="string">FiservCommerceHubCardCaptureCommand</item>
+				<item name="sale" xsi:type="string">FiservCommerceHubCardSaleCommand</item>
+				<item name="settle" xsi:type="string">FiservCommerceHubSettleCommand</item>
+				<item name="vault_authorize" xsi:type="string">FiservCommerceHubVaultAuthorizeCommand</item>
+				<item name="vault_sale" xsi:type="string">FiservCommerceHubVaultSaleCommand</item>
+				<item name="refund" xsi:type="string">FiservCommerceHubRefundCommand</item>
+				<item name="void" xsi:type="string">FiservCommerceHubCancelCommand</item>
+				<item name="cancel" xsi:type="string">FiservCommerceHubCancelCommand</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
 	<!-- Vault Command Managers -->
 	<virtualType name="FiservCommerceHubCommandManager" type="Magento\Payment\Gateway\Command\CommandManager">
 		<arguments>
@@ -107,16 +123,52 @@
 		</arguments>
 	</virtualType>
 
+	<virtualType name="FiservCommerceHubCardCommandManager" type="Magento\Payment\Gateway\Command\CommandManager">
+		<arguments>
+			<argument name="commandPool" xsi:type="object">FiservCommerceHubCardCommandPool</argument>
+		</arguments>
+	</virtualType>
+
 	<type name="Magento\Payment\Gateway\Command\CommandManagerPool">
 		<arguments>
 			<argument name="executors" xsi:type="array">
-				<item name="fiserv_commercehub" xsi:type="string">FiservCommerceHubCommandManager</item>
+				<item name="fiserv_commercehub" xsi:type="string">FiservCommerceHubCardCommandManager</item>
 				<item name="fiserv_applepay" xsi:type="string">FiservCommerceHubCommandManager</item>
 				<item name="fiserv_samsung_pay" xsi:type="string">FiservCommerceHubCommandManager</item>
 				<item name="fiserv_ach" xsi:type="string">FiservAchCommandManager</item>
 			</argument>
 		</arguments>
 	</type>
+
+	<virtualType name="FiservCommerceHubCardCaptureCommand" type="Fiserv\Payments\Gateway\Command\CommerceHub\CaptureStrategyCommand">
+		<arguments>
+			<argument name="commandPool" xsi:type="object">FiservCommerceHubCardCommandPool</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservCommerceHubCardAuthorizeCommand" type="Fiserv\Payments\Gateway\Command\CommerceHub\PreVerificationCommand">
+		<arguments>
+			<argument name="verificationCommand" xsi:type="object">FiservCommerceHubVerificationCommand</argument>
+			<argument name="paymentCommand" xsi:type="object">FiservCommerceHubAuthorizeCommand</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservCommerceHubCardSaleCommand" type="Fiserv\Payments\Gateway\Command\CommerceHub\PreVerificationCommand">
+		<arguments>
+			<argument name="verificationCommand" xsi:type="object">FiservCommerceHubVerificationCommand</argument>
+			<argument name="paymentCommand" xsi:type="object">FiservCommerceHubSaleCommand</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservCommerceHubVerificationCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+		<arguments>
+			<argument name="requestBuilder" xsi:type="object">FiservCommerceHubVerificationRequest</argument>
+			<argument name="transferFactory" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\TransferFactory</argument>
+			<argument name="client" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient</argument>
+			<argument name="validator" xsi:type="object">Fiserv\Payments\Gateway\Validator\CommerceHub\VerificationResponseValidator</argument>
+			<argument name="errorMessageMapper" xsi:type="object">Fiserv\Payments\Gateway\ErrorMapper\CommerceHub\VirtualErrorMessageMapper</argument>
+		</arguments>
+	</virtualType>
 
 	<virtualType name="FiservCommerceHubAuthorizeCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
 		<arguments>
@@ -227,6 +279,15 @@
 				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
 				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
 				<item name="3ds_data" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\ThreeDSecureDataBuilder</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservCommerceHubVerificationRequest" type="Fiserv\Payments\Gateway\Request\CommerceHub\Composite\SessionVerificationComposite">
+		<arguments>
+			<argument name="builders" xsi:type="array">
+				<item name="source" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\SessionSourceDataBuilder</item>
+				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
 			</argument>
 		</arguments>
 	</virtualType>
