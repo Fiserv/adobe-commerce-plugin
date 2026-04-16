@@ -2,6 +2,7 @@
 
 <mapping xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Payment:etc/error_mapping.xsd">
 	<message_list>
+		<message code="ACCOUNT-VERIFICATION-FAILED" translate="true">Unable to process payment. Please check your details or try a different payment method.</message>
 		<message code="PIN-ONLY-AUTH-ERROR" translate="true">PIN-only debit cards are only allowed for card-present purchases.</message>
 	</message_list>
 </mapping>
