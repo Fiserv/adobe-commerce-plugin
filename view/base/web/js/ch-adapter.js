@@ -166,10 +166,6 @@ define([
 		 * Instantiates CommerceHub iframe
 		 * from provide script element
 		 */
-		/**
-		 * Instantiates CommerceHub iframe
-		 * from provide script element
-		 */
 		instantiateIframe: function (
 			loadSuccessCb, 
 			loadErrorCb,
@@ -179,14 +175,28 @@ define([
 			let formConfig = this.buildFormConfig();
 
 			if (configData) {
+				let configDataToMerge = { ...configData };
+				delete configDataToMerge.data;
 				formConfig = {
 					...formConfig,
-					...configData,
+					...configDataToMerge,
 					data: {
 						...(formConfig.data || {}),
-						...((configData && configData.data) || {}),
+						...((configData && typeof configData.data === 'object' && configData.data) || {}),
 					},
 				};
+			}
+
+			if (!formConfig.data || typeof formConfig.data !== 'object') {
+				formConfig.data = {};
+			}
+
+			if (!formConfig.data.environment) {
+				formConfig.data.environment =
+					this.config[this.environmentKey] ||
+					(window.checkoutConfig && window.checkoutConfig.payment && window.checkoutConfig.payment.fiserv_payments ?
+						window.checkoutConfig.payment.fiserv_payments.environment :
+						undefined);
 			}
 
 			if (!formConfig.data) {
@@ -238,7 +248,6 @@ define([
 					console.log(data);
 					loadErrorCb(data);
 				});
-
 		},
 
 		 /**

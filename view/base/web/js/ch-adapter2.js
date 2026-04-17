@@ -213,7 +213,7 @@ define([
 
 		buildFormConfig: function (formData, paymentMethod) {
 			let formConfig = {
-				"data" : formData.config[this.formConfigKey], 
+				"data" : { ...(formData.config[this.formConfigKey] || {}) }, 
 				"hooks" : {
 					"onFormValid" : () => { formData.iframeValidCallback(true);  },
 					"onFormNoLongerValid" : () => { formData.iframeValidCallback(false);  },
