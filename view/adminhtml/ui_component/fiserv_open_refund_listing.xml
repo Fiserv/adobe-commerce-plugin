@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<listing xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="urn:magento:framework:Ui/etc/ui_configuration.xsd">
+
+    <argument name="data" xsi:type="array">
+        <item name="js_config" xsi:type="array">
+            <item name="provider" xsi:type="string">fiserv_open_refund_listing.fiserv_open_refund_listing_data_source</item>
+        </item>
+    </argument>
+
+    <settings>
+        <buttons>
+            <button name="add">
+                <url path="fiserv/openRefund/edit"/>
+                <class>primary</class>
+                <label translate="true">Create New Open Refund</label>
+            </button>
+        </buttons>
+        <spinner>fiserv_open_refund_listing_columns</spinner>
+        <deps>
+            <dep>fiserv_open_refund_listing.fiserv_open_refund_listing_data_source</dep>
+        </deps>
+    </settings>
+
+    <dataSource name="fiserv_open_refund_listing_data_source" component="Magento_Ui/js/grid/provider">
+        <settings>
+            <storageConfig>
+                <param name="indexField" xsi:type="string">entity_id</param>
+            </storageConfig>
+            <updateUrl path="mui/index/render"/>
+        </settings>
+        <aclResource>Fiserv_Payments::open_refunds</aclResource>
+        <dataProvider class="Fiserv\Payments\Model\Ui\OpenRefund\ListingDataProvider"
+                      name="fiserv_open_refund_listing_data_source">
+            <settings>
+                <requestFieldName>entity_id</requestFieldName>
+                <primaryFieldName>entity_id</primaryFieldName>
+            </settings>
+        </dataProvider>
+    </dataSource>
+
+    <listingToolbar name="listing_top">
+        <settings>
+            <sticky>true</sticky>
+        </settings>
+        <bookmark name="bookmarks"/>
+        <columnsControls name="columns_controls"/>
+        <filters name="listing_filters"/>
+        <paging name="listing_paging"/>
+        <exportButton name="export_button"/>
+    </listingToolbar>
+
+    <columns name="fiserv_open_refund_listing_columns">
+        <column name="entity_id">
+            <settings>
+                <filter>false</filter>
+                <label translate="true">ID</label>
+                <sorting>asc</sorting>
+            </settings>
+        </column>
+        <column name="created_at" class="Magento\Ui\Component\Listing\Columns\Date"
+                component="Magento_Ui/js/grid/columns/date">
+            <settings>
+                <filter>dateRange</filter>
+                <label translate="true">Created At</label>
+                <dataType>date</dataType>
+            </settings>
+        </column>
+        <column name="customer_name">
+            <settings>
+                <filter>text</filter>
+                <label translate="true">Customer Name</label>
+            </settings>
+        </column>
+        <column name="customer_email">
+            <settings>
+                <filter>text</filter>
+                <label translate="true">Customer Email</label>
+            </settings>
+        </column>
+        <column name="amount">
+            <settings>
+                <filter>text</filter>
+                <label translate="true">Amount</label>
+            </settings>
+        </column>
+        <column name="currency_code">
+            <settings>
+                <filter>text</filter>
+                <label translate="true">Currency</label>
+            </settings>
+        </column>
+        <column name="masked_card">
+            <settings>
+                <filter>false</filter>
+                <label translate="true">Card (Last 4)</label>
+            </settings>
+        </column>
+        <column name="status" component="Magento_Ui/js/grid/columns/select">
+            <settings>
+                <filter>select</filter>
+                <dataType>select</dataType>
+                <label translate="true">Status</label>
+                <options class="Fiserv\Payments\Model\Source\OpenRefund\Status"/>
+            </settings>
+        </column>
+        <column name="transaction_id">
+            <settings>
+                <filter>text</filter>
+                <label translate="true">Transaction ID</label>
+            </settings>
+        </column>
+        <column name="reference_transaction_id">
+            <settings>
+                <filter>text</filter>
+                <label translate="true">Reference Transaction ID</label>
+            </settings>
+        </column>
+    </columns>
+
+</listing>
+

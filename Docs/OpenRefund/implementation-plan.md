@@ -233,7 +233,7 @@ Two levels:
 
 ---
 
-### Step 7 — Admin UI — Grid
+### Step 7 — Admin UI — Grid ✅ Done
 
 **Goal:** A dashboard that lists all open refund records with filtering, sorting, and export.
 
@@ -532,7 +532,7 @@ Only additions required:
 ### PHP — UI Data Providers
 | File | Purpose |
 |---|---|
-| `Model/Ui/OpenRefund/ListingDataProvider.php` | Grid data source |
+| `Model/Ui/OpenRefund/ListingDataProvider.php` | Grid data source ✅ |
 | `Model/Ui/OpenRefund/FormDataProvider.php` | Form data source (create + edit) |
 | `Model/Ui/OpenRefund/CustomerOptions.php` | Customer select options |
 | `Model/Ui/OpenRefund/CustomerTokenOptions.php` | Token select — initial empty state |
@@ -549,14 +549,14 @@ Only additions required:
 | File | Purpose |
 |---|---|
 | `Model/Service/OpenRefundService.php` | Orchestrates submit: validation → source → API → persist |
-| `Block/Adminhtml/OpenRefund/CreateButton.php` | "Create New Open Refund" page header button |
+| `Block/Adminhtml/OpenRefund/CreateButton.php` | "Create New Open Refund" page header button ✅ |
 
 ### View — Adminhtml
 | File | Purpose |
 |---|---|
-| `view/adminhtml/layout/fiserv_openrefund_index.xml` | Grid page layout |
+| `view/adminhtml/layout/fiserv_openrefund_index.xml` | Grid page layout ✅ |
 | `view/adminhtml/layout/fiserv_openrefund_edit.xml` | Form page layout |
-| `view/adminhtml/ui_component/fiserv_open_refund_listing.xml` | Grid UI definition |
+| `view/adminhtml/ui_component/fiserv_open_refund_listing.xml` | Grid UI definition ✅ |
 | `view/adminhtml/ui_component/fiserv_open_refund_form.xml` | Form UI definition |
 | `view/adminhtml/templates/open-refund/hosted-fields.phtml` | Hosted field containers + JS init |
 | `view/adminhtml/web/js/open-refund/form.js` | Customer→token AJAX, source toggle, submit intercept |
