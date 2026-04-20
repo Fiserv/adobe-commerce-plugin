@@ -232,10 +232,17 @@ class ConfigProvider implements ConfigProviderInterface
 			$fieldsConfig["securityCode"]["masking"]["mode"] = MaskingModeCvv::NO_MASK;
 		}
 
+		$optionLabels = json_decode($expMonthConfig[$this->config::KEY_SDC_OPTION_LABELS] ?? '[]', true);
+		if (!is_array($optionLabels)) {
+			$optionLabels = [];
+		}
+		// Force sequential array output so JS receives an Array (not an Object) for SDK iteration.
+		$optionLabels = array_values($optionLabels);
+
 		$fieldsConfig["expirationMonth"] = array(
 			"parentElementId" => $expMonthConfig[$this->config::KEY_SDC_PARENT_ELEMENT],
 			"placeholder" => $expMonthConfig[$this->config::KEY_SDC_PLACEHOLDER],
-			"optionLabels" => json_decode($expMonthConfig[$this->config::KEY_SDC_OPTION_LABELS] ?? "{}"),			
+			"optionLabels" => $optionLabels,
 		);
 		
 		$fieldsConfig["expirationYear"] = array(
