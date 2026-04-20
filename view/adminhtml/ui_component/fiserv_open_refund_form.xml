@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Ui:etc/ui_configuration.xsd">
+
+    <argument name="data" xsi:type="array">
+        <item name="js_config" xsi:type="array">
+            <item name="provider" xsi:type="string">fiserv_open_refund_form.fiserv_open_refund_form_data_source</item>
+        </item>
+        <item name="label" xsi:type="string" translate="true">New Open Refund</item>
+        <item name="template" xsi:type="string">templates/form/collapsible</item>
+    </argument>
+
+    <settings>
+        <buttons>
+            <button name="back">
+                <url path="fiserv/openRefund/index"/>
+                <class>back</class>
+                <label translate="true">Back</label>
+            </button>
+            <button name="save">
+                <url path="fiserv/openRefund/save"/>
+                <class>save primary</class>
+                <label translate="true">Submit Refund</label>
+            </button>
+        </buttons>
+        <namespace>fiserv_open_refund_form</namespace>
+        <dataScope>data</dataScope>
+        <deps>
+            <dep>fiserv_open_refund_form.fiserv_open_refund_form_data_source</dep>
+        </deps>
+    </settings>
+
+    <dataSource name="fiserv_open_refund_form_data_source">
+        <argument name="data" xsi:type="array">
+            <item name="js_config" xsi:type="array">
+                <item name="component" xsi:type="string">Magento_Ui/js/form/provider</item>
+            </item>
+        </argument>
+        <settings>
+            <submitUrl path="fiserv/openRefund/save"/>
+        </settings>
+        <aclResource>Fiserv_Payments::open_refunds_manage</aclResource>
+        <dataProvider class="Fiserv\Payments\Model\Ui\OpenRefund\FormDataProvider"
+                      name="fiserv_open_refund_form_data_source">
+            <settings>
+                <requestFieldName>entity_id</requestFieldName>
+                <primaryFieldName>entity_id</primaryFieldName>
+            </settings>
+        </dataProvider>
+    </dataSource>
+
+    <!-- ═══════════════════════════════════════════════════════
+         Fieldset 1 — Refund Details
+    ═══════════════════════════════════════════════════════ -->
+    <fieldset name="refund_details">
+        <settings>
+            <label translate="true">Refund Details</label>
+            <collapsible>false</collapsible>
+        </settings>
+
+        <field name="customer_id" formElement="select">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="source" xsi:type="string">refund_details</item>
+                </item>
+            </argument>
+            <settings>
+                <label translate="true">Customer</label>
+                <dataType>text</dataType>
+                <dataScope>customer_id</dataScope>
+                <validation>
+                    <rule name="required-entry" xsi:type="boolean">true</rule>
+                </validation>
+            </settings>
+            <formElements>
+                <select>
+                    <settings>
+                        <options class="Fiserv\Payments\Model\Ui\OpenRefund\CustomerOptions"/>
+                    </settings>
+                </select>
+            </formElements>
+        </field>
+
+        <field name="amount" formElement="input">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="source" xsi:type="string">refund_details</item>
+                </item>
+            </argument>
+            <settings>
+                <label translate="true">Amount</label>
+                <dataType>number</dataType>
+                <dataScope>amount</dataScope>
+                <validation>
+                    <rule name="required-entry" xsi:type="boolean">true</rule>
+                    <rule name="validate-number" xsi:type="boolean">true</rule>
+                    <rule name="validate-greater-than-zero" xsi:type="boolean">true</rule>
+                </validation>
+            </settings>
+        </field>
+
+        <field name="currency_code" formElement="select">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="source" xsi:type="string">refund_details</item>
+                </item>
+            </argument>
+            <settings>
+                <label translate="true">Currency</label>
+                <dataType>text</dataType>
+                <dataScope>currency_code</dataScope>
+                <validation>
+                    <rule name="required-entry" xsi:type="boolean">true</rule>
+                </validation>
+            </settings>
+            <formElements>
+                <select>
+                    <settings>
+                        <options>
+                            <option name="usd" xsi:type="array">
+                                <item name="value" xsi:type="string">USD</item>
+                                <item name="label" xsi:type="string" translate="true">USD</item>
+                            </option>
+                            <option name="cad" xsi:type="array">
+                                <item name="value" xsi:type="string">CAD</item>
+                                <item name="label" xsi:type="string" translate="true">CAD</item>
+                            </option>
+                        </options>
+                    </settings>
+                </select>
+            </formElements>
+        </field>
+
+        <field name="reference_transaction_id" formElement="input">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="source" xsi:type="string">refund_details</item>
+                </item>
+            </argument>
+            <settings>
+                <label translate="true">Reference Transaction ID</label>
+                <dataType>text</dataType>
+                <dataScope>reference_transaction_id</dataScope>
+                <tooltip>
+                    <description translate="true">Optional. Provide a prior transaction ID for audit trail purposes.</description>
+                </tooltip>
+            </settings>
+        </field>
+
+        <field name="notes" formElement="textarea">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="source" xsi:type="string">refund_details</item>
+                </item>
+            </argument>
+            <settings>
+                <label translate="true">Notes</label>
+                <dataType>text</dataType>
+                <dataScope>notes</dataScope>
+            </settings>
+        </field>
+    </fieldset>
+
+    <!-- ═══════════════════════════════════════════════════════
+         Fieldset 2 — Payment Source
+    ═══════════════════════════════════════════════════════ -->
+    <fieldset name="payment_source">
+        <settings>
+            <label translate="true">Payment Source</label>
+            <collapsible>false</collapsible>
+        </settings>
+
+        <field name="payment_source_type" formElement="select">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="source" xsi:type="string">payment_source</item>
+                </item>
+            </argument>
+            <settings>
+                <label translate="true">Payment Method</label>
+                <dataType>text</dataType>
+                <dataScope>payment_source_type</dataScope>
+                <validation>
+                    <rule name="required-entry" xsi:type="boolean">true</rule>
+                </validation>
+            </settings>
+            <formElements>
+                <select>
+                    <settings>
+                        <options>
+                            <option name="vault" xsi:type="array">
+                                <item name="value" xsi:type="string">vault</item>
+                                <item name="label" xsi:type="string" translate="true">Use Saved Card</item>
+                            </option>
+                            <option name="new_card" xsi:type="array">
+                                <item name="value" xsi:type="string">new_card</item>
+                                <item name="label" xsi:type="string" translate="true">Enter New Card</item>
+                            </option>
+                        </options>
+                    </settings>
+                </select>
+            </formElements>
+        </field>
+
+        <field name="vault_token_hash" formElement="select">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="source" xsi:type="string">payment_source</item>
+                </item>
+            </argument>
+            <settings>
+                <label translate="true">Saved Card</label>
+                <dataType>text</dataType>
+                <dataScope>vault_token_hash</dataScope>
+                <visible>true</visible>
+                <imports>
+                    <link name="visible">${ $.provider }:data.payment_source_type</link>
+                </imports>
+            </settings>
+            <formElements>
+                <select>
+                    <settings>
+                        <options class="Fiserv\Payments\Model\Ui\OpenRefund\CustomerTokenOptions"/>
+                    </settings>
+                </select>
+            </formElements>
+        </field>
+
+        <htmlContent name="hosted_fields_container">
+            <settings>
+                <additionalClasses>
+                    <class name="open-refund-hosted-fields-wrap">true</class>
+                </additionalClasses>
+            </settings>
+            <block class="Magento\Backend\Block\Template"
+                   name="open_refund_hosted_fields"
+                   template="Fiserv_Payments::open-refund/hosted-fields.phtml"/>
+        </htmlContent>
+    </fieldset>
+
+</form>
+

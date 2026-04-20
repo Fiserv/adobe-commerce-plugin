@@ -1,0 +1,56 @@
+<?php
+/** @var \Magento\Backend\Block\Template $block */
+$getTokensUrl = $block->getUrl('fiserv/openRefund/getTokens');
+?>
+<div id="open-refund-hosted-fields" data-get-tokens-url="<?= $block->escapeHtmlAttr($getTokensUrl) ?>">
+
+    <input type="hidden" name="hosted_field_token" id="hosted_field_token" value=""/>
+
+    <div id="open-refund-hosted-error" class="message message-error" style="display:none;">
+        <?= $block->escapeHtml(__('Hosted fields could not be loaded. Please refresh the page or contact support.')) ?>
+    </div>
+
+    <div id="hosted-fields-wrap" style="display:none;">
+        <div class="admin__field">
+            <label class="admin__field-label"><span><?= $block->escapeHtml(__('Card Number')) ?></span></label>
+            <div class="admin__field-control">
+                <div id="open-refund-card-number" class="open-refund-hosted-field"></div>
+            </div>
+        </div>
+        <div class="admin__field">
+            <label class="admin__field-label"><span><?= $block->escapeHtml(__('Name on Card')) ?></span></label>
+            <div class="admin__field-control">
+                <div id="open-refund-name-on-card" class="open-refund-hosted-field"></div>
+            </div>
+        </div>
+        <div class="admin__field">
+            <label class="admin__field-label"><span><?= $block->escapeHtml(__('Expiry Month')) ?></span></label>
+            <div class="admin__field-control">
+                <div id="open-refund-exp-month" class="open-refund-hosted-field"></div>
+            </div>
+        </div>
+        <div class="admin__field">
+            <label class="admin__field-label"><span><?= $block->escapeHtml(__('Expiry Year')) ?></span></label>
+            <div class="admin__field-control">
+                <div id="open-refund-exp-year" class="open-refund-hosted-field"></div>
+            </div>
+        </div>
+        <div class="admin__field">
+            <label class="admin__field-label"><span><?= $block->escapeHtml(__('CVV')) ?></span></label>
+            <div class="admin__field-control">
+                <div id="open-refund-cvv" class="open-refund-hosted-field"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/x-magento-init">
+{
+    "#open-refund-hosted-fields": {
+        "Fiserv_Payments/js/open-refund/form": {
+            "getTokensUrl": "<?= $block->escapeJs($getTokensUrl) ?>"
+        }
+    }
+}
+</script>
+

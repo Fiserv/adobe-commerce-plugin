@@ -290,7 +290,7 @@ Uses `Model/ResourceModel/OpenRefund/Collection.php` ordered `created_at DESC`.
 
 ---
 
-### Step 8 — Admin UI — Create Form
+### Step 8 — Admin UI — Create Form ✅ Done
 
 **Goal:** A two-fieldset form for submitting a new open refund.
 
@@ -533,9 +533,9 @@ Only additions required:
 | File | Purpose |
 |---|---|
 | `Model/Ui/OpenRefund/ListingDataProvider.php` | Grid data source ✅ |
-| `Model/Ui/OpenRefund/FormDataProvider.php` | Form data source (create + edit) |
-| `Model/Ui/OpenRefund/CustomerOptions.php` | Customer select options |
-| `Model/Ui/OpenRefund/CustomerTokenOptions.php` | Token select — initial empty state |
+| `Model/Ui/OpenRefund/FormDataProvider.php` | Form data source (create + edit) ✅ |
+| `Model/Ui/OpenRefund/CustomerOptions.php` | Customer select options ✅ |
+| `Model/Ui/OpenRefund/CustomerTokenOptions.php` | Token select — initial empty state ✅ |
 
 ### PHP — Controllers
 | File | Route | ACL |
@@ -555,10 +555,10 @@ Only additions required:
 | File | Purpose |
 |---|---|
 | `view/adminhtml/layout/fiserv_openrefund_index.xml` | Grid page layout ✅ |
-| `view/adminhtml/layout/fiserv_openrefund_edit.xml` | Form page layout |
+| `view/adminhtml/layout/fiserv_openrefund_edit.xml` | Form page layout ✅ |
 | `view/adminhtml/ui_component/fiserv_open_refund_listing.xml` | Grid UI definition ✅ |
-| `view/adminhtml/ui_component/fiserv_open_refund_form.xml` | Form UI definition |
-| `view/adminhtml/templates/open-refund/hosted-fields.phtml` | Hosted field containers + JS init |
+| `view/adminhtml/ui_component/fiserv_open_refund_form.xml` | Form UI definition ✅ |
+| `view/adminhtml/templates/open-refund/hosted-fields.phtml` | Hosted field containers + JS init ✅ |
 | `view/adminhtml/web/js/open-refund/form.js` | Customer→token AJAX, source toggle, submit intercept |
 
 ---
