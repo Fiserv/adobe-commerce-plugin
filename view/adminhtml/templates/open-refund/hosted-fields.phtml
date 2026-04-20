@@ -1,8 +1,7 @@
 <?php
 /** @var \Magento\Backend\Block\Template $block */
-$getTokensUrl = $block->getUrl('fiserv/openRefund/getTokens');
 ?>
-<div id="open-refund-hosted-fields" data-get-tokens-url="<?= $block->escapeHtmlAttr($getTokensUrl) ?>">
+<div id="open-refund-hosted-fields">
 
     <input type="hidden" name="hosted_field_token" id="hosted_field_token" value=""/>
 
@@ -44,13 +43,4 @@ $getTokensUrl = $block->getUrl('fiserv/openRefund/getTokens');
     </div>
 </div>
 
-<script type="text/x-magento-init">
-{
-    "#open-refund-hosted-fields": {
-        "Fiserv_Payments/js/open-refund/form": {
-            "getTokensUrl": "<?= $block->escapeJs($getTokensUrl) ?>"
-        }
-    }
-}
-</script>
 

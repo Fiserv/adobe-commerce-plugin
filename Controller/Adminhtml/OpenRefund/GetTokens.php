@@ -6,73 +6,72 @@ use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
 use Magento\Framework\App\Action\HttpGetActionInterface;
 use Magento\Framework\Controller\Result\JsonFactory;
-use Magento\Framework\Api\SearchCriteriaBuilder;
-use Magento\Framework\Api\FilterBuilder;
-use Magento\Vault\Api\PaymentTokenRepositoryInterface;
+use Magento\Store\Model\StoreManagerInterface;
+use Magento\Vault\Api\PaymentTokenManagementInterface;
 
 class GetTokens extends Action implements HttpGetActionInterface
 {
     const PAYMENT_METHOD_CODE = 'fiserv_commercehub';
 
-    /**
-     * @var JsonFactory
-     */
-    private $jsonFactory;
+    /** @var JsonFactory */
+    private JsonFactory $jsonFactory;
 
-    /**
-     * @var PaymentTokenRepositoryInterface
-     */
-    private $paymentTokenRepository;
+    /** @var PaymentTokenManagementInterface */
+    private PaymentTokenManagementInterface $paymentTokenManagement;
 
-    /**
-     * @var SearchCriteriaBuilder
-     */
-    private $searchCriteriaBuilder;
-
-    /**
-     * @var FilterBuilder
-     */
-    private $filterBuilder;
+    /** @var StoreManagerInterface */
+    private StoreManagerInterface $storeManager;
 
     public function __construct(
         Context $context,
         JsonFactory $jsonFactory,
-        PaymentTokenRepositoryInterface $paymentTokenRepository,
-        SearchCriteriaBuilder $searchCriteriaBuilder,
-        FilterBuilder $filterBuilder
+        PaymentTokenManagementInterface $paymentTokenManagement,
+        StoreManagerInterface $storeManager
     ) {
         parent::__construct($context);
-        $this->jsonFactory = $jsonFactory;
-        $this->paymentTokenRepository = $paymentTokenRepository;
-        $this->searchCriteriaBuilder = $searchCriteriaBuilder;
-        $this->filterBuilder = $filterBuilder;
+        $this->jsonFactory            = $jsonFactory;
+        $this->paymentTokenManagement = $paymentTokenManagement;
+        $this->storeManager           = $storeManager;
     }
 
     public function execute()
     {
-        $result = $this->jsonFactory->create();
-        $customerId = (int)$this->getRequest()->getParam('customer_id');
+        $result     = $this->jsonFactory->create();
+        $customerId = (int) $this->getRequest()->getParam('customer_id');
 
         if (!$customerId) {
             return $result->setData(['tokens' => []]);
         }
 
-        $searchCriteria = $this->searchCriteriaBuilder
-            ->addFilter('customer_id', $customerId)
-            ->addFilter('is_active', 1)
-            ->addFilter('payment_method_code', self::PAYMENT_METHOD_CODE)
-            ->create();
-
-        $tokens = $this->paymentTokenRepository->getList($searchCriteria)->getItems();
-
+        // Use the same method as the frontend /vault/cards/listaction page.
+        // It applies is_active=1, is_visible=1, expires_at > now(), and website scope.
+        // We iterate all stores so admin sees tokens from any website the customer used.
+        $seen         = [];
         $tokenOptions = [];
-        foreach ($tokens as $token) {
-            $details = json_decode($token->getTokenDetails() ?: '{}', true);
-            $label = $this->buildTokenLabel($details);
-            $tokenOptions[] = [
-                'value' => $token->getPublicHash(),
-                'label' => $label,
-            ];
+
+        foreach ($this->storeManager->getStores() as $store) {
+            $tokens = $this->paymentTokenManagement->getVisibleAvailableTokens(
+                $customerId,
+                (int) $store->getId()
+            );
+
+            foreach ($tokens as $token) {
+                if ($token->getPaymentMethodCode() !== self::PAYMENT_METHOD_CODE) {
+                    continue;
+                }
+
+                $hash = $token->getPublicHash();
+                if (isset($seen[$hash])) {
+                    continue; // deduplicate across stores
+                }
+                $seen[$hash] = true;
+
+                $details = json_decode($token->getTokenDetails() ?: '{}', true);
+                $tokenOptions[] = [
+                    'value' => $hash,
+                    'label' => $this->buildTokenLabel($details),
+                ];
+            }
         }
 
         return $result->setData(['tokens' => $tokenOptions]);
@@ -80,11 +79,10 @@ class GetTokens extends Action implements HttpGetActionInterface
 
     private function buildTokenLabel(array $details): string
     {
-        $type = strtoupper($details['type'] ?? $details['cardType'] ?? 'CARD');
+        $type  = strtoupper($details['type'] ?? $details['cardType'] ?? 'CARD');
         $last4 = $details['maskedCC'] ?? $details['last4'] ?? '****';
-        $exp = $details['expirationDate'] ?? '';
+        $exp   = $details['expirationDate'] ?? '';
 
-        // expirationDate is typically stored as "MM/YY" or "MM/YYYY"
         if ($exp) {
             return sprintf('%s ending %s (exp %s)', $type, $last4, $exp);
         }
@@ -98,7 +96,7 @@ class GetTokens extends Action implements HttpGetActionInterface
         return sprintf('%s ending %s', $type, $last4);
     }
 
-    protected function _isAllowed()
+    protected function _isAllowed(): bool
     {
         return $this->_authorization->isAllowed('Fiserv_Payments::open_refunds_manage');
     }

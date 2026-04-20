@@ -5,6 +5,10 @@
     <body>
         <referenceContainer name="content">
             <uiComponent name="fiserv_open_refund_form"/>
+            <block class="Magento\Backend\Block\Template"
+                   name="open_refund_form_init"
+                   template="Fiserv_Payments::open-refund/form-init.phtml"
+                   after="fiserv_open_refund_form"/>
         </referenceContainer>
     </body>
 </page>

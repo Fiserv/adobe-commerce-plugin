@@ -1,0 +1,22 @@
+<?php
+/**
+ * Page-level initialization for the Open Refund create form.
+ * This block is rendered as part of the initial page HTML (not inside a UI component),
+ * so Magento's x-magento-init scanner is guaranteed to pick it up.
+ *
+ * The "*" element selector initialises the module globally, not tied to any specific DOM element.
+ *
+ * @var \Magento\Backend\Block\Template $block
+ */
+$getTokensUrl = $block->getUrl('fiserv/openRefund/getTokens');
+?>
+<script type="text/x-magento-init">
+{
+    "*": {
+        "Fiserv_Payments/js/open-refund/form": {
+            "getTokensUrl": "<?= $block->escapeJs($getTokensUrl) ?>"
+        }
+    }
+}
+</script>
+

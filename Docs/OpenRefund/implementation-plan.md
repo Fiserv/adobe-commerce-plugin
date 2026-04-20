@@ -194,7 +194,7 @@ Two levels:
 
 ---
 
-### Step 6 — Admin Controllers
+### Step 6 — Admin Controllers ✅ Done
 
 **Goal:** Four controllers handle every request the feature makes.
 
@@ -349,7 +349,7 @@ Switching Payment Method toggles the vault select / hosted fields correctly.
 
 ---
 
-### Step 9 — AJAX Customer → Token Reload
+### Step 9 — AJAX Customer → Token Reload ✅ Done
 
 **Goal:** When the admin selects a customer, the `vault_token_hash` dropdown immediately
 repopulates with that customer's active vault tokens — no page reload required.
@@ -559,7 +559,7 @@ Only additions required:
 | `view/adminhtml/ui_component/fiserv_open_refund_listing.xml` | Grid UI definition ✅ |
 | `view/adminhtml/ui_component/fiserv_open_refund_form.xml` | Form UI definition ✅ |
 | `view/adminhtml/templates/open-refund/hosted-fields.phtml` | Hosted field containers + JS init ✅ |
-| `view/adminhtml/web/js/open-refund/form.js` | Customer→token AJAX, source toggle, submit intercept |
+| `view/adminhtml/web/js/open-refund/form.js` | Customer→token AJAX, source toggle, submit intercept ✅ |
 
 ---
 
