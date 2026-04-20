@@ -3,10 +3,6 @@
       xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <update handle="styles"/>
     <body>
-        <referenceContainer name="page.main.actions">
-            <block class="Fiserv\Payments\Block\Adminhtml\OpenRefund\CreateButton"
-                   name="open_refund_add_button"/>
-        </referenceContainer>
         <referenceContainer name="content">
             <uiComponent name="fiserv_open_refund_listing"/>
         </referenceContainer>
