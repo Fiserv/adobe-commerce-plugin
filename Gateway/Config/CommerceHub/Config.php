@@ -72,6 +72,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	const KEY_FONT_FORMAT = 'format';
 	const KEY_FONT_INTEGRITY = 'integrity';
 
+	const KEY_OPEN_REFUND_CAPTURE_FLAG = 'open_refund_capture_flag';
+
 	const PATH_VAULT_ENABLED = "payment/fiserv_commercehub_vault/active";
 
 	/**
@@ -504,5 +506,13 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 		$configPath = self::KEY_SDC_CUSTOM . '_' . $formId . '_';
 		$configPath = $isValuelink ? $configPath . self::KEY_SDC_VALUELINK . '_' : $configPath;
 		return $configPath;
+	}
+
+	/**
+	 * Whether to capture open refunds immediately (captureFlag=true).
+	 */
+	public function isOpenRefundCaptureFlag($storeId = null): bool
+	{
+		return (bool) $this->getValue(self::KEY_OPEN_REFUND_CAPTURE_FLAG, $storeId);
 	}
 }

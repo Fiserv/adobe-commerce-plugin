@@ -93,7 +93,7 @@
 				<item name="settle" xsi:type="string">FiservCommerceHubSettleCommand</item>
 				<item name="vault_authorize" xsi:type="string">FiservCommerceHubVaultAuthorizeCommand</item>
 				<item name="vault_sale" xsi:type="string">FiservCommerceHubVaultSaleCommand</item>
-				<item name="refund" xsi:type="string">FiservCommerceHubRefundCommand</item>
+                                <item name="refund" xsi:type="string">FiservCommerceHubRefundCommand</item>
 				<item name="void" xsi:type="string">FiservCommerceHubCancelCommand</item>
 				<item name="cancel" xsi:type="string">FiservCommerceHubCancelCommand</item>
 			</argument>
@@ -200,7 +200,7 @@
 		</arguments>
 	</virtualType>
 
-	<!-- Request Builders -->
+        <!-- Request Builders -->
 	<virtualType name="FiservCommerceHubAuthorizeRequest" type="Fiserv\Payments\Gateway\Request\CommerceHub\Composite\SessionAuthComposite">
 		<arguments>
 			<argument name="builders" xsi:type="array">
@@ -426,6 +426,8 @@
 	<preference for="Fiserv\Payments\Api\Valuelink\ValuelinkTransactionRepositoryInterface" type="Fiserv\Payments\Model\ValuelinkTransactionRepository"/>
 	<preference for="Fiserv\Payments\Api\FailedTransaction\FailedTransactionRepositoryInterface" type="Fiserv\Payments\Model\FailedTransactionRepository"/>
 	<preference for="Fiserv\Payments\Api\FailedOrder\FailedOrderRepositoryInterface" type="Fiserv\Payments\Model\FailedOrderRepository"/>
+	<preference for="Fiserv\Payments\Api\OpenRefund\OpenRefundRepositoryInterface" type="Fiserv\Payments\Model\OpenRefundRepository"/>
+	<preference for="Fiserv\Payments\Api\Data\OpenRefund\OpenRefundSearchResultInterface" type="Fiserv\Payments\Model\OpenRefund\OpenRefundSearchResult"/>
 	<preference for="Fiserv\Payments\Api\Data\FailedOrder\FailedOrderSearchResultInterface" type="Fiserv\Payments\Model\FailedOrder\FailedOrderSearchResult"/>
 
 	<!-- Config provider for PayPal -->

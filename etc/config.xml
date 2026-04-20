@@ -186,8 +186,9 @@
 				<sdc_custom_token_font_family></sdc_custom_token_font_family>
 				<sdc_custom_token_font_format></sdc_custom_token_font_format>
 				<sdc_custom_token_font_integrity></sdc_custom_token_font_integrity>
-				<group>fiserv_group</group>
-			</fiserv_commercehub>	
+                        <group>fiserv_group</group>
+                        <open_refund_capture_flag>1</open_refund_capture_flag>
+                </fiserv_commercehub>
 			<fiserv_valuelink>
 				<active>1</active>
 				<payment_action>AUTH</payment_action>
