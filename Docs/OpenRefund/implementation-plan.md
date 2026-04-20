@@ -154,7 +154,7 @@ customer snapshot — in a dedicated table.
 
 ---
 
-### Step 4 — ACL Resources
+### Step 4 — ACL Resources ✅ Done
 
 
 **`etc/acl.xml`** — add under the Fiserv resource tree:
@@ -174,7 +174,7 @@ Two levels:
 
 ---
 
-### Step 5 — Admin Menu Item
+### Step 5 — Admin Menu Item ✅ Done
 
 **Goal:** Surface the feature at **Admin → Sales → Open Refunds**.
 
@@ -511,8 +511,8 @@ Only additions required:
 | `etc/config.xml` | Add `open_refund_capture_flag` default ✅ |
 | `etc/adminhtml/system.xml` | Add capture flag field under Credit/Debit Cards group ✅ |
 | `etc/db_schema.xml` | Add `fiserv_open_refund` table ✅ |
-| `etc/acl.xml` | Add `open_refunds` + `open_refunds_manage` resources |
-| `etc/adminhtml/menu.xml` | Add Sales → Open Refunds menu item |
+| `etc/acl.xml` | Add `open_refunds` + `open_refunds_manage` resources ✅ |
+| `etc/adminhtml/menu.xml` | Add Sales → Open Refunds menu item ✅ |
 | `etc/di.xml` | Add 2 repository/search-result preferences ✅ |
 | `Gateway/Config/CommerceHub/Config.php` | Add `KEY_OPEN_REFUND_CAPTURE_FLAG` constant + getter ✅ |
 

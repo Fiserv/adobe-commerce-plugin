@@ -9,6 +9,13 @@
 			parent="Magento_Sales::sales"
 			action="fiserv/declines/preview"
 			resource="Fiserv_Payments::preview"/>
+		<add id="Fiserv_Payments::open_refunds"
+			title="Open Refunds"
+			module="Fiserv_Payments"
+			sortOrder="110"
+			parent="Magento_Sales::sales"
+			action="fiserv/openRefund/index"
+			resource="Fiserv_Payments::open_refunds"/>
 	</menu>
 </config>
 
