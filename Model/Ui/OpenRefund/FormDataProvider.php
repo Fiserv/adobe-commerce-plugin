@@ -9,7 +9,7 @@ use Magento\Ui\DataProvider\AbstractDataProvider;
 class FormDataProvider extends AbstractDataProvider
 {
     /** @var array */
-    private array $loadedData = [];
+    protected $loadedData = [];  // must be protected to match AbstractDataProvider's property visibility
 
     /** @var RequestInterface */
     private RequestInterface $request;

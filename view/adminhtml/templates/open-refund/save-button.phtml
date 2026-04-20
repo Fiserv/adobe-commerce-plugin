@@ -1,0 +1,23 @@
+<?php
+/**
+ * "Submit Refund" toolbar button for the Open Refund create form.
+ *
+ * Clicking calls the Magento UI form component's save() method via uiRegistry.
+ * Our form.js wrapper (initSaveWrapper) intercepts that call to handle
+ * hosted-fields tokenisation before the provider actually POSTs.
+ *
+ * @var \Fiserv\Payments\Block\Adminhtml\OpenRefund\Edit\SaveButton $block
+ */
+?>
+<button type="button"
+        id="open-refund-submit-btn"
+        class="action-default scalable save action-primary"
+        onclick="require(['uiRegistry'], function (registry) {
+            var form = registry.get('fiserv_open_refund_form.fiserv_open_refund_form');
+            if (form) {
+                form.save();
+            }
+        });">
+    <span><?= $block->escapeHtml(__('Submit Refund')) ?></span>
+</button>
+

@@ -5,42 +5,49 @@
  *  1. Customer → vault token AJAX reload
  *  2. Payment source type toggle (vault / new_card)
  *  3. Mount CommerceHub hosted field iframes (new card path)
- *  4. Intercept form submit on new card path to tokenise first
+ *  4. Wrap form.save() so hosted-fields tokenisation happens BEFORE the
+ *     Magento UI provider POSTs to the server.  The hidden UI field
+ *     "hosted_field_token" (defined in the UI form XML) carries the token
+ *     in the normal KO data scope, so it is included in the AJAX POST body.
  */
 define([
     'jquery',
-    'uiRegistry'
-], function ($, registry) {
+    'uiRegistry',
+    'Magento_Ui/js/modal/alert',
+    'mage/validation'
+], function ($, registry, alert) {
     'use strict';
 
+    // ── Custom validator: 1 or 2 decimal places, no integers ─────────────────
+    $.validator.addMethod(
+        'validate-currency-amount',
+        function (value) {
+            if (value === '' || value === null) {
+                return true; // let required-entry handle empty
+            }
+            return /^\d+\.\d{1,2}$/.test(value.trim());
+        },
+        $.mage.__('Please enter a valid amount with 1 or 2 decimal places (e.g. 10.99).')
+    );
+
     // ── UI component registry paths ──────────────────────────────────────────
-    var FORM_NS          = 'fiserv_open_refund_form.fiserv_open_refund_form';
-    var CUSTOMER_COMP    = FORM_NS + '.refund_details.customer_id';
-    var TOKEN_COMP       = FORM_NS + '.payment_source.vault_token_hash';
-    var SOURCE_TYPE_COMP = FORM_NS + '.payment_source.payment_source_type';
+    var FORM_NS            = 'fiserv_open_refund_form.fiserv_open_refund_form';
+    var CUSTOMER_COMP      = FORM_NS + '.refund_details.customer_id';
+    var TOKEN_COMP         = FORM_NS + '.payment_source.vault_token_hash';
+    var SOURCE_TYPE_COMP   = FORM_NS + '.payment_source.payment_source_type';
+    var HOSTED_TOKEN_COMP  = FORM_NS + '.payment_source.hosted_field_token';
 
     // ── Module state ─────────────────────────────────────────────────────────
     var sdk         = null;
     var fieldsReady = false;
-    var submitting  = false;
+    var tokenising  = false;   // guard against re-entrant save calls
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
-    /**
-     * Read the Magento form_key from the DOM (admin session token).
-     * This is required for some admin AJAX endpoints even on GET requests.
-     */
     function getFormKey() {
         return $('input[name="form_key"]').val() || '';
     }
 
-    /**
-     * Update the vault_token_hash KO select component with a new list of tokens.
-     * We do NOT touch the DOM directly — KO owns those <option> elements and will
-     * overwrite any direct DOM changes on its next render cycle.
-     *
-     * @param {Array} tokens  [{value, label}, ...]
-     */
     function setTokenOptions(tokens) {
         registry.async(TOKEN_COMP)(function (tokenComp) {
             var koOptions;
@@ -54,63 +61,46 @@ define([
                 });
             }
 
-            console.log('[OpenRefund] setTokenOptions:', koOptions);
-
             if (typeof tokenComp.setOptions === 'function') {
                 tokenComp.setOptions(koOptions);
             } else {
-                // Fallback: update the options observable directly
                 tokenComp.options(koOptions);
             }
 
-            // Reset the currently-selected value so the placeholder shows
             tokenComp.value('');
         });
     }
 
-    /**
-     * Show the hosted-fields error banner.
-     */
-    function showHostedFieldError() {
+    function showHostedFieldError(msg) {
         $('#open-refund-hosted-error').show();
+        if (msg) {
+            console.error('[OpenRefund]', msg);
+        }
     }
 
-    /**
-     * Mount CommerceHub hosted field iframes once.
-     * Guarded by the `fieldsReady` flag so iframes only mount once.
-     */
     function mountHostedFields() {
-        if (fieldsReady) {
-            return;
-        }
+        if (fieldsReady) { return; }
 
         require(['Fiserv_Payments/js/ch-adapter'], function (chAdapter) {
             try {
                 chAdapter.initialize(
-                    /* paymentConfig  */ {},
-                    /* successCb      */ function () { fieldsReady = true; },
-                    /* validCb        */ function () {},
-                    /* brandChangeCb  */ function () {},
-                    /* fieldValidityCb*/ function () {},
-                    /* fieldFocusCb   */ function () {}
+                    {},
+                    function () { fieldsReady = true; },
+                    function () {},
+                    function () {},
+                    function () {},
+                    function () {}
                 );
                 sdk = chAdapter;
                 fieldsReady = true;
             } catch (e) {
-                console.error('[OpenRefund] mountHostedFields error:', e);
-                showHostedFieldError();
+                showHostedFieldError('mountHostedFields error: ' + e);
             }
         }, function (err) {
-            console.error('[OpenRefund] Failed to load ch-adapter:', err);
-            showHostedFieldError();
+            showHostedFieldError('Failed to load ch-adapter: ' + err);
         });
     }
 
-    /**
-     * Wire up the payment-source-type toggle.
-     * vault    → show token select, hide hosted fields
-     * new_card → hide token select, show hosted fields & mount iframes
-     */
     function initSourceTypeToggle() {
         registry.async(SOURCE_TYPE_COMP)(function (sourceComp) {
             registry.async(TOKEN_COMP)(function (tokenComp) {
@@ -126,35 +116,15 @@ define([
                     }
                 }
 
-                sourceComp.value.subscribe(function (newValue) {
-                    applySourceType(newValue);
-                });
-
+                sourceComp.value.subscribe(applySourceType);
                 applySourceType(sourceComp.value());
             });
         });
     }
 
-    /**
-     * Watch the customer_id UI component's KO value observable directly.
-     *
-     * We do NOT use a DOM 'change' event because Magento may render customer_id
-     * as a ui-select (searchable dropdown) rather than a plain <select>, and
-     * ui-select does not fire a standard DOM change event.
-     *
-     * registry.async() resolves as soon as the KO component is instantiated,
-     * regardless of the underlying DOM element type.
-     *
-     * @param {string} getTokensUrl
-     */
     function initCustomerChangeListener(getTokensUrl) {
         registry.async(CUSTOMER_COMP)(function (customerComp) {
-            console.log('[OpenRefund] customer_id component found:', customerComp.name);
-
-            // Subscribe to future value changes
             customerComp.value.subscribe(function (customerId) {
-                console.log('[OpenRefund] Customer changed to:', customerId);
-
                 if (!customerId) {
                     setTokenOptions([]);
                     return;
@@ -165,20 +135,12 @@ define([
                     + 'customer_id=' + encodeURIComponent(customerId)
                     + '&form_key=' + encodeURIComponent(getFormKey());
 
-                console.log('[OpenRefund] Fetching tokens from:', url);
-
                 fetch(url, { credentials: 'include' })
-                    .then(function (response) {
-                        console.log('[OpenRefund] GetTokens status:', response.status);
-                        if (!response.ok) {
-                            throw new Error('HTTP ' + response.status);
-                        }
-                        return response.json();
+                    .then(function (r) {
+                        if (!r.ok) { throw new Error('HTTP ' + r.status); }
+                        return r.json();
                     })
-                    .then(function (data) {
-                        console.log('[OpenRefund] Tokens received:', data);
-                        setTokenOptions(data.tokens || []);
-                    })
+                    .then(function (data) { setTokenOptions(data.tokens || []); })
                     .catch(function (err) {
                         console.error('[OpenRefund] Token reload failed:', err);
                         setTokenOptions([]);
@@ -188,58 +150,123 @@ define([
     }
 
     /**
-     * Intercept form submit on the new_card path:
-     *   1. Prevent default submit
-     *   2. Call sdk.submitCardForm() to tokenise the card
-     *   3. Inject the session token into #hosted_field_token
-     *   4. Re-submit the form
+     * Show a Magento-style banner above the form.
      */
-    function initSubmitInterceptor() {
-        $(document).on('submit', 'form[data-ui-id]', function (e) {
-            var sourceType = $('select[name*="payment_source_type"]').val();
+    function showBanner(isSuccess, text) {
+        var cssClass = isSuccess
+            ? 'message message-success success'
+            : 'message message-error error';
 
-            if (sourceType !== 'new_card') {
-                return;
+        var $banner = $('#open-refund-banner');
+        $banner
+            .removeClass()
+            .addClass(cssClass)
+            .text(text)
+            .show();
+
+        $('html, body').animate({ scrollTop: $banner.offset().top - 80 }, 200);
+    }
+
+    /**
+     * Post form data directly via $.ajax — never touches the native form action.
+     */
+    function doAjaxSave(saveUrl, indexUrl, extraData) {
+        var PROVIDER = 'fiserv_open_refund_form.fiserv_open_refund_form_data_source';
+
+        registry.async(PROVIDER)(function (provider) {
+            var data = provider.get('data') || {};
+
+            // Merge any extra fields (e.g. hosted_field_token from tokenisation)
+            if (extraData) {
+                $.extend(data, extraData);
             }
 
-            if (submitting) {
-                return;
-            }
+            data.form_key = getFormKey();
 
-            e.preventDefault();
-            var $form = $(this);
-
-            if (!sdk || !fieldsReady) {
-                showHostedFieldError();
-                return;
-            }
-
-            sdk.submitCardForm(
-                '',
-                function (sessionToken) {
-                    $('#hosted_field_token').val(sessionToken);
-                    submitting = true;
-                    $form.trigger('submit');
-                },
-                function () {
-                    showHostedFieldError();
+            $.ajax({
+                url:         saveUrl,
+                type:        'POST',
+                data:        data,
+                dataType:    'json',
+                showLoader:  true
+            }).done(function (response) {
+                if (response && response.error) {
+                    var errMsg = typeof response.message === 'string'
+                        ? response.message : 'An error occurred.';
+                    showBanner(false, $.mage.__('Error') + ': ' + errMsg);
+                } else {
+                    try {
+                        sessionStorage.setItem(
+                            'openRefundSuccess',
+                            $.mage.__('Open refund submitted successfully.')
+                        );
+                    } catch (e) {}
+                    window.location.href = indexUrl;
                 }
-            );
+            }).fail(function () {
+                showBanner(false, $.mage.__('An unexpected error occurred. Please try again.'));
+            });
+        });
+    }
+
+    /**
+     * Intercept the UI form's save() so we can:
+     *  - tokenise hosted fields first (new_card path)
+     *  - then call doAjaxSave() instead of letting Magento navigate
+     */
+    function initSaveWrapper(saveUrl, indexUrl) {
+        registry.async(FORM_NS)(function (formComp) {
+            formComp.save = function () {
+                // Run Magento's own client-side validation
+                formComp.validate();
+                if (formComp.additionalInvalid || (formComp.source && formComp.source.get('params.invalid'))) {
+                    return;
+                }
+
+                registry.async(SOURCE_TYPE_COMP)(function (sourceComp) {
+                    var sourceType = sourceComp.value();
+
+                    if (sourceType !== 'new_card') {
+                        doAjaxSave(saveUrl, indexUrl);
+                        return;
+                    }
+
+                    // new_card — tokenise first
+                    if (!sdk || !fieldsReady) {
+                        showHostedFieldError('Hosted fields are not ready. Please refresh.');
+                        return;
+                    }
+
+                    if (tokenising) { return; }
+                    tokenising = true;
+
+                    sdk.submitCardForm(
+                        '',
+                        function (sessionToken) {
+                            tokenising = false;
+                            doAjaxSave(saveUrl, indexUrl, { hosted_field_token: sessionToken });
+                        },
+                        function () {
+                            tokenising = false;
+                            showHostedFieldError('Card tokenisation failed. Please re-enter card details.');
+                        }
+                    );
+                });
+            };
         });
     }
 
     // ── Entry point (called by x-magento-init) ───────────────────────────────
-    return function (config /*, element */) {
+    return function (config) {
         var getTokensUrl = config.getTokensUrl || '';
-        console.log('[OpenRefund] form.js initialised, getTokensUrl:', getTokensUrl);
+        var saveUrl      = config.saveUrl      || '';
+        var indexUrl     = config.indexUrl     || '';
 
-        // registry.async handles its own timing — no need for $(function() {...})
         initCustomerChangeListener(getTokensUrl);
         initSourceTypeToggle();
 
-        // Submit interceptor needs DOM — wrap in DOM-ready
         $(function () {
-            initSubmitInterceptor();
+            initSaveWrapper(saveUrl, indexUrl);
         });
     };
 });

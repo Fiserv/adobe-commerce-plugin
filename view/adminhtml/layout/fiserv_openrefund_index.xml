@@ -4,6 +4,10 @@
     <update handle="styles"/>
     <body>
         <referenceContainer name="content">
+            <block class="Magento\Backend\Block\Template"
+                   name="open_refund_index_banner"
+                   template="Fiserv_Payments::open-refund/index-banner.phtml"
+                   before="fiserv_open_refund_listing"/>
             <uiComponent name="fiserv_open_refund_listing"/>
         </referenceContainer>
     </body>

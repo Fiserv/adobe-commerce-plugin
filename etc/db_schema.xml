@@ -141,11 +141,12 @@
                 </index>
         </table>
 
+    <!-- Standalone Open Refund Records — created via Setup/Patch/Schema/CreateOpenRefundTable.php -->
     <table name="fiserv_open_refund" resource="default" engine="innodb" comment="Standalone Open Refund Records">
         <column xsi:type="int" name="entity_id" unsigned="true" nullable="false" identity="true" comment="Primary Key"/>
         <column xsi:type="decimal" name="amount" scale="2" precision="12" unsigned="false" nullable="false" comment="Refund Amount"/>
         <column xsi:type="varchar" name="currency_code" nullable="false" length="10" default="USD" comment="Currency Code"/>
-        <column xsi:type="int" name="customer_id" unsigned="true" nullable="true" comment="Customer ID (FK to customer_entity, SET NULL on delete)"/>
+        <column xsi:type="int" name="customer_id" unsigned="true" nullable="true" comment="Customer ID"/>
         <column xsi:type="varchar" name="customer_email" nullable="true" length="255" comment="Customer Email (snapshotted at submission)"/>
         <column xsi:type="varchar" name="customer_name" nullable="true" length="255" comment="Customer Full Name (snapshotted at submission)"/>
         <column xsi:type="int" name="admin_user_id" unsigned="true" nullable="true" comment="Admin User ID (populated server-side)"/>
@@ -153,6 +154,7 @@
         <column xsi:type="varchar" name="transaction_id" nullable="true" length="255" comment="CommerceHub Transaction ID"/>
         <column xsi:type="varchar" name="masked_card" nullable="true" length="20" comment="Last 4 digits from CommerceHub response"/>
         <column xsi:type="varchar" name="reference_transaction_id" nullable="true" length="255" comment="Optional prior transaction ID for audit trail"/>
+        <column xsi:type="varchar" name="order_increment_id" nullable="true" length="50" comment="Associated Magento order increment ID (e.g. 000000001)"/>
         <column xsi:type="text" name="notes" nullable="true" comment="Free-text admin notes"/>
         <column xsi:type="timestamp" name="created_at" nullable="false" default="CURRENT_TIMESTAMP" comment="Created At"/>
         <constraint xsi:type="primary" referenceId="PRIMARY">
@@ -166,6 +168,9 @@
         </index>
         <index referenceId="IDX_FISERV_OPEN_REFUND_CREATED_AT" indexType="btree">
             <column name="created_at"/>
+        </index>
+        <index referenceId="IDX_FISERV_OPEN_REFUND_ORDER_INCREMENT_ID" indexType="btree">
+            <column name="order_increment_id"/>
         </index>
     </table>
 </schema>

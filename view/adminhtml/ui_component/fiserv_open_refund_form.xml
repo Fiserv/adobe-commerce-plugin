@@ -17,11 +17,7 @@
                 <class>back</class>
                 <label translate="true">Back</label>
             </button>
-            <button name="save">
-                <url path="fiserv/openRefund/save"/>
-                <class>save primary</class>
-                <label translate="true">Submit Refund</label>
-            </button>
+
         </buttons>
         <namespace>fiserv_open_refund_form</namespace>
         <dataScope>data</dataScope>
@@ -39,7 +35,6 @@
         <settings>
             <submitUrl path="fiserv/openRefund/save"/>
         </settings>
-        <aclResource>Fiserv_Payments::open_refunds_manage</aclResource>
         <dataProvider class="Fiserv\Payments\Model\Ui\OpenRefund\FormDataProvider"
                       name="fiserv_open_refund_form_data_source">
             <settings>
@@ -89,47 +84,16 @@
             </argument>
             <settings>
                 <label translate="true">Amount</label>
-                <dataType>number</dataType>
+                <dataType>text</dataType>
                 <dataScope>amount</dataScope>
                 <validation>
                     <rule name="required-entry" xsi:type="boolean">true</rule>
-                    <rule name="validate-number" xsi:type="boolean">true</rule>
                     <rule name="validate-greater-than-zero" xsi:type="boolean">true</rule>
+                    <rule name="validate-currency-amount" xsi:type="boolean">true</rule>
                 </validation>
             </settings>
         </field>
 
-        <field name="currency_code" formElement="select">
-            <argument name="data" xsi:type="array">
-                <item name="config" xsi:type="array">
-                    <item name="source" xsi:type="string">refund_details</item>
-                </item>
-            </argument>
-            <settings>
-                <label translate="true">Currency</label>
-                <dataType>text</dataType>
-                <dataScope>currency_code</dataScope>
-                <validation>
-                    <rule name="required-entry" xsi:type="boolean">true</rule>
-                </validation>
-            </settings>
-            <formElements>
-                <select>
-                    <settings>
-                        <options>
-                            <option name="usd" xsi:type="array">
-                                <item name="value" xsi:type="string">USD</item>
-                                <item name="label" xsi:type="string" translate="true">USD</item>
-                            </option>
-                            <option name="cad" xsi:type="array">
-                                <item name="value" xsi:type="string">CAD</item>
-                                <item name="label" xsi:type="string" translate="true">CAD</item>
-                            </option>
-                        </options>
-                    </settings>
-                </select>
-            </formElements>
-        </field>
 
         <field name="reference_transaction_id" formElement="input">
             <argument name="data" xsi:type="array">
@@ -143,6 +107,22 @@
                 <dataScope>reference_transaction_id</dataScope>
                 <tooltip>
                     <description translate="true">Optional. Provide a prior transaction ID for audit trail purposes.</description>
+                </tooltip>
+            </settings>
+        </field>
+
+        <field name="order_increment_id" formElement="input">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="source" xsi:type="string">refund_details</item>
+                </item>
+            </argument>
+            <settings>
+                <label translate="true">Associated Order #</label>
+                <dataType>text</dataType>
+                <dataScope>order_increment_id</dataScope>
+                <tooltip>
+                    <description translate="true">Enter the Magento order number (e.g. 000008032) to attach this refund to that order's history.</description>
                 </tooltip>
             </settings>
         </field>
@@ -188,11 +168,11 @@
                 <select>
                     <settings>
                         <options>
-                            <option name="vault" xsi:type="array">
+                            <option name="0" xsi:type="array">
                                 <item name="value" xsi:type="string">vault</item>
                                 <item name="label" xsi:type="string" translate="true">Use Saved Card</item>
                             </option>
-                            <option name="new_card" xsi:type="array">
+                            <option name="1" xsi:type="array">
                                 <item name="value" xsi:type="string">new_card</item>
                                 <item name="label" xsi:type="string" translate="true">Enter New Card</item>
                             </option>
@@ -213,9 +193,6 @@
                 <dataType>text</dataType>
                 <dataScope>vault_token_hash</dataScope>
                 <visible>true</visible>
-                <imports>
-                    <link name="visible">${ $.provider }:data.payment_source_type</link>
-                </imports>
             </settings>
             <formElements>
                 <select>
@@ -224,6 +201,15 @@
                     </settings>
                 </select>
             </formElements>
+        </field>
+
+        <!-- Hidden field — populated by JS after hosted-fields tokenization -->
+        <field name="hosted_field_token" formElement="hidden">
+            <settings>
+                <dataType>text</dataType>
+                <dataScope>hosted_field_token</dataScope>
+                <visible>false</visible>
+            </settings>
         </field>
 
         <htmlContent name="hosted_fields_container">

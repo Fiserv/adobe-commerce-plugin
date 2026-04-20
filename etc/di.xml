@@ -428,6 +428,15 @@
 	<preference for="Fiserv\Payments\Api\FailedOrder\FailedOrderRepositoryInterface" type="Fiserv\Payments\Model\FailedOrderRepository"/>
 	<preference for="Fiserv\Payments\Api\OpenRefund\OpenRefundRepositoryInterface" type="Fiserv\Payments\Model\OpenRefundRepository"/>
 	<preference for="Fiserv\Payments\Api\Data\OpenRefund\OpenRefundSearchResultInterface" type="Fiserv\Payments\Model\OpenRefund\OpenRefundSearchResult"/>
+
+	<!-- Open Refund grid: register the collection so the UI DataProvider's ReportingInterface can resolve it -->
+	<type name="Magento\Framework\View\Element\UiComponent\DataProvider\CollectionFactory">
+		<arguments>
+			<argument name="collections" xsi:type="array">
+				<item name="fiserv_open_refund_listing_data_source" xsi:type="string">Fiserv\Payments\Model\ResourceModel\OpenRefund\Collection</item>
+			</argument>
+		</arguments>
+	</type>
 	<preference for="Fiserv\Payments\Api\Data\FailedOrder\FailedOrderSearchResultInterface" type="Fiserv\Payments\Model\FailedOrder\FailedOrderSearchResult"/>
 
 	<!-- Config provider for PayPal -->

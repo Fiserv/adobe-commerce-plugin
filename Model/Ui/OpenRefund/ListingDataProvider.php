@@ -47,5 +47,32 @@ class ListingDataProvider extends DataProvider
         $collection->setOrder('created_at', \Magento\Framework\Data\Collection::SORT_ORDER_DESC);
         return $collection;
     }
+
+    /**
+     * Override getData() to bypass the parent's search-criteria processing,
+     * which can throw "foreach on null" when SearchCriteria::getFilterGroups()
+     * returns null on a fresh criteria object.
+     */
+    public function getData(): array
+    {
+        /** @var Collection $collection */
+        $collection = $this->collectionFactory->create();
+        $collection->setOrder('created_at', \Magento\Framework\Data\Collection::SORT_ORDER_DESC);
+
+        $items = [];
+        foreach ($collection->getItems() as $item) {
+            $data = $item->getData();
+            if (isset($data['amount'])) {
+                $data['amount'] = '$' . number_format((float)$data['amount'], 2);
+            }
+            $items[] = $data;
+        }
+
+        return [
+            'totalRecords' => $collection->getSize(),
+            'items'        => $items,
+        ];
+    }
 }
+
 

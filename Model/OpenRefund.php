@@ -126,6 +126,16 @@ class OpenRefund extends AbstractModel implements OpenRefundInterface
         return $this->setData(self::KEY_REFERENCE_TRANSACTION_ID, $referenceTransactionId);
     }
 
+    public function getOrderIncrementId()
+    {
+        return $this->getData(self::KEY_ORDER_INCREMENT_ID);
+    }
+
+    public function setOrderIncrementId($orderIncrementId)
+    {
+        return $this->setData(self::KEY_ORDER_INCREMENT_ID, $orderIncrementId);
+    }
+
     public function getNotes()
     {
         return $this->getData(self::KEY_NOTES);

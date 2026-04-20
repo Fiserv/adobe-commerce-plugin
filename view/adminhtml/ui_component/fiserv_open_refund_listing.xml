@@ -29,7 +29,7 @@
             </storageConfig>
             <updateUrl path="mui/index/render"/>
         </settings>
-        <aclResource>Fiserv_Payments::open_refunds</aclResource>
+        <aclResource>Magento_Backend::admin</aclResource>
         <dataProvider class="Fiserv\Payments\Model\Ui\OpenRefund\ListingDataProvider"
                       name="fiserv_open_refund_listing_data_source">
             <settings>
@@ -84,12 +84,6 @@
                 <label translate="true">Amount</label>
             </settings>
         </column>
-        <column name="currency_code">
-            <settings>
-                <filter>text</filter>
-                <label translate="true">Currency</label>
-            </settings>
-        </column>
         <column name="masked_card">
             <settings>
                 <filter>false</filter>
@@ -110,12 +104,7 @@
                 <label translate="true">Transaction ID</label>
             </settings>
         </column>
-        <column name="reference_transaction_id">
-            <settings>
-                <filter>text</filter>
-                <label translate="true">Reference Transaction ID</label>
-            </settings>
-        </column>
+
     </columns>
 
 </listing>

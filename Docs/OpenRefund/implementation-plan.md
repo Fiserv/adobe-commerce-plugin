@@ -431,7 +431,7 @@ RequireJS module. Exported as a plain function (called by `x-magento-init` with 
 
 ---
 
-### Step 10 — Service Layer
+### Step 10 — Service Layer ✅ Done
 
 **Goal:** Orchestrate the full submit flow — validation, source resolution, API call, persistence.
 
@@ -480,7 +480,7 @@ submit(OpenRefund $openRefund, array $formData): void
 
 ---
 
-### Step 11 — DI Wiring
+### Step 11 — DI Wiring ✅ Done
 
 **`etc/di.xml`** additions needed (beyond the two repository preferences in Step 3):
 
@@ -548,7 +548,7 @@ Only additions required:
 ### PHP — Service + Block
 | File | Purpose |
 |---|---|
-| `Model/Service/OpenRefundService.php` | Orchestrates submit: validation → source → API → persist |
+| `Model/Service/OpenRefundService.php` | Orchestrates submit: validation → source → API → persist ✅ |
 | `Block/Adminhtml/OpenRefund/CreateButton.php` | "Create New Open Refund" page header button ✅ |
 
 ### View — Adminhtml

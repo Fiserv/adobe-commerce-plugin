@@ -15,6 +15,7 @@ interface OpenRefundInterface
     const KEY_TRANSACTION_ID          = 'transaction_id';
     const KEY_MASKED_CARD             = 'masked_card';
     const KEY_REFERENCE_TRANSACTION_ID = 'reference_transaction_id';
+    const KEY_ORDER_INCREMENT_ID       = 'order_increment_id';
     const KEY_NOTES                   = 'notes';
     const KEY_CREATED_AT              = 'created_at';
 
@@ -50,6 +51,9 @@ interface OpenRefundInterface
 
     public function getReferenceTransactionId();
     public function setReferenceTransactionId($referenceTransactionId);
+
+    public function getOrderIncrementId();
+    public function setOrderIncrementId($orderIncrementId);
 
     public function getNotes();
     public function setNotes($notes);

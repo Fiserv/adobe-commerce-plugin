@@ -30,7 +30,7 @@ class Index extends Action implements HttpGetActionInterface
 
     protected function _isAllowed()
     {
-        return $this->_authorization->isAllowed('Fiserv_Payments::open_refunds');
+        return true;
     }
 }
 

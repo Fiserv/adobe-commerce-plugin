@@ -1,0 +1,28 @@
+<?php
+/**
+ * Flash-banner for the Open Refund index page.
+ * Reads a one-time success message stored in sessionStorage by the form page.
+ *
+ * @var \Magento\Backend\Block\Template $block
+ */
+?>
+<div id="open-refund-index-banner" style="display:none; margin-bottom:12px;"></div>
+
+<script>
+(function () {
+    'use strict';
+    try {
+        var msg = sessionStorage.getItem('openRefundSuccess');
+        if (msg) {
+            sessionStorage.removeItem('openRefundSuccess');
+            var el = document.getElementById('open-refund-index-banner');
+            if (el) {
+                el.className = 'message message-success success';
+                el.textContent = msg;
+                el.style.display = 'block';
+            }
+        }
+    } catch (e) {}
+})();
+</script>
+
