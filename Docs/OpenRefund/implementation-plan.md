@@ -58,60 +58,45 @@ Admin navigates to Sales → Open Refunds
 
 ---
 
-### Step 1 — Admin Config
+### Step 1 — Admin Config ✅ Done
 
 **Goal:** Add merchant-configurable settings that control open refund behaviour.
-These settings live under **Stores → Configuration → Payment Methods → Fiserv CommerceHub**.
+These settings live under **Stores → Configuration → Payment Methods → Fiserv CommerceHub → Credit/Debit Cards**.
 
 **`etc/config.xml`** — add defaults under `<fiserv_commercehub>`:
 
 ```xml
 <open_refund_capture_flag>1</open_refund_capture_flag>
-<open_refund_transaction_limit>0</open_refund_transaction_limit>
 ```
 
-**`etc/adminhtml/system.xml`** — add two fields inside the CommerceHub config group:
+**`etc/adminhtml/system.xml`** — add one field inside the `credit_debit_cards` group (sortOrder 10):
 
 ```xml
 <field id="open_refund_capture_flag" translate="label comment" type="select"
-       sortOrder="8" showInDefault="1" showInWebsite="1" showInStore="0">
+       sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
     <label>Open Refund Capture Flag</label>
     <comment>Yes = captureFlag=true (immediate settlement). No = authorisation only.</comment>
     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
     <config_path>payment/fiserv_commercehub/open_refund_capture_flag</config_path>
 </field>
-
-<field id="open_refund_transaction_limit" translate="label comment" type="text"
-       sortOrder="9" showInDefault="1" showInWebsite="1" showInStore="0">
-    <label>Open Refund Maximum Amount</label>
-    <comment>Maximum dollar amount per single open refund. Set 0 for no limit.</comment>
-    <config_path>payment/fiserv_commercehub/open_refund_transaction_limit</config_path>
-    <validate>validate-number validate-zero-or-greater</validate>
-</field>
 ```
 
-**`Gateway/Config/CommerceHub/Config.php`** — add constants and getters:
+**`Gateway/Config/CommerceHub/Config.php`** — add constant and getter:
 
 ```php
-const KEY_OPEN_REFUND_CAPTURE_FLAG      = 'open_refund_capture_flag';
-const KEY_OPEN_REFUND_TRANSACTION_LIMIT = 'open_refund_transaction_limit';
+const KEY_OPEN_REFUND_CAPTURE_FLAG = 'open_refund_capture_flag';
 
 public function isOpenRefundCaptureFlag($storeId = null): bool
 {
     return (bool) $this->getValue(self::KEY_OPEN_REFUND_CAPTURE_FLAG, $storeId);
 }
-
-public function getOpenRefundTransactionLimit($storeId = null): float
-{
-    return (float) $this->getValue(self::KEY_OPEN_REFUND_TRANSACTION_LIMIT, $storeId);
-}
 ```
 
-**QA:** Navigate to Stores → Config → Fiserv CommerceHub. Confirm both fields appear and save correctly.
+**QA:** Navigate to Stores → Config → Fiserv CommerceHub → Credit/Debit Cards. Confirm the field appears and saves correctly.
 
 ---
 
-### Step 2 — Database Table
+### Step 2 — Database Table ✅ Done
 
 **Goal:** Persist every standalone open refund — including its status, transaction result, and
 customer snapshot — in a dedicated table.
@@ -138,7 +123,7 @@ customer snapshot — in a dedicated table.
 
 ---
 
-### Step 3 — Model / Repository / API Layer
+### Step 3 — Model / Repository / API Layer ✅ Done
 
 **Goal:** A full Magento 2 model stack so the record can be created, queried, and displayed.
 
@@ -171,7 +156,6 @@ customer snapshot — in a dedicated table.
 
 ### Step 4 — ACL Resources
 
-**Goal:** Control which admin roles can view and manage open refunds.
 
 **`etc/acl.xml`** — add under the Fiserv resource tree:
 
@@ -524,26 +508,26 @@ Only additions required:
 ### Configuration
 | File | Change |
 |---|---|
-| `etc/config.xml` | Add `open_refund_capture_flag`, `open_refund_transaction_limit` defaults |
-| `etc/adminhtml/system.xml` | Add two config fields under CommerceHub group |
-| `etc/db_schema.xml` | Add `fiserv_open_refund` table |
+| `etc/config.xml` | Add `open_refund_capture_flag` default ✅ |
+| `etc/adminhtml/system.xml` | Add capture flag field under Credit/Debit Cards group ✅ |
+| `etc/db_schema.xml` | Add `fiserv_open_refund` table ✅ |
 | `etc/acl.xml` | Add `open_refunds` + `open_refunds_manage` resources |
 | `etc/adminhtml/menu.xml` | Add Sales → Open Refunds menu item |
-| `etc/di.xml` | Add 2 repository/search-result preferences |
-| `Gateway/Config/CommerceHub/Config.php` | Add 2 constants + 2 getter methods |
+| `etc/di.xml` | Add 2 repository/search-result preferences ✅ |
+| `Gateway/Config/CommerceHub/Config.php` | Add `KEY_OPEN_REFUND_CAPTURE_FLAG` constant + getter ✅ |
 
 ### PHP — Model Layer
 | File | Purpose |
 |---|---|
-| `Api/Data/OpenRefund/OpenRefundInterface.php` | Entity interface |
-| `Api/Data/OpenRefund/OpenRefundSearchResultInterface.php` | Search result interface |
-| `Api/OpenRefund/OpenRefundRepositoryInterface.php` | Repository interface |
-| `Model/OpenRefund.php` | Entity model |
-| `Model/OpenRefund/OpenRefundSearchResult.php` | Search result implementation |
-| `Model/ResourceModel/OpenRefund.php` | DB resource model |
-| `Model/ResourceModel/OpenRefund/Collection.php` | Collection |
-| `Model/OpenRefundRepository.php` | Repository implementation |
-| `Model/Source/OpenRefund/Status.php` | Status option source |
+| `Api/Data/OpenRefund/OpenRefundInterface.php` | Entity interface ✅ |
+| `Api/Data/OpenRefund/OpenRefundSearchResultInterface.php` | Search result interface ✅ |
+| `Api/OpenRefund/OpenRefundRepositoryInterface.php` | Repository interface ✅ |
+| `Model/OpenRefund.php` | Entity model ✅ |
+| `Model/OpenRefund/OpenRefundSearchResult.php` | Search result implementation ✅ |
+| `Model/ResourceModel/OpenRefund.php` | DB resource model ✅ |
+| `Model/ResourceModel/OpenRefund/Collection.php` | Collection ✅ |
+| `Model/OpenRefundRepository.php` | Repository implementation ✅ |
+| `Model/Source/OpenRefund/Status.php` | Status option source ✅ |
 
 ### PHP — UI Data Providers
 | File | Purpose |
