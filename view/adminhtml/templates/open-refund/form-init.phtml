@@ -1,43 +1,24 @@
 <?php
-/**
- * Page-level initialization for the Open Refund create form.
- *
- * @var \Magento\Backend\Block\Template $block
- */
-$getTokensUrl = $block->getUrl('fiserv/openRefund/getTokens');
-$saveUrl       = $block->getUrl('fiserv/openRefund/save');
-$indexUrl      = $block->getUrl('fiserv/openRefund/index');
+/** @var \Fiserv\Payments\Block\Adminhtml\OpenRefund\FormInit $block */
+$getTokensUrl    = $block->getUrl('fiserv/openRefund/getTokens');
+$saveUrl         = $block->getUrl('fiserv/openRefund/save');
+$indexUrl        = $block->getUrl('fiserv/openRefund/index');
+$tokenizeCardUrl = $block->getUrl('fiserv/openRefund/tokenizeCard');
+$paymentConfig   = $block->getPaymentConfigJson();
 ?>
 
-<!-- Result banner — hidden until a save attempt completes -->
 <div id="open-refund-banner" style="display:none; margin-bottom:12px;"></div>
-
-<!-- Submit button -->
-<div class="page-main-actions" style="margin-bottom:16px;">
-    <div class="page-actions">
-        <div class="page-actions-buttons">
-            <button type="button"
-                    id="open-refund-submit-btn"
-                    class="action-default scalable save action-primary"
-                    onclick="require(['uiRegistry'], function (registry) {
-                        var form = registry.get('fiserv_open_refund_form.fiserv_open_refund_form');
-                        if (form) { form.save(); }
-                    });">
-                <span><?= $block->escapeHtml(__('Submit Refund')) ?></span>
-            </button>
-        </div>
-    </div>
-</div>
 
 <script type="text/x-magento-init">
 {
     "*": {
         "Fiserv_Payments/js/open-refund/form": {
-            "getTokensUrl": "<?= $block->escapeJs($getTokensUrl) ?>",
-            "saveUrl":      "<?= $block->escapeJs($saveUrl) ?>",
-            "indexUrl":     "<?= $block->escapeJs($indexUrl) ?>"
+            "getTokensUrl":    "<?= $block->escapeJs($getTokensUrl) ?>",
+            "saveUrl":         "<?= $block->escapeJs($saveUrl) ?>",
+            "indexUrl":        "<?= $block->escapeJs($indexUrl) ?>",
+            "tokenizeCardUrl": "<?= $block->escapeJs($tokenizeCardUrl) ?>",
+            "paymentConfig":   <?= /* @noEscape */ $paymentConfig ?>
         }
     }
 }
 </script>
-

@@ -1,5 +1,5 @@
 <?php
-namespace Fiserv\Payments\Model\Service;
+namespace Fiserv\Payments\Model\Service\OpenRefund;
 
 use Fiserv\Payments\Gateway\Config\CommerceHub\Config;
 use Fiserv\Payments\Helper\MerchantPartnerHelper;
@@ -7,7 +7,6 @@ use Fiserv\Payments\Lib\CommerceHub\Model\Amount;
 use Fiserv\Payments\Lib\CommerceHub\Model\Card;
 use Fiserv\Payments\Lib\CommerceHub\Model\Customer;
 use Fiserv\Payments\Lib\CommerceHub\Model\MerchantDetails;
-use Fiserv\Payments\Lib\CommerceHub\Model\PaymentSession;
 use Fiserv\Payments\Lib\CommerceHub\Model\PaymentToken;
 use Fiserv\Payments\Lib\CommerceHub\Model\RefundRequest;
 use Fiserv\Payments\Lib\CommerceHub\Model\TransactionDetails;
@@ -17,7 +16,6 @@ use Fiserv\Payments\Model\OpenRefund;
 use Fiserv\Payments\Model\OpenRefundRepository;
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Vault\Api\PaymentTokenRepositoryInterface;
 
 /**
@@ -35,20 +33,18 @@ class OpenRefundService
 		private readonly OpenRefundRepository $openRefundRepository,
 		private readonly PaymentTokenRepositoryInterface $paymentTokenRepository,
 		private readonly SearchCriteriaBuilder $searchCriteriaBuilder,
-		private readonly MultiLevelLogger $logger,
-		private readonly OrderRepositoryInterface $orderRepository
+		private readonly MultiLevelLogger $logger
 	) {}
 
 	/**Submit an open refund: validate → resolve source → build request → save → call CH → persist result.*/
 	public function submit(OpenRefund $openRefund, array $formData): void
 	{
-		$orderId = trim((string)($openRefund->getOrderIncrementId() ?? ''));
 		$sourceType = $formData['payment_source_type'] ?? 'vault';
 
-		$this->logger->logInfo(1, 'Initiating open refund', "Order ID: $orderId");
-		$this->logger->logInfo(2, 'Open Refund Amount: ' . $openRefund->getAmount() . ' USD', "Order ID: $orderId");
-		$this->logger->logInfo(2, 'Open Refund Customer ID: ' . ($openRefund->getCustomerId() ?? 'n/a'), "Order ID: $orderId");
-		$this->logger->logInfo(2, 'Open Refund Payment source type: ' . $sourceType, "Order ID: $orderId");
+		$this->logger->logInfo(1, 'Initiating open refund');
+		$this->logger->logInfo(2, 'Open Refund Amount: ' . $openRefund->getAmount() . ' USD');
+		$this->logger->logInfo(2, 'Open Refund Customer ID: ' . ($openRefund->getCustomerId() ?? 'n/a'));
+		$this->logger->logInfo(2, 'Open Refund Payment source type: ' . $sourceType);
 
 		$limit = (float)($this->config->getValue('open_refund_transaction_limit') ?? 0);
 		if ($limit > 0 && (float)$openRefund->getAmount() > $limit) {
@@ -56,22 +52,22 @@ class OpenRefundService
 		}
 
 		$source = $sourceType === 'new_card'
-			? $this->buildSessionSource($formData)
+			? $this->buildTokenDataSource($formData)
 			: $this->buildVaultSource($formData, (int)$openRefund->getCustomerId());
 
-		$refundRequest = $this->buildRefundRequest($openRefund, $source, $orderId);
+		$refundRequest = $this->buildRefundRequest($openRefund, $source);
 
 		$openRefund->setStatus(OpenRefund::STATUS_PENDING);
 		$this->openRefundRepository->save($openRefund);
 
-		$this->logger->logInfo(1, 'Open Refund Sending open refund request to CommerceHub', "Order ID: $orderId");
-		$this->logger->logDebug(3, 'Open Refund Request payload: ' . json_encode(json_decode(json_encode($refundRequest), true), JSON_PRETTY_PRINT), "Order ID: $orderId");
+		$this->logger->logInfo(1, 'Open Refund Sending open refund request to CommerceHub');
+		$this->logger->logDebug(3, 'Open Refund Request payload: ' . json_encode(json_decode(json_encode($refundRequest), true), JSON_PRETTY_PRINT));
 
 		try {
 			$chResponse = $this->httpAdapter->sendRequest($refundRequest, self::REFUNDS_ENDPOINT);
 		} catch (\Exception $e) {
-			$this->logger->logCritical(1, 'Open Refund HTTP request to CommerceHub failed', "Order ID: $orderId");
-			$this->logger->logCritical(2, $e->getMessage(), "Order ID: $orderId");
+			$this->logger->logCritical(1, 'Open Refund HTTP request to CommerceHub failed');
+			$this->logger->logCritical(2, $e->getMessage());
 			$openRefund->setStatus(OpenRefund::STATUS_FAILED);
 			$this->openRefundRepository->save($openRefund);
 			throw new LocalizedException(__('Communication with the payment gateway failed. Please try again.'));
@@ -81,7 +77,7 @@ class OpenRefundService
 		$responseBody = json_decode($chResponse->getBody(), true) ?? [];
 		$transactionState = $responseBody['gatewayResponse']['transactionState'] ?? '';
 
-		$this->logger->logDebug(3, 'Open Refund Response (HTTP ' . $statusCode . '): ' . json_encode($responseBody, JSON_PRETTY_PRINT), "Order ID: $orderId");
+		$this->logger->logDebug(3, 'Open Refund Response (HTTP ' . $statusCode . '): ' . json_encode($responseBody, JSON_PRETTY_PRINT));
 
 		if ($statusCode >= 200 && $statusCode < 300 && strtoupper($transactionState) === 'CAPTURED') {
 			$transactionId = $responseBody['gatewayResponse']['transactionProcessingDetails']['transactionId'] ?? '';
@@ -91,9 +87,8 @@ class OpenRefundService
 			$openRefund->setTransactionId($transactionId);
 			$openRefund->setMaskedCard($maskedCard);
 			$this->openRefundRepository->save($openRefund);
-			$this->addOrderHistoryComment($openRefund, $transactionId, $orderId);
 
-			$this->logger->logInfo(2, 'Open Refund Transaction ID: ' . $transactionId, "Order ID: $orderId");
+			$this->logger->logInfo(2, 'Open Refund Transaction ID: ' . $transactionId);
 		} else {
 			$errorMessage = $responseBody['error'][0]['message']
 				?? $responseBody['errors'][0]['message']
@@ -103,29 +98,50 @@ class OpenRefundService
 			$openRefund->setStatus(OpenRefund::STATUS_FAILED);
 			$this->openRefundRepository->save($openRefund);
 
-			$this->logger->logError(1, 'Open Refund CH returned non-CAPTURED state: ' . $transactionState . ' (HTTP ' . $statusCode . ')', "Order ID: $orderId");
-			$this->logger->logError(2, 'Open Refund Error message: ' . $errorMessage, "Order ID: $orderId");
+			$this->logger->logError(1, 'Open Refund CH returned non-CAPTURED state: ' . $transactionState . ' (HTTP ' . $statusCode . ')');
+			$this->logger->logError(2, 'Open Refund Error message: ' . $errorMessage);
 
 			throw new LocalizedException(__('Refund was declined by the payment gateway: %1', $errorMessage));
 		}
 	}
 
 	/**
-	 * Build a PaymentSession source from a hosted-fields session token.
+	 * Build a PaymentToken source from raw token data returned by the TokenizeCard controller.
+	 * The session was already exchanged for a PaymentToken via payments-vas/v1/tokens before
+	 * this method is called — CommerceHub's refunds endpoint does not accept PaymentSession.
 	 *
-	 * @param array $formData
-	 * @return PaymentSession
+	 * Expected keys in $formData:
+	 *   new_card_token_data, new_card_token_source, new_card_exp_month,
+	 *   new_card_exp_year, new_card_name_on_card
+	 *
+	 * @param  array $formData
+	 * @return PaymentToken
 	 * @throws LocalizedException
 	 */
-	private function buildSessionSource(array $formData): PaymentSession
+	private function buildTokenDataSource(array $formData): PaymentToken
 	{
-		$sessionToken = $formData['hosted_field_token'] ?? '';
-		if (empty($sessionToken)) {
-			throw new LocalizedException(__('Hosted field session token is missing. Please re-enter card details.'));
+		$tokenData = trim((string)($formData['new_card_token_data'] ?? ''));
+		if ($tokenData === '') {
+			throw new LocalizedException(__('Card tokenization data is missing. Please re-enter your card details.'));
 		}
-		$source = new PaymentSession();
-		$source->setSessionId($sessionToken);
-		return $source;
+
+		$tokenSource = $formData['new_card_token_source'] ?? '';
+		$expMonth    = $formData['new_card_exp_month']    ?? '';
+		$expYear     = $formData['new_card_exp_year']     ?? '';
+		$nameOnCard  = $formData['new_card_name_on_card'] ?? '';
+
+		$card = new Card();
+		if ($expMonth)   { $card->setExpirationMonth($expMonth); }
+		if ($expYear)    { $card->setExpirationYear($expYear); }
+		if ($nameOnCard) { $card->setNameOnCard($nameOnCard); }
+
+		$paymentToken = new PaymentToken();
+		$paymentToken->setSourceType(self::PAYMENT_TOKEN_SOURCE_TYPE);
+		$paymentToken->setTokenData($tokenData);
+		if ($tokenSource) { $paymentToken->setTokenSource($tokenSource); }
+		$paymentToken->setDeclineDuplicates(false);
+		$paymentToken->setCard($card);
+		return $paymentToken;
 	}
 
 	/**
@@ -178,68 +194,28 @@ class OpenRefundService
 		return $paymentToken;
 	}
 
-	/**
-	 * Write an order history comment for the open refund.
-	 *
-	 * @param OpenRefund $openRefund
-	 * @param string $transactionId
-	 * @param string $orderId
-	 */
-	private function addOrderHistoryComment(OpenRefund $openRefund, string $transactionId, string $orderId): void
-	{
-		if ($orderId === '') {
-			$this->logger->logInfo(2, 'Open Refund No order_increment_id set — skipping order history comment', "Order ID: $orderId");
-			return;
-		}
 
-		try {
-			$items = $this->orderRepository->getList(
-				$this->searchCriteriaBuilder->addFilter('increment_id', $orderId, 'eq')->create()
-			)->getItems();
-
-			if (empty($items)) {
-				$this->logger->logError(2, 'Open Refund Could not find order to add history comment', "Order ID: $orderId");
-				return;
-			}
-
-			$maskedCard = $openRefund->getMaskedCard();
-			$cardSuffix = $maskedCard ? ' (****' . $maskedCard . ')' : '';
-
-			$order = reset($items);
-			$order->addCommentToStatusHistory(sprintf(
-				'Open refund of $%s USD captured%s. Transaction ID: "%s"',
-				number_format((float)$openRefund->getAmount(), 2),
-				$cardSuffix,
-				$transactionId
-			));
-			$this->orderRepository->save($order);
-		} catch (\Throwable $e) {
-			$this->logger->logError(2, 'Open Refund Failed to add order history comment: ' . $e->getMessage(), "Order ID: $orderId");
-		}
-	}
-
-	/**
-	 * Build the RefundRequest model — without referenceTransactionDetails.
-	 *
-	 * @param OpenRefund $openRefund
-	 * @param PaymentToken|PaymentSession $source
-	 * @param string $orderId
-	 * @return RefundRequest
-	 */
-	private function buildRefundRequest(OpenRefund $openRefund, $source, string $orderId): RefundRequest
+        /**
+         * Build the RefundRequest model — without referenceTransactionDetails.
+         *
+         * @param OpenRefund $openRefund
+         * @param PaymentToken $source
+         * @return RefundRequest
+         */
+        private function buildRefundRequest(OpenRefund $openRefund, $source): RefundRequest
 	{
 		$amount = new Amount();
 		$amount->setTotal((float)$openRefund->getAmount());
 		$amount->setCurrency('USD');
-		$this->logger->logDebug(3, "Open Refund Amount Data Builder:\n" . $amount->__toString(), "Order ID: $orderId");
+		$this->logger->logDebug(3, "Open Refund Amount Data Builder:\n" . $amount->__toString());
 
-		$this->logger->logDebug(3, "Open Refund Payment Source Data Builder:\n" . json_encode(json_decode(json_encode($source), true), JSON_PRETTY_PRINT), "Order ID: $orderId");
+		$this->logger->logDebug(3, "Open Refund Payment Source Data Builder:\n" . json_encode(json_decode(json_encode($source), true), JSON_PRETTY_PRINT));
 
 		$merchantDetails = new MerchantDetails();
 		$merchantDetails->setMerchantId($this->config->getMerchantId());
 		$merchantDetails->setTerminalId($this->config->getTerminalId());
 		$merchantDetails->setMerchantPartner(MerchantPartnerHelper::createMerchantPartner($this->config));
-		$this->logger->logDebug(3, "Open Refund Merchant Details Data Builder:\n" . $merchantDetails->__toString(), "Order ID: $orderId");
+		$this->logger->logDebug(3, "Open Refund Merchant Details Data Builder:\n" . $merchantDetails->__toString());
 
 		$transactionDetails = new TransactionDetails();
 		$transactionDetails->setCaptureFlag($this->config->isOpenRefundCaptureFlag());
@@ -247,10 +223,7 @@ class OpenRefundService
 		$transactionDetails->setAccountVerification(false);
 		$transactionDetails->setMerchantTransactionId(substr(uniqid('or_', true), 0, 36));
 
-		$referenceTransactionId = trim((string)($openRefund->getReferenceTransactionId() ?? ''));
-		if ($referenceTransactionId !== '') { $transactionDetails->setMerchantOrderId($referenceTransactionId); }
-
-		$this->logger->logDebug(3, "Open Refund Transaction Details Data Builder:\n" . $transactionDetails->__toString(), "Order ID: $orderId");
+		$this->logger->logDebug(3, "Open Refund Transaction Details Data Builder:\n" . $transactionDetails->__toString());
 
 		$customer   = null;
 		$customerId = $openRefund->getCustomerId();
@@ -268,7 +241,7 @@ class OpenRefundService
 			$email = trim((string)($openRefund->getCustomerEmail() ?? ''));
 			if ($email !== '') { $customer->setEmail($email); }
 
-			$this->logger->logDebug(3, "Open Refund Customer Data Builder:\n" . $customer->__toString(), "Order ID: $orderId");
+			$this->logger->logDebug(3, "Open Refund Customer Data Builder:\n" . $customer->__toString());
 		}
 
 		$refundRequest = new RefundRequest();

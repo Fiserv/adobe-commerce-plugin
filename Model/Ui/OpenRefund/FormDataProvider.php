@@ -8,23 +8,18 @@ use Magento\Ui\DataProvider\AbstractDataProvider;
 
 class FormDataProvider extends AbstractDataProvider
 {
-    /** @var array */
-    protected $loadedData = [];  // must be protected to match AbstractDataProvider's property visibility
-
-    /** @var RequestInterface */
-    private RequestInterface $request;
+    protected $loadedData = [];
 
     public function __construct(
         $name,
         $primaryFieldName,
         $requestFieldName,
         CollectionFactory $collectionFactory,
-        RequestInterface $request,
+        private readonly RequestInterface $request,
         array $meta = [],
         array $data = []
     ) {
         $this->collection = $collectionFactory->create();
-        $this->request    = $request;
         parent::__construct($name, $primaryFieldName, $requestFieldName, $meta, $data);
     }
 
@@ -35,9 +30,7 @@ class FormDataProvider extends AbstractDataProvider
         }
 
         $entityId = (int) $this->request->getParam('entity_id');
-
         if ($entityId) {
-            /** @var \Fiserv\Payments\Model\OpenRefund $item */
             foreach ($this->collection->getItems() as $item) {
                 if ((int) $item->getEntityId() === $entityId) {
                     $this->loadedData[$entityId] = $item->getData();
@@ -49,4 +42,3 @@ class FormDataProvider extends AbstractDataProvider
         return $this->loadedData;
     }
 }
-

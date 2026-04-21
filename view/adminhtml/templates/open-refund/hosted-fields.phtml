@@ -1,46 +1,58 @@
 <?php
 /** @var \Magento\Backend\Block\Template $block */
 ?>
-<div id="open-refund-hosted-fields">
+<link rel="stylesheet" type="text/css"
+      href="<?= $block->escapeUrl($block->getViewFileUrl('Fiserv_Payments/css/ch-form-admin.css')) ?>">
 
-    <input type="hidden" name="hosted_field_token" id="hosted_field_token" value=""/>
+<input type="hidden" id="hosted_field_token" name="hosted_field_token" value=""/>
 
-    <div id="open-refund-hosted-error" class="message message-error" style="display:none;">
-        <?= $block->escapeHtml(__('Hosted fields could not be loaded. Please refresh the page or contact support.')) ?>
-    </div>
-
-    <div id="hosted-fields-wrap" style="display:none;">
-        <div class="admin__field">
-            <label class="admin__field-label"><span><?= $block->escapeHtml(__('Card Number')) ?></span></label>
-            <div class="admin__field-control">
-                <div id="open-refund-card-number" class="open-refund-hosted-field"></div>
-            </div>
-        </div>
-        <div class="admin__field">
-            <label class="admin__field-label"><span><?= $block->escapeHtml(__('Name on Card')) ?></span></label>
-            <div class="admin__field-control">
-                <div id="open-refund-name-on-card" class="open-refund-hosted-field"></div>
-            </div>
-        </div>
-        <div class="admin__field">
-            <label class="admin__field-label"><span><?= $block->escapeHtml(__('Expiry Month')) ?></span></label>
-            <div class="admin__field-control">
-                <div id="open-refund-exp-month" class="open-refund-hosted-field"></div>
-            </div>
-        </div>
-        <div class="admin__field">
-            <label class="admin__field-label"><span><?= $block->escapeHtml(__('Expiry Year')) ?></span></label>
-            <div class="admin__field-control">
-                <div id="open-refund-exp-year" class="open-refund-hosted-field"></div>
-            </div>
-        </div>
-        <div class="admin__field">
-            <label class="admin__field-label"><span><?= $block->escapeHtml(__('CVV')) ?></span></label>
-            <div class="admin__field-control">
-                <div id="open-refund-cvv" class="open-refund-hosted-field"></div>
-            </div>
-        </div>
-    </div>
+<div id="open-refund-hosted-error" class="message message-error" style="display:none;">
+    <?= $block->escapeHtml(__('Hosted fields could not be loaded. Please refresh the page or contact support.')) ?>
 </div>
 
+<div id="hosted-fields-wrap" style="display:none;">
+    <div id="sdc-container">
 
+        <div class="sdc-row">
+            <div id="sdc-card-number-frame" class="sdc-field-frame sdc-text">
+                <div id="sdc-card-brand-icon" class="sdc-card-brand-icon"></div>
+                <div id="fiserv_commercehub-card-number" class="sdc-field"></div>
+                <div id="sdc-unmask-number" class="sdc-unmasking-icon"></div>
+                <div id="sdc-mask-number" class="sdc-masking-icon sdc-hidden"></div>
+            </div>
+            <span id="sdc-card-number-invalid-message" class="sdc-error-message sdc-hidden"></span>
+        </div>
+
+        <div class="sdc-row">
+            <div id="sdc-card-name-frame" class="sdc-field-frame sdc-text">
+                <div id="fiserv_commercehub-name-on-card" class="sdc-field"></div>
+            </div>
+            <span id="sdc-card-name-invalid-message" class="sdc-error-message sdc-hidden"></span>
+        </div>
+
+        <div class="sdc-row">
+            <div id="sdc-security-code-frame" class="sdc-field-frame sdc-text">
+                <div id="fiserv_commercehub-security-code" class="sdc-field"></div>
+                <div id="sdc-unmask-security" class="sdc-unmasking-icon"></div>
+                <div id="sdc-mask-security" class="sdc-masking-icon sdc-hidden"></div>
+            </div>
+            <span id="sdc-security-code-invalid-message" class="sdc-error-message sdc-hidden"></span>
+        </div>
+
+        <div class="sdc-column">
+            <div class="sdc-row">
+                <div id="sdc-exp-month-frame" class="sdc-field-frame sdc-dropdown">
+                    <div id="fiserv_commercehub-expiration-month" class="sdc-field"></div>
+                </div>
+                <span id="sdc-exp-month-invalid-message" class="sdc-error-message sdc-hidden"></span>
+            </div>
+            <div class="sdc-row">
+                <div id="sdc-exp-year-frame" class="sdc-field-frame sdc-dropdown">
+                    <div id="fiserv_commercehub-expiration-year" class="sdc-field"></div>
+                </div>
+                <span id="sdc-exp-year-invalid-message" class="sdc-error-message sdc-hidden"></span>
+            </div>
+        </div>
+
+    </div>
+</div>

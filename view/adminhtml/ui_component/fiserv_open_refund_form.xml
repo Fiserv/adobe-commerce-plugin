@@ -95,37 +95,6 @@
         </field>
 
 
-        <field name="reference_transaction_id" formElement="input">
-            <argument name="data" xsi:type="array">
-                <item name="config" xsi:type="array">
-                    <item name="source" xsi:type="string">refund_details</item>
-                </item>
-            </argument>
-            <settings>
-                <label translate="true">Reference Transaction ID</label>
-                <dataType>text</dataType>
-                <dataScope>reference_transaction_id</dataScope>
-                <tooltip>
-                    <description translate="true">Optional. Provide a prior transaction ID for audit trail purposes.</description>
-                </tooltip>
-            </settings>
-        </field>
-
-        <field name="order_increment_id" formElement="input">
-            <argument name="data" xsi:type="array">
-                <item name="config" xsi:type="array">
-                    <item name="source" xsi:type="string">refund_details</item>
-                </item>
-            </argument>
-            <settings>
-                <label translate="true">Associated Order #</label>
-                <dataType>text</dataType>
-                <dataScope>order_increment_id</dataScope>
-                <tooltip>
-                    <description translate="true">Enter the Magento order number (e.g. 000008032) to attach this refund to that order's history.</description>
-                </tooltip>
-            </settings>
-        </field>
 
         <field name="notes" formElement="textarea">
             <argument name="data" xsi:type="array">

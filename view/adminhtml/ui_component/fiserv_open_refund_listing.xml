@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <listing xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="urn:magento:framework:Ui/etc/ui_configuration.xsd">
-
     <argument name="data" xsi:type="array">
         <item name="js_config" xsi:type="array">
             <item name="provider" xsi:type="string">fiserv_open_refund_listing.fiserv_open_refund_listing_data_source</item>
         </item>
     </argument>
-
     <settings>
         <buttons>
             <button name="add">
@@ -21,7 +19,6 @@
             <dep>fiserv_open_refund_listing.fiserv_open_refund_listing_data_source</dep>
         </deps>
     </settings>
-
     <dataSource name="fiserv_open_refund_listing_data_source" component="Magento_Ui/js/grid/provider">
         <settings>
             <storageConfig>
@@ -38,7 +35,6 @@
             </settings>
         </dataProvider>
     </dataSource>
-
     <listingToolbar name="listing_top">
         <settings>
             <sticky>true</sticky>
@@ -49,7 +45,6 @@
         <paging name="listing_paging"/>
         <exportButton name="export_button"/>
     </listingToolbar>
-
     <columns name="fiserv_open_refund_listing_columns">
         <column name="entity_id">
             <settings>

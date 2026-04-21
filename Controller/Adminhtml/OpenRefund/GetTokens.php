@@ -13,92 +13,62 @@ class GetTokens extends Action implements HttpGetActionInterface
 {
     const PAYMENT_METHOD_CODE = 'fiserv_commercehub';
 
-    /** @var JsonFactory */
-    private JsonFactory $jsonFactory;
-
-    /** @var PaymentTokenManagementInterface */
-    private PaymentTokenManagementInterface $paymentTokenManagement;
-
-    /** @var StoreManagerInterface */
-    private StoreManagerInterface $storeManager;
-
     public function __construct(
         Context $context,
-        JsonFactory $jsonFactory,
-        PaymentTokenManagementInterface $paymentTokenManagement,
-        StoreManagerInterface $storeManager
+        private readonly JsonFactory $jsonFactory,
+        private readonly PaymentTokenManagementInterface $paymentTokenManagement,
+        private readonly StoreManagerInterface $storeManager
     ) {
         parent::__construct($context);
-        $this->jsonFactory            = $jsonFactory;
-        $this->paymentTokenManagement = $paymentTokenManagement;
-        $this->storeManager           = $storeManager;
     }
 
     public function execute()
     {
-        $result     = $this->jsonFactory->create();
         $customerId = (int) $this->getRequest()->getParam('customer_id');
 
         if (!$customerId) {
-            return $result->setData(['tokens' => []]);
+            return $this->jsonFactory->create()->setData(['tokens' => []]);
         }
 
-        // Use the same method as the frontend /vault/cards/listaction page.
-        // It applies is_active=1, is_visible=1, expires_at > now(), and website scope.
-        // We iterate all stores so admin sees tokens from any website the customer used.
-        $seen         = [];
-        $tokenOptions = [];
+        $seen    = [];
+        $options = [];
 
         foreach ($this->storeManager->getStores() as $store) {
-            $tokens = $this->paymentTokenManagement->getVisibleAvailableTokens(
-                $customerId,
-                (int) $store->getId()
-            );
-
-            foreach ($tokens as $token) {
+            foreach ($this->paymentTokenManagement->getVisibleAvailableTokens($customerId, (int) $store->getId()) as $token) {
                 if ($token->getPaymentMethodCode() !== self::PAYMENT_METHOD_CODE) {
                     continue;
                 }
-
                 $hash = $token->getPublicHash();
                 if (isset($seen[$hash])) {
-                    continue; // deduplicate across stores
+                    continue;
                 }
                 $seen[$hash] = true;
-
-                $details = json_decode($token->getTokenDetails() ?: '{}', true);
-                $tokenOptions[] = [
-                    'value' => $hash,
-                    'label' => $this->buildTokenLabel($details),
-                ];
+                $details     = json_decode($token->getTokenDetails() ?: '{}', true);
+                $options[]   = ['value' => $hash, 'label' => $this->buildLabel($details)];
             }
         }
 
-        return $result->setData(['tokens' => $tokenOptions]);
+        return $this->jsonFactory->create()->setData(['tokens' => $options]);
     }
 
-    private function buildTokenLabel(array $details): string
+    private function buildLabel(array $d): string
     {
-        $type  = strtoupper($details['type'] ?? $details['cardType'] ?? 'CARD');
-        $last4 = $details['maskedCC'] ?? $details['last4'] ?? '****';
-        $exp   = $details['expirationDate'] ?? '';
+        $type  = strtoupper($d['type'] ?? $d['cardType'] ?? 'CARD');
+        $last4 = $d['maskedCC'] ?? $d['last4'] ?? '****';
+        $exp   = $d['expirationDate'] ?? '';
 
         if ($exp) {
-            return sprintf('%s ending %s (exp %s)', $type, $last4, $exp);
+            return "{$type} ending {$last4} (exp {$exp})";
         }
-
-        $expMonth = $details['expMonth'] ?? '';
-        $expYear  = $details['expYear'] ?? '';
-        if ($expMonth && $expYear) {
-            return sprintf('%s ending %s (exp %s/%s)', $type, $last4, $expMonth, $expYear);
+        if (($d['expMonth'] ?? '') && ($d['expYear'] ?? '')) {
+            return "{$type} ending {$last4} (exp {$d['expMonth']}/{$d['expYear']})";
         }
-
-        return sprintf('%s ending %s', $type, $last4);
+        return "{$type} ending {$last4}";
     }
 
     protected function _isAllowed(): bool
     {
-        return true;
+        return $this->_authorization->isAllowed('Fiserv_Payments::open_refunds_manage');
     }
 }
 

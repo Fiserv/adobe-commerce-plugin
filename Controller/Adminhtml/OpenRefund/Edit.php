@@ -4,33 +4,29 @@ namespace Fiserv\Payments\Controller\Adminhtml\OpenRefund;
 
 use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
-use Magento\Framework\View\Result\PageFactory;
 use Magento\Framework\App\Action\HttpGetActionInterface;
+use Magento\Framework\View\Result\PageFactory;
 
 class Edit extends Action implements HttpGetActionInterface
 {
-    /**
-     * @var PageFactory
-     */
-    private $pageFactory;
-
-    public function __construct(Context $context, PageFactory $pageFactory)
-    {
+    public function __construct(
+        Context $context,
+        private readonly PageFactory $pageFactory
+    ) {
         parent::__construct($context);
-        $this->pageFactory = $pageFactory;
     }
 
     public function execute()
     {
-        $resultPage = $this->pageFactory->create();
-        $resultPage->setActiveMenu('Fiserv_Payments::open_refunds');
-        $resultPage->getConfig()->getTitle()->prepend(__('Create New Open Refund'));
-        return $resultPage;
+        $page = $this->pageFactory->create();
+        $page->setActiveMenu('Fiserv_Payments::open_refunds');
+        $page->getConfig()->getTitle()->prepend(__('Create New Open Refund'));
+        return $page;
     }
 
     protected function _isAllowed()
     {
-        return true;
+        return $this->_authorization->isAllowed('Fiserv_Payments::open_refunds_manage');
     }
 }
 

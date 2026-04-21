@@ -4,13 +4,13 @@
     <update handle="styles"/>
     <body>
         <referenceBlock name="page.actions.toolbar">
-            <block class="Fiserv\Payments\Block\Adminhtml\OpenRefund\Edit\SaveButton"
+            <block class="Magento\Backend\Block\Template"
                    name="open_refund_save_button"
                    template="Fiserv_Payments::open-refund/save-button.phtml"/>
         </referenceBlock>
         <referenceContainer name="content">
             <uiComponent name="fiserv_open_refund_form"/>
-            <block class="Magento\Backend\Block\Template"
+            <block class="Fiserv\Payments\Block\Adminhtml\OpenRefund\FormInit"
                    name="open_refund_form_init"
                    template="Fiserv_Payments::open-refund/form-init.phtml"
                    after="fiserv_open_refund_form"/>

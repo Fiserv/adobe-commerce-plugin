@@ -5,7 +5,6 @@ namespace Fiserv\Payments\Model;
 use Fiserv\Payments\Api\Data\OpenRefund\OpenRefundInterface;
 use Fiserv\Payments\Api\Data\OpenRefund\OpenRefundSearchResultInterface;
 use Fiserv\Payments\Api\OpenRefund\OpenRefundRepositoryInterface;
-use Fiserv\Payments\Model\OpenRefundFactory;
 use Fiserv\Payments\Model\ResourceModel\OpenRefund as OpenRefundResource;
 use Fiserv\Payments\Model\ResourceModel\OpenRefund\CollectionFactory;
 use Magento\Framework\Api\SearchCriteria\CollectionProcessorInterface;
@@ -16,44 +15,13 @@ use Magento\Framework\Exception\NoSuchEntityException;
 
 class OpenRefundRepository implements OpenRefundRepositoryInterface
 {
-    /**
-     * @var OpenRefundResource
-     */
-    private $resource;
-
-    /**
-     * @var OpenRefundFactory
-     */
-    private $openRefundFactory;
-
-    /**
-     * @var CollectionFactory
-     */
-    private $collectionFactory;
-
-    /**
-     * @var \Fiserv\Payments\Model\OpenRefund\OpenRefundSearchResultFactory
-     */
-    private $searchResultFactory;
-
-    /**
-     * @var CollectionProcessorInterface
-     */
-    private $collectionProcessor;
-
     public function __construct(
-        OpenRefundResource $resource,
-        OpenRefundFactory $openRefundFactory,
-        CollectionFactory $collectionFactory,
-        \Fiserv\Payments\Model\OpenRefund\OpenRefundSearchResultFactory $searchResultFactory,
-        CollectionProcessorInterface $collectionProcessor
-    ) {
-        $this->resource            = $resource;
-        $this->openRefundFactory   = $openRefundFactory;
-        $this->collectionFactory   = $collectionFactory;
-        $this->searchResultFactory = $searchResultFactory;
-        $this->collectionProcessor = $collectionProcessor;
-    }
+        private readonly OpenRefundResource $resource,
+        private readonly OpenRefundFactory $openRefundFactory,
+        private readonly CollectionFactory $collectionFactory,
+        private readonly OpenRefund\OpenRefundSearchResultFactory $searchResultFactory,
+        private readonly CollectionProcessorInterface $collectionProcessor
+    ) {}
 
     public function get(int $entityId): OpenRefundInterface
     {
@@ -61,9 +29,7 @@ class OpenRefundRepository implements OpenRefundRepositoryInterface
         $this->resource->load($openRefund, $entityId);
 
         if (!$openRefund->getId()) {
-            throw new NoSuchEntityException(
-                __('Open Refund with ID "%1" does not exist.', $entityId)
-            );
+            throw new NoSuchEntityException(__('Open Refund with ID "%1" does not exist.', $entityId));
         }
 
         return $openRefund;
@@ -74,12 +40,12 @@ class OpenRefundRepository implements OpenRefundRepositoryInterface
         $collection = $this->collectionFactory->create();
         $this->collectionProcessor->process($searchCriteria, $collection);
 
-        $searchResult = $this->searchResultFactory->create();
-        $searchResult->setSearchCriteria($searchCriteria);
-        $searchResult->setItems($collection->getItems());
-        $searchResult->setTotalCount($collection->getSize());
+        $result = $this->searchResultFactory->create();
+        $result->setSearchCriteria($searchCriteria);
+        $result->setItems($collection->getItems());
+        $result->setTotalCount($collection->getSize());
 
-        return $searchResult;
+        return $result;
     }
 
     public function save(OpenRefundInterface $openRefund): OpenRefundInterface
@@ -89,7 +55,6 @@ class OpenRefundRepository implements OpenRefundRepositoryInterface
         } catch (\Exception $e) {
             throw new CouldNotSaveException(__('Could not save Open Refund: %1', $e->getMessage()));
         }
-
         return $openRefund;
     }
 
@@ -100,7 +65,6 @@ class OpenRefundRepository implements OpenRefundRepositoryInterface
         } catch (\Exception $e) {
             throw new CouldNotDeleteException(__('Could not delete Open Refund: %1', $e->getMessage()));
         }
-
         return true;
     }
 }
