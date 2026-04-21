@@ -27,6 +27,7 @@
 				<tokenization_strategy>CUSTOMER</tokenization_strategy>
 				<tokenization>1</tokenization>
 				<standalone_spa>1</standalone_spa>
+				<checkout_interactions_expires_in_minutes>30</checkout_interactions_expires_in_minutes>
 				<order_status>pending</order_status>
 				<logging_level>2</logging_level>
 				<currency>USD</currency>

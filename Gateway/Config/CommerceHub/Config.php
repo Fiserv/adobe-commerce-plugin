@@ -38,6 +38,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	const KEY_TOKEN_STRATEGY = 'tokenization_strategy';
 	const KEY_TOKENIZATION = "tokenization";
 	const KEY_STANDALONE_SPA = 'standalone_spa';
+	const KEY_CHECKOUT_INTERACTIONS_EXPIRES_IN_MINUTES = 'checkout_interactions_expires_in_minutes';
 	const KEY_LOGGING_LEVEL = 'logging_level';
 	const KEY_3DS = 'three_d_secure';
 
@@ -358,6 +359,29 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	public function getLoggingLevel($storeId = null)
 	{
 		return $this->getValue(self::KEY_LOGGING_LEVEL, $storeId);
+	}
+
+	/**
+	 * Checkout interaction expiration (minutes) used when requesting Commerce Hub credentials.
+	 *
+	 * @param int|null $storeId
+	 * @return int
+	 */
+
+	public function getCheckoutInteractionsExpiresInMinutes($storeId = null): int
+	{
+		$value = $this->getValue(self::KEY_CHECKOUT_INTERACTIONS_EXPIRES_IN_MINUTES, $storeId);
+		if (!is_numeric($value)) {
+			return 30;
+		}
+		$minutes = (int)$value;
+		if ($minutes < 30) {
+			return 30;
+		}
+		if ($minutes > 240) {
+			return 240;
+		}
+		return $minutes;
 	}
 
 	/**

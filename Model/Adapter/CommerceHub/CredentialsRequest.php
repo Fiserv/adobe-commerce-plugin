@@ -29,6 +29,7 @@ class CredentialsRequest
 	const KEY_PAYMENT_TOKEN = "paymentToken";
 	const KEY_SOURCE = "source";
 	const KEY_3DS = "threeDSecure";
+	const KEY_CHECKOUT_INTERACTIONS = 'checkoutInteractions';
 	const KEY_TRANSACTION_DETAILS = "transactionDetails";
 	const KEY_AUTHENTICATION_3DS = "authentication3DS";
 	const KEY_ADDITIONAL_DATA_COMMON = "additionalDataCommon";
@@ -216,6 +217,11 @@ class CredentialsRequest
                 ]
             ];
 		}
+
+		$payload[self::KEY_CHECKOUT_INTERACTIONS] = [
+			'expiresInMinutes' => $this->chConfig->getCheckoutInteractionsExpiresInMinutes(),
+		];
+
         
 		$payload[self::KEY_ADDITIONAL_DATA_COMMON] = array(
 			self::KEY_ADDITIONAL_DATA => array(

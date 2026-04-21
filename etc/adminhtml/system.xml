@@ -124,6 +124,13 @@
 						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 						<config_path>payment/fiserv_commercehub/standalone_spa</config_path>
 					</field>
+					<field id="checkout_interactions_expires_in_minutes" translate="label" type="text" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Checkout Interaction Expiration (Minutes)</label>
+						<config_path>payment/fiserv_commercehub/checkout_interactions_expires_in_minutes</config_path>
+						<backend_model>Fiserv\Payments\Model\System\Config\Backend\CommerceHub\CheckoutInteractionsExpiresInMinutes</backend_model>
+						<validate>validate-number validate-greater-than-zero</validate>
+						<comment>Session validity: 30–240 minutes (default 30 minutes).</comment>
+					</field>
 				</group>
 				<group id="valuelink_gift_card" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="5">
 					<label>Gift Cards</label>
