@@ -26,15 +26,12 @@ define([
 			additionalData: {},
 			paymentPayload: { sessionId: null },
 			paymentMethodName: '[name="payment[method]"]',
-			isIframeValid: null, // will be set as observable in initialize
 			securityIframeInitialized: false
 		},
 
 		initialize: function () {
 			this._super();
-			this.isIframeValid = ko.observable(false);
 			if (!this.shouldRequireVaultCvv()) {
-				this.isIframeValid(true);
 				this.updatePlaceOrderState(true);
 			}
 			this.setupPaymentMethodWatcher();
@@ -44,15 +41,9 @@ define([
 		shouldRequireVaultCvv: function () {
 			const paymentCfg = window.checkoutConfig && window.checkoutConfig.payment && window.checkoutConfig.payment[this.getCode()];
 			if (!paymentCfg || typeof paymentCfg.vaultUseCcv === 'undefined') {
-				return true;
+				return false;
 			}
 			return paymentCfg.vaultUseCcv === true || paymentCfg.vaultUseCcv === '1' || paymentCfg.vaultUseCcv === 1;
-		},
-
-		initObservable: function () {
-			this._super()
-			.observe(['isIframeValid']);
-			return this;
 		},
 
 		getPlaceOrderButton: function () {
@@ -91,7 +82,11 @@ define([
 		setupPaymentMethodWatcher: function () {
 			$(document).on("click", this.paymentMethodName, (event) => {
 				if (event.currentTarget.id === this.getId()) {
-					this.loadSecurityIframe();
+					if (!this.shouldRequireVaultCvv()) {
+						this.updatePlaceOrderState(true);
+					} else {
+						this.loadSecurityIframe();
+					}
 				} else {
 					this.destroySecurityIframe();
 				}
@@ -134,16 +129,9 @@ define([
 		},
 
 		loadSecurityIframe: function () {
-			if (!this.shouldRequireVaultCvv()) {
-				this.isIframeValid(true);
-				this.updatePlaceOrderState(true);
-				return;
-			}
 			window.fiservVaultIframeGuards = window.fiservVaultIframeGuards || {};
 			var guardKey = this.getId();
-			console.log('[commercehub-vault] loadSecurityIframe called for', guardKey);
 			if (window.fiservVaultIframeGuards[guardKey]) {
-				console.log('[commercehub-vault] Iframe already initialized for', guardKey);
 				return;
 			}
 			window.fiservVaultIframeGuards[guardKey] = true;
@@ -162,7 +150,6 @@ define([
 
 		destroySecurityIframe: function () {
 			chAdapter.destroyIframe();
-			this.isIframeValid(false);
 			this.updatePlaceOrderState(false);
 			if (window.fiservVaultIframeGuards) {
 				delete window.fiservVaultIframeGuards[this.getId()];
@@ -199,7 +186,6 @@ define([
 		},
 
 		iframeValidHandler: function(valid) {
-			this.isIframeValid(valid);
 			this.updatePlaceOrderState(valid);
 		},
 
@@ -226,20 +212,17 @@ define([
 			let frame = this.getSdcFieldFrame();
 			let mess = this.getSdcFieldInvalidMessageContainer();
 			if (data["isValid"] === true) {
-				this.isIframeValid(true);
 				this.updatePlaceOrderState(true);
 				frame.removeClass('sdc-error-field');
 				frame.addClass('sdc-valid-field');
 				mess.addClass('sdc-hidden');
 			} else if (data["shouldShowError"] === true) {
-				this.isIframeValid(false);
 				this.updatePlaceOrderState(false);
 				mess.text(this.getSdcInvalidFieldMessageText());
 				frame.removeClass('sdc-valid-field');
 				frame.addClass('sdc-error-field');
 				mess.removeClass('sdc-hidden');
 			} else {
-				this.isIframeValid(false);
 				this.updatePlaceOrderState(false);
 				frame.removeClass('sdc-valid-field');
 				frame.removeClass('sdc-error-field');
@@ -288,7 +271,6 @@ define([
 		iframeRunFailure: function (message) {
 			this.showError(message || "Card capture failure. Please try again.");
 			this.endIframeFlow();
-			this.isIframeValid(false);
 			this.updatePlaceOrderState(false);
 		},
 
@@ -303,10 +285,6 @@ define([
 			});
 		},
 
-		isButtonActive: function () {
-			return this.isIframeValid() && this._super();
-		},
-
 		/**
 		 * Place order
 		 */
@@ -314,11 +292,6 @@ define([
 
 			if (!this.shouldRequireVaultCvv()) {
 				await this.getPaymentMethodToken();
-				return;
-			}
-
-			if (!this.isIframeValid) {
-				this.showError("Please enter a valid security code.");
 				return;
 			}
 
