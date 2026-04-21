@@ -104,8 +104,6 @@
                 <label translate="true">Transaction ID</label>
             </settings>
         </column>
-
     </columns>
-
 </listing>
 
