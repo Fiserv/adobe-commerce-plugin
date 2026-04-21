@@ -43,6 +43,7 @@ define(
 		'use strict';
 
 		return Component.extend({
+			isPlaceOrderActionAllowed: ko.observable(quote.billingAddress() != null),
 			surchargeConfirmed: ko.observable(false),
 			defaults: {
 				template: 'Fiserv_Payments/payment/commercehub/form',
@@ -63,9 +64,9 @@ define(
 			 * @returns {exports.initialize}
 			 */
 			initialize: async function () {
-				quote.billingAddress.subscribe(function (address) {
+					quote.billingAddress.subscribe(function (address) {
 					this.isPlaceOrderActionAllowed(address !== null);
-					this.checkoutValidHandler();
+					this.checkoutValidHandler();	
 				}, this);
 			
 				this.code = 'fiserv_commercehub';
@@ -75,7 +76,7 @@ define(
 				this.vaultEnabler = new VaultEnabler();
 				this.vaultEnabler.setPaymentCode(this.getVaultCode());
 			
-				return this;
+						return this;
 			},
 
 			initializeChAdapter: function () 
@@ -126,8 +127,6 @@ define(
 
 			iframeLoadSuccess: function (data) {
 				this.endIframeFlow();
-				this.isPlaceOrderActionAllowed(quote.billingAddress() != null);
-				this.checkoutValidHandler();
 			},
 
 			iframeRunSuccess: async function (sessionId) {
@@ -193,12 +192,6 @@ define(
 
 				this._super()
 					.observe(['active']);
-
-				if (!this.isPlaceOrderActionAllowed) {
-					this.isPlaceOrderActionAllowed = ko.observable(quote.billingAddress() != null);
-				} else {
-					this.isPlaceOrderActionAllowed(quote.billingAddress() != null);
-				}
 
 				return this;
 			},
