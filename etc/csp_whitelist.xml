@@ -4,7 +4,7 @@
         <policy id="script-src">
             <values>
 				<value id="ch-sdcv2-lib" type="host">https://commercehub-checkout.fiservapps.com</value>
-				<value id="ch-sdk-cert" type="host">https://connect-cert.fiservapis.com</value>
+				<value id="ch-sdk-cert" type="host">https://commercehub-checkout-cert.fiservapps.com</value>
 				<value id="ch-sdk-prod" type="host">https://connect.fiservapis.com</value>
                 <value id="ch-prod-lib-base" type="host">https://prod.api.fiservapps.com</value>
                 <value id="ch-cert-lib-base" type="host">https://cert.api.fiservapps.com</value>
@@ -23,7 +23,7 @@
         <policy id="connect-src">
             <values>
 				<value id="ch-sdcv2-lib" type="host">https://commercehub-checkout.fiservapps.com</value>
-				<value id="ch-sdk-cert" type="host">https://connect-cert.fiservapis.com</value>
+				<value id="ch-sdk-cert" type="host">https://commercehub-checkout-cert.fiservapps.com</value>
 				<value id="ch-sdk-prod" type="host">https://connect.fiservapis.com</value>
                 <value id="ch-prod-lib-base" type="host">https://prod.api.fiservapps.com</value>
                 <value id="ch-cert-lib-base" type="host">https://cert.api.fiservapps.com</value>
@@ -42,7 +42,7 @@
         <policy id="frame-src">
             <values>
 				<value id="ch-sdcv2-lib" type="host">https://commercehub-checkout.fiservapps.com</value>
-				<value id="ch-sdk-cert" type="host">https://connect-cert.fiservapis.com</value>
+				<value id="ch-sdk-cert" type="host">https://commercehub-checkout-cert.fiservapps.com</value>
 				<value id="ch-sdk-prod" type="host">https://connect.fiservapis.com</value>
                 <value id="ch-prod-lib-base" type="host">https://prod.api.fiservapps.com</value>
                 <value id="ch-cert-lib-base" type="host">https://cert.api.fiservapps.com</value>
@@ -69,7 +69,7 @@
         <policy id="form-action">
             <values>
 				<value id="ch-sdcv2-lib" type="host">https://commercehub-checkout.fiservapps.com</value>
-				<value id="ch-sdk-cert" type="host">https://connect-cert.fiservapis.com</value>
+				<value id="ch-sdk-cert" type="host">https://commercehub-checkout-cert.fiservapps.com</value>
 				<value id="ch-sdk-prod" type="host">https://connect.fiservapis.com</value>
                 <value id="ch-prod-lib-base" type="host">https://prod.api.fiservapps.com</value>
                 <value id="ch-cert-lib-base" type="host">https://cert.api.fiservapps.com</value>
