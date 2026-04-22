@@ -10,27 +10,27 @@ use Magento\Payment\Gateway\Validator\ResultInterface;
 use Magento\Payment\Gateway\Validator\ResultInterfaceFactory;
 
 /**
- * Validates account verification response before payment transaction runs.
- */
+ * * Validates account verification response before payment transaction runs.
+ * */
 class VerificationResponseValidator extends AbstractValidator
 {
 	const TRANSACTION_STATE_VERIFIED = 'VERIFIED';
 
 	/**
-	 * @var SubjectReader
-	 */
+	 * * @var SubjectReader
+	 * */
 	private $subjectReader;
 
 	/**
-	 * @var MultiLevelLogger
-	 */
+	 * * @var MultiLevelLogger
+	 * */
 	private $logger;
 
 	/**
-	 * @param ResultInterfaceFactory $resultFactory
-	 * @param SubjectReader $subjectReader
-	 * @param MultiLevelLogger $logger
-	 */
+	 * * @param ResultInterfaceFactory $resultFactory
+	 * * @param SubjectReader $subjectReader
+	 * * @param MultiLevelLogger $logger
+	 * */
 	public function __construct(
 		ResultInterfaceFactory $resultFactory,
 		SubjectReader $subjectReader,
@@ -42,8 +42,8 @@ class VerificationResponseValidator extends AbstractValidator
 	}
 
 	/**
-	 * @inheritdoc
-	 */
+	 * * @inheritdoc
+	 * */
 	public function validate(array $validationSubject): ResultInterface
 	{
 		$chRawResponse = $this->subjectReader->readChResponseFromResponse($validationSubject);

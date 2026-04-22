@@ -4,6 +4,7 @@ namespace Fiserv\Payments\Gateway\Request\CommerceHub\Composite;
 
 use Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\SessionSourceDataBuilder;
+use Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 use Magento\Framework\ObjectManager\TMapFactory;
 
@@ -44,6 +45,7 @@ class SessionVerificationComposite extends ChCompositeBase
 
 		$request = [
 			self::SOURCE_KEY => $result[SessionSourceDataBuilder::SESSION_SOURCE_KEY],
+			MerchantDetailsDataBuilder::MERCHANT_DETAILS_KEY => $result[MerchantDetailsDataBuilder::MERCHANT_DETAILS_KEY],
 			BillingAddressDataBuilder::BILLING_ADDRESS_KEY => $result[BillingAddressDataBuilder::BILLING_ADDRESS_KEY]
 		];
 
