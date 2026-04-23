@@ -549,7 +549,7 @@ define(
 
 			fetchSurchargeEstimate: async function() {
 				if (!this.isSurchargeEnabled()) {
-					return;
+					return true;
 				}
 				try {
 					var quoteTotals = quote.totals();
@@ -559,15 +559,24 @@ define(
 						tax: quoteTotals ? quoteTotals.tax_amount : 'N/A',
 						grand_total: quoteTotals ? quoteTotals.grand_total : 'N/A'
 					}));
+					
+					// Re-initialize SDK with fresh session for surcharge estimation
+					var credsResponse = await chSession({ 'threeDSecure': false });
+					var creds = credsResponse['ch_credentials'];
+					await chAdapter.initSdk(
+						window.checkoutConfig.payment[this.code],
+						creds
+					);
+					
 					var surchargeResponse = await chAdapter.getSurchargeEstimate();
 					var surchargeDetails = surchargeResponse && surchargeResponse.data
 						? surchargeResponse.data
 						: surchargeResponse;
-					console.log('Surcharge SDK full response:', surchargeDetails);
+					console.log('Surcharge SDK full response:', JSON.stringify(surchargeDetails));
 
 					if (!surchargeDetails) {
 						surchargeModel.surchargeData(null);
-						return false;
+						return true;
 					}
 
 					if (surchargeDetails.reason !== 'RESTRICTED_STATE') {
@@ -595,7 +604,7 @@ define(
 				} catch (e) {
 					console.log('Surcharge estimate failure:', e);
 					surchargeModel.surchargeData(null);
-					return false;
+					return true;
 				}
 			},
 
