@@ -309,7 +309,57 @@ define([
 			if (typeof(this.sdcv2Form) === "undefined") {
 				throw new Error("Payment form not initialized.");
 			}
-			return await this.sdcv2Form.getSurchargeEstimate();
+
+			let hasResolvedFromMessage = false;
+			let cleanup = null;
+			const estimateFromMessage = new Promise((resolve) => {
+				const timeoutId = window.setTimeout(() => {
+					if (!hasResolvedFromMessage) {
+						resolve(undefined);
+					}
+				}, 2000);
+
+				const onMessage = (event) => {
+					let payload = event.data;
+					if (typeof(payload) === 'string') {
+						try {
+							payload = JSON.parse(payload);
+						} catch (e) {
+							return;
+						}
+					}
+
+					if (!payload || payload.type !== 'SURCHARGE_ESTIMATE_RESPONSE') {
+						return;
+					}
+
+					hasResolvedFromMessage = true;
+					window.clearTimeout(timeoutId);
+					window.removeEventListener('message', onMessage);
+					resolve(payload.data || payload);
+				};
+
+				window.addEventListener('message', onMessage);
+				cleanup = () => {
+					window.clearTimeout(timeoutId);
+					window.removeEventListener('message', onMessage);
+				};
+			});
+
+			let sdkResponse = undefined;
+			try {
+				sdkResponse = await this.sdcv2Form.getSurchargeEstimate();
+			} finally {
+				if (sdkResponse !== undefined && cleanup) {
+					cleanup();
+				}
+			}
+
+			if (sdkResponse !== undefined && sdkResponse !== null) {
+				return sdkResponse;
+			}
+
+			return await estimateFromMessage;
 		}
 	};
 });
