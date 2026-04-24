@@ -3,15 +3,16 @@
 <tr class="totals surcharge">
     <th class="mark" scope="row">
         <span data-bind="text: title"></span>
-        <span class="surcharge-info-icon" title="">
-            &#9432;
-            <span class="surcharge-tooltip" data-bind="text: disclosureText()"></span>
-        </span>
     </th>
     <td class="amount">
         <span class="price" data-bind="text: formattedAmount()"></span>
     </td>
 </tr>
+<!-- ko if: disclosureText() -->
+<tr class="totals surcharge-disclosure-row">
+    <td class="mark surcharge-disclosure" colspan="2" data-bind="text: disclosureText()"></td>
+</tr>
+<!-- /ko -->
 <tr class="totals grand surcharge-grand-total">
     <th class="mark" scope="row">
         <strong><span data-bind="i18n: 'Order Total'"></span></strong>
@@ -22,49 +23,12 @@
 </tr>
 <style>
     .surcharge-grand-total ~ .grand.totals { display: none !important; }
-    .surcharge-info-icon {
-        position: relative;
-        display: inline-block;
-        cursor: pointer;
-        font-size: 14px;
-        color: #006bb4;
-        margin-left: 4px;
-        vertical-align: middle;
-    }
-    .surcharge-tooltip {
-        visibility: hidden;
-        opacity: 0;
-        position: absolute;
-        top: 50%;
-        left: calc(100% + 8px);
-        transform: translateY(-50%);
-        background: #333;
-        color: #fff;
+    .surcharge-disclosure {
         font-size: 12px;
-        font-weight: normal;
-        padding: 8px 12px;
-        border-radius: 4px;
-        width: 260px;
+        color: #4a4a4a;
         line-height: 1.4;
-        text-align: left;
-        z-index: 100;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        transition: opacity 0.2s ease, visibility 0.2s ease;
-        pointer-events: none;
-    }
-    .surcharge-tooltip::after {
-        content: '';
-        position: absolute;
-        top: 50%;
-        right: 100%;
-        transform: translateY(-50%);
-        border-width: 6px;
-        border-style: solid;
-        border-color: transparent #333 transparent transparent;
-    }
-    .surcharge-info-icon:hover .surcharge-tooltip {
-        visibility: visible;
-        opacity: 1;
+        padding-top: 0;
+        padding-bottom: 10px;
     }
 </style>
 <!-- /ko -->

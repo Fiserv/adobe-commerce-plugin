@@ -19,7 +19,7 @@ define([
 
             this.hasSurcharge = ko.computed(function () {
                 var data = surchargeModel.surchargeData();
-                return data !== null && data.applied === true;
+                return data !== null && data.applied === true && Number(data.amount) > 0;
             }, this);
 
             this.surchargeAmount = ko.computed(function () {

@@ -45,6 +45,7 @@ define(
 		return Component.extend({
 			isPlaceOrderActionAllowed: ko.observable(quote.billingAddress() != null),
 			surchargeConfirmed: ko.observable(false),
+			hasSurchargeDisclosureAcknowledgement: ko.observable(false),
 			defaults: {
 				template: 'Fiserv_Payments/payment/commercehub/form',
 				active: false,
@@ -66,6 +67,9 @@ define(
 			initialize: async function () {
 					quote.billingAddress.subscribe(function (address) {
 					this.isPlaceOrderActionAllowed(address !== null);
+					if (this.isSurchargeEnabled()) {
+						this.invalidateSurchargeState();
+					}
 					this.checkoutValidHandler();	
 				}, this);
 			
@@ -426,9 +430,12 @@ define(
 					fullScreenLoader.startLoader();
 					let credsResponse = undefined;	
 					try {	
-						credsResponse = await chSession( { "threeDSecure" : this.is3DSecureEnabled() } );
+						if (this.isSurchargeEnabled() && this.surchargeConfirmed() && this.credentials) {
+							credsResponse = { 'ch_credentials': this.credentials };
+						} else {
+							credsResponse = await chSession( { "threeDSecure" : this.is3DSecureEnabled() } );
+						}
 					} catch (error) {
-						console.log("An error occurred while starting Commercehub payment session: ".concat(error));
 						this.iframeRunFailure();
 						return;
 					}
@@ -524,21 +531,27 @@ define(
 				this.isIframeValid = valid;
 				this.checkoutValidHandler();
 				if (!valid) {
-					this.clearSurcharge();
-					this.surchargeConfirmed(false);
+					this.invalidateSurchargeState();
 				}
 			},
 
 			checkoutValidHandler: function() {
-				if (this.isIframeValid === true && this.isPlaceOrderActionAllowed() === true) {
-					if (this.isSurchargeEnabled() && !this.surchargeConfirmed()) {
-						this.enableContinueButton();
-						this.disableSubmitButton();
-					} else {
-						this.enableSubmitButton();
-					}
-				} else {
+				if (this.isIframeValid !== true) {
 					this.disableContinueButton();
+					this.disableSubmitButton();
+					return;
+				}
+
+				if (this.isSurchargeEnabled() && !this.surchargeConfirmed()) {
+					this.enableContinueButton();
+					this.disableSubmitButton();
+					return;
+				}
+
+				this.disableContinueButton();
+				if (this.isPlaceOrderActionAllowed() === true) {
+					this.enableSubmitButton();
+				} else {
 					this.disableSubmitButton();
 				}
 			},
@@ -547,22 +560,41 @@ define(
 				return !!window.checkoutConfig.payment[this.code]["surchargeEnabled"];
 			},
 
+			invalidateSurchargeState: function() {
+				this.surchargeConfirmed(false);
+				this.hasSurchargeDisclosureAcknowledgement(false);
+				this.credentials = undefined;
+				this.clearSurcharge();
+			},
+
+			isSurchargeApplicable: function (surchargeDetails) {
+				if (!surchargeDetails || surchargeDetails.reason === 'RESTRICTED_STATE') {
+					return false;
+				}
+
+				var surchargeAmount = (surchargeDetails.amountComponent && surchargeDetails.amountComponent.surcharge)
+					? parseFloat(surchargeDetails.amountComponent.surcharge)
+					: 0;
+
+				return Number.isFinite(surchargeAmount) && surchargeAmount > 0;
+			},
+
+			getOrCreateSurchargeCredentials: async function () {
+				if (this.credentials) {
+					return this.credentials;
+				}
+
+				var credsResponse = await chSession({ 'threeDSecure': this.is3DSecureEnabled() });
+				this.credentials = credsResponse['ch_credentials'];
+				return this.credentials;
+			},
+
 			fetchSurchargeEstimate: async function() {
 				if (!this.isSurchargeEnabled()) {
 					return true;
 				}
 				try {
-					var quoteTotals = quote.totals();
-					console.log('Surcharge - quote.totals():', JSON.stringify({
-						subtotal: quoteTotals ? quoteTotals.subtotal : 'N/A',
-						shipping: quoteTotals ? quoteTotals.shipping_amount : 'N/A',
-						tax: quoteTotals ? quoteTotals.tax_amount : 'N/A',
-						grand_total: quoteTotals ? quoteTotals.grand_total : 'N/A'
-					}));
-					
-					// Re-initialize SDK with fresh session for surcharge estimation
-					var credsResponse = await chSession({ 'threeDSecure': false });
-					var creds = credsResponse['ch_credentials'];
+					var creds = await this.getOrCreateSurchargeCredentials();
 					await chAdapter.initSdk(
 						window.checkoutConfig.payment[this.code],
 						creds
@@ -572,44 +604,48 @@ define(
 					var surchargeDetails = surchargeResponse && surchargeResponse.data
 						? surchargeResponse.data
 						: surchargeResponse;
-					console.log('Surcharge SDK full response:', JSON.stringify(surchargeDetails));
 
-					if (!surchargeDetails) {
+					if (!this.isSurchargeApplicable(surchargeDetails)) {
 						surchargeModel.surchargeData(null);
 						return true;
 					}
 
-					if (surchargeDetails.reason !== 'RESTRICTED_STATE') {
-						var disclosureText = (surchargeDetails.disclosureText && surchargeDetails.disclosureText.length)
-							? surchargeDetails.disclosureText[0].value
-							: '';
-						var surchargeAmount = (surchargeDetails.amountComponent && surchargeDetails.amountComponent.surcharge)
-							? parseFloat(surchargeDetails.amountComponent.surcharge)
-							: 0;
-						var newGrandTotal = (surchargeDetails.amount && surchargeDetails.amount.total)
-							? parseFloat(surchargeDetails.amount.total)
-							: 0;
-						surchargeModel.surchargeData({
-							applied: true,
-							disclosureText: disclosureText,
-							amount: surchargeAmount,
-							grandTotal: newGrandTotal,
-							currency: (surchargeDetails.amount && surchargeDetails.amount.currency) || 'USD'
-						});
-						return true;
-					}
-
-					surchargeModel.surchargeData(null);
+					var disclosureText = (surchargeDetails.disclosureText && surchargeDetails.disclosureText.length)
+						? surchargeDetails.disclosureText[0].value
+						: '';
+					var surchargeAmount = parseFloat(surchargeDetails.amountComponent.surcharge);
+					var newGrandTotal = (surchargeDetails.amount && surchargeDetails.amount.total)
+						? parseFloat(surchargeDetails.amount.total)
+						: 0;
+					surchargeModel.surchargeData({
+						applied: true,
+						disclosureText: disclosureText,
+						amount: surchargeAmount,
+						grandTotal: newGrandTotal,
+						currency: (surchargeDetails.amount && surchargeDetails.amount.currency) || 'USD'
+					});
 					return true;
 				} catch (e) {
-					console.log('Surcharge estimate failure:', e);
+					this.credentials = undefined;
 					surchargeModel.surchargeData(null);
 					return true;
 				}
 			},
 
+			confirmSurchargeDisclosure: function () {
+				var surchargeData = surchargeModel.surchargeData();
+				if (!surchargeData || !surchargeData.disclosureText) {
+					this.hasSurchargeDisclosureAcknowledgement(true);
+					return true;
+				}
+
+				var confirmed = window.confirm(surchargeData.disclosureText);
+				this.hasSurchargeDisclosureAcknowledgement(confirmed);
+				return confirmed;
+			},
+
 			handleContinue: async function() {
-				if (!this.isIframeValid || !this.isPlaceOrderActionAllowed()) {
+				if (!this.isIframeValid) {
 					return;
 				}
 				this.disableContinueButton();
@@ -617,8 +653,14 @@ define(
 				try {
 					var success = await this.fetchSurchargeEstimate();
 					if (success) {
-						this.surchargeConfirmed(true);
-						this.enableSubmitButton();
+						if (this.confirmSurchargeDisclosure()) {
+							this.surchargeConfirmed(true);
+							this.enableSubmitButton();
+						} else {
+							this.surchargeConfirmed(false);
+							this.disableSubmitButton();
+							this.enableContinueButton();
+						}
 					} else {
 						this.showError('Unable to retrieve surcharge estimate. Please try again.');
 						this.enableContinueButton();
@@ -662,6 +704,11 @@ define(
 			},
 
 			cardBrandChangeHandler: function(brand) {
+				if (this.isSurchargeEnabled()) {
+					this.invalidateSurchargeState();
+					this.checkoutValidHandler();
+				}
+
 				let icon = this.getCardBrandIcon();
 
 				switch (brand) {
@@ -771,6 +818,11 @@ define(
 			},
 
 			fieldValidityHandler: function(data) {
+				if (this.isSurchargeEnabled() && this.surchargeConfirmed()) {
+					this.invalidateSurchargeState();
+					this.checkoutValidHandler();
+				}
+
 				let frame = this.getSdcFieldFrame(data["field"]);
 				let mess = this.getSdcFieldInvalidMessageContainer(data["field"]);
 
