@@ -82,7 +82,6 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	{
 		return [
 			self::KEY_SDC_PARENT_ELEMENT => $this->getValue('sdc_custom_checkout_id_type_' . self::KEY_SDC_PARENT_ELEMENT, $storeId),
-			self::KEY_SDC_PLACEHOLDER => $this->getValue('sdc_custom_checkout_id_type_' . self::KEY_SDC_PLACEHOLDER, $storeId),
 		];
 	}
 

@@ -457,10 +457,6 @@
 								<label>Parent Element ID</label>
 								<config_path>payment/fiserv_ach/sdc_custom_checkout_id_type_parent_element</config_path>
 							</field>
-							<field id="customer_ach_id_type_placeholder" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
-								<label>Placeholder</label>
-								<config_path>payment/fiserv_ach/sdc_custom_checkout_id_type_placeholder</config_path>
-							</field>
 						</group>
 
 						<group id="customer_ach_id_value" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="4">
