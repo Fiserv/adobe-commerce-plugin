@@ -403,10 +403,9 @@
 				<sdc_custom_checkout_account_number_masking_mode>ALWAYS_MASK_EXCEPT_LAST_4</sdc_custom_checkout_account_number_masking_mode>
 
 				<sdc_custom_checkout_id_type_parent_element>fiserv_ach-id-type</sdc_custom_checkout_id_type_parent_element>
-				<sdc_custom_checkout_id_type_placeholder>Identification Type</sdc_custom_checkout_id_type_placeholder>
 
 				<sdc_custom_checkout_id_value_parent_element>fiserv_ach-id-value</sdc_custom_checkout_id_value_parent_element>
-				<sdc_custom_checkout_id_value_placeholder>Identification Value</sdc_custom_checkout_id_value_placeholder>
+				<sdc_custom_checkout_id_value_placeholder>ID Value</sdc_custom_checkout_id_value_placeholder>
 
 				<sdc_custom_checkout_driver_license_state_parent_element>fiserv_ach-driver-license-state</sdc_custom_checkout_driver_license_state_parent_element>
 				<sdc_custom_checkout_driver_license_state_placeholder>Driver License State</sdc_custom_checkout_driver_license_state_placeholder>

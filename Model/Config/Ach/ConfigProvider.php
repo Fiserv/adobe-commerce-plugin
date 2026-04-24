@@ -108,7 +108,6 @@ class ConfigProvider implements ConfigProviderInterface
 			],
 			"idType" => [
 				"parentElementId" => $this->resolveParentElement($idTypeConfig, 'fiserv_ach-id-type'),
-				"placeholder" => $idTypeConfig[AchConfig::KEY_SDC_PLACEHOLDER]
 			],
 			"idValue" => [
 				"parentElementId" => $this->resolveParentElement($idValueConfig, 'fiserv_ach-id-value'),
