@@ -1,6 +1,7 @@
 define([
 		'ko',
 		'uiComponent',
+		'Fiserv_Payments/js/action/ensure-array-entries',
 		'Fiserv_Payments/js/ch-adapter',
 		'Magento_Ui/js/modal/alert',
 		'Magento_Ui/js/lib/view/utils/dom-observer',
@@ -9,6 +10,7 @@ define([
 	], function(
 		ko,
 		Component,
+		ensureArrayEntries,
 		chIframe,
 		alert,
 		domObserver,
@@ -26,15 +28,15 @@ define([
 			},
 
 			/**
-			* @returns {exports.initialize}
-			*/
+			 * @returns {exports.initialize}
+			 */
 			initialize: function (config) {
-				
-				if (typeof(config.paymentConfig) === "undefined") { 
+
+				if (typeof(config.paymentConfig) === "undefined") {
 					throw new Error('Required parameter paymentConfig not found!');
 				}
 				this.paymentConfig = config.paymentConfig;
-				
+
 				window.instantiateIframe = () => { this.remoteInstantiate(); };
 
 				if($('input#p_method_fiserv_commercehub').is(':checked')) {
@@ -51,18 +53,19 @@ define([
 					return;
 				}
 				let config = this.paymentConfig;
-				if (typeof(config) === "undefined") { 
+				if (typeof(config) === "undefined") {
 					throw new Error('Required parameter paymentConfig not found!');
 				}
 
 				var self = this;
-				
+
 				// defaults aren't being set for some reason...?
 				self.paymentConfig = config;
 				self.code = 'fiserv_commercehub';
 				self.$selector = null;
 				self.selector = 'edit_form';
 				self.paymentMethodName = '[name="payment[method]"]';
+				ensureArrayEntries();
 
 				chIframe.initialize(
 					self.paymentConfig,
@@ -77,7 +80,7 @@ define([
 			},
 
 
-			remoteInstantiate: function() 
+			remoteInstantiate: function()
 			{
 				if (typeof(window.shouldInstantiateIframe) !== 'undefined' &&
 					window.shouldInstantiateIframe === true)
@@ -122,21 +125,21 @@ define([
 				return $('button#tokenization-builder-create');
 			},
 
-	
+
 			createIframe: function() {
 				var self = this;
 				let successCb = self.iframeLoadSuccess.bind(self);
 				let failureCb = self.iframeLoadFailure.bind(self);
-				
+
 				self.beginAsyncFlow();
 				let iframePromise = new Promise((resolve, reject) => {
 					chIframe.instantiateIframe(
-						resolve, 
+						resolve,
 						reject
 					);
 				});
 				iframePromise.then((data) => {
-				
+
 				}).catch((error) =>{
 					failureCb(error);
 				})
@@ -167,11 +170,11 @@ define([
 			},
 
 			beginAsyncFlow: function() {
-				 $('body').trigger('processStart');
+				$('body').trigger('processStart');
 			},
 
 			endAsyncFlow: function() {
-				 $('body').trigger('processStop');	
+				$('body').trigger('processStop');
 			},
 
 			/**
@@ -192,7 +195,7 @@ define([
 			},
 
 			setPaymentSessionInput: function(sessionId) {
-				this.getPaymentSessionInput().val(sessionId);	
+				this.getPaymentSessionInput().val(sessionId);
 			},
 
 			getPaymentSessionInput: function() {
@@ -200,12 +203,12 @@ define([
 			},
 
 			/**
-			* Begin order flow (i.e. secure card capture)
-			*/
+			 * Begin order flow (i.e. secure card capture)
+			 */
 			startOrderFlow: function () {
 				if (this.iframeValid) {
 					chIframe.submitCardForm(
-						this.paymentConfig['storeUrl'], 
+						this.paymentConfig['storeUrl'],
 						(sessionId) => { this.placeOrder(sessionId); },
 						() => { this.iframeRunFailure(); }
 					)
@@ -240,7 +243,7 @@ define([
 				this.createIframe();
 			},
 
-			/** 
+			/**
 			 * Destroys SCC form when fiserv_commercehub not checked.
 			 * isActive() not working with COD for some reason.
 			 */
@@ -265,7 +268,7 @@ define([
 			 */
 			changePaymentMethod: function (event, method) {
 				this.active(method === this.code);
-				this.onActiveChange(this.active());	
+				this.onActiveChange(this.active());
 				return this;
 			},
 
@@ -378,15 +381,15 @@ define([
 						return $('#sdc-exp-month-invalid-message');
 					case "expirationYear":
 						return $('#sdc-exp-year-invalid-message');
-				}               
+				}
 
 				return undefined;
 
-			},              
+			},
 
 			getSdcInvalidFieldMessageText: function(name) {
-				switch(name)    
-				{       
+				switch(name)
+				{
 					case "cardNumber":
 						return this.getInvalidFieldMessages()["cardNumber"];
 					case "nameOnCard":
@@ -421,7 +424,7 @@ define([
 						frame.addClass('sdc-error-field');
 						mess.removeClass('sdc-hidden');
 					} else
-					{       
+					{
 						frame.removeClass('sdc-valid-field');
 						frame.removeClass('sdc-error-field');
 						mess.addClass('sdc-hidden');
@@ -431,7 +434,7 @@ define([
 
 			fieldFocusHandler: function(data) {
 				let frame = this.getSdcFieldFrame(data);
-				
+
 				if(typeof(frame) !== "undefined") {
 					if(frame[0].contains(document.activeElement) === true) {
 						frame.addClass('sdc-focused-field');
@@ -442,7 +445,7 @@ define([
 				}
 			},
 
-			
+
 			getNumberUnmaskButton: function() {
 				return $('#sdc-unmask-number');
 			},
@@ -454,7 +457,7 @@ define([
 			getNumberMaskButton: function() {
 				return $('#sdc-mask-number');
 			},
-	
+
 			getSecurityMaskButton: function() {
 				return $('#sdc-mask-security');
 			},
