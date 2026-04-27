@@ -7,8 +7,10 @@ namespace Fiserv\Payments\Gateway\Request\CommerceHub;
 
 use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use Fiserv\Payments\Observer\CommerceHub\DataAssignObserver;
+use Fiserv\Payments\Gateway\Request\CommerceHub\SessionSourceDataBuilder;
 use Fiserv\Payments\Lib\CommerceHub\Model\PaymentToken;
 use Fiserv\Payments\Lib\CommerceHub\Model\Card;
+use Fiserv\Payments\Gateway\Config\CommerceHub\Config;
 use Magento\Payment\Gateway\Request\BuilderInterface;
 use Magento\Payment\Helper\Formatter;
 use Fiserv\Payments\Logger\MultiLevelLogger;
@@ -28,6 +30,8 @@ class TokenSourceDataBuilder implements BuilderInterface
 	 */
 	private $logger;
 	
+	private $chConfig;
+
 	/**
 	 * @var SubjectReader
 	 */
@@ -40,9 +44,11 @@ class TokenSourceDataBuilder implements BuilderInterface
 	 */
 	public function __construct(
 		SubjectReader $subjectReader,
+		Config $chConfig,
 		MultiLevelLogger $logger
 	) {
 		$this->subjectReader = $subjectReader;
+		$this->chConfig = $chConfig;
 		$this->logger = $logger;
 	}
 
@@ -55,7 +61,10 @@ class TokenSourceDataBuilder implements BuilderInterface
 		$payment = $paymentDO->getPayment();
 		$orderDO = $paymentDO->getOrder();
 		$orderIncrementId = $orderDO->getOrderIncrementId();
-		
+
+
+
+
 		$tokenData = $payment->getAdditionalInformation(DataAssignObserver::PAYMENT_TOKEN_KEY);
 		$tokenSource = $payment->getAdditionalInformation(DataAssignObserver::TOKEN_SOURCE_KEY);
 		$expMonth = $payment->getAdditionalInformation(DataAssignObserver::EXP_MONTH_KEY);
@@ -78,6 +87,16 @@ class TokenSourceDataBuilder implements BuilderInterface
 		$source->setTokenData($tokenData);
 		$source->setTokenSource($tokenSource);
 		$source->setDeclineDuplicates(false);
+
+		if ($this->chConfig->isVaultCvvEnabled())
+		{
+			$sessionId = $payment->getAdditionalInformation(DataAssignObserver::SESSION_ID_KEY);
+			if (empty($sessionId))
+			{
+				throw new \Exception("CVV is required but no SessionId was found.");
+			}
+			$source->setSessionId($sessionId);
+		}
 
 		$card = new Card();
 		$card->setExpirationMonth($expMonth);

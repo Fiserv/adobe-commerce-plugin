@@ -32,7 +32,27 @@
                 <render args="$item.getTemplate()"/>
             </each>
         </div>
-        <div class="checkout-agreements-block">
+
+	<!-- ko if: shouldRequireVaultCvv() -->
+	<div class="sdc-row">
+		<div data-bind="attr: {'id': getId() + '-sdc-security-code-frame'}" class="sdc-field-frame sdc-text">
+			<div data-bind="attr: {'id': getId() + '-security-code'}, afterRender: initSecurityIframe" class="sdc-field"></div>
+			<!-- ko if: (checkSecurityMask())-->
+			<button
+				class="sdc-unmasking-icon"
+				data-bind="click: unmaskSecurityCode, attr: {id: getId() + '-sdc-unmask-security'}">
+			</button>
+			<!-- /ko -->
+				<button
+					class="sdc-masking-icon sdc-hidden"
+					data-bind="click: maskSecurityCode, attr: {id: getId() + '-sdc-mask-security'}">
+				</button>
+		</div>
+		<span data-bind="attr: {'id': getId() + '-sdc-security-code-invalid-message'}" class="sdc-error-message sdc-hidden"></span>
+	</div>
+	<!-- /ko -->
+
+	<div class="checkout-agreements-block">
             <!-- ko foreach: $parent.getRegion('before-place-order') -->
             <!-- ko template: getTemplate() --><!-- /ko -->
             <!--/ko-->
@@ -41,12 +61,11 @@
             <div class="primary">
                 <button class="action primary checkout"
                         type="submit"
+			disabled="disabled"
                         data-bind="
                             click: placeOrderClick,
-                            attr: {title: $t('Place Order')},
-                            enable: isButtonActive()
-                        "
-                    disabled>
+                            attr: {title: $t('Place Order'), id: getId() + '-place-order'},
+                        ">
                     <span translate="'Place Order'"></span>
                 </button>
             </div>

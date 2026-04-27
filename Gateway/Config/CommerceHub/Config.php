@@ -26,7 +26,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	const KEY_PAYMENT_TYPE = 'payment_type';
 	const KEY_PAYMENT_ACTION = 'payment_action';
 	const KEY_CC_TYPES = 'cc_types';
-	const KEY_USE_CCV = 'use_ccv';
+	const KEY_USE_CVV = 'use_cvv';
+	const KEY_VAULT_USE_CVV = 'vault_use_cvv';
 	const KEY_CURRENCY = 'currency';
 	const KEY_CC_TYPES_MAPPER ='cc_types_ch_mapper';
 	const KEY_PROD_API_SERVICE = 'prod_api_service';
@@ -220,14 +221,25 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	}
 
 	/**
-	 * Checks if CCV field is enabled.
+	 * Checks if CVV field is enabled.
 	 *
 	 * @param int|null $storeId
 	 * @return bool
 	 */
-	public function isCcvEnabled($storeId = null)
+	public function isCvvEnabled($storeId = null)
 	{
-		return (bool) $this->getValue(self::KEY_USE_CCV, $storeId);
+		return (bool) $this->getValue(self::KEY_USE_CVV, $storeId);
+	}
+
+	/**
+ 	 * Checks if CVV is required for stored (vault) cards.
+ 	 *
+ 	 * @param int|null $storeId
+ 	 * @return bool
+	 */
+	public function isVaultCvvEnabled($storeId = null)
+	{
+		return (bool) $this->getValue(self::KEY_VAULT_USE_CVV, $storeId);
 	}
 
 	/**

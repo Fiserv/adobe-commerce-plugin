@@ -29,7 +29,7 @@ class ConfigProvider implements ConfigProviderInterface
 	const ENV_KEY = 'environment';
 	const PAYMENT_ACTION_KEY = 'paymentAction';
 	const AVAILABLE_CC_KEY = 'availableCardTypes';
-	const USE_CCV_KEY = 'useCcv';
+	const USE_CVV_KEY = 'useCvv';
 	const LOGGING_LEVEL_KEY = 'loggingLevel';
 	const CURRENCY_KEY = 'currency';
 	const PROD_CLIENT_KEY = 'prodClientUrl';
@@ -38,6 +38,7 @@ class ConfigProvider implements ConfigProviderInterface
 	const CARD_FORM_CONFIG_KEY = 'formConfig';
 	const TERMINAL_ID_KEY = 'terminalId';
 	const THREE_D_SECURE_KEY = 'threeDSecure';
+	const VAULT_USE_CVV_KEY = 'vaultUseCvv';
 
 	const INVALID_FIELDS_KEY = 'invalidFields';
 	const CARD_NUMBER_KEY = 'cardNumber';
@@ -87,7 +88,8 @@ class ConfigProvider implements ConfigProviderInterface
 			self::ENV_KEY => $this->config->getApiEnvironment($storeId),
 			self::PAYMENT_ACTION_KEY => $this->config->getPaymentAction($storeId),
 			self::AVAILABLE_CC_KEY => $this->config->getAvailableCardTypes($storeId),
-			self::USE_CCV_KEY => $this->config->isCcvEnabled($storeId),
+			self::USE_CVV_KEY => $this->config->isCvvEnabled($storeId),
+			self::VAULT_USE_CVV_KEY => $this->config->isVaultCvvEnabled($storeId),
 			self::LOGGING_LEVEL_KEY => $this->config->getLoggingLevel($storeId),
 			self::CURRENCY_KEY => $this->config->getCurrency($storeId),
 			self::PROD_CLIENT_KEY => $this->config->getProdClientUrl(),

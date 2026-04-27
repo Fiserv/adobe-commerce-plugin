@@ -131,6 +131,12 @@
 						<validate>validate-number validate-greater-than-zero</validate>
 						<comment>Session validity: 30–240 minutes (default 30 minutes).</comment>
 					</field>
+					<field id="vault_use_cvv" translate="label" type="select" sortOrder="8" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Require CVV For Stored Cards</label>
+						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+						<config_path>payment/fiserv_commercehub/vault_use_cvv</config_path>
+						<comment>Choose Yes to require the customer to enter CVV when paying with a stored card.</comment>
+					</field>
 				</group>
 				<group id="valuelink_gift_card" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="5">
 					<label>Gift Cards</label>
