@@ -68,9 +68,9 @@ class Form extends Cc
 	 * Check if cvv validation is available
 	 * @return boolean
 	 */
-	public function useCcv()
+	public function useCvv()
 	{
-		return $this->gatewayConfig->isCcvEnabled($this->sessionQuote->getStoreId());
+		return $this->gatewayConfig->isCvvEnabled($this->sessionQuote->getStoreId());
 	}
 
 	/**
