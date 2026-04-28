@@ -122,7 +122,11 @@ define([
 			const baseConfig = window.checkoutConfig.payment[this.getCode()].formConfig;
 			const clonedConfig = JSON.parse(JSON.stringify(baseConfig));
 			clonedConfig.fields = {
-				securityCode: { ...baseConfig.fields.securityCode, parentElementId: this.getId() + '-security-code' }
+				securityCode: {
+					...baseConfig.fields.securityCode,
+					parentElementId: this.getId() + '-security-code',
+					brandId: this.mapCardTypeToBrandId(this.details.type)
+				}
 			};
 			clonedConfig.environment = window.checkoutConfig.payment[this.getCode()].environment;
 			return clonedConfig;
@@ -432,6 +436,26 @@ define([
 		 */
 		getCode: function () {
 			return this.commercehubCode;
+		},
+
+		mapCardTypeToBrandId: function(cardType)
+		{
+			if (!cardType) return null;
+
+			switch (cardType) {
+				case 'VI':
+					return 'visa';
+				case 'MC':
+					return 'mastercard';
+				case 'AE':
+					return 'american-express';
+				case 'MD':
+					return 'maestro';
+				case 'DI':
+					return 'discover';
+				default:
+					return null;
+			}
 		}
 	});
 });
