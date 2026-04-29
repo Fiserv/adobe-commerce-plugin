@@ -15,6 +15,10 @@ use Magento\Payment\Gateway\Request\BuilderInterface;
 use Magento\Payment\Helper\Formatter;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 
+use Magento\Framework\App\Area;
+use Magento\Framework\App\State;
+use Magento\Framework\Exception\LocalizedException;
+
 /**
  * Token Payment Data Builder
  */
@@ -37,6 +41,8 @@ class TokenSourceDataBuilder implements BuilderInterface
 	 */
 	private $subjectReader;
 
+	private $appState;
+
 	/**
 	 * @param MultiLevelLogger $logger
 	 * @param SubjectReader $subjectReader
@@ -45,10 +51,12 @@ class TokenSourceDataBuilder implements BuilderInterface
 	public function __construct(
 		SubjectReader $subjectReader,
 		Config $chConfig,
+		State $appState,
 		MultiLevelLogger $logger
 	) {
 		$this->subjectReader = $subjectReader;
 		$this->chConfig = $chConfig;
+		$this->appState = $appState;
 		$this->logger = $logger;
 	}
 
@@ -88,7 +96,7 @@ class TokenSourceDataBuilder implements BuilderInterface
 		$source->setTokenSource($tokenSource);
 		$source->setDeclineDuplicates(false);
 
-		if ($this->chConfig->isVaultCvvEnabled())
+		if ($this->chConfig->isVaultCvvEnabled() && !$this->isAdminArea())
 		{
 			$sessionId = $payment->getAdditionalInformation(DataAssignObserver::SESSION_ID_KEY);
 			if (empty($sessionId))
@@ -110,5 +118,14 @@ class TokenSourceDataBuilder implements BuilderInterface
 		$this->logger->logDebug(3, "Token Source Data Builder:\n" . $source->__toString(), "Order ID: $orderIncrementId");
 
 		return [ self::TOKEN_SOURCE_KEY => $source ];
+	}
+
+	private function isAdminArea(): bool
+	{
+		try {
+			return $this->appState->getAreaCode() === Area::AREA_ADMINHTML;
+		} catch (LocalizedException $exception) {
+			return false;
+		}
 	}
 }
