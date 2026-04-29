@@ -66,12 +66,12 @@ define(
 					type: null,
 				},
 				additionalData: {},
+                addressComponent: undefined,
 				paymentMethodName: '[name="payment[method]"',
 				isIframeValid: false,
 				credentials: undefined,
 				lastBillingAddressKey: '',
 				adapterInitialized: false,
-				isIframeLoading: false,
 				isIframeReady: false,
 				pendingIframeReload: false,
 				refreshAddressTimeoutId: null,
@@ -79,6 +79,7 @@ define(
 				billingFormObserverAttached: false,
 				achRoutingNumberKey: 'routingNumber',
 				achAccountNumberKey: 'accountNumber',
+                billingAddressContainerId: 'fiserv-ach-billing-address-container',
 			},
 
 			/**
@@ -86,32 +87,21 @@ define(
 			 */
 			initialize() {
 				this._super();
+                this.code = 'fiserv_ach';
 
-				this.code = 'fiserv_ach';
-				this.isTemplateReady = false;
-
-				quote.billingAddress.subscribe(function (address) {
-					this.handleAddressChange(address);
+                quote.billingAddress.subscribe(function (address) {
+					this.isPlaceOrderActionAllowed(address !== null);
+					this.checkoutValidHandler();	
 				}, this);
 
-				if (quote.shippingAddress && quote.shippingAddress.subscribe) {
-					quote.shippingAddress.subscribe(function (address) {
-						this.handleAddressChange(address);
-					}, this);
-				}
-
-				this.lastBillingAddressKey = this.getBillingAddressKey(this.getBillingAddress());
-				this.isPlaceOrderActionAllowed(this.hasAvailableBillingAddress());
+                this.initializeChAdapter();
 
 				return this;
 			},
 
 			hasAvailableBillingAddress() {
 				const billingAddress = this.getBillingAddress();
-
-				if (this.isAddressDataComplete(billingAddress)) {
-					return true;
-				}
+				if (this.isAddressDataComplete(billingAddress)) return true;
 
 				return this.hasCompletedBillingForm();
 			},
@@ -172,240 +162,83 @@ define(
 				});
 			},
 
-			handleAddressChange() {
-				if (this.getCode() !== this.isChecked()) {
-					return;
-				}
-
-				this.isPlaceOrderActionAllowed(this.hasAvailableBillingAddress());
-				this.checkoutValidHandler();
-
-				const currentKey = this.getBillingAddressKey(this.getBillingAddress());
-
-				if (currentKey && currentKey !== this.lastBillingAddressKey) {
-					this.lastBillingAddressKey = currentKey;
-					this.refreshAchIframe();
-				}
-			},
-
-			getBillingAddressKey(address) {
-				if (!address) {
-					return '';
-				}
-
-				const street = Array.isArray(address.street) ? address.street.join(' ') : (address.street || '');
-
-				return [
-					address.firstname,
-					address.lastname,
-					street,
-					address.city,
-					address.region_id,
-					address.region,
-					address.postcode,
-					address.countryId || address.country_id,
-					address.telephone,
-				].filter(Boolean).join('|');
-			},
-
-			refreshAchIframe() {
-				if (this.getCode() !== this.isChecked() || !this.hasAvailableBillingAddress()) {
-					return;
-				}
-
-				this.isIframeValid = false;
-				this.checkoutValidHandler();
-				this.scheduleIframeReload();
-			},
-
-			scheduleIframeReload() {
-				if (this.refreshAddressTimeoutId) {
-					globalThis.clearTimeout(this.refreshAddressTimeoutId);
-				}
-
-				this.refreshAddressTimeoutId = globalThis.setTimeout(() => {
-					this.refreshAddressTimeoutId = null;
-					this.loadIframe(true);
-				}, 500);
-			},
-
 			initializeChAdapter() {
-				const normalizedConfig = this.normalizeAchConfig(this.getPaymentConfig());
-				const fieldValueChangeCallback = (typeof this.fieldValueChangeHandler === 'function') ?
-					(data) => { this.fieldValueChangeHandler(data); } :
-					null;
-
 				chAdapter.initialize(
-					normalizedConfig,
+					this.getPaymentConfig(),
 					() => { this.iframeLoadSuccess(); },
 					(valid) => { this.iframeValidHandler(valid); },
 					null,
 					(data) => { this.fieldValidityHandler(data); },
 					(data) => { this.fieldFocusHandler(data); },
-					fieldValueChangeCallback,
+					(data) => { this.fieldValueChangeHandler(data); },
 				);
 			},
 
-			normalizeAchConfig(config) {
-				if (!config || !config.formConfig) {
-					return config;
-				}
-
-				const { formConfig } = config;
-				const fields = formConfig.fields || {};
-
-				if (!fields.checkType && fields.check_type) {
-					fields.checkType = fields.check_type;
-				}
-				if (!fields.accountType && fields.account_type) {
-					fields.accountType = fields.account_type;
-				}
-				if (!fields.driverLicenseState && fields.driver_license_state) {
-					fields.driverLicenseState = fields.driver_license_state;
-				}
-				if (!fields.idType && fields.id_type) {
-					fields.idType = fields.id_type;
-				}
-				if (!fields.idValue && fields.id_value) {
-					fields.idValue = fields.id_value;
-				}
-
-				this.ensureFieldParent(fields, 'accountNumber', 'fiserv_ach-account-number');
-				this.ensureFieldParent(fields, 'routingNumber', 'fiserv_ach-routing-number');
-				this.ensureFieldParent(fields, 'idType', 'fiserv_ach-id-type');
-				this.ensureFieldParent(fields, 'idValue', 'fiserv_ach-id-value');
-				this.ensureFieldParent(fields, 'driverLicenseState', 'fiserv_ach-driver-license-state');
-				this.ensureFieldParent(fields, 'checkType', 'fiserv_ach-check-type');
-				this.ensureFieldParent(fields, 'accountType', 'fiserv_ach-account-type');
-				this.ensureFieldParent(fields, 'businessName', 'fiserv_ach-business-name');
-
-				formConfig.fields = fields;
-				config.formConfig = formConfig;
-
-				return config;
-			},
-
-			ensureFieldParent(fields, fieldName, fallbackParentId) {
-				if (!fields[fieldName]) {
-					return;
-				}
-				const currentParentId = (fields[fieldName].parentElementId || '').toString().trim();
-
-				if (!currentParentId) {
-					fields[fieldName].parentElementId = fallbackParentId;
-				}
-			},
-
 			loadSdcForm() {
-				this.isTemplateReady = true;
-				if (!this.adapterInitialized) {
-					this.initializeChAdapter();
-					this.adapterInitialized = true;
-				}
-				if (this.isChecked() === this.code) {
-					this.loadIframe(false);
+                this.initializeChAdapter();
+
+                if (this.isChecked() === this.code) {
+					this.loadIframe()
+                        .catch((e) => { this.iframeLoadFailure(e); });
 				}
 			},
 
-			areFieldContainersReady() {
-				if (!this.isTemplateReady) {
-					return false;
-				}
-				const container = document.querySelector('#fiserv_ach-account-number');
+			async loadIframe() {
+                this.beginIframeFlow();
 
-				if (!container) {
-					return false;
-				}
-				// Check the container is visible (not inside a hidden payment method)
-				const rect = container.getBoundingClientRect();
+                const billingAddress = this.getBillingAddress();
+                if (!billingAddress) throw new Error("Billing address not found.");
+                
+                await this.initCheckoutSdk(billingAddress);
+                this.addressComponent = await this.initSdkAddressComponent(billingAddress);
+		this.populateAddressComponent();
 
-				return rect.width > 0 && rect.height > 0;
+                chAdapter.instantiateIframe(
+                    () => { this.iframeLoadSuccess(); },
+                    (e) => { this.iframeLoadFailure(e); },
+                    { billingAddress: this.addressComponent }
+                );
 			},
 
-			loadIframe(forceReload) {
-				const shouldForceReload = forceReload === true;
+            async initSdkAddressComponent(billingAddress) {
+                const container = this.getBillingAddressContainer();
+                const fieldMap = this.mapBillingAddressFields(billingAddress);
+                const mappedFields = this.mapAddressFieldsToTempForm(container, fieldMap);
 
-				if (this.getCode() !== this.isChecked()) {
-					return;
-				}
+                return await chAdapter.createBillingAddressComponent(mappedFields);
+            },
 
-				if (!shouldForceReload && this.isIframeReady && this.getCode() === this.isChecked()) {
-					return;
-				}
+            populateAddressComponent() {
+                if (!this.addressComponent || typeof(this.addressComponent) !== 'object') throw new Error("Address component not initialized.");
 
-				// Don't attempt to load if DOM containers aren't ready yet
-				if (!this.areFieldContainersReady()) {
-					return;
-				}
+                const billingAddress = this.getBillingAddress();
+                if (!billingAddress) throw new Error("Billing address not found.");
 
-				if (this.isIframeLoading) {
-					if (shouldForceReload) {
-						this.pendingIframeReload = true;
-					}
-
-					return;
-				}
-
-				// Cancel any pending address-change reload timer
-				if (this.refreshAddressTimeoutId) {
-					globalThis.clearTimeout(this.refreshAddressTimeoutId);
-					this.refreshAddressTimeoutId = null;
-				}
-
-				this.isIframeLoading = true;
-				this.isIframeReady = false;
-				this.pendingIframeReload = false;
-				this.destroyAchIframe(false);
-
-				const billingAddress = this.buildBillingAddressPayload();
-				const failureCallback = this.iframeLoadFailure.bind(this);
-
-				const iframePromise = new Promise((resolve, reject) => {
-					this.beginIframeFlow();
-					chAdapter.instantiateIframe(
-						resolve,
-						reject,
-						undefined,
-						billingAddress,
-					);
-				});
-
-				iframePromise.catch((error) => {
-					failureCallback(error);
-				});
-			},
+                const mappedAddress = this.mapBillingAddressFields(this.buildBillingAddressPayload(billingAddress));
+                
+                this.addressComponent.populate({ "firstName": mappedAddress.firstName });
+                this.addressComponent.populate({ "lastName": mappedAddress.lastName });
+                this.addressComponent.populate({ "street": mappedAddress.street });
+                this.addressComponent.populate({ "city": mappedAddress.city });
+                this.addressComponent.populate({ "stateOrProvince": mappedAddress.stateOrProvince });
+                this.addressComponent.populate({ "postalCode": mappedAddress.postalCode });
+                this.addressComponent.populate({ "country": mappedAddress.country });
+            },
 
 			iframeLoadSuccess() {
-				this.isIframeLoading = false;
-				this.isIframeReady = true;
 				this.endIframeFlow();
-
-				if (this.pendingIframeReload) {
-					this.pendingIframeReload = false;
-					// Delay pending reload to let the SDK finish rendering iframes
-					// and avoid stacking with the just-created ones
-					globalThis.setTimeout(() => {
-						this.loadIframe(true);
-					}, 300);
-				}
 			},
 
-			async iframeRunSuccess(sessionId) {
+			iframeRunSuccess(sessionId) {
 				this.setPaymentPayload(sessionId);
 				this.endIframeFlow();
 				this.placeOrderClick();
 			},
 
 			iframeLoadFailure(message) {
-				this.isIframeLoading = false;
 				this.isIframeReady = false;
 				this.endIframeFlow();
 				this.showError(message);
-
-				if (this.pendingIframeReload) {
-					this.pendingIframeReload = false;
-					this.loadIframe(true);
-				}
 			},
 
 			iframeRunFailure(message) {
@@ -436,49 +269,9 @@ define(
 
 			setupPaymentMethod() {
 				this.watchPaymentMethods();
-				this.observeBillingFormInteractions();
 			},
 
-			observeBillingFormInteractions() {
-				if (this.billingFormObserverAttached) {
-					return;
-				}
-
-				this.billingFormObserverAttached = true;
-				$(document).off(
-					'input.fiservAchBilling change.fiservAchBilling',
-					'.payment-method-billing-address :input',
-				);
-				$(document).on(
-					'input.fiservAchBilling change.fiservAchBilling',
-					'.payment-method-billing-address :input',
-					() => { this.scheduleBillingStateSync(); },
-				);
-			},
-
-			scheduleBillingStateSync() {
-				if (this.getCode() !== this.isChecked()) {
-					return;
-				}
-
-				if (this.billingSyncTimeoutId) {
-					globalThis.clearTimeout(this.billingSyncTimeoutId);
-				}
-
-				this.billingSyncTimeoutId = globalThis.setTimeout(() => {
-					this.billingSyncTimeoutId = null;
-					this.checkoutValidHandler();
-
-					const currentKey = this.getBillingAddressKey(this.getBillingAddress());
-
-					if (currentKey && currentKey !== this.lastBillingAddressKey) {
-						this.lastBillingAddressKey = currentKey;
-						this.refreshAchIframe();
-					}
-				}, 80);
-			},
-
-			/**
+            /**
 			 * Re-init SDK when switching payment methods.
 			 */
 			watchPaymentMethods() {
@@ -486,8 +279,7 @@ define(
 				$(this.paymentMethodName).on('click.fiservAchMethod', (event) => {
 					if (event.currentTarget.id === this.getCode()) {
 						this.initializeChAdapter();
-						this.adapterInitialized = true;
-						this.loadIframe(false);
+						this.loadIframe();
 					} else {
 						this.destroyAchIframe(true);
 					}
@@ -496,12 +288,10 @@ define(
 
 			destroyAchIframe(resetFlags) {
 				chAdapter.destroyIframe();
-				this.isIframeValid = false;
 				this.disableSubmitButton();
 				this.clearAchFieldContainers();
 
 				if (resetFlags === true) {
-					this.isIframeLoading = false;
 					this.isIframeReady = false;
 					this.pendingIframeReload = false;
 				}
@@ -510,7 +300,7 @@ define(
 			canSubmitIframe() {
 				const isBillingReady = this.hasAvailableBillingAddress();
 
-				return this.isIframeValid === true && this.isIframeReady === true && isBillingReady === true;
+				return this.isIframeValid === true && isBillingReady === true;
 			},
 
 			clearAchFieldContainers() {
@@ -602,7 +392,6 @@ define(
 
 			placeOrderFailureHandler() {
 				this.destroyAchIframe(true);
-				this.isIframeReady = false;
 				this.loadIframe(true);
 				this.resetFieldValidation();
 			},
@@ -674,78 +463,41 @@ define(
 			},
 
 			async submitIframe() {
-				const isBillingReady = this.hasAvailableBillingAddress();
-
-				this.isPlaceOrderActionAllowed(isBillingReady);
-
-				if (this.canSubmitIframe() !== true) {
-					this.disableSubmitButton();
-
-					return;
-				}
-
-				if (additionalValidators.validate()) {
-					fullScreenLoader.startLoader();
-					let credsResponse;
-
-					const billingAddress = this.buildBillingAddressPayload();
-					const sessionPayload = { billingAddress };
-
-					try {
-						credsResponse = await chSession(sessionPayload);
-					} catch {
-						this.iframeRunFailure();
-
-						return;
-					}
-
-					let legalText = '';
-
-					try {
-						const legalTextResponse = await chAdapter.getAchLegalText();
-
-						if (legalTextResponse && typeof legalTextResponse === 'object') {
-							legalText = legalTextResponse.plainText ||
-								legalTextResponse.achConsentText ||
-								legalTextResponse.legalText ||
-								legalTextResponse.text ||
-								legalTextResponse.htmlText ||
-								'';
-						} else if (typeof legalTextResponse === 'string') {
-							legalText = legalTextResponse;
-						}
-					} catch (error) {
-						console.warn('ACH legal text retrieval failed, using default consent text.', error);
-					}
-
-					this.endIframeFlow();
-
-					try {
-						const accepted = await this.showAchConsentModal(legalText);
-
-						if (accepted !== true) {
-							return;
-						}
-
-						this.persistAchConsentAcceptance(legalText);
-					} catch (error) {
-						this.iframeRunFailure(error && error.message ? error.message : undefined);
-
-						return;
-					}
-
-					const creds = credsResponse.ch_credentials;
-
-					fullScreenLoader.startLoader();
-
-					chAdapter.submitAchForm(
-						globalThis.checkoutConfig.payment.fiserv_payments.storeUrl,
-						(sessionId) => { this.iframeRunSuccess(sessionId); },
-						() => { this.iframeRunFailure(); },
-						creds,
-					);
-				}
+                try {
+                    if (additionalValidators.validate()) {
+                        fullScreenLoader.startLoader();
+    
+                        this.populateAddressComponent();
+                        
+                        const legalText = await chAdapter.getAchLegalText();
+                        this.endIframeFlow();
+    
+                        const accepted = await this.showAchConsentModal(legalText);
+                        if (accepted !== true) return;
+    
+                        this.persistAchConsentAcceptance(legalText);
+    
+                        fullScreenLoader.startLoader();
+    
+                        chAdapter.submitAchForm(
+				globalThis.checkoutConfig.payment.fiserv_payments.storeUrl,
+                            (sessionId) => { this.iframeRunSuccess(sessionId); },
+                            (e) => { this.iframeRunFailure(e.message || 'An error occurred during ACH processing. Please try again.'); },
+                            this.credentials
+                        );
+                    }
+                    
+                } catch (error) {
+                    this.iframeRunFailure(error.message || 'An error occurred during ACH processing. Please try again.');
+                }
 			},
+
+            async initCheckoutSdk(billingAddress) {
+                const billingPayload = this.buildBillingAddressPayload(billingAddress); 
+                const credsResponse = await chSession({ billingAddress: billingPayload });
+		        this.credentials = credsResponse["ch_credentials"];
+                await chAdapter.initSdk(this.getPaymentConfig(), this.credentials);
+            },
 
 			/**
 			 * Build billing address payload for ACH submission
@@ -753,12 +505,8 @@ define(
 			 *
 			 * @returns {Object} Billing address with first/last name and address details
 			 */
-			buildBillingAddressPayload() {
-				const billingAddress = this.getBillingAddress();
-
-				if (!billingAddress) {
-					return {};
-				}
+			buildBillingAddressPayload(billingAddress) {
+				if (!billingAddress) throw new Error("Billing address not found.");
 
 				const streetValue = Array.isArray(billingAddress.street) ?
 					billingAddress.street.filter(Boolean).join(' ').trim() :
@@ -787,19 +535,13 @@ define(
 			getBillingAddress() {
 				let billingAddress = quote.billingAddress();
 
-				if (!billingAddress) {
-					billingAddress = checkoutData.getBillingAddressFromData();
-				}
-
-				if (!this.isAddressDataComplete(billingAddress)) {
-					const billingAddressFromDom = this.getBillingAddressFromForm();
-
-					if (this.isAddressDataComplete(billingAddressFromDom)) {
-						billingAddress = billingAddressFromDom;
-					}
-				}
-
-				return billingAddress;
+				if (!billingAddress) billingAddress = checkoutData.getBillingAddressFromData();
+				if (this.isAddressDataComplete(billingAddress)) return billingAddress
+                    
+                billingAddress = this.getBillingAddressFromForm();
+                if (this.isAddressDataComplete(billingAddress)) return billingAddress;
+				
+                return undefined;
 			},
 
 			getBillingAddressFromForm() {
@@ -902,13 +644,11 @@ define(
 			},
 
 			checkoutValidHandler() {
-				const isBillingReady = this.hasAvailableBillingAddress();
-
-				this.isPlaceOrderActionAllowed(isBillingReady);
-
 				if (this.canSubmitIframe() === true) {
+                    this.isPlaceOrderActionAllowed(true);
 					this.enableSubmitButton();
 				} else {
+                    this.isPlaceOrderActionAllowed(false);
 					this.disableSubmitButton();
 				}
 			},
@@ -1092,6 +832,53 @@ define(
 
 				this.checkoutValidHandler();
 			},
+
+            mapAddressFieldsToTempForm(container, fieldMap) {
+                const addressFields = {};
+
+                for (const key in fieldMap) {
+                    const inputId = 'fiserv-ach-billing-' + key;
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.id = inputId;
+                    input.value = fieldMap[key];
+                    container.append(input);
+                    addressFields[key] = { elementId: inputId };
+                }
+
+                return addressFields;
+            },
+
+            getBillingAddressContainer()
+            {
+                let container = document.getElementById(this.billingAddressContainerId);
+
+                if (!container) {
+                    container = document.createElement('div');
+                    container.id = this.billingAddressContainerId;
+                    container.style.display = 'none';
+                    document.body.append(container);
+                }
+
+                container.innerHTML = '';
+
+                return container;
+            },
+
+            mapBillingAddressFields(billingAddress) {
+                if (!billingAddress || typeof billingAddress !== 'object') throw Error("Missing billing address");
+   
+                const address = billingAddress.address || {};
+                return {
+                    firstName: billingAddress.firstName || '',
+                    lastName: billingAddress.lastName || '',
+                    street: address.street || '',
+                    city: address.city || '',
+                    stateOrProvince: address.stateOrProvince || '',
+                    postalCode: address.postalCode || '',
+                    country: address.country || '',
+                };
+		    }
 		});
 	},
 );

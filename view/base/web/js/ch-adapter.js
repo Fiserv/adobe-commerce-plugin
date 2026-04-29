@@ -119,46 +119,7 @@ define([
 			return response[this.credentialsKey];
 		},
 
-		createBillingAddressComponent: async function (billingAddress) {
-			if (!billingAddress || typeof billingAddress !== 'object') {
-				return null;
-			}
-
-			let containerId = 'fiserv-ach-billing-address-container';
-			let container = document.getElementById(containerId);
-
-			if (!container) {
-				container = document.createElement('div');
-				container.id = containerId;
-				container.style.display = 'none';
-				document.body.append(container);
-			}
-
-			container.innerHTML = '';
-
-			let address = billingAddress.address || {};
-			let fieldMap = {
-				firstName: billingAddress.firstName || '',
-				lastName: billingAddress.lastName || '',
-				street: address.street || '',
-				city: address.city || '',
-				stateOrProvince: address.stateOrProvince || '',
-				postalCode: address.postalCode || '',
-				country: address.country || '',
-			};
-
-			let addressFields = {};
-
-			for (let key in fieldMap) {
-				let inputId = 'fiserv-ach-billing-' + key;
-				let input = document.createElement('input');
-				input.type = 'text';
-				input.id = inputId;
-				input.value = fieldMap[key];
-				container.append(input);
-				addressFields[key] = { elementId: inputId };
-			}
-
+		createBillingAddressComponent: async function (addressFields) {
 			return await window.fiserv.components.address({ fields: addressFields });
 		},
 
@@ -174,7 +135,6 @@ define([
 			loadSuccessCb, 
 			loadErrorCb,
 			configData = undefined,
-			billingAddress = undefined
 		) {
 			let formConfig = this.buildFormConfig();
 
@@ -201,44 +161,16 @@ define([
 						undefined);
 			}
 
-			let initPromise = Promise.resolve();
-
-			if (billingAddress && typeof billingAddress === 'object') {
-				initPromise = new Promise((resolve, reject) => {
-					let storeUrl = window.checkoutConfig && window.checkoutConfig.payment && window.checkoutConfig.payment.fiserv_payments ?
-						window.checkoutConfig.payment.fiserv_payments.storeUrl :
-						'';
-
-					this.getChCredentials(storeUrl, resolve, reject);
-				})
-					.then((creds) => {
-						return this.initSdk(this.config, creds)
-							.then(() => this.createBillingAddressComponent(billingAddress))
-							.then((billingAddressComponent) => {
-								if (billingAddressComponent) {
-									formConfig.billingAddress = billingAddressComponent;
-								}
-							});
-					})
-					.catch((error) => {
-						console.warn('[CH-Adapter] SDK init or billingAddress component failed, continuing without address component.', error);
-					});
-			}
-
-			initPromise
-				.then(() => {
-					return window.fiserv.components.paymentFields(formConfig);
-				})
-				.then((next) => {
-					this.sdcv2Form = next;
-					this.iframeReadyCallback();
-					loadSuccessCb();
-				})
+            window.fiserv.components.paymentFields(formConfig)
+                .then((next) => { 
+                    this.sdcv2Form = next; 
+                    this.iframeReadyCallback(); 
+                    loadSuccessCb();
+                })
 				.catch((data) => {
 					console.log(data);
 					loadErrorCb(data);
 				});
-
 		},
 
 		 /**
@@ -326,11 +258,12 @@ define([
 		},
 
 		getAchLegalText: async function () {
-			if (this.sdcv2Form === undefined || typeof this.sdcv2Form.getAchLegalText !== 'function') {
-				return '';
-			}
+			if (this.sdcv2Form === undefined || typeof this.sdcv2Form.getAchLegalText !== 'function') throw new Error('SDC Form not found)');
 
-			return await this.sdcv2Form.getAchLegalText();
+			const legalTextResponse = await this.sdcv2Form.getAchLegalText();
+
+            if (!legalTextResponse.plainText) throw new Error('ACH legal text not found');
+            return legalTextResponse.plainText;
 		},
 
 		unmask: function (
