@@ -142,7 +142,7 @@ define([
 		setPaymentDetails: function (token) {
 			this.createPublicHashSelector();
 
-			this.$selector.find('[name="payment[public_hash]"]').val(this.publicHash);
+			this.getContainer().find('#' + this.getPublicHashSelectorName()).val(this.publicHash);
 			this.getContainer().find('#' + this.getTokenSelectorName()).val(token);
 		},
 
@@ -151,6 +151,7 @@ define([
 		 */
 		createPublicHashSelector: function () {
 			var $input;
+			var $publicHashInput;
 
 			if (this.getContainer().find('#' + this.getTokenSelectorName()).length === 0) {
 				$input = $('<input>').attr(
@@ -163,6 +164,19 @@ define([
 
 				$input.appendTo(this.getContainer());
 				$input.prop('disabled', false);
+			}
+
+			if (this.getContainer().find('#' + this.getPublicHashSelectorName()).length === 0) {
+				$publicHashInput = $('<input>').attr(
+					{
+						type: 'hidden',
+						id: this.getPublicHashSelectorName(),
+						name: 'payment[public_hash]'
+					}
+				);
+
+				$publicHashInput.appendTo(this.getContainer());
+				$publicHashInput.prop('disabled', false);
 			}
 		},
 
@@ -182,6 +196,10 @@ define([
 		 */
 		getTokenSelectorName: function () {
 			return this.getCode() + '_payment_token';
+		},
+
+		getPublicHashSelectorName: function () {
+			return this.getCode() + '_public_hash';
 		}
 	});
 });
