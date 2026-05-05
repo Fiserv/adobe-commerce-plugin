@@ -15,6 +15,7 @@ use Magento\Payment\Gateway\Validator\ResultInterfaceFactory;
 class VerificationResponseValidator extends AbstractValidator
 {
 	const TRANSACTION_STATE_VERIFIED = 'VERIFIED';
+	const VERIFICATION_FAILED_ERROR = 'ACCOUNT-VERIFICATION-FAILED';
 
 	/**
 	 * @var SubjectReader
@@ -64,7 +65,11 @@ class VerificationResponseValidator extends AbstractValidator
 		$normalizedTransactionState = strtoupper(trim((string)$transactionState));
 		if ($normalizedTransactionState !== self::TRANSACTION_STATE_VERIFIED) {
 			$this->logger->logError(2, 'Account verification returned non-verified state: ' . ($transactionState ?? 'NOT_PROVIDED'), 'Order ID: ' . ($orderIncrementId ?? 'Not found'));
-			return $this->createResult(false, [$validationFailureMessage], [($transactionState === null || $transactionState === '') ? 'NOT_PROVIDED' : (string)$transactionState]);
+			return $this->createResult(
+				false,
+				[self::VERIFICATION_FAILED_ERROR],
+				[($transactionState === null || $transactionState === '') ? 'NOT_PROVIDED' : (string)$transactionState]
+			);
 		}
 
 		$this->logger->logInfo(1, 'Account verification succeeded', 'Order ID: ' . ($orderIncrementId ?? 'Not found'));
