@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Fiserv\Payments\Gateway\Command\CommerceHub;
 
 use Fiserv\Payments\Logger\MultiLevelLogger;
