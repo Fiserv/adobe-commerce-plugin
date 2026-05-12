@@ -1365,4 +1365,140 @@
 			<argument name="methodCode" xsi:type="const">Fiserv\Payments\Model\Config\Paze\ConfigProvider::CODE</argument>
 		</arguments>
 	</type>
+
+	<!-- Google Pay Facade -->
+	<virtualType name="FiservGooglePayFacade" type="Magento\Payment\Model\Method\Adapter">
+		<arguments>
+			<argument name="code" xsi:type="const">Fiserv\Payments\Model\Config\GooglePay\ConfigProvider::CODE</argument>
+			<argument name="formBlockType" xsi:type="string">Fiserv\Payments\Block\CommerceHub\Form</argument>
+			<argument name="infoBlockType" xsi:type="string">Magento\Payment\Block\ConfigurableInfo</argument>
+			<argument name="valueHandlerPool" xsi:type="object">FiservGooglePayValueHandlerPool</argument>
+			<argument name="validatorPool" xsi:type="object">FiservCommerceHubValidatorPool</argument>
+			<argument name="commandPool" xsi:type="object">FiservGooglePayCommandPool</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservGooglePayValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+		<arguments>
+			<argument name="handlers" xsi:type="array">
+				<item name="default" xsi:type="string">FiservGooglePayValueHandler</item>
+				<item name="can_void" xsi:type="string">Fiserv\Payments\Gateway\Config\CanVoidHandler</item>
+				<item name="can_refund" xsi:type="string">Fiserv\Payments\Gateway\Config\CanRefundHandler</item>
+				<item name="can_cancel" xsi:type="string">Fiserv\Payments\Gateway\Config\CanVoidHandler</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservGooglePayValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+		<arguments>
+			<argument name="configInterface" xsi:type="object">Fiserv\Payments\Gateway\Config\GooglePay\Config</argument>
+		</arguments>
+	</virtualType>
+
+	<type name="Fiserv\Payments\Gateway\Config\GooglePay\Config">
+		<arguments>
+			<argument name="methodCode" xsi:type="const">Fiserv\Payments\Model\Config\GooglePay\ConfigProvider::CODE</argument>
+		</arguments>
+	</type>
+
+	<!-- Google Pay Command Pool -->
+        <virtualType name="FiservGooglePayCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
+                <arguments>
+                        <argument name="commands" xsi:type="array">
+                                <item name="authorize" xsi:type="string">FiservGooglePayAuthorizeCommand</item>
+                                <item name="capture" xsi:type="string">FiservGooglePayCaptureCommand</item>
+                                <item name="sale" xsi:type="string">FiservGooglePaySaleCommand</item>
+                                <item name="settle" xsi:type="string">FiservGooglePaySettleCommand</item>
+                                <item name="refund" xsi:type="string">FiservCommerceHubRefundCommand</item>
+                                <item name="void" xsi:type="string">FiservCommerceHubCancelCommand</item>
+                                <item name="cancel" xsi:type="string">FiservCommerceHubCancelCommand</item>
+                        </argument>
+                </arguments>
+        </virtualType>
+
+        <!-- Google Pay Authorize Command -->
+        <virtualType name="FiservGooglePayAuthorizeCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+                <arguments>
+                        <argument name="requestBuilder" xsi:type="object">FiservGooglePayAuthorizeRequest</argument>
+                        <argument name="transferFactory" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\TransferFactory</argument>
+                        <argument name="client" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient</argument>
+                        <argument name="handler" xsi:type="object">FiservGooglePayAuthorizeHandler</argument>
+                        <argument name="validator" xsi:type="object">Fiserv\Payments\Gateway\Validator\CommerceHub\AuthorizeResponseValidator</argument>
+                        <argument name="errorMessageMapper" xsi:type="object">Fiserv\Payments\Gateway\ErrorMapper\CommerceHub\VirtualErrorMessageMapper</argument>
+                </arguments>
+        </virtualType>
+
+        <virtualType name="FiservGooglePayAuthorizeRequest" type="Fiserv\Payments\Gateway\Request\CommerceHub\Composite\SessionAuthComposite">
+                <arguments>
+                        <argument name="builders" xsi:type="array">
+                                <item name="amount" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder</item>
+                                <item name="source" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\SessionSourceDataBuilder</item>
+                                <item name="auth_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AuthDetailsDataBuilder</item>
+                                <item name="txn_interaction" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\TransactionInteractionDataBuilder</item>
+                                <item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
+                                <item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
+                                <item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
+                        </argument>
+                </arguments>
+        </virtualType>
+
+        <virtualType name="FiservGooglePayAuthorizeHandler" type="Magento\Payment\Gateway\Response\HandlerChain">
+                <arguments>
+                        <argument name="handlers" xsi:type="array">
+                                <item name="payment_details" xsi:type="string">Fiserv\Payments\Gateway\Response\CommerceHub\PaymentDetailsHandler</item>
+                                <item name="card_details" xsi:type="string">Fiserv\Payments\Gateway\Response\CommerceHub\CardDetailsHandler</item>
+                        </argument>
+                </arguments>
+        </virtualType>
+	<virtualType name="FiservGooglePayCaptureCommand" type="Fiserv\Payments\Gateway\Command\CommerceHub\CaptureStrategyCommand">
+		<arguments>
+			<argument name="commandPool" xsi:type="object">FiservGooglePayCommandPool</argument>
+		</arguments>
+	</virtualType>
+
+        <!-- Google Pay Sale Command -->
+        <virtualType name="FiservGooglePaySaleCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+                <arguments>
+                        <argument name="requestBuilder" xsi:type="object">FiservGooglePaySaleRequest</argument>
+                        <argument name="transferFactory" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\TransferFactory</argument>
+                        <argument name="client" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient</argument>
+                        <argument name="handler" xsi:type="object">FiservGooglePayAuthorizeHandler</argument>
+                        <argument name="validator" xsi:type="object">Fiserv\Payments\Gateway\Validator\CommerceHub\SaleResponseValidator</argument>
+                        <argument name="errorMessageMapper" xsi:type="object">Fiserv\Payments\Gateway\ErrorMapper\CommerceHub\VirtualErrorMessageMapper</argument>
+                </arguments>
+        </virtualType>
+
+        <virtualType name="FiservGooglePaySaleRequest" type="Fiserv\Payments\Gateway\Request\CommerceHub\Composite\SessionSaleComposite">
+                <arguments>
+                        <argument name="builders" xsi:type="array">
+                                <item name="amount" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder</item>
+                                <item name="source" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\SessionSourceDataBuilder</item>
+                                <item name="sale_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\SaleDetailsDataBuilder</item>
+                                <item name="txn_interaction" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\TransactionInteractionDataBuilder</item>
+                                <item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
+                                <item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
+                                <item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
+                        </argument>
+                </arguments>
+        </virtualType>
+
+        <!-- Google Pay Settle Command -->
+        <virtualType name="FiservGooglePaySettleCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+                <arguments>
+                        <argument name="requestBuilder" xsi:type="object">FiservCommerceHubSettleRequest</argument>
+                        <argument name="transferFactory" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\TransferFactory</argument>
+                        <argument name="client" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient</argument>
+                        <argument name="handler" xsi:type="object">FiservCommerceHubSettleHandler</argument>
+                        <argument name="validator" xsi:type="object">Fiserv\Payments\Gateway\Validator\CommerceHub\SettleResponseValidator</argument>
+                        <argument name="errorMessageMapper" xsi:type="object">Fiserv\Payments\Gateway\ErrorMapper\CommerceHub\VirtualErrorMessageMapper</argument>
+                </arguments>
+        </virtualType>
+
+	<type name="Magento\Checkout\Model\CompositeConfigProvider">
+		<arguments>
+			<argument name="configProviders" xsi:type="array">
+				<item name="fiserv_googlepay" xsi:type="object">Fiserv\Payments\Model\Config\GooglePay\ConfigProvider</item>
+			</argument>
+		</arguments>
+	</type>
 </config>

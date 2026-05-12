@@ -438,6 +438,21 @@
 				<order_status>pending</order_status>
 				<group>fiserv_group</group>
 			</fiserv_paze>
+			<fiserv_googlepay>
+				<active>1</active>
+				<payment_active>0</payment_active>
+				<title>Google Pay</title>
+				<payment_action>AUTH</payment_action>
+				<googlepay_button_style>black</googlepay_button_style>
+				<googlepay_button_type>buy</googlepay_button_type>
+				<model>FiservGooglePayFacade</model>
+				<is_gateway>1</is_gateway>
+				<can_use_checkout>1</can_use_checkout>
+				<can_authorize>1</can_authorize>
+				<can_capture>1</can_capture>
+				<can_refund>1</can_refund>
+				<can_void>1</can_void>
+			</fiserv_googlepay>
 		</payment>
 	</default>
 </config>
