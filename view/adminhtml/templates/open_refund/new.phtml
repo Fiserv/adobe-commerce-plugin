@@ -1,0 +1,136 @@
+<?php
+/** @var \Fiserv\Payments\Block\Adminhtml\OpenRefund\NewForm $block */
+?>
+<div class="admin__page-section">
+    <div class="admin__page-section-title">
+        <span class="title"><?= $block->escapeHtml(__('Create Open Refund')) ?></span>
+    </div>
+
+    <?php if (!$block->isEnabled()): ?>
+        <div class="message message-warning warning">
+            <div><?= $block->escapeHtml(__('Open refunds are disabled in payment settings.')) ?></div>
+        </div>
+    <?php else: ?>
+        <form method="post" action="<?= $block->escapeUrl($block->getSubmitUrl()) ?>">
+            <?= $block->getBlockHtml('formkey') ?>
+
+            <fieldset class="admin__fieldset">
+                <legend class="admin__legend"><span><?= $block->escapeHtml(__('Refund Details')) ?></span></legend>
+
+                <div class="admin__field field">
+                    <label class="label admin__field-label" for="customer_id"><span><?= $block->escapeHtml(__('Customer Id (optional)')) ?></span></label>
+                    <div class="admin__field-control control">
+                        <input class="admin__control-text" type="text" name="customer_id" id="customer_id"/>
+                    </div>
+                </div>
+
+                <div class="admin__field field required">
+                    <label class="label admin__field-label" for="amount"><span><?= $block->escapeHtml(__('Amount')) ?></span></label>
+                    <div class="admin__field-control control">
+                        <input class="admin__control-text required-entry validate-number" type="text" name="amount" id="amount"/>
+                    </div>
+                </div>
+
+                <div class="admin__field field required">
+                    <label class="label admin__field-label" for="currency_code"><span><?= $block->escapeHtml(__('Currency')) ?></span></label>
+                    <div class="admin__field-control control">
+                        <input class="admin__control-text required-entry" type="text" name="currency_code" id="currency_code" value="USD" maxlength="3"/>
+                    </div>
+                </div>
+
+                <div class="admin__field field">
+                    <label class="label admin__field-label" for="linked_identifier"><span><?= $block->escapeHtml(__('Linked Identifier (optional)')) ?></span></label>
+                    <div class="admin__field-control control">
+                        <input class="admin__control-text" type="text" name="linked_identifier" id="linked_identifier"/>
+                    </div>
+                </div>
+
+                <div class="admin__field field">
+                    <label class="label admin__field-label" for="notes"><span><?= $block->escapeHtml(__('Notes')) ?></span></label>
+                    <div class="admin__field-control control">
+                        <textarea class="admin__control-textarea" name="notes" id="notes"></textarea>
+                    </div>
+                </div>
+
+                <div class="admin__field field">
+                    <label class="label admin__field-label" for="capture_flag"><span><?= $block->escapeHtml(__('Capture Flag')) ?></span></label>
+                    <div class="admin__field-control control">
+                        <select name="capture_flag" id="capture_flag" class="admin__control-select">
+                            <option value="1" <?= $block->getDefaultCaptureFlag() === 1 ? 'selected' : '' ?>><?= $block->escapeHtml(__('True')) ?></option>
+                            <option value="0" <?= $block->getDefaultCaptureFlag() === 0 ? 'selected' : '' ?>><?= $block->escapeHtml(__('False')) ?></option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="admin__field field required">
+                    <label class="label admin__field-label" for="source_type"><span><?= $block->escapeHtml(__('Payment Source')) ?></span></label>
+                    <div class="admin__field-control control">
+                        <select name="source_type" id="source_type" class="admin__control-select">
+                            <option value="TOKEN"><?= $block->escapeHtml(__('Stored Token')) ?></option>
+                            <option value="HOSTED_FIELDS" selected><?= $block->escapeHtml(__('Hosted Fields / Encrypted Card')) ?></option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="token-fields">
+                    <div class="admin__field field">
+                        <label class="label admin__field-label" for="payment_token"><span><?= $block->escapeHtml(__('Payment Token')) ?></span></label>
+                        <div class="admin__field-control control">
+                            <input class="admin__control-text" type="text" name="payment_token" id="payment_token"/>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="card-fields">
+                    <div class="admin__field field">
+                        <label class="label admin__field-label" for="masked_card"><span><?= $block->escapeHtml(__('Masked Card')) ?></span></label>
+                        <div class="admin__field-control control">
+                            <input class="admin__control-text" type="text" name="masked_card" id="masked_card" placeholder="************1234"/>
+                        </div>
+                    </div>
+
+                    <div class="admin__field field">
+                        <label class="label admin__field-label" for="encryption_block"><span><?= $block->escapeHtml(__('Encryption Block')) ?></span></label>
+                        <div class="admin__field-control control">
+                            <textarea class="admin__control-textarea" name="encryption_block" id="encryption_block"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="admin__field field">
+                        <label class="label admin__field-label" for="encryption_block_fields"><span><?= $block->escapeHtml(__('Encryption Block Fields')) ?></span></label>
+                        <div class="admin__field-control control">
+                            <input class="admin__control-text" type="text" name="encryption_block_fields" id="encryption_block_fields"/>
+                        </div>
+                    </div>
+
+                    <div class="admin__field field">
+                        <label class="label admin__field-label" for="key_id"><span><?= $block->escapeHtml(__('Key Id')) ?></span></label>
+                        <div class="admin__field-control control">
+                            <input class="admin__control-text" type="text" name="key_id" id="key_id"/>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+
+            <div class="actions">
+                <button type="submit" class="action-primary">
+                    <span><?= $block->escapeHtml(__('Create Open Refund')) ?></span>
+                </button>
+            </div>
+        </form>
+
+        <script>
+            require(['jquery'], function ($) {
+                function toggleSourceFields() {
+                    var sourceType = $('#source_type').val();
+                    $('#token-fields').toggle(sourceType === 'TOKEN');
+                    $('#card-fields').toggle(sourceType !== 'TOKEN');
+                }
+
+                $('#source_type').on('change', toggleSourceFields);
+                toggleSourceFields();
+            });
+        </script>
+    <?php endif; ?>
+</div>
+

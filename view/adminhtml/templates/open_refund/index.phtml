@@ -1,0 +1,50 @@
+<?php
+/** @var \Fiserv\Payments\Block\Adminhtml\OpenRefund\Index $block */
+$rows = $block->getRows();
+?>
+<div class="admin__page-section">
+    <div class="admin__page-section-title">
+        <span class="title"><?= $block->escapeHtml(__('Open Refunds')) ?></span>
+    </div>
+    <div class="admin__page-section-content" style="margin-bottom: 12px;">
+        <a class="action-primary" href="<?= $block->escapeUrl($block->getCreateUrl()) ?>">
+            <span><?= $block->escapeHtml(__('Create New Open Refund')) ?></span>
+        </a>
+    </div>
+
+    <div class="admin__table-wrapper">
+        <table class="data-table admin__table-primary">
+            <thead>
+                <tr>
+                    <th><?= $block->escapeHtml(__('Date')) ?></th>
+                    <th><?= $block->escapeHtml(__('Amount')) ?></th>
+                    <th><?= $block->escapeHtml(__('Currency')) ?></th>
+                    <th><?= $block->escapeHtml(__('Customer')) ?></th>
+                    <th><?= $block->escapeHtml(__('ID')) ?></th>
+                    <th><?= $block->escapeHtml(__('Status')) ?></th>
+                    <th><?= $block->escapeHtml(__('Admin')) ?></th>
+                </tr>
+            </thead>
+            <tbody>
+            <?php if (!$rows): ?>
+                <tr>
+                    <td colspan="7"><?= $block->escapeHtml(__('No open refunds found.')) ?></td>
+                </tr>
+            <?php else: ?>
+                <?php foreach ($rows as $row): ?>
+                    <tr>
+                        <td><?= $block->escapeHtml((string)$row->getData('created_at')) ?></td>
+                        <td><?= $block->escapeHtml((string)$row->getData('amount')) ?></td>
+                        <td><?= $block->escapeHtml((string)$row->getData('currency_code')) ?></td>
+                        <td><?= $block->escapeHtml((string)$row->getData('customer_id')) ?></td>
+                        <td><?= $block->escapeHtml((string)$row->getData('open_refund_id')) ?></td>
+                        <td><?= $block->escapeHtml((string)$row->getData('status')) ?></td>
+                        <td><?= $block->escapeHtml((string)$row->getData('admin_username')) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+

@@ -82,6 +82,29 @@
 						<validate>validate-no-empty</validate>
 						<config_path>payment/fiserv_commercehub/specificcountry</config_path>
 					</field>
+					<field id="open_refund_enabled" translate="label" type="select" sortOrder="17" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Enable Open Refunds</label>
+						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+						<config_path>payment/fiserv_commercehub/open_refund_enabled</config_path>
+						<comment>Default should remain disabled unless the merchant explicitly enables this high-risk feature.</comment>
+					</field>
+					<field id="open_refund_capture_flag" translate="label" type="select" sortOrder="18" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Default Open Refund Capture Flag</label>
+						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+						<config_path>payment/fiserv_commercehub/open_refund_capture_flag</config_path>
+						<depends>
+							<field id="open_refund_enabled">1</field>
+						</depends>
+					</field>
+					<field id="open_refund_max_amount" translate="label" type="text" sortOrder="19" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Open Refund Max Amount</label>
+						<config_path>payment/fiserv_commercehub/open_refund_max_amount</config_path>
+						<validate>validate-number validate-zero-or-greater</validate>
+						<depends>
+							<field id="open_refund_enabled">1</field>
+						</depends>
+						<comment>Set 0 to disable amount capping.</comment>
+					</field>
 				</group>
 				<group id="credit_debit_cards" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="5">
 					<label>Credit/Debit Cards</label>

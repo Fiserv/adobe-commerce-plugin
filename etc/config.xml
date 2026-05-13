@@ -189,7 +189,10 @@
 				<sdc_custom_token_font_integrity></sdc_custom_token_font_integrity>
 				<group>fiserv_group</group>
 				<vault_use_cvv>0</vault_use_cvv>
-			</fiserv_commercehub>	
+				<open_refund_enabled>0</open_refund_enabled>
+				<open_refund_capture_flag>1</open_refund_capture_flag>
+				<open_refund_max_amount>0</open_refund_max_amount>
+			</fiserv_commercehub>
 			<fiserv_valuelink>
 				<active>1</active>
 				<payment_action>AUTH</payment_action>

@@ -42,6 +42,9 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	const KEY_CHECKOUT_INTERACTIONS_EXPIRES_IN_MINUTES = 'checkout_interactions_expires_in_minutes';
 	const KEY_LOGGING_LEVEL = 'logging_level';
 	const KEY_3DS = 'three_d_secure';
+	const KEY_OPEN_REFUND_ENABLED = 'open_refund_enabled';
+	const KEY_OPEN_REFUND_CAPTURE_FLAG = 'open_refund_capture_flag';
+	const KEY_OPEN_REFUND_MAX_AMOUNT = 'open_refund_max_amount';
 
 	// Iframe Customization Fields
 	const KEY_SDC_CUSTOM = 'sdc_custom';
@@ -405,6 +408,44 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	public function isThreeDSEnabled($storeId = null)
 	{
 		return $this->getValue(self::KEY_3DS, $storeId);
+	}
+
+	/**
+	 * Is open refund feature enabled.
+	 *
+	 * @param int|null $storeId
+	 * @return bool
+	 */
+	public function isOpenRefundEnabled($storeId = null)
+	{
+		return (bool)$this->getValue(self::KEY_OPEN_REFUND_ENABLED, $storeId);
+	}
+
+	/**
+	 * Default capture flag for open refunds.
+	 *
+	 * @param int|null $storeId
+	 * @return bool
+	 */
+	public function getOpenRefundCaptureFlag($storeId = null)
+	{
+		return (bool)$this->getValue(self::KEY_OPEN_REFUND_CAPTURE_FLAG, $storeId);
+	}
+
+	/**
+	 * Max amount allowed per open refund. 0 means no cap.
+	 *
+	 * @param int|null $storeId
+	 * @return float
+	 */
+	public function getOpenRefundMaxAmount($storeId = null)
+	{
+		$value = $this->getValue(self::KEY_OPEN_REFUND_MAX_AMOUNT, $storeId);
+		if (!is_numeric($value)) {
+			return 0.0;
+		}
+
+		return max(0.0, (float)$value);
 	}
 
 	//////////////////////////
