@@ -10,7 +10,7 @@ class Version
 	 * class constants
 	 */
 	const MAJOR = 1;
-	const MINOR = 5;
+	const MINOR = 6;
 	const TINY = 0;
 
 	public function  __construct()
