@@ -139,7 +139,7 @@ define([
 							data.completePayment('FAILURE');
 						}
 						globalMessageList.addErrorMessage({
-							message: $t('Apple Pay error occurred.')
+							message: $t('Error during Apple Pay checkout')
 						});
 					}
 				}
@@ -149,7 +149,7 @@ define([
 
 		} catch (error) {
 			globalMessageList.addErrorMessage({
-				message: $t('Apple Pay error: ') + error.message
+				message: $t('Error during Apple Pay checkout')
 			});
 		} finally {
 			fullScreenLoader.stopLoader();

@@ -1,9 +1,3 @@
-/**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
- */
-/*browser:true*/
-/*global define*/
 define([
     'jquery',
     'Magento_Payment/js/view/payment/cc-form',
@@ -47,8 +41,7 @@ define([
             credentials: undefined,
             paypalComponent: null,
             vaultEnabler: null,
-            placeOrderCallback: null,
-		initializedAmount: 0.00
+            initializedAmount: 0.00
         },
 
         initialize: function () {
@@ -57,25 +50,25 @@ define([
                 this.isPlaceOrderActionAllowed(address !== null);
             }, this);
 
-		quote.shippingAddress.subscribe(async () => {
-			if (this.isChecked() === this.getCode())
-			{
-				await this.initchAdapter();
-			}
-		});
-		return this;
+            quote.shippingAddress.subscribe(async () => {
+                if (this.isChecked() === this.getCode())
+                {
+                    await this.initchAdapter();
+                }
+            });
+            return this;
         },
 
-		initializePayPal: async function()
-		{
-			await this.loadPayPalForm();
-			this.watchPaymentMethods();
-		},
+        initializePayPal: async function()
+        {
+            await this.loadPayPalForm();
+            this.watchPaymentMethods();
+        },
 
-		loadPayPalForm: async function () {
+        loadPayPalForm: async function () {
             if (this.isChecked() === this.getCode()) {
                 await this.initchAdapter();
-            } 
+            }
         },
 
         initchAdapter: async function () {
@@ -113,18 +106,8 @@ define([
                 this.paypalComponent = paypalComponent;
                 const buttonsConfig = config.buttonConfig;
                 await this.renderPayPalButtons(buttonsConfig);
-		this.initializedAmount = quote.totals()['grand_total'];
-		this.observeTotals();
-		   
-		this.placeOrderCallback = function(approvalData) {
-                    self.additionalData.paypal_order_id = approvalData.orderId;
-                    self.additionalData.email = approvalData.email;
-                    require(['Magento_Checkout/js/action/place-order'], function(placeOrderAction) {
-                        placeOrderAction(self.getData()).done(function() {
-                            window.location.href = '/checkout/onepage/success/';
-                        });
-                    });
-                };
+                this.initializedAmount = quote.totals()['grand_total'];
+                this.observeTotals();
             } catch (error) {
                 globalMessageList.addErrorMessage({ message: $t('PayPal credentials error: ') + (error.message || error) });
                 console.error('[PayPal] Error in initchAdapter:', error);
@@ -184,20 +167,16 @@ define([
                             } catch (error) {
                                 email = '';
                             }
-                            if (this.placeOrderCallback) {
-                                this.placeOrderCallback({
-                                    orderId: data.orderId,
-                                    email: email
-                                });
-                            } else {
-                                console.error('No placeOrderCallback set for PayPal approval');
-                            }
+                            this.additionalData.paypal_order_id = data.orderId;
+                            this.additionalData.email = email;
+                            // Use inherited placeOrder method to trigger Magento's default flow
+                            this.placeOrder('parent');
                         },
                         onCancel: () => {
                             console.log('on cancel called');
                         },
                         onError: error => {
-                            console.log('on error called', error);
+                            console.error('Error during PayPal checkout');
                         }
                     }
                 });
@@ -207,20 +186,21 @@ define([
             }
         },
 
-	observeTotals: function()
-	{
-		quote.totals.subscribe( (totals) => {
-		    if (
-			    this.getCode() === this.isChecked() &&
-			    this.initializedAmount && 
-			    this.initializedAmount > 0.00 && 
-			    totals && 
-			    totals['grand_total'] && 
-			    totals['grand_total'] != this.initializedAmount) {
-			    location.reload();
-		    }
-	    });
-	},
+        observeTotals: function ()
+        {
+            quote.totals.subscribe((totals) => {
+                if (
+                    this.getCode() === this.isChecked() &&
+                    this.initializedAmount &&
+                    this.initializedAmount > 0.00 &&
+                    totals &&
+                    totals['grand_total'] &&
+                    totals['grand_total'] != this.initializedAmount
+                ) {
+                    location.reload();
+                }
+            });
+        },
 
         getData: function () {
             var data = {
@@ -231,11 +211,6 @@ define([
                 data.additional_data.payment_session = this.paymentPayload.sessionId;
             }
             return data;
-        },
-
-        isVenmoEnabled: function () {
-            var config = (window.checkoutConfig && window.checkoutConfig.payment) ? window.checkoutConfig.payment[this.getCode()] : {};
-            return config && config.venmoConfig && config.venmoConfig.enableVenmo;
         },
 
         /**
@@ -277,12 +252,10 @@ define([
             if (!address) {
                 return undefined;
             }
-            // Inline mapShippingAddress logic
             if (!address.street || !address.firstname || !address.lastname) {
                 console.warn('Shipping address is incomplete:', address);
                 return undefined;
             }
-            // Handle both array and object for street
             let streetArr = Array.isArray(address.street)
                 ? address.street
                 : Object.values(address.street);
@@ -301,21 +274,21 @@ define([
         },
 
         /**
-		 * Set list of observable attributes
-		 *
-		 * @returns {exports.initObservable}
-		 */
-		initObservable: function () {
-			this._super()
-				.observe(['active']);
-			return this;
-		},
+         * Set list of observable attributes
+         *
+         * @returns {exports.initObservable}
+         */
+        initObservable: function () {
+            this._super()
+                .observe(['active']);
+            return this;
+        },
 
         watchPaymentMethods: function(element) {
             let self = this;
-			$(self.paymentMethodName).on("click", function() {
+            $(self.paymentMethodName).on("click", function() {
                 let selected = $(this).attr("id");
-				if (selected === self.getCode()) {
+                if (selected === self.getCode()) {
                     self.loadPayPalForm();
                 } else {
                     // Clear PayPal button container if another payment method is selected
@@ -325,10 +298,10 @@ define([
         },
 
         refreshBillingAddress: function () {
-			if (this.isAchActive() && quote.billingAddress()) {
-				shpfUtils.setBillingAddress(quote.billingAddress());
-				this.initAchIframe();
-			}
-		}
+            if (this.isAchActive() && quote.billingAddress()) {
+                shpfUtils.setBillingAddress(quote.billingAddress());
+                this.initAchIframe();
+            }
+        }
     });
 });

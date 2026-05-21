@@ -22,6 +22,11 @@ class DataAssignObserver extends AbstractDataAssignObserver
 	const EXP_YEAR_KEY = 'expiration_year';
 	const NAME_ON_CARD_KEY = 'nameOnCard';
 	const THREE_D_SECURE_KEY = '3DSecureId';
+	const ACH_LEGAL_TEXT_ACCEPTED_KEY = 'ach_legal_text_accepted';
+	const ACH_LEGAL_TEXT_KEY = 'ach_legal_text';
+	const ACH_LEGAL_TEXT_ACCEPTED_AT_KEY = 'ach_legal_text_accepted_at';
+	const ACH_ROUTING_NUMBER_KEY = 'routingNumber';
+	const ACH_ROUTING_NUMBER_SNAKE_KEY = 'routing_number';
 
 	/**
 	 * @var array
@@ -33,7 +38,12 @@ class DataAssignObserver extends AbstractDataAssignObserver
 		self::TOKEN_SOURCE_KEY,
 		self::EXP_MONTH_KEY,
 		self::EXP_YEAR_KEY,
-		self::THREE_D_SECURE_KEY
+		self::THREE_D_SECURE_KEY,
+		self::ACH_LEGAL_TEXT_ACCEPTED_KEY,
+		self::ACH_LEGAL_TEXT_KEY,
+		self::ACH_LEGAL_TEXT_ACCEPTED_AT_KEY,
+		self::ACH_ROUTING_NUMBER_KEY,
+		self::ACH_ROUTING_NUMBER_SNAKE_KEY
 	];
 
 	/**

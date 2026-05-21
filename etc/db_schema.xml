@@ -109,4 +109,35 @@
 		<column xsi:type="decimal" name="storeCredit" scale="4" precision="20" unsigned="false" nullable="false" comment="Store Credit"/>
 		<column xsi:type="decimal" name="discountAmount" scale="4" precision="20" unsigned="false" nullable="false" comment="Discount Amount"/>
 	</table>
+
+        <!-- Table for tracking pending transaction inquiry jobs -->
+        <table name="fiserv_pending_inquiry_job" resource="default" engine="innodb" comment="Pending Transaction Inquiry Jobs">
+                <column xsi:type="int" name="entity_id" unsigned="true" nullable="false" identity="true" comment="Entity ID"/>
+                <constraint xsi:type="primary" referenceId="PRIMARY">
+                        <column name="entity_id"/>
+                </constraint>
+                <column xsi:type="int" name="order_id" unsigned="true" nullable="true" comment="Magento Order Entity ID"/>
+                <column xsi:type="varchar" name="order_increment_id" nullable="false" length="50" comment="Magento Order Increment ID"/>
+                <column xsi:type="varchar" name="reference_order_id" nullable="false" length="255" comment="CommerceHub Reference Order ID (CHG01...)"/>
+                <column xsi:type="varchar" name="payment_method" nullable="false" length="50" comment="Payment Method Code"/>
+                <column xsi:type="varchar" name="status" nullable="false" length="20" default="queued" comment="Job Status: queued, processing, completed, failed"/>
+                <column xsi:type="varchar" name="transaction_state" nullable="true" length="50" comment="Last Known Transaction State"/>
+                <column xsi:type="varchar" name="approval_status" nullable="true" length="50" comment="Last Known Approval Status"/>
+                <column xsi:type="int" name="attempts" unsigned="true" nullable="false" default="0" comment="Number of inquiry attempts"/>
+                <column xsi:type="int" name="max_attempts" unsigned="true" nullable="false" default="5" comment="Maximum inquiry attempts"/>
+                <column xsi:type="timestamp" name="next_run_at" nullable="false" comment="Next scheduled run time"/>
+                <column xsi:type="text" name="last_response" nullable="true" comment="Last inquiry response JSON"/>
+                <column xsi:type="text" name="error_message" nullable="true" comment="Last error message if any"/>
+                <column xsi:type="timestamp" name="created_at" nullable="false" default="CURRENT_TIMESTAMP" comment="Created At"/>
+                <column xsi:type="timestamp" name="updated_at" nullable="false" default="CURRENT_TIMESTAMP" on_update="true" comment="Updated At"/>
+                <index referenceId="IDX_FISERV_PENDING_INQUIRY_JOB_STATUS" indexType="btree">
+                        <column name="status"/>
+                </index>
+                <index referenceId="IDX_FISERV_PENDING_INQUIRY_JOB_NEXT_RUN" indexType="btree">
+                        <column name="next_run_at"/>
+                </index>
+                <index referenceId="IDX_FISERV_PENDING_INQUIRY_JOB_ORDER_INCREMENT" indexType="btree">
+                        <column name="order_increment_id"/>
+                </index>
+        </table>
 </schema>

@@ -3,7 +3,7 @@
 		<input type="radio"
 			   name="payment[method]"
 			   class="radio"
-			   data-bind="attr: {'id': getCode()}, value: getCode(), checked: isChecked, click: selectPaymentMethod, visible: isRadioButtonVisible(), afterRender: watchPaymentMethods"/>
+			   data-bind="attr: {'id': getCode()}, value: getCode(), checked: isChecked, click: selectPaymentMethod, visible: isRadioButtonVisible(), afterRender: setupPaymentMethod"/>
 		<label data-bind="attr: {'for': getCode()}" class="label"><span data-bind="text: getTitle()"></span></label>
 	</div>
 	<div class="payment-method-content">
@@ -91,6 +91,8 @@
 			<!-- ko template: getTemplate() --><!-- /ko -->
 			<!--/ko-->
 		</div>
+		
+		<div id="fiserv-paypal-consent-container"></div>
 
 		<div class="actions-toolbar">
             <div class="primary">
@@ -106,10 +108,9 @@
         </div>
 
 	<div class="privacyPolicy">
-		<span></span>Payments Powered by Fiserv.&nbsp; <a target="_blank" href="http://www.fiserv.com/privacy">Privacy Notice</a>.
+		<span></span>Payments Powered by Fiserv.&nbsp; <a target="_blank" href="https://www.fiserv.com/privacy">Privacy Notice</a>.
 	</div>
 
-	<div id="fiserv-paypal-consent-container"></div>
 
 	</div>
 </div>

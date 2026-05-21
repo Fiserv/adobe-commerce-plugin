@@ -3,6 +3,7 @@
 namespace Fiserv\Payments\Helper\Valuelink;
 
 use Fiserv\Payments\Model\Valuelink\ValuelinkQuoteRecord;
+use Fiserv\Payments\Gateway\Config\CommerceHub\Config as CommerceHubConfig;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\Serialize\Serializer\Json;
@@ -11,13 +12,17 @@ use Magento\Framework\Serialize\Serializer\Json;
 class DataHelper extends AbstractHelper
 {
 	private $serializer;
+	private $commerceHubConfig;
 
 	public function __construct(
-			Context $context, 
-			Json $serializer)
+		Context $context, 
+		Json $serializer,
+		CommerceHubConfig $commerceHubConfig
+	)
 	{
-			parent::__construct($context);
-			$this->serializer = $serializer;
+		parent::__construct($context);
+		$this->serializer = $serializer;
+		$this->commerceHubConfig = $commerceHubConfig;
 	}
 
 	public function addValuelinkRecordsToQuote(\Magento\Quote\Model\Quote $quote, array $records)
@@ -60,6 +65,7 @@ class DataHelper extends AbstractHelper
 
 	public function isValuelinkRecordValid(int $record)
 	{
-		return $record > strtotime("-30 minutes");
+		$expiresInMinutes = $this->commerceHubConfig->getCheckoutInteractionsExpiresInMinutes();
+		return $record > strtotime(sprintf('-%d minutes', $expiresInMinutes));
 	}
 }

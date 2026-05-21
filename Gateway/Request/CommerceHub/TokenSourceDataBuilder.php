@@ -7,11 +7,17 @@ namespace Fiserv\Payments\Gateway\Request\CommerceHub;
 
 use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use Fiserv\Payments\Observer\CommerceHub\DataAssignObserver;
+use Fiserv\Payments\Gateway\Request\CommerceHub\SessionSourceDataBuilder;
 use Fiserv\Payments\Lib\CommerceHub\Model\PaymentToken;
 use Fiserv\Payments\Lib\CommerceHub\Model\Card;
+use Fiserv\Payments\Gateway\Config\CommerceHub\Config;
 use Magento\Payment\Gateway\Request\BuilderInterface;
 use Magento\Payment\Helper\Formatter;
 use Fiserv\Payments\Logger\MultiLevelLogger;
+
+use Magento\Framework\App\Area;
+use Magento\Framework\App\State;
+use Magento\Framework\Exception\LocalizedException;
 
 /**
  * Token Payment Data Builder
@@ -28,10 +34,14 @@ class TokenSourceDataBuilder implements BuilderInterface
 	 */
 	private $logger;
 	
+	private $chConfig;
+
 	/**
 	 * @var SubjectReader
 	 */
 	private $subjectReader;
+
+	private $appState;
 
 	/**
 	 * @param MultiLevelLogger $logger
@@ -40,9 +50,13 @@ class TokenSourceDataBuilder implements BuilderInterface
 	 */
 	public function __construct(
 		SubjectReader $subjectReader,
+		Config $chConfig,
+		State $appState,
 		MultiLevelLogger $logger
 	) {
 		$this->subjectReader = $subjectReader;
+		$this->chConfig = $chConfig;
+		$this->appState = $appState;
 		$this->logger = $logger;
 	}
 
@@ -55,7 +69,10 @@ class TokenSourceDataBuilder implements BuilderInterface
 		$payment = $paymentDO->getPayment();
 		$orderDO = $paymentDO->getOrder();
 		$orderIncrementId = $orderDO->getOrderIncrementId();
-		
+
+
+
+
 		$tokenData = $payment->getAdditionalInformation(DataAssignObserver::PAYMENT_TOKEN_KEY);
 		$tokenSource = $payment->getAdditionalInformation(DataAssignObserver::TOKEN_SOURCE_KEY);
 		$expMonth = $payment->getAdditionalInformation(DataAssignObserver::EXP_MONTH_KEY);
@@ -79,6 +96,16 @@ class TokenSourceDataBuilder implements BuilderInterface
 		$source->setTokenSource($tokenSource);
 		$source->setDeclineDuplicates(false);
 
+		if ($this->chConfig->isVaultCvvEnabled() && !$this->isAdminArea())
+		{
+			$sessionId = $payment->getAdditionalInformation(DataAssignObserver::SESSION_ID_KEY);
+			if (empty($sessionId))
+			{
+				throw new \Exception("CVV is required but no SessionId was found.");
+			}
+			$source->setSessionId($sessionId);
+		}
+
 		$card = new Card();
 		$card->setExpirationMonth($expMonth);
 		$card->setExpirationYear($expYear);
@@ -91,5 +118,14 @@ class TokenSourceDataBuilder implements BuilderInterface
 		$this->logger->logDebug(3, "Token Source Data Builder:\n" . $source->__toString(), "Order ID: $orderIncrementId");
 
 		return [ self::TOKEN_SOURCE_KEY => $source ];
+	}
+
+	private function isAdminArea(): bool
+	{
+		try {
+			return $this->appState->getAreaCode() === Area::AREA_ADMINHTML;
+		} catch (LocalizedException $exception) {
+			return false;
+		}
 	}
 }

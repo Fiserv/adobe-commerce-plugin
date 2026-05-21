@@ -27,8 +27,8 @@
 				<tokenization_strategy>CUSTOMER</tokenization_strategy>
 				<tokenization>1</tokenization>
 				<standalone_spa>1</standalone_spa>
+				<checkout_interactions_expires_in_minutes>30</checkout_interactions_expires_in_minutes>
 				<order_status>pending</order_status>
-				<debug>1</debug>
 				<logging_level>2</logging_level>
 				<currency>USD</currency>
 				<allowspecific>1</allowspecific>
@@ -188,6 +188,7 @@
 				<sdc_custom_token_font_format></sdc_custom_token_font_format>
 				<sdc_custom_token_font_integrity></sdc_custom_token_font_integrity>
 				<group>fiserv_group</group>
+				<vault_use_cvv>0</vault_use_cvv>
 			</fiserv_commercehub>	
 			<fiserv_valuelink>
 				<active>1</active>
@@ -248,11 +249,10 @@
 			</fiserv_commercehub_vault>
 			<fiserv_paypal>
 				<active>1</active>
-				<payment_active>1</payment_active>
+				<payment_active>0</payment_active>
 				<title>PayPal</title>
 				<model>FiservPayPalFacade</model>
 				<payment_action>AUTH</payment_action>
-				<!-- <ch_paypal_venmo>1</ch_paypal_venmo> -->
 				<ch_paypal_fastlane>1</ch_paypal_fastlane>
 				<is_gateway>1</is_gateway>
 				<can_use_internal>0</can_use_internal>
@@ -268,9 +268,29 @@
 				<order_status>pending</order_status>
 				<group>fiserv_group</group>
 			</fiserv_paypal>
-			<fiserv_paypal_fastlane>
+            <fiserv_venmo>
 				<active>1</active>
-				<payment_active>1</payment_active>
+				<payment_active>0</payment_active>
+                <title>Venmo</title>
+                <model>FiservVenmoFacade</model>
+                <payment_action>AUTH</payment_action>
+				<is_gateway>1</is_gateway>
+				<can_use_internal>0</can_use_internal>
+				<can_use_checkout>1</can_use_checkout>
+				<can_authorize>1</can_authorize>
+				<can_capture>1</can_capture>
+				<can_capture_partial>1</can_capture_partial>
+				<can_refund>1</can_refund>
+				<can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
+				<can_void>1</can_void>
+				<can_authorize_vault>1</can_authorize_vault>
+				<can_capture_vault>1</can_capture_vault>
+				<order_status>pending</order_status>
+				<group>fiserv_group</group>
+            </fiserv_venmo>
+            <fiserv_paypal_fastlane>
+				<active>1</active>
+				<payment_active>0</payment_active>
 				<title>PayPal Fastlane</title>
 				<model>FiservPayPalFastlaneFacade</model>
 				<payment_action>AUTH</payment_action>
@@ -287,8 +307,8 @@
 				<group>fiserv_group</group>
 			</fiserv_paypal_fastlane>
             <fiserv_applepay>
-                <active>1</active>
-                <payment_active>1</payment_active>
+				<active>1</active>
+				<payment_active>0</payment_active>
                 <title>ApplePay</title>
                 <model>FiservApplePayFacade</model>
                 <payment_action>AUTH</payment_action>
@@ -302,10 +322,122 @@
                 <can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
                 <can_void>1</can_void>
                 <order_status>pending</order_status>
-		<applepay_button_style>black</applepay_button_style>
-		<applepay_button_type>buy</applepay_button_type>
+				<applepay_button_style>black</applepay_button_style>
+				<applepay_button_type>buy</applepay_button_type>
                 <group>fiserv_group</group>
             </fiserv_applepay>
+			<fiserv_affirm>
+				<active>1</active>
+				<payment_active>0</payment_active>
+				<title>Affirm</title>
+				<model>FiservAffirmFacade</model>
+				<payment_action>AUTH</payment_action>
+				<is_gateway>1</is_gateway>
+				<can_use_internal>0</can_use_internal>
+				<can_use_checkout>1</can_use_checkout>
+				<can_authorize>1</can_authorize>
+				<can_capture>1</can_capture>
+				<can_capture_partial>0</can_capture_partial>
+				<can_refund>1</can_refund>
+				<can_refund_partial_per_invoice>0</can_refund_partial_per_invoice>
+				<can_void>1</can_void>
+				<order_status>pending</order_status>
+				<group>fiserv_group</group>
+				<!-- Async Inquiry Configuration -->
+				<inquiry_enabled>1</inquiry_enabled>
+				<inquiry_first_interval>60</inquiry_first_interval>
+				<inquiry_second_interval>300</inquiry_second_interval>
+				<inquiry_subsequent_interval>1800</inquiry_subsequent_interval>
+				<inquiry_max_attempts>5</inquiry_max_attempts>
+				<inquiry_fallback_enabled>0</inquiry_fallback_enabled>
+				<inquiry_fallback_secret></inquiry_fallback_secret>
+				<inquiry_auto_process_enabled>1</inquiry_auto_process_enabled>
+			</fiserv_affirm>
+			<fiserv_samsung_pay>
+				<active>1</active>
+				<payment_active>0</payment_active>
+				<title>SamsungPay</title>
+				<model>FiservSamsungPayFacade</model>
+				<payment_action>AUTH</payment_action>
+				<is_gateway>1</is_gateway>
+				<can_use_internal>0</can_use_internal>
+				<can_use_checkout>1</can_use_checkout>
+				<can_authorize>1</can_authorize>
+				<can_capture>1</can_capture>
+				<can_capture_partial>1</can_capture_partial>
+				<can_refund>1</can_refund>
+				<can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
+				<can_void>1</can_void>
+				<order_status>pending</order_status>
+				<samsung_pay_button_style>black</samsung_pay_button_style>
+				<group>fiserv_group</group>
+			</fiserv_samsung_pay>
+			<fiserv_ach>
+				<active>1</active>
+				<payment_active>0</payment_active>
+				<title>ACH/Bank Transfer</title>
+				<model>FiservAchFacade</model>
+				<payment_action>authorize_capture</payment_action>
+				<order_status>pending</order_status>
+				<is_gateway>1</is_gateway>
+				<can_use_internal>0</can_use_internal>
+				<can_use_checkout>1</can_use_checkout>
+				<can_authorize>0</can_authorize>
+				<can_capture>1</can_capture>
+				<can_capture_partial>0</can_capture_partial>
+				<can_refund>1</can_refund>
+				<can_refund_partial_per_invoice>0</can_refund_partial_per_invoice>
+				<can_void>1</can_void>
+				<allowspecific>1</allowspecific>
+				<specificcountry>US</specificcountry>
+				<group>fiserv_group</group>
+
+				<!-- ACH Field Configurations -->
+				<sdc_custom_checkout_routing_number_parent_element>fiserv_ach-routing-number</sdc_custom_checkout_routing_number_parent_element>
+				<sdc_custom_checkout_routing_number_placeholder>Routing Number</sdc_custom_checkout_routing_number_placeholder>
+				<sdc_custom_checkout_routing_number_masking_character>•</sdc_custom_checkout_routing_number_masking_character>
+				<sdc_custom_checkout_routing_number_masking_mode>NO_MASKING</sdc_custom_checkout_routing_number_masking_mode>
+
+				<sdc_custom_checkout_account_number_parent_element>fiserv_ach-account-number</sdc_custom_checkout_account_number_parent_element>
+				<sdc_custom_checkout_account_number_placeholder>Account Number</sdc_custom_checkout_account_number_placeholder>
+				<sdc_custom_checkout_account_number_masking_character>•</sdc_custom_checkout_account_number_masking_character>
+				<sdc_custom_checkout_account_number_masking_mode>ALWAYS_MASK_EXCEPT_LAST_4</sdc_custom_checkout_account_number_masking_mode>
+
+				<sdc_custom_checkout_id_type_parent_element>fiserv_ach-id-type</sdc_custom_checkout_id_type_parent_element>
+
+				<sdc_custom_checkout_id_value_parent_element>fiserv_ach-id-value</sdc_custom_checkout_id_value_parent_element>
+				<sdc_custom_checkout_id_value_placeholder>ID Value</sdc_custom_checkout_id_value_placeholder>
+
+				<sdc_custom_checkout_driver_license_state_parent_element>fiserv_ach-driver-license-state</sdc_custom_checkout_driver_license_state_parent_element>
+				<sdc_custom_checkout_driver_license_state_placeholder>Driver License State</sdc_custom_checkout_driver_license_state_placeholder>
+
+				<sdc_custom_checkout_check_type_parent_element>fiserv_ach-check-type</sdc_custom_checkout_check_type_parent_element>
+				<sdc_custom_checkout_check_type_placeholder>Check Type</sdc_custom_checkout_check_type_placeholder>
+
+				<sdc_custom_checkout_account_type_parent_element>fiserv_ach-account-type</sdc_custom_checkout_account_type_parent_element>
+				<sdc_custom_checkout_account_type_placeholder>Account Type</sdc_custom_checkout_account_type_placeholder>
+
+				<sdc_custom_checkout_business_name_parent_element>fiserv_ach-business-name</sdc_custom_checkout_business_name_parent_element>
+				<sdc_custom_checkout_business_name_placeholder>Business Name</sdc_custom_checkout_business_name_placeholder>
+			</fiserv_ach>
+			<fiserv_paze>
+				<active>1</active>
+				<payment_active>0</payment_active>
+				<title>Paze</title>
+				<model>FiservPazeFacade</model>
+				<payment_action>AUTH</payment_action>
+				<is_gateway>1</is_gateway>
+				<can_use_internal>0</can_use_internal>
+				<can_use_checkout>1</can_use_checkout>
+				<can_authorize>1</can_authorize>
+				<can_capture>1</can_capture>
+				<can_capture_partial>1</can_capture_partial>
+				<can_refund>1</can_refund>
+				<can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
+				<can_void>1</can_void>
+				<order_status>pending</order_status>
+				<group>fiserv_group</group>
+			</fiserv_paze>
 		</payment>
 	</default>
 </config>

@@ -29,7 +29,7 @@ class ConfigProvider implements ConfigProviderInterface
 	const ENV_KEY = 'environment';
 	const PAYMENT_ACTION_KEY = 'paymentAction';
 	const AVAILABLE_CC_KEY = 'availableCardTypes';
-	const USE_CCV_KEY = 'useCcv';
+	const USE_CVV_KEY = 'useCvv';
 	const LOGGING_LEVEL_KEY = 'loggingLevel';
 	const CURRENCY_KEY = 'currency';
 	const PROD_CLIENT_KEY = 'prodClientUrl';
@@ -38,6 +38,7 @@ class ConfigProvider implements ConfigProviderInterface
 	const CARD_FORM_CONFIG_KEY = 'formConfig';
 	const TERMINAL_ID_KEY = 'terminalId';
 	const THREE_D_SECURE_KEY = 'threeDSecure';
+	const VAULT_USE_CVV_KEY = 'vaultUseCvv';
 
 	const INVALID_FIELDS_KEY = 'invalidFields';
 	const CARD_NUMBER_KEY = 'cardNumber';
@@ -87,7 +88,8 @@ class ConfigProvider implements ConfigProviderInterface
 			self::ENV_KEY => $this->config->getApiEnvironment($storeId),
 			self::PAYMENT_ACTION_KEY => $this->config->getPaymentAction($storeId),
 			self::AVAILABLE_CC_KEY => $this->config->getAvailableCardTypes($storeId),
-			self::USE_CCV_KEY => $this->config->isCcvEnabled($storeId),
+			self::USE_CVV_KEY => $this->config->isCvvEnabled($storeId),
+			self::VAULT_USE_CVV_KEY => $this->config->isVaultCvvEnabled($storeId),
 			self::LOGGING_LEVEL_KEY => $this->config->getLoggingLevel($storeId),
 			self::CURRENCY_KEY => $this->config->getCurrency($storeId),
 			self::PROD_CLIENT_KEY => $this->config->getProdClientUrl(),
@@ -111,7 +113,11 @@ class ConfigProvider implements ConfigProviderInterface
 		$fieldsConfig = array();
 		$fieldsConfig["fields"] = $this->buildFormFieldsConfig($formId, $storeId);
 		$fieldsConfig["css"] = json_decode($this->config->cssFormConfig($formId, $storeId) ?? "{}");
-		$fieldsConfig["font"] = $this->config->fontFormConfig($formId, $storeId) ?? array();
+
+		$fontConfig = $this->config->fontFormConfig($formId, $storeId) ?? array();
+		if ($this->hasRequiredFontConfig($fontConfig)) {
+			$fieldsConfig["font"] = $fontConfig;
+		}
 
 		return $fieldsConfig;
 	}
@@ -121,10 +127,22 @@ class ConfigProvider implements ConfigProviderInterface
 		$fieldsConfig = array();
 		$fieldsConfig["fields"] = $this->buildValuelinkFormFieldsConfig($formId, $storeId);
 		$fieldsConfig["css"] = json_decode($this->config->cssFormConfig($formId, $storeId, true) ?? "{}");
-		$fieldsConfig["font"] = $this->config->fontFormConfig($formId, $storeId, true) ?? array();
+
+		$fontConfig = $this->config->fontFormConfig($formId, $storeId, true) ?? array();
+		if ($this->hasRequiredFontConfig($fontConfig)) {
+			$fieldsConfig["font"] = $fontConfig;
+		}
 
 		return $fieldsConfig;
 	}	
+
+	private function hasRequiredFontConfig($fontConfig)
+	{
+		return
+			!empty(trim((string)($fontConfig[Config::KEY_FONT_DATA] ?? ''))) &&
+			!empty(trim((string)($fontConfig[Config::KEY_FONT_FAMILY] ?? ''))) &&
+			!empty(trim((string)($fontConfig[Config::KEY_FONT_FORMAT] ?? '')));
+	}
 
 	private function buildValuelinkFormFieldsConfig($formId, $storeId)
 	{

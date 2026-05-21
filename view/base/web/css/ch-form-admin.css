@@ -143,3 +143,7 @@
 .sdc-focused-field {
 	border-width: 2px;
 }
+
+#payment_form_fiserv_commercehub.admin__fieldset {
+	overflow-x: auto;
+}
