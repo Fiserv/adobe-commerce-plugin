@@ -71,7 +71,8 @@ define(
 			return {
 				"amount" : amount,
 				"customer" : customer,
-				"billingAddress" : billingAddress
+				"billingAddress" : billingAddress,
+				"country" : "US"
 			};
 		}
 
@@ -79,7 +80,7 @@ define(
 			let payload = buildPayload();
 			if (params)
 			{
-				payload = { ...params, ...payload };
+				payload = { ...payload, ...params };
 			}
 
 			try {

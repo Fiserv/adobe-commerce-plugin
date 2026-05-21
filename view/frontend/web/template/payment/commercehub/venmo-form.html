@@ -1,0 +1,30 @@
+<div class="payment-method" data-bind="css: {'_active': (getCode() == isChecked())}">
+	<div class="payment-method-title field choice">
+			 <input type="radio"
+				 name="payment[method]"
+				 class="radio"
+				 data-bind="attr: {'id': getCode()}, value: getCode(), checked: isChecked, click: selectPaymentMethod, visible: isRadioButtonVisible(), afterRender: initializePayPal"/>
+		<img data-bind="attr: {src: require.toUrl('Fiserv_Payments/images/venmo_logo.svg')}" alt="venmo" style="height: 12px; display: inline-block; vertical-align: middle;"/>
+	</div>
+
+	<div class="payment-method-content">
+		<!-- ko foreach: getRegion('messages') -->
+		<!-- ko template: getTemplate() --><!-- /ko -->
+		<!--/ko-->
+
+		<div class="payment-method-billing-address">
+			<!-- ko foreach: $parent.getRegion(getBillingAddressFormName()) -->
+			<!-- ko template: getTemplate() --><!-- /ko -->
+			<!--/ko-->
+		</div>
+
+		<!-- Buttons -->
+		<div data-bind="visible: isPlaceOrderActionAllowed" id="venmo-button-container"></div>
+
+
+		<div class="privacyPolicy">
+			<span></span>Payments Powered by Fiserv.&nbsp; <a target="_blank" href="https://www.fiserv.com/privacy">Privacy Notice</a>.
+		</div>
+
+	</div>
+</div>

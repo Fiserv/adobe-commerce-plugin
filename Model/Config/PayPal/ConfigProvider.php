@@ -67,9 +67,6 @@ class ConfigProvider implements ConfigProviderInterface
 			'enableVault' => method_exists($this->paypalConfig, 'isVaultActive') ? $this->paypalConfig->isVaultActive($storeId) : false,
 			'vaultLabel' => __('Save PayPal for future use'),
 		];
-		if (method_exists($this->paypalConfig, 'isVenmoActive') && $this->paypalConfig->isVenmoActive($storeId)) {
-			$allowedFunding[] = 'venmo';
-		}
 		$buttonConfig = [
 			'data' => [
 				'vaulting' => $vaultConfig['enableVault'],
@@ -79,12 +76,7 @@ class ConfigProvider implements ConfigProviderInterface
 						'shape' => $this->paypalConfig->getPaypalButtonShape($storeId) ?: 'rect',
 						'label' => $this->paypalConfig->getPaypalButtonLabel($storeId) ?: 'paypal',
 						'parentElementId' => 'paypal-button-container'
-					]
-					// 'venmo' => [
-						// 	'color' => $this->paypalConfig->getVenmoButtonColor($storeId) ?: 'gold',
-						// 	'shape' => $this->paypalConfig->getVenmoButtonShape($storeId) ?: 'rect',
-					// ],
-
+					],
 				]
 			],
 			'funding' => [
@@ -92,10 +84,6 @@ class ConfigProvider implements ConfigProviderInterface
 				'disallowed' => [],
 			],
 		];
-		// $venmoConfig = [
-		// 	'enableVenmo' => method_exists($this->paypalConfig, 'isVenmoActive') ? $this->paypalConfig->isVenmoActive($storeId) : false,
-		// 	'venmoLabel' => __('Pay with Venmo'),
-		// ];
 
 		$regionsByCountry = [];
 
@@ -120,7 +108,6 @@ class ConfigProvider implements ConfigProviderInterface
 		$config = [
 			'buttonConfig' => $buttonConfig,
 			'vaultConfig' => $vaultConfig,
-			// 'venmoConfig' => $venmoConfig,
 			self::FASTLANE_CODE => $this->paypalConfig->isFastlaneActive($storeId),
 			self::IS_ONEPAGE_CHECKOUT_KEY => $this->checkoutHelper->canOnepageCheckout(),
 			self::IS_ACTIVE_KEY => $this->paypalConfig->isActive($storeId),
@@ -141,5 +128,4 @@ class ConfigProvider implements ConfigProviderInterface
 			]
 		];
 	}
-	
 }

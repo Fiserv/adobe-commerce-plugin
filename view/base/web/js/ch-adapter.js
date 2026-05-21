@@ -40,16 +40,18 @@ define([
 		cardBrandChangeCallback: undefined,
 		fieldValidityHandler: undefined,
 		fieldFocusHandler: undefined,
+		fieldValueChangeHandler: undefined,
 		sdcv2Form: undefined,
 		credentials: undefined,
 
-		initialize: function (config, iframeReadyCallback, iframeValidCallback, cardBrandChangeCallback, fieldValidityHandler, fieldFocusHandler) {
+		initialize: function (config, iframeReadyCallback, iframeValidCallback, cardBrandChangeCallback, fieldValidityHandler, fieldFocusHandler, fieldValueChangeHandler) {
 			this.config = config;
 			this.iframeReadyCallback = iframeReadyCallback;
 			this.iframeValidCallback = iframeValidCallback;
 			this.cardBrandChangeCallback = cardBrandChangeCallback;
 			this.fieldValidityHandler = fieldValidityHandler;
 			this.fieldFocusHandler = fieldFocusHandler;
+			this.fieldValueChangeHandler = fieldValueChangeHandler;
 		},
 
   		initSdk: async function(config, creds)
@@ -117,6 +119,10 @@ define([
 			return response[this.credentialsKey];
 		},
 
+		createBillingAddressComponent: async function (addressFields) {
+			return await window.fiserv.components.address({ fields: addressFields });
+		},
+
 		/**
 		 * Instantiates CommerceHub iframe
 		 * from provide script element
@@ -128,26 +134,43 @@ define([
 		instantiateIframe: function (
 			loadSuccessCb, 
 			loadErrorCb,
-			configData = undefined
+			configData = undefined,
 		) {
 			let formConfig = this.buildFormConfig();
 
-			if (configData)
-			{
-				formConfig = { ...configData, ...formConfig };
+			if (configData) {
+				formConfig = {
+					...formConfig,
+					...configData,
+					data: {
+						...(formConfig.data || {}),
+						...((configData && configData.data) || {}),
+					},
+				};
 			}
 
-			window.fiserv.components.paymentFields(formConfig)
-				.then((next) => { 
-					this.sdcv2Form = next; 
-					this.iframeReadyCallback(); 
-					loadSuccessCb();
-				})
+			if (!formConfig.data) {
+				formConfig.data = {};
+			}
+
+			if (!formConfig.data.environment) {
+				formConfig.data.environment =
+					this.config[this.environmentKey] ||
+					(window.checkoutConfig && window.checkoutConfig.payment && window.checkoutConfig.payment.fiserv_payments ?
+						window.checkoutConfig.payment.fiserv_payments.environment :
+						undefined);
+			}
+
+            window.fiserv.components.paymentFields(formConfig)
+                .then((next) => { 
+                    this.sdcv2Form = next; 
+                    this.iframeReadyCallback(); 
+                    loadSuccessCb();
+                })
 				.catch((data) => {
 					console.log(data);
 					loadErrorCb(data);
 				});
-
 		},
 
 		 /**
@@ -161,6 +184,31 @@ define([
             }
             this.paypalComponent = await window.fiserv.components.paypal(options);
             return this.paypalComponent;
+        },
+
+		/**
+         * Load Paze SDK (Step 4 of Paze documentation)
+         * @param {Object} options - { displayName, cspNonce }
+         * @returns {Promise<Object>} Paze component instance
+         */
+        async loadPazeComponent(options) {
+            if (!window.fiserv || typeof window.fiserv.components.paze !== 'function') {
+                throw new Error('Fiserv SDK not loaded or window.fiserv.components.paze not available');
+            }
+            
+            // Paze component initialization with displayName and optional cspNonce
+            const pazeOptions = {
+                displayName: options.displayName || 'My Site'
+            };
+            
+            // Add cspNonce if provided (for security/CSP compliance)
+            if (options.cspNonce) {
+                pazeOptions.cspNonce = options.cspNonce;
+            }
+            
+            console.log('[CH-Adapter] Loading Paze component with options:', pazeOptions);
+            this.pazeComponent = await window.fiserv.components.paze(pazeOptions);
+            return this.pazeComponent;
         },
 
 		submitCardForm: function (
@@ -200,6 +248,24 @@ define([
 			};
 		},
 
+		submitAchForm: function (
+			storeUrl,
+			runSuccessCb,
+			runErrorCb,
+			creds
+		) {
+			this.submitCardForm(storeUrl, runSuccessCb, runErrorCb, creds);
+		},
+
+		getAchLegalText: async function () {
+			if (this.sdcv2Form === undefined || typeof this.sdcv2Form.getAchLegalText !== 'function') throw new Error('SDC Form not found)');
+
+			const legalTextResponse = await this.sdcv2Form.getAchLegalText();
+
+            if (!legalTextResponse.plainText) throw new Error('ACH legal text not found');
+            return legalTextResponse.plainText;
+		},
+
 		unmask: function (
 			field
 		) {
@@ -229,14 +295,43 @@ define([
 
 		buildFormConfig: function (data) {
 			let formConfig = {
-				"data" : this.config[this.formConfigKey], 
+				"data" : { ...(this.config[this.formConfigKey] || {}) }, 
 				"hooks" : {
-					"onFormValid" : () => { this.iframeValidCallback(true);  },
-					"onFormNoLongerValid" : () => { this.iframeValidCallback(false);  },
-					"onCardBrandChange" : (data) => { this.cardBrandChangeCallback(data); },
-					"onFieldValidityChange" : (data) => { this.fieldValidityHandler(data); },
-					"onFocus" : (data) => { this.fieldFocusHandler(data); },
-					"onLostFocus" : (data) => { this.fieldFocusHandler(data); }
+					"onFormValid" : () => {
+						if (typeof this.iframeValidCallback === 'function') {
+							this.iframeValidCallback(true);
+						}
+					},
+					"onFormNoLongerValid" : () => {
+						if (typeof this.iframeValidCallback === 'function') {
+							this.iframeValidCallback(false);
+						}
+					},
+					"onCardBrandChange" : (data) => {
+						if (typeof this.cardBrandChangeCallback === 'function') {
+							this.cardBrandChangeCallback(data);
+						}
+					},
+					"onFieldValidityChange" : (data) => {
+						if (typeof this.fieldValidityHandler === 'function') {
+							this.fieldValidityHandler(data);
+						}
+					},
+					"onFocus" : (data) => {
+						if (typeof this.fieldFocusHandler === 'function') {
+							this.fieldFocusHandler(data);
+						}
+					},
+					"onLostFocus" : (data) => {
+						if (typeof this.fieldFocusHandler === 'function') {
+							this.fieldFocusHandler(data);
+						}
+					},
+					"onFieldValueChange" : (data) => {
+						if (typeof this.fieldValueChangeHandler === 'function') {
+							this.fieldValueChangeHandler(data);
+						}
+					}
 				} 
 
 			}; 

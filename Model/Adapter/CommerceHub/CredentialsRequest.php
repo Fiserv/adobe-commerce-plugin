@@ -25,9 +25,11 @@ class CredentialsRequest
 	const KEY_CUSTOMER_ID_PAYPAL = "providerCustomerId";
 	const KEY_AMOUNT = "amount";
 	const KEY_BILLING_ADDRESS = "billingAddress";
+	const KEY_SHIPPING_ADDRESS = "shippingAddress";
 	const KEY_PAYMENT_TOKEN = "paymentToken";
 	const KEY_SOURCE = "source";
 	const KEY_3DS = "threeDSecure";
+	const KEY_CHECKOUT_INTERACTIONS = 'checkoutInteractions';
 	const KEY_TRANSACTION_DETAILS = "transactionDetails";
 	const KEY_AUTHENTICATION_3DS = "authentication3DS";
 	const KEY_ADDITIONAL_DATA_COMMON = "additionalDataCommon";
@@ -192,6 +194,10 @@ class CredentialsRequest
 			$payload[self::KEY_BILLING_ADDRESS] = $sessionData[self::KEY_BILLING_ADDRESS];
 		}
 
+		if (isset($sessionData[self::KEY_SHIPPING_ADDRESS])) {
+			$payload[self::KEY_SHIPPING_ADDRESS] = $sessionData[self::KEY_SHIPPING_ADDRESS];
+		}
+
 		if (isset($sessionData[self::KEY_PAYMENT_TOKEN])) {
 			// Customer ID should be set, because only customers can use payment tokens
 			$payload[self::KEY_SOURCE] = $this->buildPaymentTokenSource($sessionData[self::KEY_PAYMENT_TOKEN], $sessionData[self::KEY_CUSTOMER][self::KEY_CUSTOMER_ID_COMMERCEHUB]);	
@@ -211,6 +217,11 @@ class CredentialsRequest
                 ]
             ];
 		}
+
+		$payload[self::KEY_CHECKOUT_INTERACTIONS] = [
+			'expiresInMinutes' => $this->chConfig->getCheckoutInteractionsExpiresInMinutes(),
+		];
+
         
 		$payload[self::KEY_ADDITIONAL_DATA_COMMON] = array(
 			self::KEY_ADDITIONAL_DATA => array(

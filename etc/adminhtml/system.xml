@@ -48,11 +48,6 @@
 						<source_model>Fiserv\Payments\Model\Source\CommerceHub\ApiEnvironment</source_model>
 						<config_path>payment/fiserv_commercehub/api_environment</config_path>
 					</field>
-					<field id="debug" translate="label" type="select" sortOrder="8" showInDefault="1" showInWebsite="1" showInStore="0">
-						<label>Debug</label>
-						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-						<config_path>payment/fiserv_commercehub/debug</config_path>
-					</field>
 					<field id="logging_level" translate="label" type="select" sortOrder="9" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Logging Level</label>
 						<source_model>Fiserv\Payments\Model\Source\CommerceHub\LoggingLevel</source_model>
@@ -129,6 +124,19 @@
 						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 						<config_path>payment/fiserv_commercehub/standalone_spa</config_path>
 					</field>
+					<field id="checkout_interactions_expires_in_minutes" translate="label" type="text" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Checkout Interaction Expiration (Minutes)</label>
+						<config_path>payment/fiserv_commercehub/checkout_interactions_expires_in_minutes</config_path>
+						<backend_model>Fiserv\Payments\Model\System\Config\Backend\CommerceHub\CheckoutInteractionsExpiresInMinutes</backend_model>
+						<validate>validate-number validate-greater-than-zero</validate>
+						<comment>Session validity: 30–240 minutes (default 30 minutes).</comment>
+					</field>
+					<field id="vault_use_cvv" translate="label" type="select" sortOrder="8" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Require CVV For Stored Cards</label>
+						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+						<config_path>payment/fiserv_commercehub/vault_use_cvv</config_path>
+						<comment>Choose Yes to require the customer to enter CVV when paying with a stored card.</comment>
+					</field>
 				</group>
 				<group id="valuelink_gift_card" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="5">
 					<label>Gift Cards</label>
@@ -183,7 +191,7 @@
                     <field id="active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
                         <label>Enable Apple Pay</label>
                         <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                        <config_path>payment/fiserv_applepay/active</config_path>
+						<config_path>payment/fiserv_applepay/payment_active</config_path>
                         <comment>Choose Yes to enable Apple Pay as a payment method. No to disable.</comment>
                     </field>
                     <field id="applepay_title" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
@@ -393,7 +401,142 @@
 						</group>
 					</group>
 
-					<group id="customer_valuelink_form_custom" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="2">
+					<group id="customer_ach_form_custom" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="2">
+						<label>Customer Checkout ACH Form</label>
+						<comment>Customer checkout ACH payment form</comment>
+						<attribute type="expanded">0</attribute>
+						<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+
+						<group id="customer_ach_routing_number" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="1">
+							<label>Routing Number Field</label>
+							<attribute type="expanded">0</attribute>
+							<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+							<field id="customer_ach_routing_number_parent_element" translate="label" type="text" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Parent Element ID</label>
+								<config_path>payment/fiserv_ach/sdc_custom_checkout_routing_number_parent_element</config_path>
+							</field>
+							<field id="customer_ach_routing_number_placeholder" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Placeholder</label>
+								<config_path>payment/fiserv_ach/sdc_custom_checkout_routing_number_placeholder</config_path>
+							</field>
+							<field id="customer_ach_routing_number_masking_character" translate="label" type="select" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Masking Character</label>
+								<source_model>Fiserv\Payments\Model\Source\CommerceHub\MaskingCharacter</source_model>
+								<config_path>payment/fiserv_ach/sdc_custom_checkout_routing_number_masking_character</config_path>
+							</field>
+							<field id="customer_ach_routing_number_masking_mode" translate="label" type="select" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Mask Mode</label>
+								<source_model>Fiserv\Payments\Model\Source\CommerceHub\MaskingMode</source_model>
+								<config_path>payment/fiserv_ach/sdc_custom_checkout_routing_number_masking_mode</config_path>
+							</field>
+						</group>
+
+						<group id="customer_ach_account_number" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="2">
+							<label>Account Number Field</label>
+							<attribute type="expanded">0</attribute>
+							<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+							<field id="customer_ach_account_number_parent_element" translate="label" type="text" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Parent Element ID</label>
+								<config_path>payment/fiserv_ach/sdc_custom_checkout_account_number_parent_element</config_path>
+							</field>
+							<field id="customer_ach_account_number_placeholder" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Placeholder</label>
+								<config_path>payment/fiserv_ach/sdc_custom_checkout_account_number_placeholder</config_path>
+							</field>
+							<field id="customer_ach_account_number_masking_character" translate="label" type="select" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Masking Character</label>
+								<source_model>Fiserv\Payments\Model\Source\CommerceHub\MaskingCharacter</source_model>
+								<config_path>payment/fiserv_ach/sdc_custom_checkout_account_number_masking_character</config_path>
+							</field>
+							<field id="customer_ach_account_number_masking_mode" translate="label" type="select" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Mask Mode</label>
+								<source_model>Fiserv\Payments\Model\Source\CommerceHub\MaskingMode</source_model>
+								<config_path>payment/fiserv_ach/sdc_custom_checkout_account_number_masking_mode</config_path>
+							</field>
+						</group>
+
+						<group id="customer_ach_id_type" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="3">
+							<label>ID Type Field</label>
+							<attribute type="expanded">0</attribute>
+							<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+							<field id="customer_ach_id_type_parent_element" translate="label" type="text" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Parent Element ID</label>
+								<config_path>payment/fiserv_ach/sdc_custom_checkout_id_type_parent_element</config_path>
+							</field>
+						</group>
+
+						<group id="customer_ach_id_value" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="4">
+							<label>ID Value Field</label>
+							<attribute type="expanded">0</attribute>
+							<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+							<field id="customer_ach_id_value_parent_element" translate="label" type="text" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Parent Element ID</label>
+								<config_path>payment/fiserv_ach/sdc_custom_checkout_id_value_parent_element</config_path>
+							</field>
+							<field id="customer_ach_id_value_placeholder" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Placeholder</label>
+								<config_path>payment/fiserv_ach/sdc_custom_checkout_id_value_placeholder</config_path>
+							</field>
+						</group>
+
+						<group id="customer_ach_driver_license_state" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="5">
+							<label>Driver License State Field</label>
+							<attribute type="expanded">0</attribute>
+							<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+							<field id="customer_ach_driver_license_state_parent_element" translate="label" type="text" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Parent Element ID</label>
+								<config_path>payment/fiserv_ach/sdc_custom_checkout_driver_license_state_parent_element</config_path>
+							</field>
+							<field id="customer_ach_driver_license_state_placeholder" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Placeholder</label>
+								<config_path>payment/fiserv_ach/sdc_custom_checkout_driver_license_state_placeholder</config_path>
+							</field>
+						</group>
+
+						<group id="customer_ach_check_type" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="6">
+							<label>Check Type Field</label>
+							<attribute type="expanded">0</attribute>
+							<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+							<field id="customer_ach_check_type_parent_element" translate="label" type="text" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Parent Element ID</label>
+								<config_path>payment/fiserv_ach/sdc_custom_checkout_check_type_parent_element</config_path>
+							</field>
+							<field id="customer_ach_check_type_placeholder" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Placeholder</label>
+								<config_path>payment/fiserv_ach/sdc_custom_checkout_check_type_placeholder</config_path>
+							</field>
+						</group>
+
+						<group id="customer_ach_account_type" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="7">
+							<label>Account Type Field</label>
+							<attribute type="expanded">0</attribute>
+							<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+							<field id="customer_ach_account_type_parent_element" translate="label" type="text" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Parent Element ID</label>
+								<config_path>payment/fiserv_ach/sdc_custom_checkout_account_type_parent_element</config_path>
+							</field>
+							<field id="customer_ach_account_type_placeholder" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Placeholder</label>
+								<config_path>payment/fiserv_ach/sdc_custom_checkout_account_type_placeholder</config_path>
+							</field>
+						</group>
+
+						<group id="customer_ach_business_name" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="8">
+							<label>Business Name Field</label>
+							<attribute type="expanded">0</attribute>
+							<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+							<field id="customer_ach_business_name_parent_element" translate="label" type="text" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Parent Element ID</label>
+								<config_path>payment/fiserv_ach/sdc_custom_checkout_business_name_parent_element</config_path>
+							</field>
+							<field id="customer_ach_business_name_placeholder" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+								<label>Placeholder</label>
+								<config_path>payment/fiserv_ach/sdc_custom_checkout_business_name_placeholder</config_path>
+							</field>
+						</group>
+					</group>
+
+					<group id="customer_valuelink_form_custom" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="3">
 						<label>Customer Checkout GiftCard Form</label>
 						<comment>Customer checkout giftcard form</comment>
 						<attribute type="expanded">0</attribute>
@@ -1026,7 +1169,7 @@
 					<field id="enabled" translate="label" type="select" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Enable PayPal</label>
 						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-						<config_path>payment/fiserv_paypal/active</config_path>
+						<config_path>payment/fiserv_paypal/payment_active</config_path>
 					</field>
 					<field id="paypal_enable_vaulting" translate="label" type="select" sortOrder="99" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Enable PayPal Vaulting</label>
@@ -1040,12 +1183,6 @@
 						<config_path>payment/fiserv_paypal/ch_paypal_fastlane</config_path>
 						<comment>Allow customers to PayPal Fastlane for faster payement.</comment>
 					</field>
-
-					<!-- VENMO DISABLED: <field id="fiserv_paypal_venmo" translate="label" type="select" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
-						<label>Enable PayPal Venmo</label>
-						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-						<config_path>payment/fiserv_paypal/fiserv_paypal_venmo</config_path>
-					</field> -->
 					<field id="payment_action" translate="label" type="select" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="1">
 						<label>Charge Type</label>
 						<source_model>Fiserv\Payments\Model\Source\CommerceHub\TransactionType</source_model>
@@ -1056,35 +1193,124 @@
 					<field id="paypal_button_color" translate="label" type="select" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>PayPal Button Color</label>
 						<comment>Set the color for the PayPal button (e.g., gold, blue, silver, black).</comment>
-						<source_model>Fiserv\Payments\Model\Source\ButtonColor</source_model>
+						<source_model>Fiserv\Payments\Model\Source\PayPal\ButtonColor</source_model>
 						<config_path>payment/fiserv_paypal/paypal_button_color</config_path>
 					</field>
 					<field id="paypal_button_shape" translate="label" type="select" sortOrder="101" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>PayPal Button Shape</label>
 						<comment>Set the shape for the PayPal button (e.g., rect, pill).</comment>
-						<source_model>Fiserv\Payments\Model\Source\ButtonShape</source_model>
+						<source_model>Fiserv\Payments\Model\Source\PayPal\ButtonShape</source_model>
 						<config_path>payment/fiserv_paypal/paypal_button_shape</config_path>
 					</field>
 					<field id="paypal_button_label" translate="label" type="select" sortOrder="102" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>PayPal Button Label</label>
 						<comment>Set the label for the PayPal button (e.g., paypal, checkout, pay, buynow).</comment>
-						<source_model>Fiserv\Payments\Model\Source\ButtonLabel</source_model>
+						<source_model>Fiserv\Payments\Model\Source\PayPal\ButtonLabel</source_model>
 						<config_path>payment/fiserv_paypal/paypal_button_label</config_path>
 					</field>
-
-					<!-- VENMO DISABLED: Venmo Button Style Fields -->
-					<!-- VENMO DISABLED: <field id="venmo_button_color" translate="label" type="select" sortOrder="120" showInDefault="1" showInWebsite="1" showInStore="0">
-						<label>Venmo Button Color</label>
-						<source_model>Fiserv\Payments\Model\Source\ButtonColor</source_model>
-						<config_path>payment/fiserv_paypal/venmo_button_color</config_path>
-					</field> -->
-					<!-- VENMO DISABLED: <field id="venmo_button_shape" translate="label" type="select" sortOrder="121" showInDefault="1" showInWebsite="1" showInStore="0">
-						<label>Venmo Button Shape</label>
-						<source_model>Fiserv\Payments\Model\Source\ButtonShape</source_model>
-						<config_path>payment/fiserv_paypal/venmo_button_shape</config_path>
-					</field> -->
 				</group>
+                <group id="fiserv_venmo" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="9">
+                    <label>Venmo</label>
+                    <attribute type="expanded">0</attribute>
+                    <frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+                    <field id="enabled" translate="label" type="select" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Enable Venmo</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+						<config_path>payment/fiserv_venmo/payment_active</config_path>
+                    </field>
+					<field id="venmo_button_color" translate="label" type="select" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Venmo Button Color</label>
+						<comment>Set the color for the Venmo button (e.g., blue, white).</comment>
+						<source_model>Fiserv\Payments\Model\Source\PayPal\Venmo\ButtonColor</source_model>
+						<config_path>payment/fiserv_venmo/venmo_button_color</config_path>
+					</field>
+                    <field id="venmo_button_shape" translate="label" type="select" sortOrder="121" showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Venmo Button Shape</label>
+                        <source_model>Fiserv\Payments\Model\Source\PayPal\ButtonShape</source_model>
+                        <config_path>payment/fiserv_venmo/venmo_button_shape</config_path>
+                    </field>
+                    <field id="payment_action" translate="label" type="select" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Charge Type</label>
+                        <source_model>Fiserv\Payments\Model\Source\CommerceHub\TransactionType</source_model>
+                        <config_path>payment/fiserv_venmo/payment_action</config_path>
+                    </field>
+                </group>
+				<group id="fiserv_affirm" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="8">
+						<label>Affirm</label>
+						<attribute type="expanded">0</attribute>
+						<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+						<field id="active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+							<label>Enable Affirm Pay</label>
+							<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+							<config_path>payment/fiserv_affirm/payment_active</config_path>
+							<comment>Choose Yes to enable Affirm Pay as a payment method. No to disable.</comment>
+						</field>
+						<field id="title" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+							<label>Payment Method Title</label>
+							<config_path>payment/fiserv_affirm/title</config_path>
+						</field>
+						<field id="payment_action" translate="label" type="select" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
+							<label>Charge Type</label>
+							<source_model>Fiserv\Payments\Model\Source\CommerceHub\TransactionType</source_model>
+							<config_path>payment/fiserv_affirm/payment_action</config_path>
+						</field>
+						<field id="affirm_button_color" translate="label" type="select" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="0">
+							<label>Affirm Button Color</label>
+							<config_path>payment/fiserv_affirm/affirm_button_color</config_path>
+							<source_model>Fiserv\Payments\Model\Source\Affirm\ButtonColor</source_model>
+						</field>
+				</group>
+				<group id="fiserv_samsung_pay" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="10">
+					<label>Samsung Pay</label>
+					<attribute type="expanded">0</attribute>
+					<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+					<field id="enabled" translate="label" type="select" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Enable Samsung Pay</label>
+						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+						<config_path>payment/fiserv_samsung_pay/payment_active</config_path>
+					</field>
+					<field id="payment_action" translate="label" type="select" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="1">
+						<label>Charge Type</label>
+						<source_model>Fiserv\Payments\Model\Source\CommerceHub\TransactionType</source_model>
+						<config_path>payment/fiserv_samsung_pay/payment_action</config_path>
+					</field>
+					<field id="samsung_pay_button_color" translate="label" type="select" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Samsung Pay Button Color</label>
+						<comment>Set the color for the Samsung Pay button (e.g., black, white).</comment>
+						<source_model>Fiserv\Payments\Model\Source\SamsungPay\ButtonColor</source_model>
+						<config_path>payment/fiserv_samsung_pay/samsung_pay_button_color</config_path>
+					</field>
 			</group>
+			<group id="fiserv_ach" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="11">
+				<label>ACH/Bank Transfer</label>
+				<attribute type="expanded">0</attribute>
+				<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+				<field id="active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
+					<label>Enable ACH/Bank Transfer</label>
+					<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+					<config_path>payment/fiserv_ach/payment_active</config_path>
+				</field>
+				<field id="title" translate="label" type="text" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
+					<label>Payment Method Title</label>
+					<config_path>payment/fiserv_ach/title</config_path>
+				</field>
+			</group>
+			<group id="fiserv_paze" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="10">
+				<label>Paze</label>
+				<attribute type="expanded">0</attribute>
+				<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+				<field id="enabled" translate="label" type="select" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+					<label>Enable Paze</label>
+					<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+					<config_path>payment/fiserv_paze/payment_active</config_path>
+				</field>
+				<field id="payment_action" translate="label" type="select" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="1">
+					<label>Charge Type</label>
+					<source_model>Fiserv\Payments\Model\Source\CommerceHub\TransactionType</source_model>
+					<config_path>payment/fiserv_paze/payment_action</config_path>
+				</field>
+			</group>
+		</group>
 		</section>
 		<section id="three_d_secure" translate="label" type="text" sortOrder="410" showInDefault="1" showInWebsite="1" showInStore="1">
 			<label>3D Secure</label>

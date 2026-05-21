@@ -108,10 +108,22 @@ class ConfigProvider implements ConfigProviderInterface
 		$fieldsConfig = array();
 		$fieldsConfig["fields"] = $this->buildValuelinkFormFieldsConfig($formId, $storeId);
 		$fieldsConfig["css"] = json_decode($this->valuelinkConfig->cssFormConfig($formId, $storeId) ?? "{}");
-		$fieldsConfig["font"] = $this->valuelinkConfig->fontFormConfig($formId, $storeId) ?? array();
+
+		$fontConfig = $this->valuelinkConfig->fontFormConfig($formId, $storeId) ?? array();
+		if ($this->hasRequiredFontConfig($fontConfig)) {
+			$fieldsConfig["font"] = $fontConfig;
+		}
 
 		return $fieldsConfig;
 	}	
+
+	private function hasRequiredFontConfig($fontConfig)
+	{
+		return
+			!empty(trim((string)($fontConfig[ValuelinkConfig::KEY_FONT_DATA] ?? ''))) &&
+			!empty(trim((string)($fontConfig[ValuelinkConfig::KEY_FONT_FAMILY] ?? ''))) &&
+			!empty(trim((string)($fontConfig[ValuelinkConfig::KEY_FONT_FORMAT] ?? '')));
+	}
 
 	private function buildValuelinkFormFieldsConfig($formId, $storeId)
 	{
