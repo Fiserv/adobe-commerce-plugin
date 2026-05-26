@@ -135,6 +135,7 @@ define([
 			loadSuccessCb, 
 			loadErrorCb,
 			configData = undefined,
+			addressValues = undefined,
 		) {
 			let formConfig = this.buildFormConfig();
 
@@ -161,12 +162,16 @@ define([
 						undefined);
 			}
 
-            window.fiserv.components.paymentFields(formConfig)
-                .then((next) => { 
-                    this.sdcv2Form = next; 
-                    this.iframeReadyCallback(); 
-                    loadSuccessCb();
-                })
+			if (addressValues) {
+				formConfig.data.billingAddress = addressValues;
+			}
+
+			window.fiserv.components.paymentFields(formConfig)
+				.then((next) => {
+					this.sdcv2Form = next;
+					this.iframeReadyCallback();
+					loadSuccessCb();
+				})
 				.catch((data) => {
 					console.log(data);
 					loadErrorCb(data);
@@ -352,6 +357,14 @@ define([
 			{
 				this.sdcv2Form.reset();
 			}
+		},
+
+
+		getSurchargeEstimate: async function() {
+			if (typeof(this.sdcv2Form) === "undefined") {
+				throw new Error("Payment form not initialized.");
+			}
+			return await this.sdcv2Form.getSurchargeEstimate();
 		}
 	};
 });

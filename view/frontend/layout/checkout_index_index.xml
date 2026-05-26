@@ -137,6 +137,13 @@
 																<item name="title" translate="true" xsi:type="string">Gift Card</item>
 															</item>
 														</item>
+														<item name="fiserv_surcharge" xsi:type="array">
+															<item name="component" xsi:type="string">Fiserv_Payments/js/view/checkout/summary/surcharge</item>
+															<item name="sortOrder" xsi:type="string">21</item>
+															<item name="config" xsi:type="array">
+																<item name="title" translate="true" xsi:type="string">Surcharge</item>
+															</item>
+														</item>
 													</item>
 												</item>
 											</item>

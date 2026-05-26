@@ -41,6 +41,7 @@ class ConfigProvider implements ConfigProviderInterface
 	const VAULT_USE_CVV_KEY = 'vaultUseCvv';
 
 	const INVALID_FIELDS_KEY = 'invalidFields';
+	const SURCHARGE_ENABLED_KEY = 'surchargeEnabled';
 	const CARD_NUMBER_KEY = 'cardNumber';
 	const CARD_NAME_KEY = 'nameOnCard';
 	const SECURITY_CODE_KEY = 'securityCode';
@@ -98,7 +99,8 @@ class ConfigProvider implements ConfigProviderInterface
 			self::CARD_FORM_CONFIG_KEY => $this->buildFormConfig(Config::KEY_SDC_CHECKOUT, $storeId),
 			self::TERMINAL_ID_KEY => $this->config->getTerminalId($storeId),
 			self::INVALID_FIELDS_KEY => $this->getInvalidFieldMessages(CONFIG::KEY_SDC_CHECKOUT, $storeId),
-			self::THREE_D_SECURE_KEY => $this->config->isThreeDSEnabled($storeId)
+			self::THREE_D_SECURE_KEY => $this->config->isThreeDSEnabled($storeId),
+			self::SURCHARGE_ENABLED_KEY => $this->config->isSurchargeEnabled($storeId)
 		];
 
 		return [
