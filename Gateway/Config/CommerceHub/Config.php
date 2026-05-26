@@ -42,6 +42,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	const KEY_CHECKOUT_INTERACTIONS_EXPIRES_IN_MINUTES = 'checkout_interactions_expires_in_minutes';
 	const KEY_LOGGING_LEVEL = 'logging_level';
 	const KEY_3DS = 'three_d_secure';
+    const KEY_SURCHARGE = 'surcharge_enabled';
 
 	// Iframe Customization Fields
 	const KEY_SDC_CUSTOM = 'sdc_custom';
@@ -526,7 +527,12 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 		
 		return $formConfig;
 	}
-	
+
+	public function isSurchargeEnabled($storeId = null)
+	{
+		return (bool) $this->getValue(self::KEY_SURCHARGE, $storeId);
+	}
+
 	private function validateFormId($formId)
 	{
 		return 
