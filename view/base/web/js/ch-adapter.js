@@ -17,7 +17,7 @@ define([
 	//		b. Public Key generated during initial credentials request
 	//		c. Symmetric Encryption Algorithm generated during initial credentials request
 	return {
-		credentialsErrorMsg: "Oops! Something went wrong...",	
+		credentialsErrorMsg: "Oops! Something went wrong...",
 		credentialsUrl: "fiserv/commercehub/getcredentials",
 		clientScriptId: "commercehub",
 		configApiKeyKey: "apiKey",
@@ -161,12 +161,12 @@ define([
 						undefined);
 			}
 
-            window.fiserv.components.paymentFields(formConfig)
-                .then((next) => { 
-                    this.sdcv2Form = next; 
-                    this.iframeReadyCallback(); 
-                    loadSuccessCb();
-                })
+			window.fiserv.components.paymentFields(formConfig)
+				.then((next) => {
+					this.sdcv2Form = next;
+					this.iframeReadyCallback();
+					loadSuccessCb();
+				})
 				.catch((data) => {
 					console.log(data);
 					loadErrorCb(data);
@@ -195,17 +195,17 @@ define([
             if (!window.fiserv || typeof window.fiserv.components.paze !== 'function') {
                 throw new Error('Fiserv SDK not loaded or window.fiserv.components.paze not available');
             }
-            
+
             // Paze component initialization with displayName and optional cspNonce
             const pazeOptions = {
                 displayName: options.displayName || 'My Site'
             };
-            
+
             // Add cspNonce if provided (for security/CSP compliance)
             if (options.cspNonce) {
                 pazeOptions.cspNonce = options.cspNonce;
             }
-            
+
             console.log('[CH-Adapter] Loading Paze component with options:', pazeOptions);
             this.pazeComponent = await window.fiserv.components.paze(pazeOptions);
             return this.pazeComponent;
@@ -213,22 +213,22 @@ define([
 
 		submitCardForm: function (
 			storeUrl,
-			runSuccessCb, 
+			runSuccessCb,
 			runErrorCb,
 			creds
 		) {
 			if (typeof(this.sdcv2Form) !== "undefined") {
 				if (typeof(creds) === "undefined") {
 					let promise = new Promise((resolve, reject) => {
-						this.getChCredentials(storeUrl, resolve, reject);	
+						this.getChCredentials(storeUrl, resolve, reject);
 					});
 
 					promise.then((data) => {
 						let submitConfig = this.buildFormSubmitPayload(data);
 						this.sdcv2Form.submit(submitConfig)
-							.then((next) => { 
+							.then((next) => {
 								let sessionId = data[this.sessionIdKey];
-								runSuccessCb(sessionId); 
+								runSuccessCb(sessionId);
 							})
 							.catch((data) => { console.log(data); runErrorCb(); });
 					})
@@ -239,9 +239,9 @@ define([
 				else {
 					let submitConfig = this.buildFormSubmitPayload(creds);
 					this.sdcv2Form.submit(submitConfig)
-						.then((next) => { 
+						.then((next) => {
 							let sessionId = creds[this.sessionIdKey];
-							runSuccessCb(sessionId); 
+							runSuccessCb(sessionId);
 						})
 						.catch((data) => { console.log(data); runErrorCb(); });
 				}
@@ -352,6 +352,14 @@ define([
 			{
 				this.sdcv2Form.reset();
 			}
+		},
+
+
+		getSurchargeEstimate: async function() {
+			if (typeof(this.sdcv2Form) === "undefined") {
+				throw new Error("Payment form not initialized.");
+			}
+			return await this.sdcv2Form.getSurchargeEstimate();
 		}
 	};
 });
