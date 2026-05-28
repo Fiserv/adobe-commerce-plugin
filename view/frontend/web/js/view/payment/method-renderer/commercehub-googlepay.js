@@ -19,7 +19,6 @@ define([
     ko,
     $t
 ) {
-    'use strict';
 
     return Component.extend({
         defaults: {
@@ -28,7 +27,6 @@ define([
             additionalData: {},
             paymentPayload: {
                 sessionId: null,
-                orderId: null,
                 type: 'googlepay',
                 publicKeyHash: null
             },
