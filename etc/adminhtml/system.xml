@@ -137,6 +137,12 @@
 						<config_path>payment/fiserv_commercehub/vault_use_cvv</config_path>
 						<comment>Choose Yes to require the customer to enter CVV when paying with a stored card.</comment>
 					</field>
+					<field id="surcharge_enabled" translate="label" type="select" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Enable Surcharge</label>
+						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+						<config_path>payment/fiserv_commercehub/surcharge_enabled</config_path>
+						<comment>Enable surcharge estimation for credit card payments. When enabled, surcharge details will be displayed in the checkout order summary.</comment>
+					</field>
 				</group>
 				<group id="valuelink_gift_card" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="5">
 					<label>Gift Cards</label>

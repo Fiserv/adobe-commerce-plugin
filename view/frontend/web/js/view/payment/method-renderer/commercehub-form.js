@@ -18,6 +18,7 @@ define(
 		'Magento_Checkout/js/model/full-screen-loader',
 		'Magento_Checkout/js/model/payment/additional-validators',
 		'Fiserv_Payments/js/action/modify-requirejs',
+		'Fiserv_Payments/js/model/surcharge',
 		'ko',
 		'mage/translate',
 		'domReady!'
@@ -35,6 +36,7 @@ define(
 		fullScreenLoader,
 		additionalValidators,
 		modifyRequirejs,
+		surchargeModel,
 		ko,
 		$t
 	) {
@@ -42,6 +44,7 @@ define(
 
 		return Component.extend({
 			isPlaceOrderActionAllowed: ko.observable(quote.billingAddress() != null),
+			surchargeConfirmed: ko.observable(false),
 			defaults: {
 				template: 'Fiserv_Payments/payment/commercehub/form',
 				active: false,
@@ -73,7 +76,7 @@ define(
 				this.vaultEnabler = new VaultEnabler();
 				this.vaultEnabler.setPaymentCode(this.getVaultCode());
 			
-						return self;
+                return this;
 			},
 
 			initializeChAdapter: function () 
@@ -84,7 +87,8 @@ define(
 					(valid) => { this.iframeValidHandler(valid); },
 					(brand) => { this.cardBrandChangeHandler(brand); },
 					(data) => { this.fieldValidityHandler(data); },
-					(data) => { this.fieldFocusHandler(data); }
+					(data) => { this.fieldFocusHandler(data); },
+					(data) => { this.fieldValueChangeHandler(data); }
 				);
 			},
 
@@ -106,23 +110,48 @@ define(
 				chAdapter.destroyIframe();
 				this.cardBrandChangeHandler(null);
 
-				var self = this;
-				let failureCb = this.iframeLoadFailure.bind(this);
+			const self = this;
+			let failureCb = this.iframeLoadFailure.bind(this);
 
-				let iframePromise = new Promise((resolve, reject) => {
-					this.beginIframeFlow();
-					chAdapter.instantiateIframe(
-						resolve, 
-						reject,
-					)
-				});
-				iframePromise.then((data) => {
-				}).catch((error) =>{
-					failureCb(error);
-				})
+			let iframePromise = new Promise((resolve, reject) => {
+				this.beginIframeFlow();
+				const addressValues = this.buildBillingAddressValues();
+				chAdapter.instantiateIframe(
+					resolve,
+					reject,
+					{
+						data: {
+							billingAddress: addressValues
+						}
+					},
+				)
+			});
+			iframePromise.then((data) => {}).catch((error) =>{
+				failureCb(error);
+			})
+		},
+
+			/**
+			 * Builds a static billing address values object from the current quote for the CH SDK address component.
+			 */
+		buildBillingAddressValues: function() {
+			const billingAddress = quote.billingAddress();
+			if (!billingAddress) {
+					return undefined;
+				}
+				return {
+					firstName: billingAddress.firstname || '',
+					lastName: billingAddress.lastname || '',
+					street: (billingAddress.street && billingAddress.street[0]) || '',
+					houseNumberOrName: (billingAddress.street && billingAddress.street[1]) || '',
+					city: billingAddress.city || '',
+					stateOrProvince: billingAddress.regionCode || '',
+					postalCode: billingAddress.postcode || '',
+					country: billingAddress.countryId || ''
+				};
 			},
 
-			iframeLoadSuccess: function (data) {
+			iframeLoadSuccess: function(data) {
 				this.endIframeFlow();
 			},
 
@@ -211,6 +240,8 @@ define(
 					} else {
 						this.cardBrandChangeHandler(null);
 						chAdapter.destroyIframe();
+						this.clearSurcharge();
+						this.surchargeConfirmed(false);
 					}
 				});
 			},
@@ -302,13 +333,13 @@ define(
 			 *
 			 * @returns {Object}
 			 */
-			getData: function () {
-				var data = {
-					'method': this.getCode(),
-					'additional_data': {
-						'payment_session': this.paymentPayload.sessionId
-					}
-				};
+		getData: function () {
+			const data = {
+				'method': this.getCode(),
+				'additional_data': {
+					'payment_session': this.paymentPayload.sessionId
+				}
+			};
 
 				if (typeof(this.paymentPayload.threeDSecureId) !== "undefined") {
 					data['additional_data']['3DSecureId'] = this.paymentPayload.threeDSecureId;
@@ -332,10 +363,10 @@ define(
 			/**
 			 * Action to place order
 			 */
-			placeOrder: function (key) {
-				var self = this;
+		placeOrder: function (key) {
+			const self = this;
 
-				if (key) {
+			if (key) {
 					// handle payment failure. Reinit Iframe
 					$(document).one("ajaxError", (ev,xhr) => { this.placeOrderFailureHandler(ev,xhr); } );
 					return self._super();
@@ -517,17 +548,127 @@ define(
 
 			iframeValidHandler: function(valid) {
 				this.isIframeValid = valid;
+				if (!valid) {
+					this.clearSurcharge();
+					this.surchargeConfirmed(false);
+				}
 				this.checkoutValidHandler();
 			},
 
 			checkoutValidHandler: function() {
 				if (this.isIframeValid === true && this.isPlaceOrderActionAllowed() === true) {
-					this.enableSubmitButton();
+					if (this.isSurchargeEnabled() && !this.surchargeConfirmed()) {
+						this.enableContinueButton();
+						this.disableSubmitButton();
+					} else {
+						this.disableContinueButton();
+						this.enableSubmitButton();
+					}
 				} else {
 					this.disableSubmitButton();
 				}
 			},
 
+			isSurchargeEnabled: function() {
+				return !!window.checkoutConfig.payment[this.code]["surchargeEnabled"];
+			},
+
+		fetchSurchargeEstimate: async function() {
+			try {
+				const quoteTotals = quote.totals();
+				console.log('Surcharge - quote.totals():', JSON.stringify({
+					subtotal: quoteTotals ? quoteTotals.subtotal : 'N/A',
+					shipping: quoteTotals ? quoteTotals.shipping_amount : 'N/A',
+					tax: quoteTotals ? quoteTotals.tax_amount : 'N/A',
+					grand_total: quoteTotals ? quoteTotals.grand_total : 'N/A'
+				}));
+				const credsResponse = await chSession({ 'threeDSecure': false });
+				const creds = credsResponse['ch_credentials'];
+				await chAdapter.initSdk(
+					window.checkoutConfig.payment[this.code],
+					creds
+				);
+
+
+				const surchargeDetails = await chAdapter.getSurchargeEstimate();
+				console.log('Surcharge SDK full response:', JSON.stringify(surchargeDetails));
+
+				if (surchargeDetails && surchargeDetails.reason !== 'RESTRICTED_STATE') {
+					const disclosureText = (surchargeDetails.disclosureText && surchargeDetails.disclosureText.length)
+						? surchargeDetails.disclosureText[0].value
+						: '';
+					const surchargeAmount = (surchargeDetails.amountComponent && surchargeDetails.amountComponent.surcharge)
+						? parseFloat(surchargeDetails.amountComponent.surcharge)
+						: 0;
+					const newGrandTotal = (surchargeDetails.amount && surchargeDetails.amount.total)
+						? parseFloat(surchargeDetails.amount.total)
+						: 0;
+					surchargeModel.surchargeData({
+						applied: true,
+						disclosureText: disclosureText,
+						amount: surchargeAmount,
+						grandTotal: newGrandTotal,
+						currency: (surchargeDetails.amount && surchargeDetails.amount.currency) || 'USD'
+					});
+					return true;
+				} else {
+					surchargeModel.surchargeData(null);
+					return true;
+				}
+			} catch (e) {
+				console.error('Surcharge estimate error:', e);
+				surchargeModel.surchargeData(null);
+				return false;
+			}
+		},
+
+		handleContinue: async function() {
+			if (!this.isIframeValid || !this.isPlaceOrderActionAllowed()) {
+				return;
+			}
+			this.disableContinueButton();
+			fullScreenLoader.startLoader();
+			try {
+				// Only fetch surcharge estimate if surcharge is enabled
+				if (this.isSurchargeEnabled()) {
+					const success = await this.fetchSurchargeEstimate();
+					if (success) {
+						this.surchargeConfirmed(true);
+						this.enableSubmitButton();
+					} else {
+						this.showError('Unable to retrieve surcharge estimate. Please try again.');
+						this.enableContinueButton();
+					}
+				} else {
+					// Surcharge disabled - proceed directly
+					this.surchargeConfirmed(true);
+					this.enableSubmitButton();
+				}
+			} catch (e) {
+				this.showError('Unable to retrieve surcharge estimate. Please try again.');
+				this.enableContinueButton();
+			} finally {
+				fullScreenLoader.stopLoader();
+			}
+		},
+
+			clearSurcharge: function() {
+				surchargeModel.surchargeData(null);
+			},
+
+
+			enableContinueButton: function() {
+				this.getContinueButton().prop('disabled', false);
+			},
+
+			disableContinueButton: function() {
+				this.getContinueButton().prop('disabled', true);
+			},
+
+			getContinueButton: function() {
+				return $('button#fiserv-checkout-continue');
+			},
+			
 			getCardBrandIcon: function() {
 				return $('#sdc-card-brand-icon');
 			},
@@ -687,6 +828,13 @@ define(
 					{
 						frame.removeClass('sdc-focused-field');
 					}
+				}
+			},
+			fieldValueChangeHandler: function(data) {
+				if (this.isSurchargeEnabled() && this.surchargeConfirmed()) {
+					this.clearSurcharge();
+					this.surchargeConfirmed(false);
+					this.checkoutValidHandler();
 				}
 			}
 		});
