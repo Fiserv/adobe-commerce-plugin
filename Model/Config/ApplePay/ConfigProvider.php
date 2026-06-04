@@ -88,16 +88,16 @@ class ConfigProvider implements ConfigProviderInterface
 			self::BUTTON_TYPE_KEY => $this->config->getApplePayButtonType($storeId),
 
 			// Recurring payment configuration
-			self::RECURRING_ENABLED_KEY                => $this->config->isRecurringEnabled($storeId),
-			self::RECURRING_ORDER_DESCRIPTION_KEY      => $this->config->getRecurringOrderDescription($storeId),
-			self::RECURRING_TOKEN_PROVIDER_KEY         => $this->config->getRecurringTokenProvider($storeId),
-			self::RECURRING_TOKEN_NOTIFICATION_URL_KEY => $this->config->getRecurringTokenNotificationUrl($storeId),
-			self::RECURRING_SUBSCRIPTION_TYPE_KEY      => $this->config->getRecurringSubscriptionType($storeId),
-			self::RECURRING_BILLING_AGREEMENT_KEY      => $this->config->getRecurringBillingAgreement($storeId),
-			self::RECURRING_MANAGEMENT_URL_KEY         => $this->config->getRecurringManagementUrl($storeId),
-			self::RECURRING_FREE_CANCELLATION_DATE_KEY => $this->config->getRecurringFreeCancellationDate($storeId),
-			self::RECURRING_FREE_CANCELLATION_TZ_KEY   => $this->config->getRecurringFreeCancellationTimezone($storeId),
-			self::RECURRING_PAYMENT_ITEMS_KEY          => $this->config->getRecurringPaymentItems($storeId),
+            self::RECURRING_ENABLED_KEY => $this->config->isRecurringEnabled($storeId),
+            self::RECURRING_ORDER_DESCRIPTION_KEY => $this->config->getRecurringOrderDescription($storeId),
+            self::RECURRING_TOKEN_PROVIDER_KEY => $this->config->getRecurringTokenProvider($storeId),
+            self::RECURRING_TOKEN_NOTIFICATION_URL_KEY => $this->config->getRecurringTokenNotificationUrl($storeId),
+            self::RECURRING_SUBSCRIPTION_TYPE_KEY => $this->config->getRecurringSubscriptionType($storeId),
+            self::RECURRING_BILLING_AGREEMENT_KEY => $this->config->getRecurringBillingAgreement($storeId),
+            self::RECURRING_MANAGEMENT_URL_KEY => $this->config->getRecurringManagementUrl($storeId),
+            self::RECURRING_FREE_CANCELLATION_DATE_KEY => $this->config->getRecurringFreeCancellationDate($storeId),
+            self::RECURRING_FREE_CANCELLATION_TZ_KEY => $this->config->getRecurringFreeCancellationTimezone($storeId),
+            self::RECURRING_PAYMENT_ITEMS_KEY => $this->config->getRecurringPaymentItems($storeId),
 		];
 		return ['payment' => [self::CODE => $config]];
 	}
