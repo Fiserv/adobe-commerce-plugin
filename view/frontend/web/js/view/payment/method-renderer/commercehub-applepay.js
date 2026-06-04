@@ -91,8 +91,16 @@ define([
 		try {
 			fullScreenLoader.startLoader();
 			$('#applepay-button-container').empty();
-			let merchantName = window.checkoutConfig.payment[this.getCode()]["storeName"];
-			const creds = await chSession({ "merchantName" : merchantName });
+			let merchantName = config.storeName;
+
+			// Build session params. For recurring payments, merge the
+			// subscription fields; for one-time payments pass only merchantName.
+			let sessionParams = { merchantName };
+			if (config.recurringEnabled) {
+				sessionParams = Object.assign(sessionParams, this.buildRecurringSessionParams(config));
+			}
+
+			const creds = await chSession(sessionParams);
 
 			if (!creds?.ch_credentials) {
 				throw new Error('No credentials returned from backend');
@@ -155,6 +163,47 @@ define([
 			fullScreenLoader.stopLoader();
 		}
 	},
+
+        /**
+         * Builds the recurring-payment portion of the session payload from the
+         * merchant's admin configuration (exposed via window.checkoutConfig).
+         * Passed as `params` to the standard chSession action.
+         */
+        buildRecurringSessionParams: function (config) {
+            const tokenProvider = config.recurringTokenProvider || 'FISERV_SECURE_VAULT';
+
+            const transactionDetails = { tokenProvider };
+            if (tokenProvider === 'PROVIDER_TOKEN' && config.recurringTokenNotificationUrl) {
+                transactionDetails.tokenNotificationUrl = config.recurringTokenNotificationUrl;
+            }
+
+            const subscriptionPaymentDetails = {
+                subscriptionType: config.recurringSubscriptionType || 'RECURRING',
+                managementUrl:    config.recurringManagementUrl    || ''
+            };
+            if (config.recurringBillingAgreement) {
+                subscriptionPaymentDetails.billingAgreement = config.recurringBillingAgreement;
+            }
+            if (config.recurringFreeCancellationDate) {
+                subscriptionPaymentDetails.freeCancellationDate = config.recurringFreeCancellationDate;
+                if (config.recurringFreeCancellationTimezone) {
+                    subscriptionPaymentDetails.freeCancellationTimeZone = config.recurringFreeCancellationTimezone;
+                }
+            }
+            if (Array.isArray(config.recurringPaymentItems) && config.recurringPaymentItems.length > 0) {
+                subscriptionPaymentDetails.paymentItems = config.recurringPaymentItems;
+            }
+
+            return {
+                orderData: {
+                    orderDescription: config.recurringOrderDescription || ''
+                },
+                transactionDetails,
+                additionalDataCommon: {
+                    subscriptionPaymentDetails
+                }
+            };
+        },
 
         watchPaymentMethods: function () {
             $(`[name="payment[method]"]`).on("click", (event) => {

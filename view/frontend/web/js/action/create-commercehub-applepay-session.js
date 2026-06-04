@@ -47,7 +47,10 @@ define(
 			let payload = buildPayload();
 			if (params)
 			{
-				payload = { ...params, ...payload };
+				// Deep-merge orderData so caller fields (e.g. orderDescription)
+				// are preserved alongside the built itemDetails/itemCount.
+				let mergedOrderData = Object.assign({}, params.orderData || {}, payload.orderData);
+				payload = { ...params, ...payload, orderData: mergedOrderData };
 			}
 
 			try {

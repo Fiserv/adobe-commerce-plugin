@@ -325,6 +325,18 @@
 				<applepay_button_style>black</applepay_button_style>
 				<applepay_button_type>buy</applepay_button_type>
                 <group>fiserv_group</group>
+
+                <!-- Recurring payment defaults -->
+                <recurring_enabled>0</recurring_enabled>
+                <recurring_order_description></recurring_order_description>
+                <recurring_token_provider>FISERV_SECURE_VAULT</recurring_token_provider>
+                <recurring_token_notification_url></recurring_token_notification_url>
+                <recurring_subscription_type>RECURRING</recurring_subscription_type>
+                <recurring_billing_agreement></recurring_billing_agreement>
+                <recurring_management_url></recurring_management_url>
+                <recurring_free_cancellation_date></recurring_free_cancellation_date>
+                <recurring_free_cancellation_timezone></recurring_free_cancellation_timezone>
+                <recurring_payment_items></recurring_payment_items>
             </fiserv_applepay>
 			<fiserv_affirm>
 				<active>1</active>

@@ -215,6 +215,69 @@
                         <source_model>Fiserv\Payments\Model\Source\ApplePay\ButtonType</source_model>
                         <config_path>payment/fiserv_applepay/applepay_button_type</config_path>
                     </field>
+
+                    <!-- ── Recurring Payments ───────────────────────────────────────── -->
+                    <field id="recurring_enabled" translate="label" type="select" sortOrder="200" showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Enable Recurring Payments</label>
+                        <comment>Enable Apple Pay recurring / subscription payment mode.</comment>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <config_path>payment/fiserv_applepay/recurring_enabled</config_path>
+                    </field>
+                    <field id="recurring_order_description" translate="label" type="text" sortOrder="201" showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Order Description</label>
+                        <comment>Short description shown in the payment sheet (e.g. "Monthly Subscription").</comment>
+                        <config_path>payment/fiserv_applepay/recurring_order_description</config_path>
+                        <depends><field id="recurring_enabled">1</field></depends>
+                    </field>
+                    <field id="recurring_token_provider" translate="label" type="select" sortOrder="202" showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Token Provider</label>
+                        <comment>Where the recurring payment token should be stored.</comment>
+                        <source_model>Fiserv\Payments\Model\Source\ApplePay\TokenProvider</source_model>
+                        <config_path>payment/fiserv_applepay/recurring_token_provider</config_path>
+                        <depends><field id="recurring_enabled">1</field></depends>
+                    </field>
+                    <field id="recurring_token_notification_url" translate="label" type="text" sortOrder="203" showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Token Notification URL</label>
+                        <comment>Required only when Token Provider is "Provider Token". URL that receives token notifications.</comment>
+                        <config_path>payment/fiserv_applepay/recurring_token_notification_url</config_path>
+                        <depends><field id="recurring_enabled">1</field></depends>
+                    </field>
+                    <field id="recurring_subscription_type" translate="label" type="select" sortOrder="204" showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Subscription Type</label>
+                        <source_model>Fiserv\Payments\Model\Source\ApplePay\SubscriptionType</source_model>
+                        <config_path>payment/fiserv_applepay/recurring_subscription_type</config_path>
+                        <depends><field id="recurring_enabled">1</field></depends>
+                    </field>
+                    <field id="recurring_billing_agreement" translate="label" type="textarea" sortOrder="205" showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Billing Agreement</label>
+                        <comment>Localized billing agreement displayed to the user before payment authorization.</comment>
+                        <config_path>payment/fiserv_applepay/recurring_billing_agreement</config_path>
+                        <depends><field id="recurring_enabled">1</field></depends>
+                    </field>
+                    <field id="recurring_management_url" translate="label" type="text" sortOrder="206" showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Management URL</label>
+                        <comment>URL where customers can manage their subscription (e.g. https://merchant.com/my-subscription).</comment>
+                        <config_path>payment/fiserv_applepay/recurring_management_url</config_path>
+                        <depends><field id="recurring_enabled">1</field></depends>
+                    </field>
+                    <field id="recurring_free_cancellation_date" translate="label" type="text" sortOrder="207" showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Free Cancellation Date</label>
+                        <comment>ISO 8601 date until which the subscription can be cancelled for free (e.g. 2025-07-02T04:00:00.000Z). Leave blank if not applicable.</comment>
+                        <config_path>payment/fiserv_applepay/recurring_free_cancellation_date</config_path>
+                        <depends><field id="recurring_enabled">1</field></depends>
+                    </field>
+                    <field id="recurring_free_cancellation_timezone" translate="label" type="text" sortOrder="208" showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Free Cancellation Timezone</label>
+                        <comment>Required when Free Cancellation Date is set (e.g. EST).</comment>
+                        <config_path>payment/fiserv_applepay/recurring_free_cancellation_timezone</config_path>
+                        <depends><field id="recurring_enabled">1</field></depends>
+                    </field>
+                    <field id="recurring_payment_items" translate="label" type="textarea" sortOrder="209" showInDefault="1" showInWebsite="1" showInStore="0">
+                        <label>Payment Items (JSON)</label>
+                        <comment><![CDATA[JSON array of paymentItem objects. Each item requires at minimum: type (TRIAL|REGULAR), name, amount {total, currency}. See documentation for additional optional fields per subscription type.<br/>Example (RECURRING):<br/><pre>[{"type":"TRIAL","name":"7 Days Free","amount":{"total":0.00,"currency":"USD"},"endDate":"2025-07-02T04:00:00.000Z"},{"type":"REGULAR","name":"Subscription","amount":{"total":4.99,"currency":"USD"},"intervalUnit":"MONTH","intervalCount":1,"startDate":"2025-07-02T04:00:00.000Z"}]</pre>]]></comment>
+                        <config_path>payment/fiserv_applepay/recurring_payment_items</config_path>
+                        <depends><field id="recurring_enabled">1</field></depends>
+                    </field>
                 </group>
 				<group id="sdc_custom" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="7">
 					<label>Payment Form Customization</label>
