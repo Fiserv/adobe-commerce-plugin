@@ -11,6 +11,7 @@ define(
 		'Magento_Payment/js/view/payment/cc-form',
 		'Fiserv_Payments/js/ch-adapter',
 		'Fiserv_Payments/js/action/create-commercehub-enriched-session',
+		'Fiserv_Payments/js/action/verify-account',
 		'Magento_Checkout/js/model/quote',
 		'Magento_Checkout/js/checkout-data',
 		'Magento_Ui/js/model/messageList',
@@ -29,6 +30,7 @@ define(
 		Component,
 		chAdapter,
 		chSession,
+		verifyAccount,
 		quote,
 		checkoutData,
 		globalMessageList,
@@ -167,8 +169,35 @@ define(
 					this.endIframeFlow();
 					return;
 				}
+
 				this.endIframeFlow();
 				this.placeOrderClick();
+			},
+
+			/**
+			 * Perform account verification as a discrete step: obtain a session, capture the card, & verify the account.
+			 * This is used when account verification config option is enabled.
+			 * @return {Promise}
+			 */
+			performAccountVerification: async function () {
+				let credsResponse;
+				try {
+					credsResponse = await chSession({ 'threeDSecure': false });
+				} catch {
+					throw new Error($t('Unable to obtain a payment session for account verification. Please try again.'));
+				}
+
+				const creds = credsResponse['ch_credentials'];
+				const sessionId = await new Promise((resolve, reject) => {
+					chAdapter.submitCardForm(
+						window.checkoutConfig.payment.fiserv_payments['storeUrl'],
+						resolve,
+						() => reject(new Error($t('Card capture failed during account verification. Please try again.'))),
+						creds
+					);
+				});
+
+				await verifyAccount({ sessionId });
 			},
 
 			run3DSecure: async function () {
@@ -450,8 +479,20 @@ define(
 			submitIframe: async function() {
 				if (this.isPlaceOrderActionAllowed() === true && additionalValidators.validate()) {
 					fullScreenLoader.startLoader();
-					let credsResponse = undefined;	
-					try {	
+
+					// Perform account verification as a discrete step before the main card capture
+					if (window.checkoutConfig.payment[this.code]['accountVerificationEnabled']) {
+						try {
+							await this.performAccountVerification();
+						} catch (error) {
+							this.showError(error.message || $t('Account verification failed. Please try again.'));
+							this.endIframeFlow();
+							return;
+						}
+					}
+
+					let credsResponse = undefined;
+					try {
 						credsResponse = await chSession( { "threeDSecure" : this.is3DSecureEnabled() } );
 					} catch (error) {
 						console.log("An error occurred while starting Commercehub payment session: ".concat(error));

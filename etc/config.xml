@@ -190,6 +190,7 @@
 				<sdc_custom_token_font_integrity></sdc_custom_token_font_integrity>
 				<group>fiserv_group</group>
 				<vault_use_cvv>0</vault_use_cvv>
+				<account_verification_enabled>0</account_verification_enabled>
 			</fiserv_commercehub>	
 			<fiserv_valuelink>
 				<active>1</active>
