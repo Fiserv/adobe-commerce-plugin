@@ -6,7 +6,8 @@ define([
 	'Magento_Ui/js/model/messageList',
 	'Magento_Checkout/js/model/full-screen-loader',
 	'Fiserv_Payments/js/ch-adapter',
-	'Fiserv_Payments/js/action/create-commercehub-enriched-session'
+	'Fiserv_Payments/js/action/create-commercehub-enriched-session',
+	'Fiserv_Payments/js/action/verify-account'
 ], function(
 	_,
 	$,
@@ -15,7 +16,8 @@ define([
 	globalMessageList,
 	fullScreenLoader,
 	chAdapter,
-	chSession
+	chSession,
+	verifyAccount
 ){
 	'use_strict';
 
@@ -324,6 +326,21 @@ define([
 				}
 			}
 
+			// Account verification using the stored PaymentToken + card expiration data.
+			if (this.isAccountVerificationEnabled()) {
+				try {
+					await verifyAccount({
+						paymentToken:    this.paymentToken,
+						expirationMonth: this.getExpirationMonth(),
+						expirationYear:  this.getExpirationYear()
+					});
+				} catch (error) {
+					// Error message already displayed by verifyAccount action
+					fullScreenLoader.stopLoader();
+					return;
+				}
+			}
+
 			this.additionalData['payment_token'] = this.paymentToken;
 			
 			fullScreenLoader.stopLoader();
@@ -456,6 +473,12 @@ define([
 				default:
 					return null;
 			}
+		},
+		isAccountVerificationEnabled: function () {
+			const chConfig = window.checkoutConfig &&
+				window.checkoutConfig.payment &&
+				window.checkoutConfig.payment['fiserv_commercehub'];
+			return !!(chConfig && chConfig.accountVerificationEnabled);
 		}
 	});
 });

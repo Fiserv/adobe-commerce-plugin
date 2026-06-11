@@ -39,6 +39,7 @@ class ConfigProvider implements ConfigProviderInterface
 	const TERMINAL_ID_KEY = 'terminalId';
 	const THREE_D_SECURE_KEY = 'threeDSecure';
 	const VAULT_USE_CVV_KEY = 'vaultUseCvv';
+    const ACCOUNT_VERIFICATION_ENABLED_KEY = 'accountVerificationEnabled';
 
 	const INVALID_FIELDS_KEY = 'invalidFields';
 	const SURCHARGE_ENABLED_KEY = 'surchargeEnabled';
@@ -100,7 +101,8 @@ class ConfigProvider implements ConfigProviderInterface
 			self::TERMINAL_ID_KEY => $this->config->getTerminalId($storeId),
 			self::INVALID_FIELDS_KEY => $this->getInvalidFieldMessages(CONFIG::KEY_SDC_CHECKOUT, $storeId),
 			self::THREE_D_SECURE_KEY => $this->config->isThreeDSEnabled($storeId),
-			self::SURCHARGE_ENABLED_KEY => $this->config->isSurchargeEnabled($storeId)
+			self::SURCHARGE_ENABLED_KEY => $this->config->isSurchargeEnabled($storeId),
+            self::ACCOUNT_VERIFICATION_ENABLED_KEY => $this->config->isAccountVerificationEnabled($storeId),
 		];
 
 		return [

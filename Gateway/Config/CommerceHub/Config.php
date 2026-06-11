@@ -43,6 +43,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	const KEY_LOGGING_LEVEL = 'logging_level';
 	const KEY_3DS = 'three_d_secure';
     const KEY_SURCHARGE = 'surcharge_enabled';
+    const KEY_ACCOUNT_VERIFICATION_ENABLED = 'account_verification_enabled';
 
 	// Iframe Customization Fields
 	const KEY_SDC_CUSTOM = 'sdc_custom';
@@ -408,6 +409,12 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 		return $this->getValue(self::KEY_3DS, $storeId);
 	}
 
+    /** Returns whether account verification is enabled before payment. */
+    public function isAccountVerificationEnabled($storeId = null)
+    {
+        return (bool) $this->getValue(self::KEY_ACCOUNT_VERIFICATION_ENABLED, $storeId);
+    }
+    
 	//////////////////////////
 	// SDC v2 Customization //
 	//////////////////////////
