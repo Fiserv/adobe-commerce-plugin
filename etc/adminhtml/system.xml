@@ -143,6 +143,12 @@
 						<config_path>payment/fiserv_commercehub/surcharge_enabled</config_path>
 						<comment>Enable surcharge estimation for credit card payments. When enabled, surcharge details will be displayed in the checkout order summary.</comment>
 					</field>
+					<field id="account_verification_enabled" translate="label" type="select" sortOrder="9" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Enable Account Verification</label>
+						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+						<config_path>payment/fiserv_commercehub/account_verification_enabled</config_path>
+						<comment>When enabled, every card transaction will trigger an account verification request to Commerce Hub before the order is placed. If verification fails the customer must update or change their payment details.</comment>
+					</field>
 				</group>
 				<group id="valuelink_gift_card" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="5">
 					<label>Gift Cards</label>
