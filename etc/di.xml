@@ -305,6 +305,7 @@
 				<!-- <item name="txn_id" xsi:type="string">Fiserv\Payments\Gateway\Response\CommerceHub\TransactionIdHandler</item> -->
 				<item name="card_details" xsi:type="string">Fiserv\Payments\Gateway\Response\CommerceHub\CardDetailsHandler</item>
 				<item name="vault_details" xsi:type="string">	Fiserv\Payments\Gateway\Response\CommerceHub\VaultDetailsHandler</item>
+				<item name="surcharge" xsi:type="string">Fiserv\Payments\Gateway\Response\CommerceHub\SurchargeResponseHandler</item>
 			</argument>
 		</arguments>
 	</virtualType>
@@ -315,6 +316,7 @@
 				<item name="payment_details" xsi:type="string">Fiserv\Payments\Gateway\Response\CommerceHub\PaymentDetailsHandler</item>
 				<!-- <item name="settlement" xsi:type="string">Fiserv\Payments\Gateway\Response\CommerceHub\SettleHandler</item> -->
 				<item name="card_details" xsi:type="string">Fiserv\Payments\Gateway\Response\CommerceHub\CardDetailsHandler</item>
+				<item name="surcharge" xsi:type="string">Fiserv\Payments\Gateway\Response\CommerceHub\SurchargeResponseHandler</item>
 			</argument>
 		</arguments>
 	</virtualType>
@@ -405,6 +407,13 @@
 	</type>
 	<type name="Magento\Sales\Model\Order\Payment">
 		<plugin name="valueLinkPaymentPlace" type="Fiserv\Payments\Model\Plugin\Valuelink\PaymentPlace" />
+		<plugin name="commerceHubSurchargeAuthorizeMessage" type="Fiserv\Payments\Model\Plugin\CommerceHub\SurchargeAuthorizeMessage" sortOrder="100"/>
+	</type>
+	<type name="Magento\Sales\Model\Order\CreditmemoFactory">
+		<plugin name="commerceHubCreditmemoSurchargeAdjustment" type="Fiserv\Payments\Model\Plugin\CommerceHub\CreditmemoSurchargeAdjustment" sortOrder="100"/>
+	</type>
+	<type name="Magento\Sales\Model\Order\Invoice">
+		<plugin name="commerceHubInvoiceSurchargeAdjustment" type="Fiserv\Payments\Model\Plugin\CommerceHub\InvoiceSurchargeAdjustment" sortOrder="100"/>
 	</type>
 	<type name="Magento\Quote\Model\Quote\TotalsReader">
 		<plugin name="valueLinkTotalsReader" type="Fiserv\Payments\Model\Plugin\Valuelink\TotalsReader" />

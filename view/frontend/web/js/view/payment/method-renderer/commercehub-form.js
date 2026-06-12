@@ -370,15 +370,13 @@ define(
 				}
 			};
 
-				if (typeof(this.paymentPayload.threeDSecureId) !== "undefined") {
-					data['additional_data']['3DSecureId'] = this.paymentPayload.threeDSecureId;
-				}
-
+			if (typeof(this.paymentPayload.threeDSecureId) !== "undefined") {
+				data['additional_data']['3DSecureId'] = this.paymentPayload.threeDSecureId;
+			}
 				data['additional_data'] = _.extend(data['additional_data'], this.additionalData);
 				this.vaultEnabler.visitAdditionalData(data);
-
-				return data;
-			},
+			return data;
+		},
 
 			/**
 			 * Get list of available CC types
@@ -396,7 +394,6 @@ define(
 			const self = this;
 
 			if (key) {
-					// handle payment failure. Reinit Iframe
 					$(document).one("ajaxError", (ev,xhr) => { this.placeOrderFailureHandler(ev,xhr); } );
 					return self._super();
 				}
@@ -616,48 +613,33 @@ define(
 
 		fetchSurchargeEstimate: async function() {
 			try {
-				const quoteTotals = quote.totals();
-				console.log('Surcharge - quote.totals():', JSON.stringify({
-					subtotal: quoteTotals ? quoteTotals.subtotal : 'N/A',
-					shipping: quoteTotals ? quoteTotals.shipping_amount : 'N/A',
-					tax: quoteTotals ? quoteTotals.tax_amount : 'N/A',
-					grand_total: quoteTotals ? quoteTotals.grand_total : 'N/A'
-				}));
 				const credsResponse = await chSession({ 'threeDSecure': false });
 				const creds = credsResponse['ch_credentials'];
-				await chAdapter.initSdk(
-					window.checkoutConfig.payment[this.code],
-					creds
-				);
-
+				await chAdapter.initSdk(window.checkoutConfig.payment[this.code], creds);
 
 				const surchargeDetails = await chAdapter.getSurchargeEstimate();
-				console.log('Surcharge SDK full response:', JSON.stringify(surchargeDetails));
+				const surchargeAmount = (surchargeDetails && surchargeDetails.amountComponent
+					&& surchargeDetails.amountComponent.surcharge)
+					? parseFloat(surchargeDetails.amountComponent.surcharge)
+					: 0;
 
-				if (surchargeDetails && surchargeDetails.reason !== 'RESTRICTED_STATE') {
-					const disclosureText = (surchargeDetails.disclosureText && surchargeDetails.disclosureText.length)
-						? surchargeDetails.disclosureText[0].value
-						: '';
-					const surchargeAmount = (surchargeDetails.amountComponent && surchargeDetails.amountComponent.surcharge)
-						? parseFloat(surchargeDetails.amountComponent.surcharge)
-						: 0;
-					const newGrandTotal = (surchargeDetails.amount && surchargeDetails.amount.total)
-						? parseFloat(surchargeDetails.amount.total)
-						: 0;
+				if (surchargeAmount > 0) {
 					surchargeModel.surchargeData({
 						applied: true,
-						disclosureText: disclosureText,
+						disclosureText: (surchargeDetails.disclosureText && surchargeDetails.disclosureText.length)
+							? surchargeDetails.disclosureText[0].value
+							: '',
 						amount: surchargeAmount,
-						grandTotal: newGrandTotal,
+						grandTotal: (surchargeDetails.amount && surchargeDetails.amount.total)
+							? parseFloat(surchargeDetails.amount.total)
+							: 0,
 						currency: (surchargeDetails.amount && surchargeDetails.amount.currency) || 'USD'
 					});
-					return true;
 				} else {
 					surchargeModel.surchargeData(null);
-					return true;
 				}
+				return true;
 			} catch (e) {
-				console.error('Surcharge estimate error:', e);
 				surchargeModel.surchargeData(null);
 				return false;
 			}
@@ -670,7 +652,6 @@ define(
 			this.disableContinueButton();
 			fullScreenLoader.startLoader();
 			try {
-				// Only fetch surcharge estimate if surcharge is enabled
 				if (this.isSurchargeEnabled()) {
 					const success = await this.fetchSurchargeEstimate();
 					if (success) {
@@ -681,7 +662,6 @@ define(
 						this.enableContinueButton();
 					}
 				} else {
-					// Surcharge disabled - proceed directly
 					this.surchargeConfirmed(true);
 					this.enableSubmitButton();
 				}
