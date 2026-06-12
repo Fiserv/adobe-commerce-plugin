@@ -35,6 +35,7 @@
     </event>
 	<event name="sales_model_service_quote_submit_before">
         <observer name="fiserv_valuelink" instance="Fiserv\Payments\Observer\Valuelink\ProcessOrderPlace" />
+        <observer name="fiserv_apply_surcharge_to_order" instance="Fiserv\Payments\Observer\CommerceHub\ApplySurchargeToOrder" />
 	</event>
 	<event name="checkout_submit_all_after">
 		<observer name="fiserv_valuelink_sale_invoice" instance="Fiserv\Payments\Observer\Valuelink\ValuelinkOnlySaleCreateInvoice" />

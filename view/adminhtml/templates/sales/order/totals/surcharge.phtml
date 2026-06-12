@@ -1,0 +1,20 @@
+<?php
+/**
+ * Admin order totals surcharge line item.
+ * Rendered inside class="admin__page-section-item order-totals".
+ *
+ * @var \Fiserv\Payments\Block\Sales\Order\Adminhtml\Surcharge $block
+ */
+$order = $block->getOrder();
+$surchargeAmount = $block->getSurchargeAmount();
+?>
+<?php if ($surchargeAmount): ?>
+<tr class="fiserv-surcharge totals">
+    <td class="label">
+        <?= $block->escapeHtml(__('Surcharge')) ?>
+    </td>
+    <td>
+        <span class="price"><?= /* @noEscape */ $order->formatPrice($surchargeAmount) ?></span>
+    </td>
+</tr>
+<?php endif; ?>

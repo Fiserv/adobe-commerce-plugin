@@ -39,6 +39,7 @@
 		<column xsi:type="varchar" name="paypal_provider_customer_id" nullable="false" length="255" comment="PayPal Provider Customer ID"/>
 	</table>
 
+
 	<table name="quote" resource="checkout" comment="Sales Flat Quote">
 		<column xsi:type="text" name="valuelink_cards" nullable="true" comment="Valuelink Cards"/>
 		<column xsi:type="decimal" name="valuelink_cards_amount" scale="4" precision="20" unsigned="false" nullable="true" comment="Valuelink Amount"/>
