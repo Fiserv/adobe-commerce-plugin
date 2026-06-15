@@ -68,7 +68,11 @@ define(
 			initialize: async function () {
 					quote.billingAddress.subscribe(function (address) {
 					this.isPlaceOrderActionAllowed(address !== null);
-					this.checkoutValidHandler();	
+					if (this.isSurchargeEnabled()) {
+						this.clearSurcharge();
+						this.surchargeConfirmed(false);
+					}
+					this.checkoutValidHandler();
 				}, this);
 			
 				this.code = 'fiserv_commercehub';
@@ -372,6 +376,13 @@ define(
 
 				if (typeof(this.paymentPayload.threeDSecureId) !== "undefined") {
 					data['additional_data']['3DSecureId'] = this.paymentPayload.threeDSecureId;
+				}
+
+				if (this.isSurchargeEnabled()) {
+					const surchargeData = surchargeModel.surchargeData();
+					if (surchargeData && surchargeData.applied && surchargeData.amount > 0) {
+						data['additional_data']['surcharge_amount'] = surchargeData.amount;
+					}
 				}
 
 				data['additional_data'] = _.extend(data['additional_data'], this.additionalData);
