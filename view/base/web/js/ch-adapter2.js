@@ -48,6 +48,9 @@ define([
 			formData.cardBrandChangeCallback = cardBrandChangeCallback;
 			formData.fieldValidityHandler = fieldValidityHandler;
 			formData.fieldFocusHandler = fieldFocusHandler;
+            formData.contextId = 'fiserv-form-' + idx + '-' + Date.now();
+            formData.fiservContext = undefined;
+            formData.sdkInitialized = false;
 		
 			this.forms[idx] = formData;
 
@@ -60,24 +63,46 @@ define([
 				this.getChCredentials(config.storeUrl, resolve, reject);
 			});
 
-			promise.then((data) => {
-				initSdk(config, data[this.accessTokenKey]);
-			})
-			.catch((data) => {
-				console.log("WHOOPS something went wrong: ", data);
-			});
+            promise.then((data) => {
+                this.initSdk(config, data);
+            })
+                .catch((data) => {
+                    console.log("WHOOPS something went wrong: ", data);
+                });
 
 		},
 
-		initSdk: async function(config, accessToken)
-		{
-			await window.fiserv.init({
-				environment: config.environment,
-				accessToken: accessToken, 
-				apiKey: config.apiKey,
-				merchantId: config.merchantId
-			});
-		},
+        initSdk: async function(config, creds, contextId)
+        {
+            const initPayload = {
+                cspNonce: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : undefined,
+                environment: config.environment,
+                accessToken: creds[this.accessTokenKey],
+                apiKey: config.apiKey,
+                merchantId: config.merchantId,
+                publicKey: creds[this.publicTokenKey],
+                keyId: creds[this.keyIdKey],
+                terminalId: config[this.configTerminalIdKey],
+                sessionId: creds[this.sessionIdKey]
+            };
+
+            if (contextId && window.fiserv && window.fiserv.FiservContext) {
+                const FiservContext = window.fiserv.FiservContext;
+                let ctx = (typeof FiservContext.getInstance === 'function')
+                    ? FiservContext.getInstance(contextId)
+                    : undefined;
+                if (!ctx) {
+                    ctx = await FiservContext.load(contextId);
+                }
+                if (ctx && typeof ctx.init === 'function') {
+                    await ctx.init(initPayload);
+                    return ctx;
+                }
+            }
+
+            await window.fiserv.init(initPayload);
+            return null;
+        },
 
 		getChCredentials: function (storeUrl, successCb, errorCb) {
 			let validateCb = this.validateCredentialsResponse.bind(this);
@@ -129,44 +154,62 @@ define([
 			return response[this.credentialsKey];
 		},
 
-		/**
-		 * Instantiates CommerceHub iframe
-		 * from provide script element
-		 */
-		/**
-		 * Instantiates CommerceHub iframe
-		 * from provide script element
-		 */
-		instantiateIframe: function (
-			formKey,
-			paymentMethod,
-			loadSuccessCb, 
-			loadErrorCb
-		) {
-			let formData = undefined;
-			try {
-				formData = this.getSdcForm(formKey);
-			
-			} catch(err)
-			{
-				loadErrorCb(err);
-				return;
-			}
-			
-			let formConfig = this.buildFormConfig(formData, paymentMethod);
-						
-			window.fiserv.components.paymentFields(formConfig)
-				.then((next) => { 
-					formData.sdcv2Form = next; 
-					formData.iframeReadyCallback(); 
-					loadSuccessCb();
-				})
-				.catch((data) => {
-					console.log(data);
-					loadErrorCb(data);
-				});
+        /**
+         * Instantiates CommerceHub iframe from provide script element.
+         */
+        instantiateIframe: function (
+            formKey,
+            paymentMethod,
+            loadSuccessCb,
+            loadErrorCb
+        ) {
+            let formData = undefined;
+            try {
+                formData = this.getSdcForm(formKey);
 
-		},
+            } catch(err)
+            {
+                loadErrorCb(err);
+                return;
+            }
+
+            const ensureSdkReady = () => {
+                if (formData.sdkInitialized) {
+                    return Promise.resolve();
+                }
+                return new Promise((resolve, reject) => {
+                    this.getChCredentials(formData.config.storeUrl, resolve, reject);
+                }).then(async (creds) => {
+                    formData.credentials = creds;
+                    formData.fiservContext = await this.initSdk(
+                        formData.config,
+                        creds,
+                        formData.contextId
+                    );
+                    formData.sdkInitialized = true;
+                });
+            };
+
+            ensureSdkReady()
+                .then(() => {
+                    let formConfig = this.buildFormConfig(formData, paymentMethod);
+
+                    window.fiserv.components.paymentFields(formConfig)
+                        .then((next) => {
+                            formData.sdcv2Form = next;
+                            formData.iframeReadyCallback();
+                            loadSuccessCb();
+                        })
+                        .catch((data) => {
+                            console.log(data);
+                            loadErrorCb(data);
+                        });
+                })
+                .catch((err) => {
+                    console.log('[ch-adapter2] SDK init failure: ', err);
+                    loadErrorCb(err);
+                });
+        },
 
 		submitCardForm: function (
 			formKey,
@@ -226,7 +269,11 @@ define([
 			}; 
 			formConfig["data"]["environment"] =  formData.config[this.environmentKey];
 			formConfig["data"]["paymentMethod"] = paymentMethod;
-			// formConfig["data"]["supportedCardBrands"] = [];
+
+            if (formData.contextId) {
+                formConfig["contextId"] = formData.contextId;
+                formConfig["data"]["contextId"] = formData.contextId;
+            }
 
 			return formConfig;
 		},

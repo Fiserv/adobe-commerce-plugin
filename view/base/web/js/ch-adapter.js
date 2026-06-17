@@ -43,6 +43,9 @@ define([
 		fieldValueChangeHandler: undefined,
 		sdcv2Form: undefined,
 		credentials: undefined,
+		contextId: undefined,
+		fiservContext: undefined,
+		sdkInitialized: false,
 
 		initialize: function (config, iframeReadyCallback, iframeValidCallback, cardBrandChangeCallback, fieldValidityHandler, fieldFocusHandler, fieldValueChangeHandler) {
 			this.config = config;
@@ -54,10 +57,20 @@ define([
 			this.fieldValueChangeHandler = fieldValueChangeHandler;
 		},
 
-  		initSdk: async function(config, creds)
+		setContextId: function (contextId) {
+			this.contextId = contextId;
+			this.sdkInitialized = false;
+			this.fiservContext = undefined;
+		},
+
+		initSdk: async function(config, creds, contextId)
 		{
-			await window.fiserv.init({
-  				cspNonce: crypto.randomUUID(),
+			if (contextId) {
+				this.contextId = contextId;
+			}
+
+			const initPayload = {
+				cspNonce: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : undefined,
 				environment: config.environment,
 				accessToken: creds[this.accessTokenKey], 
 				apiKey: config.apiKey,
@@ -66,8 +79,28 @@ define([
 				keyId: creds[this.keyIdKey],
 				terminalId: config[this.configTerminalIdKey],
 				sessionId: creds[this.sessionIdKey]
-			}); 
-		}, 
+			};
+
+			if (this.contextId && window.fiserv && window.fiserv.FiservContext) {
+				const FiservContext = window.fiserv.FiservContext;
+				let ctx = (typeof FiservContext.getInstance === 'function')
+					? FiservContext.getInstance(this.contextId)
+					: undefined;
+				if (!ctx) {
+					ctx = await FiservContext.load(this.contextId);
+				}
+				if (ctx && typeof ctx.init === 'function') {
+					await ctx.init(initPayload);
+					this.fiservContext = ctx;
+					this.sdkInitialized = true;
+					return ctx;
+				}
+			}
+
+			await window.fiserv.init(initPayload);
+			this.sdkInitialized = true;
+			return null;
+		},
 
 		getChCredentials: function (storeUrl, successCb, errorCb) {
 			let validateCb = this.validateCredentialsResponse.bind(this);
@@ -120,7 +153,11 @@ define([
 		},
 
 		createBillingAddressComponent: async function (addressFields) {
-			return await window.fiserv.components.address({ fields: addressFields });
+			const addressOptions = { fields: addressFields };
+			if (this.contextId) {
+				addressOptions.contextId = this.contextId;
+			}
+			return await window.fiserv.components.address(addressOptions);
 		},
 
 		/**
@@ -136,7 +173,25 @@ define([
 			loadErrorCb,
 			configData = undefined,
 		) {
-			let formConfig = this.buildFormConfig();
+			const ensureSdkReady = () => {
+				if (this.sdkInitialized) {
+					return Promise.resolve();
+				}
+				const storeUrl = this.config.storeUrl ||
+					(window.checkoutConfig && window.checkoutConfig.payment &&
+						window.checkoutConfig.payment.fiserv_payments &&
+						window.checkoutConfig.payment.fiserv_payments.storeUrl) || '';
+				return new Promise((resolve, reject) => {
+					this.getChCredentials(storeUrl, resolve, reject);
+				}).then(async (creds) => {
+					this.credentials = creds;
+					await this.initSdk(this.config, creds);
+				});
+			};
+
+			ensureSdkReady()
+				.then(() => {
+					let formConfig = this.buildFormConfig();
 
 			if (configData) {
 				formConfig = {
@@ -161,50 +216,63 @@ define([
 						undefined);
 			}
 
-			window.fiserv.components.paymentFields(formConfig)
-				.then((next) => {
-					this.sdcv2Form = next;
-					this.iframeReadyCallback();
-					loadSuccessCb();
+					window.fiserv.components.paymentFields(formConfig)
+						.then((next) => {
+							this.sdcv2Form = next;
+							this.iframeReadyCallback();
+							loadSuccessCb();
+						})
+						.catch((data) => {
+							console.log(data);
+							loadErrorCb(data);
+						});
 				})
-				.catch((data) => {
-					console.log(data);
-					loadErrorCb(data);
+				.catch((err) => {
+					console.log('[ch-adapter] SDK init failure:', err);
+					loadErrorCb(err);
 				});
 		},
 
-		 /**
-         * Load PayPal SDK
-         * @param {Object} options - { customerId, intent }
-         * @returns {Promise<Object>} PayPal component instance
-         */
-        async loadPayPalComponent(options) {
-            if (!window.fiserv || typeof window.fiserv.components.paypal !== 'function') {
-                throw new Error('Fiserv SDK not loaded or window.fiserv.components.paypal not available');
-            }
-            this.paypalComponent = await window.fiserv.components.paypal(options);
-            return this.paypalComponent;
-        },
+		/**
+		 * Load PayPal SDK
+		 * @param {Object} options - { customerId, intent }
+		 * @returns {Promise<Object>} PayPal component instance`
+		 */
+		async loadPayPalComponent(options) {
+			if (!window.fiserv || typeof window.fiserv.components.paypal !== 'function') {
+				throw new Error('Fiserv SDK not loaded or window.fiserv.components.paypal not available');
+			}
+
+			const mergedOptions = Object.assign({}, options || {});
+			if (this.contextId && mergedOptions.contextId === undefined) {
+				mergedOptions.contextId = this.contextId;
+			}
+
+			this.paypalComponent = await window.fiserv.components.paypal(mergedOptions);
+			return this.paypalComponent;
+		},
 
 		/**
-         * Load Paze SDK (Step 4 of Paze documentation)
-         * @param {Object} options - { displayName, cspNonce }
-         * @returns {Promise<Object>} Paze component instance
-         */
-        async loadPazeComponent(options) {
-            if (!window.fiserv || typeof window.fiserv.components.paze !== 'function') {
-                throw new Error('Fiserv SDK not loaded or window.fiserv.components.paze not available');
-            }
+		 * Load Paze SDK (Step 4 of Paze documentation)
+		 * @param {Object} options - { displayName }
+		 * @returns {Promise<Object>} Paze component instance
+		 *
+		 * SDK 4.0.25 makes window.fiserv.init(...) mandatory for Paze.
+		 * Paze error code FAILED_TO_DECODE_PAZE_RESPONSE was also renamed
+		 * to UNEXPECTED_PROVIDER_RESPONSE — callers handling onError
+		 * should match against the new code.
+		 */
+		async loadPazeComponent(options) {
+			if (!window.fiserv || typeof window.fiserv.components.paze !== 'function') {
+				throw new Error('Fiserv SDK not loaded or window.fiserv.components.paze not available');
+			}
 
-            // Paze component initialization with displayName and optional cspNonce
-            const pazeOptions = {
-                displayName: options.displayName || 'My Site'
-            };
+            const pazeOptions = {displayName: options.displayName || 'My Site'};
 
-            // Add cspNonce if provided (for security/CSP compliance)
-            if (options.cspNonce) {
-                pazeOptions.cspNonce = options.cspNonce;
-            }
+
+			if (this.contextId) {
+				pazeOptions.contextId = this.contextId;
+			}
 
             console.log('[CH-Adapter] Loading Paze component with options:', pazeOptions);
             this.pazeComponent = await window.fiserv.components.paze(pazeOptions);
@@ -336,7 +404,12 @@ define([
 
 			}; 
 			formConfig["data"]["environment"] =  this.config[this.environmentKey];
-			
+
+			if (this.contextId) {
+				formConfig["contextId"] = this.contextId;
+				formConfig["data"]["contextId"] = this.contextId;
+			}
+
 			return formConfig;
 		},
 
