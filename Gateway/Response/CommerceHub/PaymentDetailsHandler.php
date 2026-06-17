@@ -13,7 +13,6 @@ class PaymentDetailsHandler implements HandlerInterface
 {
 	const API_TRACE_ID = "apiTraceId";
 	const KEY_AMOUNT = "amount";
-	const KEY_ORDER_ID = "orderId";
 	const TXN_TIMESTAMP = "txnTimestamp";
 
 	/** @var SubjectReader */
@@ -36,13 +35,9 @@ class PaymentDetailsHandler implements HandlerInterface
 		$payment->setTransactionId($tnxDetails["transactionId"]);
 		$payment->setShouldCloseParentTransaction(false);
 		$payment->setIsTransactionClosed(false);
-
 		$payment->setTransactionAdditionalInfo(self::API_TRACE_ID, $tnxDetails["apiTraceId"]);
-		$payment->setTransactionAdditionalInfo(self::KEY_ORDER_ID, $tnxDetails["orderId"]);
 
-		$amount = $chResponse["paymentReceipt"]["approvedAmount"]["total"]
-			?? $chResponse["transaction"]["paymentReceipt"]["approvedAmount"]["total"]
-			?? null;
+        $amount = $chResponse["paymentReceipt"]["approvedAmount"]["total"] ?? null;
 
 		if ($amount !== null) {
 			$payment->setTransactionAdditionalInfo(self::KEY_AMOUNT, (float)$amount);
