@@ -491,21 +491,21 @@ define(
 						}
 					}
 
+				let creds;
+				if (this.is3DSecureEnabled()) {
 					let credsResponse = undefined;
 					try {
-						credsResponse = await chSession( { "threeDSecure" : this.is3DSecureEnabled() } );
+						credsResponse = await chSession( { "threeDSecure" : true } );
 					} catch (error) {
 						console.log("An error occurred while starting Commercehub payment session: ".concat(error));
 						this.iframeRunFailure();
 						return;
 					}
-					let creds = credsResponse["ch_credentials"];
-					
-					// handle 3DS
-					if(this.is3DSecureEnabled())
-					{
-						await this.initCheckoutSdk(creds);
-					}
+					creds = credsResponse["ch_credentials"];
+					await this.initCheckoutSdk(creds);
+				} else {
+					creds = chAdapter.credentials;
+				}
 						
 					chAdapter.submitCardForm(
 						window.checkoutConfig.payment.fiserv_payments['storeUrl'], 
