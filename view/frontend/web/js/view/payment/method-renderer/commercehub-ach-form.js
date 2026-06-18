@@ -202,7 +202,8 @@ define(
 
             async initSdkAddressComponent(billingAddress) {
                 const container = this.getBillingAddressContainer();
-                const fieldMap = this.mapBillingAddressFields(billingAddress);
+                const billingPayload = this.buildBillingAddressPayload(billingAddress);
+                const fieldMap = this.mapBillingAddressFields(billingPayload);
                 const mappedFields = this.mapAddressFieldsToTempForm(container, fieldMap);
 
                 return await chAdapter.createBillingAddressComponent(mappedFields);
@@ -215,7 +216,18 @@ define(
                 if (!billingAddress) throw new Error("Billing address not found.");
 
                 const mappedAddress = this.mapBillingAddressFields(this.buildBillingAddressPayload(billingAddress));
-                
+                const stateSelect = document.getElementById('fiserv-ach-billing-stateOrProvince');
+                if (stateSelect && mappedAddress.stateOrProvince) {
+                    let option = stateSelect.querySelector('option[value="' + mappedAddress.stateOrProvince + '"]');
+                    if (!option) {
+                        stateSelect.innerHTML = '';
+                        option = document.createElement('option');
+                        option.value = mappedAddress.stateOrProvince;
+                        option.text = mappedAddress.stateOrProvince;
+                        stateSelect.append(option);
+                    }
+                    stateSelect.value = mappedAddress.stateOrProvince;
+                }
                 this.addressComponent.populate({ "firstName": mappedAddress.firstName });
                 this.addressComponent.populate({ "lastName": mappedAddress.lastName });
                 this.addressComponent.populate({ "street": mappedAddress.street });
@@ -837,13 +849,26 @@ define(
                 const addressFields = {};
 
                 for (const key in fieldMap) {
-                    const inputId = 'fiserv-ach-billing-' + key;
-                    const input = document.createElement('input');
-                    input.type = 'text';
-                    input.id = inputId;
-                    input.value = fieldMap[key];
-                    container.append(input);
-                    addressFields[key] = { elementId: inputId };
+                    const elementId = 'fiserv-ach-billing-' + key;
+                    let element;
+
+                    if (key === 'stateOrProvince') {
+                        element = document.createElement('select');
+                        element.id = elementId;
+                        const option = document.createElement('option');
+                        option.value = fieldMap[key];
+                        option.text = fieldMap[key];
+                        option.selected = true;
+                        element.append(option);
+                    } else {
+                        element = document.createElement('input');
+                        element.type = 'text';
+                        element.id = elementId;
+                        element.value = fieldMap[key];
+                    }
+
+                    container.append(element);
+                    addressFields[key] = { elementId };
                 }
 
                 return addressFields;
