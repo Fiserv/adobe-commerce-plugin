@@ -44,8 +44,8 @@ class SurchargeResponseHandler implements HandlerInterface
 		ContextHelper::assertOrderPayment($payment);
 
 		$order = $payment->getOrder();
-		$storeId = $order ? (int)$order->getStoreId() : null;
-		if (!$this->config->isSurchargeEnabled($storeId)) {return;}
+		if (!$order) {return;}
+		if (!$this->config->isSurchargeEnabled((int)$order->getStoreId())) {return;}
 
 		$chResponse = $this->subjectReader->readChResponse($response)[HttpClient::RESPONSE_KEY];
 
@@ -56,7 +56,6 @@ class SurchargeResponseHandler implements HandlerInterface
 
 		$payment->setAdditionalInformation(self::SURCHARGE_AMOUNT_KEY, $surcharge);
 
-		if (!$order) {return;}
 
 		$originalGrandTotal = (float)$order->getGrandTotal();
 		$originalBaseGrandTotal = (float)$order->getBaseGrandTotal();
