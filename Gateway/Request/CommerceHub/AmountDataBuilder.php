@@ -8,6 +8,7 @@ namespace Fiserv\Payments\Gateway\Request\CommerceHub;
 use Magento\Payment\Gateway\Request\BuilderInterface;
 use Fiserv\Payments\Lib\CommerceHub\Model\Amount;
 use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
+use Magento\Payment\Helper\Formatter;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 
 /**
@@ -15,6 +16,7 @@ use Fiserv\Payments\Logger\MultiLevelLogger;
  */
 class AmountDataBuilder implements BuilderInterface
 {
+	use Formatter;
 
 	const AMOUNT_KEY = "amount";
 
@@ -51,7 +53,7 @@ class AmountDataBuilder implements BuilderInterface
 		$orderDO = $paymentDO->getOrder(); //Retrieve the order data object from the payment data object
 
 		$rawTotal = $this->subjectReader->readAmount($buildSubject);
-
+		
 		$amt = new Amount();
 		$amt->setTotal(round($rawTotal, 2, PHP_ROUND_HALF_UP));
 		$amt->setCurrency($orderDO->getCurrencyCode());
