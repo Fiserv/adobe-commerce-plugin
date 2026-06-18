@@ -22,24 +22,24 @@ class CreditMemoServicePlugin
 
 	public function aroundRefund(CreditmemoService $subject, callable $proceed, Creditmemo $creditmemo, $offlineRequested = false)
 	{
-		try {
-			return $proceed($creditmemo, $offlineRequested);
-		} catch (\Exception $e) {
+		try{
+			$result = $proceed($creditmemo, $offlineRequested);
+			return $result;
+		}
+		catch (\Exception $e)
+		{
 			$order = $creditmemo->getOrder();
 			$failedOrder = $this->failedOrderManager->createFailedOrder($order);
 			$this->failedOrderManager->saveFailedOrder($failedOrder, $order->getQuoteId(), $order->getStoreId());
 
 			$payment = $order->getPayment();
-			$data = $payment ? $payment->getAdditionalInformation('ch_failed_transaction_data') : null;
+			$data = $payment->getAdditionalInformation('ch_failed_transaction_data');
 
-			if (is_array($data)
-				&& isset($data['response'], $data['paths'], $data['payment_action'])
-				&& isset($data['response'][HttpClient::RESPONSE_KEY])
-			) {
-				$data['response'][HttpClient::RESPONSE_KEY]['amount'] = $creditmemo->getGrandTotal() ?: 0;
+			$data['response'][HttpClient::RESPONSE_KEY]["amount"] = ($creditmemo['grand_total']) ? $creditmemo['grand_total'] : 0;
 
+			if ($data) {
 				$this->failedTransactionManager->createFailedTransaction(
-					$order->getIncrementId(),
+					$order['increment_id'],
 					$data['response'],
 					$data['paths'],
 					$data['payment_action']
