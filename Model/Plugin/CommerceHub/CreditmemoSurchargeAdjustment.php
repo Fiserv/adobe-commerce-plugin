@@ -67,21 +67,21 @@ class CreditmemoSurchargeAdjustment
 			return;
 		}
 
-		$alreadyRefunded = (float)$creditmemo->getAdjustmentPositive();
-		foreach ($order->getCreditmemosCollection() as $existing) {
-			$alreadyRefunded += (float)$existing->getAdjustmentPositive();
-		}
+		$invoiced = (float)$payment->getAdditionalInformation(SurchargeResponseHandler::SURCHARGE_INVOICED_KEY);
+		$capturedSurcharge = $invoiced > 0 ? $invoiced : $surcharge;
 
-		$remaining = round($surcharge - $alreadyRefunded, 4);
-		if ($remaining <= 0) {
+		$refunded = (float)$payment->getAdditionalInformation(SurchargeResponseHandler::SURCHARGE_REFUNDED_KEY);
+
+		$allowed = round($capturedSurcharge - $refunded, 4);
+		if ($allowed <= 0) {
 			return;
 		}
 
-		$creditmemo->setAdjustmentPositive((float)$creditmemo->getAdjustmentPositive() + $remaining);
-		$creditmemo->setBaseAdjustmentPositive((float)$creditmemo->getBaseAdjustmentPositive() + $remaining);
-		$creditmemo->setGrandTotal((float)$creditmemo->getGrandTotal() + $remaining);
-		$creditmemo->setBaseGrandTotal((float)$creditmemo->getBaseGrandTotal() + $remaining);
-		$creditmemo->setAdjustment((float)$creditmemo->getAdjustment() + $remaining);
-		$creditmemo->setBaseAdjustment((float)$creditmemo->getBaseAdjustment() + $remaining);
+		$creditmemo->setAdjustmentPositive((float)$creditmemo->getAdjustmentPositive() + $allowed);
+		$creditmemo->setBaseAdjustmentPositive((float)$creditmemo->getBaseAdjustmentPositive() + $allowed);
+		$creditmemo->setGrandTotal((float)$creditmemo->getGrandTotal() + $allowed);
+		$creditmemo->setBaseGrandTotal((float)$creditmemo->getBaseGrandTotal() + $allowed);
+		$creditmemo->setAdjustment((float)$creditmemo->getAdjustment() + $allowed);
+		$creditmemo->setBaseAdjustment((float)$creditmemo->getBaseAdjustment() + $allowed);
 	}
 }

@@ -17,6 +17,14 @@ class SurchargeResponseHandler implements HandlerInterface
 {
 	const SURCHARGE_AMOUNT_KEY = 'surcharge_amount';
 
+	/**
+	 * How much of the surcharge has been captured / refunded so far. These mirror the
+	 * core order.shipping_invoiced / order.shipping_refunded counters and let secondary
+	 * transactions draw the surcharge down greedily, exactly like shipping.
+	 */
+	const SURCHARGE_INVOICED_KEY = 'surcharge_invoiced';
+	const SURCHARGE_REFUNDED_KEY = 'surcharge_refunded';
+
 	/** @var SubjectReader */
 	private $subjectReader;
 
@@ -73,6 +81,7 @@ class SurchargeResponseHandler implements HandlerInterface
 			$createdInvoice->setBaseGrandTotal((float)$createdInvoice->getBaseGrandTotal() + $surcharge);
 			$order->setTotalInvoiced((float)$order->getTotalInvoiced() + $surcharge);
 			$order->setBaseTotalInvoiced((float)$order->getBaseTotalInvoiced() + $surcharge);
+			$payment->setAdditionalInformation(self::SURCHARGE_INVOICED_KEY, $surcharge);
 		}
 
 		$baseCurrency = $order->getBaseCurrency();

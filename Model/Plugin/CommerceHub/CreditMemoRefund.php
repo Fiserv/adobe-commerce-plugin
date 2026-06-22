@@ -4,6 +4,7 @@ namespace Fiserv\Payments\Model\Plugin\CommerceHub;
 
 use Fiserv\Payments\Logger\MultiLevelLogger;
 use Fiserv\Payments\Model\Config\CommerceHub\ConfigProvider;
+use Fiserv\Payments\Gateway\Response\CommerceHub\SurchargeResponseHandler;
 use Magento\Sales\Api\Data\CreditmemoInterface;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Model\Order\Payment;
@@ -27,6 +28,10 @@ class CreditMemoRefund
 	{
 		$payment = $order->getPayment();
 
+		if ($payment && $payment->getMethod() === ConfigProvider::CODE) {
+			$this->drawDownSurcharge($payment);
+		}
+
 		// if Grand Total is zero set refund method to offline
 		// so we don't trigger the payment gateway capture command.
 		if ($payment->getMethod() === ConfigProvider::CODE && $isOnline === true && $creditMemo->getGrandTotal() < 0.01)
@@ -36,5 +41,28 @@ class CreditMemoRefund
 		}
 
 		return [$creditMemo, $order, $isOnline];
+	}
+
+	private function drawDownSurcharge(Payment $payment): void
+	{
+		$surcharge = (float)$payment->getAdditionalInformation(SurchargeResponseHandler::SURCHARGE_AMOUNT_KEY);
+		if ($surcharge <= 0) {
+			return;
+		}
+
+		$invoiced = (float)$payment->getAdditionalInformation(SurchargeResponseHandler::SURCHARGE_INVOICED_KEY);
+		$capturedSurcharge = $invoiced > 0 ? $invoiced : $surcharge;
+
+		$refunded = (float)$payment->getAdditionalInformation(SurchargeResponseHandler::SURCHARGE_REFUNDED_KEY);
+
+		$allowed = round($capturedSurcharge - $refunded, 4);
+		if ($allowed <= 0) {
+			return;
+		}
+
+		$payment->setAdditionalInformation(
+			SurchargeResponseHandler::SURCHARGE_REFUNDED_KEY,
+			round($refunded + $allowed, 4)
+		);
 	}
 }
