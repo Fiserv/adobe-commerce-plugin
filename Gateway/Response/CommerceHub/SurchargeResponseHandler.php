@@ -101,7 +101,7 @@ class SurchargeResponseHandler implements HandlerInterface
 
 	private function extractSurcharge(array $chResponse): ?float
 	{
-		$value = $chResponse['paymentReceipt']['amountComponents']['surcharge'];
+		$value = $chResponse['paymentReceipt']['amountComponents']['surcharge'] ?? null;
 		return $value === null ? null : (float)$value;
 	}
 }
