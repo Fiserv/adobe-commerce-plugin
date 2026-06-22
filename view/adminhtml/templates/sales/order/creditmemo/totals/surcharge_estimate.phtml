@@ -1,0 +1,26 @@
+<?php
+/**
+ * Admin credit memo totals – Estimated Surcharge Fee Refund line item.
+ *
+ * This row is read-only (locked). The value is calculated proportionally:
+ *   estimatedRefund = creditMemoGrandTotal × surcharge ÷ (orderGrandTotal − surcharge)
+ *
+ * @var \Fiserv\Payments\Block\Sales\Order\Adminhtml\CreditMemo\SurchargeEstimate $block
+ */
+
+$estimated = $block->getEstimatedSurchargeRefund();
+$order     = $block->getOrder();
+?>
+<?php if ($estimated && $order): ?>
+<tr class="fiserv-surcharge-estimate totals">
+    <td class="label">
+        <strong><?= $block->escapeHtml(__('Estimated Surcharge Fee Refund')) ?></strong>
+    </td>
+    <td>
+        <span class="price" style="color:#555;font-style:italic;">
+            <?= /* @noEscape */ $order->formatPrice($estimated) ?>
+        </span>
+    </td>
+</tr>
+<?php endif; ?>
+
