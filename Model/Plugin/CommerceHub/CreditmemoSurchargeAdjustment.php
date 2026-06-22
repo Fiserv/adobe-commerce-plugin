@@ -43,7 +43,16 @@ class CreditmemoSurchargeAdjustment
 
 	private function adminProvidedAdjustment(array $data): bool
 	{
-		return array_key_exists('adjustment_positive', $data) || array_key_exists('adjustment_negative', $data);
+		return $this->hasNonZeroValue($data, 'adjustment_positive')
+			|| $this->hasNonZeroValue($data, 'adjustment_negative');
+	}
+
+	private function hasNonZeroValue(array $data, string $key): bool
+	{
+		if (!array_key_exists($key, $data) || $data[$key] === null || $data[$key] === '') {
+			return false;
+		}
+		return abs((float)$data[$key]) > 0.0;
 	}
 
 	private function applySurcharge(Creditmemo $creditmemo, Order $order): void
@@ -58,7 +67,7 @@ class CreditmemoSurchargeAdjustment
 			return;
 		}
 
-		$alreadyRefunded = 0.0;
+		$alreadyRefunded = (float)$creditmemo->getAdjustmentPositive();
 		foreach ($order->getCreditmemosCollection() as $existing) {
 			$alreadyRefunded += (float)$existing->getAdjustmentPositive();
 		}
