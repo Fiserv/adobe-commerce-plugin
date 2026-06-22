@@ -28,8 +28,11 @@ class InvoiceSurchargeAdjustment
 			return;
 		}
 
-		$gap = round((float)$order->getGrandTotal() - (float)$subject->getGrandTotal(), 4);
-		$baseGap = round((float)$order->getBaseGrandTotal() - (float)$subject->getBaseGrandTotal(), 4);
+		$remainingOrderTotal = (float)$order->getGrandTotal() - (float)$order->getTotalInvoiced();
+		$remainingBaseOrderTotal = (float)$order->getBaseGrandTotal() - (float)$order->getBaseTotalInvoiced();
+
+		$gap = round($remainingOrderTotal - (float)$subject->getGrandTotal(), 4);
+		$baseGap = round($remainingBaseOrderTotal - (float)$subject->getBaseGrandTotal(), 4);
 
 		$bump = min(max($gap, 0), $surcharge);
 		$baseBump = min(max($baseGap, 0), $surcharge);
