@@ -5,17 +5,12 @@
  */
 namespace Fiserv\Payments\Model\Plugin\CommerceHub;
 
+use Fiserv\Payments\Gateway\Response\CommerceHub\SurchargeResponseHandler;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Creditmemo;
 use Magento\Sales\Model\Order\CreditmemoFactory;
 use Magento\Sales\Model\Order\Invoice;
 
-/**
- * Previously auto-filled the Adjustment Refund field with the surcharge amount.
- * That behaviour has been removed: the Adjustment Fee field is now left blank
- * and an "Estimated Surcharge Fee Refund" read-only line item is displayed above
- * Grand Total instead (rendered by SurchargeEstimate block / template).
- */
 class CreditmemoSurchargeAdjustment
 {
 	public function afterCreateByOrder(
@@ -24,6 +19,7 @@ class CreditmemoSurchargeAdjustment
 		Order $order,
 		array $data = []
 	) {
+		$this->applyEstimatedSurchargeToGrandTotal($result, $order);
 		return $result;
 	}
 
@@ -33,6 +29,37 @@ class CreditmemoSurchargeAdjustment
 		Invoice $invoice,
 		array $data = []
 	) {
+		$this->applyEstimatedSurchargeToGrandTotal($result, $invoice->getOrder());
 		return $result;
+	}
+
+	private function applyEstimatedSurchargeToGrandTotal(Creditmemo $creditmemo, Order $order): void
+	{
+		$payment = $order->getPayment();
+		if (!$payment) {
+			return;
+		}
+
+		$surcharge = (float)$payment->getAdditionalInformation(SurchargeResponseHandler::SURCHARGE_AMOUNT_KEY);
+		if ($surcharge <= 0) {
+			return;
+		}
+
+		$orderGrandTotal = (float)$order->getGrandTotal();
+		$baseAmount = $orderGrandTotal - $surcharge; // non-surcharge portion of the order
+
+		if ($baseAmount <= 0) {
+			return;
+		}
+
+		$creditMemoTotal = (float)$creditmemo->getGrandTotal();
+		$estimate = round($creditMemoTotal * $surcharge / $baseAmount, 4);
+
+		if ($estimate <= 0) {
+			return;
+		}
+
+		$creditmemo->setGrandTotal($creditMemoTotal + $estimate);
+		$creditmemo->setBaseGrandTotal((float)$creditmemo->getBaseGrandTotal() + $estimate);
 	}
 }

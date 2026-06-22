@@ -16,14 +16,7 @@ use Magento\Payment\Gateway\Response\HandlerInterface;
 class SurchargeResponseHandler implements HandlerInterface
 {
 	const SURCHARGE_AMOUNT_KEY = 'surcharge_amount';
-
-	/**
-	 * How much of the surcharge has been captured / refunded so far. These mirror the
-	 * core order.shipping_invoiced / order.shipping_refunded counters and let secondary
-	 * transactions draw the surcharge down greedily, exactly like shipping.
-	 */
 	const SURCHARGE_INVOICED_KEY = 'surcharge_invoiced';
-	const SURCHARGE_REFUNDED_KEY = 'surcharge_refunded';
 
 	/** @var SubjectReader */
 	private $subjectReader;
@@ -44,7 +37,6 @@ class SurchargeResponseHandler implements HandlerInterface
 		$this->config = $config;
 	}
 
-	/** @inheritdoc */
 	public function handle(array $handlingSubject, array $response)
 	{
 		$paymentDO = $this->subjectReader->readPayment($handlingSubject);
