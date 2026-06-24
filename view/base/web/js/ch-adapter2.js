@@ -177,8 +177,12 @@ define([
                 if (formData.sdkInitialized) {
                     return Promise.resolve();
                 }
+                const storeUrl = formData.config.storeUrl ||
+                    (window.checkoutConfig && window.checkoutConfig.payment &&
+                        window.checkoutConfig.payment.fiserv_payments &&
+                        window.checkoutConfig.payment.fiserv_payments.storeUrl) || '';
                 return new Promise((resolve, reject) => {
-                    this.getChCredentials(formData.config.storeUrl, resolve, reject);
+                    this.getChCredentials(storeUrl, resolve, reject);
                 }).then(async (creds) => {
                     formData.credentials = creds;
                     formData.fiservContext = await this.initSdk(
