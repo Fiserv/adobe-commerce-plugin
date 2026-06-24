@@ -35,6 +35,9 @@ define([
 		prodEnv: "PROD",
 		certEnv: "CERT",
 		forms: {},
+        // Module-level flag: has window.fiserv.init() been called this page session?
+        // SDK v4 requires init() to be called exactly once before any other SDK call.
+        sdkInitialized: false,
 
 		initializeForm: function (config, iframeReadyCallback, iframeValidCallback, cardBrandChangeCallback, fieldValidityHandler, fieldFocusHandler) {
 			let idx = Object.keys(this.forms).length + 1;
@@ -86,11 +89,25 @@ define([
                 sessionId: creds[this.sessionIdKey]
             };
 
+            // SDK v4: window.fiserv.init() must be called once per page session BEFORE
+            // any other SDK API (including FiservContext.getInstance). Guard with module-level flag.
+            if (!this.sdkInitialized) {
+                await window.fiserv.init(initPayload);
+                this.sdkInitialized = true;
+            }
+
+            // After global init, use per-form FiservContext for multi-form isolation.
             if (contextId && window.fiserv && window.fiserv.FiservContext) {
                 const FiservContext = window.fiserv.FiservContext;
-                let ctx = (typeof FiservContext.getInstance === 'function')
-                    ? FiservContext.getInstance(contextId)
-                    : undefined;
+                let ctx;
+                try {
+                    ctx = (typeof FiservContext.getInstance === 'function')
+                        ? FiservContext.getInstance(contextId)
+                        : undefined;
+                } catch (e) {
+                    // getInstance may throw if context doesn't exist yet — treat as "not found"
+                    ctx = undefined;
+                }
                 if (!ctx) {
                     ctx = await FiservContext.load(contextId);
                 }
@@ -100,7 +117,6 @@ define([
                 }
             }
 
-            await window.fiserv.init(initPayload);
             return null;
         },
 
