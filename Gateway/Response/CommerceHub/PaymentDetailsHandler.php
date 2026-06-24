@@ -5,42 +5,78 @@
  */
 namespace Fiserv\Payments\Gateway\Response\CommerceHub;
 
-use Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient;
 use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use Magento\Payment\Gateway\Response\HandlerInterface;
+use Magento\Sales\Api\Data\OrderPaymentInterface;
 
+/**
+ * Class PaymentDetailsHandler
+ */
 class PaymentDetailsHandler implements HandlerInterface
 {
 	const API_TRACE_ID = "apiTraceId";
 	const KEY_AMOUNT = "amount";
+	const KEY_ORDER_ID = "orderId";
 	const TXN_TIMESTAMP = "txnTimestamp";
 
-	/** @var SubjectReader */
+	private $amountPath = array( "total" => "paymentReceipt", "approvedAmount" );
+
+	/**
+	 * @var SubjectReader
+	 */
 	private $subjectReader;
 
-	public function __construct(SubjectReader $subjectReader)
-	{
+	/**
+	 * Constructor
+	 *
+	 * @param SubjectReader $subjectReader
+	 */
+	public function __construct(
+		SubjectReader $subjectReader
+	) {
 		$this->subjectReader = $subjectReader;
 	}
 
+	/**
+	 * @inheritdoc
+	 */
 	public function handle(array $handlingSubject, array $response)
 	{
 		$paymentDO = $this->subjectReader->readPayment($handlingSubject);
 		$payment = $paymentDO->getPayment();
 
-		$chResponse = $this->subjectReader->readChResponse($response)[HttpClient::RESPONSE_KEY];
+		$chResponse = $this->subjectReader->readChResponse($response)[\Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient::RESPONSE_KEY];
+
 		$tnxDetails = $chResponse["gatewayResponse"]["transactionProcessingDetails"];
 
-		$payment->setLastTransId($tnxDetails["transactionId"]);
-		$payment->setTransactionId($tnxDetails["transactionId"]);
+		$transId = $tnxDetails["transactionId"];
+		$payment->setLastTransId($transId);
+		$payment->setTransactionId($transId);
+
 		$payment->setShouldCloseParentTransaction(false);
 		$payment->setIsTransactionClosed(false);
-		$payment->setTransactionAdditionalInfo(self::API_TRACE_ID, $tnxDetails["apiTraceId"]);
 
-        $amount = $chResponse["paymentReceipt"]["approvedAmount"]["total"] ?? null;
+		$payment->setTransactionAdditionalInfo(
+			self::API_TRACE_ID,
+			$tnxDetails["apiTraceId"]
+		);
 
-		if ($amount !== null) {
-			$payment->setTransactionAdditionalInfo(self::KEY_AMOUNT, (float)$amount);
+		$payment->setTransactionAdditionalInfo(
+			self::KEY_ORDER_ID,
+			$tnxDetails["orderId"]
+		);
+
+		$amount = null;
+		if(isset($chResponse["transaction"]["paymentReceipt"]["approvedAmount"])){
+			$amount = $chResponse["transaction"]["paymentReceipt"]["approvedAmount"]['total'] ?? null;
+		} elseif (isset($chResponse["paymentReceipt"]["approvedAmount"])){
+			$amount = $chResponse["paymentReceipt"]["approvedAmount"]['total'] ?? null;
+		}
+		if ($amount !== null){
+			$payment->setTransactionAdditionalInfo(
+				self::KEY_AMOUNT,
+				(float)$amount
+			);
 		}
 	}
 }
