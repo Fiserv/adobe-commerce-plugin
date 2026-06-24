@@ -89,34 +89,25 @@ define([
                 sessionId: creds[this.sessionIdKey]
             };
 
-            // SDK v4: window.fiserv.init() must be called once per page session BEFORE
-            // any other SDK API (including FiservContext.getInstance). Guard with module-level flag.
+            if (contextId && window.fiserv && window.fiserv.FiservContext) {
+                try {
+                    const ctx = await window.fiserv.FiservContext.load(contextId);
+                    if (ctx && typeof ctx.init === 'function') {
+                        await ctx.init(initPayload);
+                        return ctx;
+                    }
+                } catch (e) {
+                    console.warn('[ch-adapter2] FiservContext.load() failed, falling back to global init:', e);
+                    // Fall through to window.fiserv.init() below
+                }
+            }
+
+            // Fallback: global window.fiserv.init() used when FiservContext is unavailable
+            // or not supported. SDK v4 requires this to be called exactly once per page session.
             if (!this.sdkInitialized) {
                 await window.fiserv.init(initPayload);
                 this.sdkInitialized = true;
             }
-
-            // After global init, use per-form FiservContext for multi-form isolation.
-            if (contextId && window.fiserv && window.fiserv.FiservContext) {
-                const FiservContext = window.fiserv.FiservContext;
-                let ctx;
-                try {
-                    ctx = (typeof FiservContext.getInstance === 'function')
-                        ? FiservContext.getInstance(contextId)
-                        : undefined;
-                } catch (e) {
-                    // getInstance may throw if context doesn't exist yet — treat as "not found"
-                    ctx = undefined;
-                }
-                if (!ctx) {
-                    ctx = await FiservContext.load(contextId);
-                }
-                if (ctx && typeof ctx.init === 'function') {
-                    await ctx.init(initPayload);
-                    return ctx;
-                }
-            }
-
             return null;
         },
 
