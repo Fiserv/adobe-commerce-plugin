@@ -78,11 +78,13 @@ class SurchargeResponseHandler implements HandlerInterface
 
 		$baseCurrency = $order->getBaseCurrency();
 		$surchargeFormatted = $baseCurrency ? $baseCurrency->formatTxt($surcharge) : (string)$surcharge;
+		$originalGrandTotalFormatted = $baseCurrency ? $baseCurrency->formatTxt($originalGrandTotal) : (string)$originalGrandTotal;
 		$newGrandTotalFormatted = $baseCurrency ? $baseCurrency->formatTxt($newGrandTotal) : (string)$newGrandTotal;
 		$order->addCommentToStatusHistory(
 			sprintf(
 				'Surcharge applied by gateway: %s. Previous order total: %s. Updated order total: %s',
 				$surchargeFormatted,
+				$originalGrandTotalFormatted,
 				$newGrandTotalFormatted
 			)
 		);
