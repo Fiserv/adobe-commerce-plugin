@@ -36,10 +36,6 @@ class SurchargeEstimate extends \Magento\Sales\Block\Adminhtml\Order\Totals\Item
         return $invoice ? $invoice->getOrder() : null;
     }
 
-    /**
-     * Remaining surcharge that this invoice will carry: the full surcharge captured at
-     * authorization minus any portion already invoiced. Returns null when none applies.
-     */
     public function getSurchargeAmount(): ?float
     {
         $order = $this->getOrder();
@@ -63,10 +59,6 @@ class SurchargeEstimate extends \Magento\Sales\Block\Adminhtml\Order\Totals\Item
         return $remaining > 0 ? $remaining : null;
     }
 
-    /**
-     * Registers a "Surcharge" totals row just before Grand Total and bumps the displayed
-     * grand total to include it. Display-only: affects the preview page exclusively.
-     */
     public function initTotals(): self
     {
         $surcharge = $this->getSurchargeAmount();
