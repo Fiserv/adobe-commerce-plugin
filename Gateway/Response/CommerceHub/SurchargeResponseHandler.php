@@ -17,6 +17,7 @@ class SurchargeResponseHandler implements HandlerInterface
 {
 	const SURCHARGE_AMOUNT_KEY = 'surcharge_amount';
 	const SURCHARGE_INVOICED_KEY = 'surcharge_invoiced';
+	const SURCHARGE_CAPTURED_KEY = 'surcharge_capture_amount';
 
 	/** @var SubjectReader */
 	private $subjectReader;
@@ -48,11 +49,20 @@ class SurchargeResponseHandler implements HandlerInterface
 		if (!$this->config->isSurchargeEnabled((int)$order->getStoreId())) {return;}
 
 		$alreadyApplied = $payment->getAdditionalInformation(self::SURCHARGE_AMOUNT_KEY);
+
+		$chResponse = $this->subjectReader->readChResponse($response)[HttpClient::RESPONSE_KEY];
+
 		if ($alreadyApplied !== null && (float)$alreadyApplied > 0) {
+			// Surcharge was already applied during auth — do not modify order totals again.
+			// Store the capture-specific surcharge so SurchargeAuthorizationComment can
+			// correct the "Captured amount of $X" comment to show the actual gateway total.
+			$captureSurcharge = $this->extractSurcharge($chResponse);
+			if ($captureSurcharge !== null && $captureSurcharge > 0) {
+				$payment->setAdditionalInformation(self::SURCHARGE_CAPTURED_KEY, $captureSurcharge);
+			}
 			return;
 		}
 
-		$chResponse = $this->subjectReader->readChResponse($response)[HttpClient::RESPONSE_KEY];
 
 		$surcharge = $this->extractSurcharge($chResponse);
 		if ($surcharge === null || $surcharge <= 0) {
