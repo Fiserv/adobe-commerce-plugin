@@ -7,6 +7,7 @@
 					<argument name="param" xsi:type="string">customerbalance</argument>
 				</action>
 			</block>
+			<block class="Fiserv\Payments\Block\Sales\Order\Adminhtml\Surcharge" name="fiserv_surcharge" template="Fiserv_Payments::sales/order/totals/surcharge.phtml" cacheable="false"/>
 		</referenceBlock>
 	</body>
 </page>

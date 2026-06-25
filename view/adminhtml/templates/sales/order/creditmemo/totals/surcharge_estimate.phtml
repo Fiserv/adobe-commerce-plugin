@@ -1,0 +1,19 @@
+<?php
+/** Admin credit memo totals – Estimated Surcharge Fee Refund line item. */
+
+$estimated = $block->getEstimatedSurchargeRefund();
+$order     = $block->getOrder();
+?>
+<?php if ($estimated && $order): ?>
+<tr class="fiserv-surcharge-estimate totals">
+    <td class="label">
+        <strong><?= $block->escapeHtml(__('Estimated Surcharge Refund')) ?></strong>
+    </td>
+    <td>
+        <span class="price" style="color:#555;font-style:italic;">
+            <?= /* @noEscape */ $order->formatPrice($estimated) ?>
+        </span>
+    </td>
+</tr>
+<?php endif; ?>
+
