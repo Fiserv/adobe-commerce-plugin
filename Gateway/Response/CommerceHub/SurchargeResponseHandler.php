@@ -47,6 +47,11 @@ class SurchargeResponseHandler implements HandlerInterface
 		if (!$order) {return;}
 		if (!$this->config->isSurchargeEnabled((int)$order->getStoreId())) {return;}
 
+		$alreadyApplied = $payment->getAdditionalInformation(self::SURCHARGE_AMOUNT_KEY);
+		if ($alreadyApplied !== null && (float)$alreadyApplied > 0) {
+			return;
+		}
+
 		$chResponse = $this->subjectReader->readChResponse($response)[HttpClient::RESPONSE_KEY];
 
 		$surcharge = $this->extractSurcharge($chResponse);
