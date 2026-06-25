@@ -66,7 +66,7 @@ define(
 			 * @returns {exports.initialize}
 			 */
 			initialize: async function () {
-					quote.billingAddress.subscribe(function (address) {
+				quote.billingAddress.subscribe(function (address) {
 					this.isPlaceOrderActionAllowed(address !== null);
 					if (this.isSurchargeEnabled()) {
 						this.clearSurcharge();
@@ -156,6 +156,26 @@ define(
 					country: billingAddress.countryId || ''
 				};
 			},
+
+		/** This function is built out for surcharge estimation, which requires a nested billing address object.*/
+		buildEstimateBillingAddress: function() {
+			const billingAddress = quote.billingAddress();
+			if (!billingAddress) {
+				return undefined;
+			}
+			return {
+				firstName: billingAddress.firstname,
+				lastName: billingAddress.lastname,
+				address: {
+					street: (billingAddress.street && billingAddress.street[0]) ,
+					houseNumberOrName: (billingAddress.street && billingAddress.street[1]),
+					city: billingAddress.city,
+					stateOrProvince: billingAddress.regionCode || billingAddress.region,
+					postalCode: billingAddress.postcode,
+					country: billingAddress.countryId
+				}
+			};
+		},
 
 			iframeLoadSuccess: function(data) {
 				this.endIframeFlow();
@@ -634,7 +654,8 @@ define(
 					tax: quoteTotals ? quoteTotals.tax_amount : 'N/A',
 					grand_total: quoteTotals ? quoteTotals.grand_total : 'N/A'
 				}));
-				const credsResponse = await chSession({ 'threeDSecure': false });
+				const billingAddress = this.buildEstimateBillingAddress();
+				const credsResponse = await chSession({ 'threeDSecure': false, billingAddress });
 				const creds = credsResponse['ch_credentials'];
 				await chAdapter.initSdk(
 					window.checkoutConfig.payment[this.code],
