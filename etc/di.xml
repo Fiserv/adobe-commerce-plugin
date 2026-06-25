@@ -407,6 +407,7 @@
 	</type>
 	<type name="Magento\Sales\Model\Order\Payment">
 		<plugin name="valueLinkPaymentPlace" type="Fiserv\Payments\Model\Plugin\Valuelink\PaymentPlace" />
+		<plugin name="fiservSurchargeAuthorizationComment" type="Fiserv\Payments\Model\Plugin\CommerceHub\SurchargeAuthorizationComment" sortOrder="200"/>
 	</type>
 	<type name="Magento\Sales\Model\Order\CreditmemoFactory">
 		<plugin name="commerceHubCreditmemoSurchargeAdjustment" type="Fiserv\Payments\Model\Plugin\CommerceHub\CreditmemoSurchargeAdjustment" sortOrder="100"/>
