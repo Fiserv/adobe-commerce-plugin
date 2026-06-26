@@ -704,9 +704,16 @@ define(
 			}
 		},
 
-			clearSurcharge: function() {
-				surchargeModel.surchargeData(null);
-			},
+		clearSurcharge: function() {
+			surchargeModel.surchargeData(null);
+		},
+
+		changeCard: function() {
+			this.clearSurcharge();
+			this.surchargeConfirmed(false);
+			this.checkoutValidHandler();
+			return false;
+		},
 
 
 			enableContinueButton: function() {

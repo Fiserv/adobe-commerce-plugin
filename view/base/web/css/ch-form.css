@@ -151,6 +151,26 @@
 	border-width: 2px;
 }
 
+.sdc-card-fields-wrapper {
+	position: relative;
+}
+
+.sdc-fields-locked {
+	pointer-events: none;
+	opacity: 0.6;
+	user-select: none;
+}
+
+.sdc-change-card-row {
+	margin-bottom: 0.75rem;
+}
+
+.sdc-change-card-link {
+	font-size: 13px;
+	text-decoration: underline;
+	cursor: pointer;
+}
+
 .privacyPolicy {
 	display: flex;
 	align-items: center;

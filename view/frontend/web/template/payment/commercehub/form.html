@@ -16,63 +16,71 @@
 			<!--/ko-->
 		</div>
 
-		<div class="sdc-row">
-			<div id="sdc-card-number-frame" class="sdc-field-frame sdc-text">
-				<div id="sdc-card-brand-icon" class="sdc-card-brand-icon"></div>
-				<div data-bind="attr: {'id': getCode() + '-card-number'}" class="sdc-field"></div>
-				<!-- ko if: (checkNumberMask())-->
-					<button 
-						id="sdc-unmask-number" 
-						class="sdc-unmasking-icon"
-						data-bind="click: unmaskCardNumber">
-					</button>
-				<!-- /ko -->
-				<button
-					id="sdc-mask-number"
-					class="sdc-masking-icon sdc-hidden"
-					data-bind="click: maskCardNumber">
-				</button>
-			</div>
-			<span id="sdc-card-number-invalid-message" class="sdc-error-message sdc-hidden"></span>
-		</div>
-		<div class="sdc-row">
-			<div id="sdc-card-name-frame" class="sdc-field-frame sdc-text">
-				<div data-bind="attr: {'id': getCode() + '-name-on-card'}" class="sdc-field"></div>
-			</div>
-			<span id="sdc-card-name-invalid-message" class="sdc-error-message sdc-hidden"></span>
-		</div>
-		<div class="sdc-row">
-			<div id="sdc-security-code-frame" class="sdc-field-frame sdc-text">
-				<div data-bind="attr: {'id': getCode() + '-security-code'}" class="sdc-field"></div>
-				<!-- ko if: (checkSecurityMask())-->
+		<div class="sdc-card-fields-wrapper" data-bind="css: {'sdc-fields-locked': isSurchargeEnabled() && surchargeConfirmed()}">
+			<div class="sdc-row">
+				<div id="sdc-card-number-frame" class="sdc-field-frame sdc-text">
+					<div id="sdc-card-brand-icon" class="sdc-card-brand-icon"></div>
+					<div data-bind="attr: {'id': getCode() + '-card-number'}" class="sdc-field"></div>
+					<!-- ko if: (checkNumberMask())-->
+						<button
+							id="sdc-unmask-number"
+							class="sdc-unmasking-icon"
+							data-bind="click: unmaskCardNumber">
+						</button>
+					<!-- /ko -->
 					<button
-						id="sdc-unmask-security"
-						class="sdc-unmasking-icon"
-						data-bind="click: unmaskSecurityCode">
+						id="sdc-mask-number"
+						class="sdc-masking-icon sdc-hidden"
+						data-bind="click: maskCardNumber">
 					</button>
-				<!-- /ko -->
-				<button
-					id="sdc-mask-security"
-					class="sdc-masking-icon sdc-hidden"
-					data-bind="click: maskSecurityCode">
-				</button>
-			</div>
-			<span id="sdc-security-code-invalid-message" class="sdc-error-message sdc-hidden"></span>
-		</div>
-		<div class="sdc-column">
-			<div class="sdc-row">
-				<div id="sdc-exp-month-frame" class="sdc-field-frame sdc-dropdown">
-					<div data-bind="attr: {'id': getCode() + '-expiration-month'}" class="sdc-field"></div>
 				</div>
-				<span id="sdc-exp-month-invalid-message" class="sdc-error-message sdc-hidden"></span>
+				<span id="sdc-card-number-invalid-message" class="sdc-error-message sdc-hidden"></span>
 			</div>
 			<div class="sdc-row">
-				<div id="sdc-exp-year-frame" class="sdc-field-frame sdc-dropdown">
-					<div data-bind="attr: {'id': getCode() + '-expiration-year'}, afterRender: loadSdcForm" class="sdc-field"></div>
+				<div id="sdc-card-name-frame" class="sdc-field-frame sdc-text">
+					<div data-bind="attr: {'id': getCode() + '-name-on-card'}" class="sdc-field"></div>
 				</div>
-				<span id="sdc-exp-year-invalid-message" class="sdc-error-message sdc-hidden"></span>
+				<span id="sdc-card-name-invalid-message" class="sdc-error-message sdc-hidden"></span>
+			</div>
+			<div class="sdc-row">
+				<div id="sdc-security-code-frame" class="sdc-field-frame sdc-text">
+					<div data-bind="attr: {'id': getCode() + '-security-code'}" class="sdc-field"></div>
+					<!-- ko if: (checkSecurityMask())-->
+						<button
+							id="sdc-unmask-security"
+							class="sdc-unmasking-icon"
+							data-bind="click: unmaskSecurityCode">
+						</button>
+					<!-- /ko -->
+					<button
+						id="sdc-mask-security"
+						class="sdc-masking-icon sdc-hidden"
+						data-bind="click: maskSecurityCode">
+					</button>
+				</div>
+				<span id="sdc-security-code-invalid-message" class="sdc-error-message sdc-hidden"></span>
+			</div>
+			<div class="sdc-column">
+				<div class="sdc-row">
+					<div id="sdc-exp-month-frame" class="sdc-field-frame sdc-dropdown">
+						<div data-bind="attr: {'id': getCode() + '-expiration-month'}" class="sdc-field"></div>
+					</div>
+					<span id="sdc-exp-month-invalid-message" class="sdc-error-message sdc-hidden"></span>
+				</div>
+				<div class="sdc-row">
+					<div id="sdc-exp-year-frame" class="sdc-field-frame sdc-dropdown">
+						<div data-bind="attr: {'id': getCode() + '-expiration-year'}, afterRender: loadSdcForm" class="sdc-field"></div>
+					</div>
+					<span id="sdc-exp-year-invalid-message" class="sdc-error-message sdc-hidden"></span>
+				</div>
 			</div>
 		</div>
+
+		<!-- ko if: isSurchargeEnabled() && surchargeConfirmed() -->
+		<div class="sdc-change-card-row">
+			<a href="#" class="sdc-change-card-link" data-bind="click: changeCard, clickBubble: false" translate="'Change card details'"></a>
+		</div>
+		<!-- /ko -->
 
 		<!-- ko if: (isVaultEnabled())-->
 			<div class="field choice">
