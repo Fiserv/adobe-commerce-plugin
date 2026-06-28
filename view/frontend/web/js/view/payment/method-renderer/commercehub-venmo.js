@@ -170,7 +170,13 @@ define([
                             } catch (error) {
                                 email = '';
                             }
-                            this.additionalData.paypal_order_id = data.orderId;
+                            // SDK v4 (breaking): "paypalData" renamed to "providerData" for cross-component
+                            // consistency. orderId may now be on data.providerData; fall back to data.orderId
+                            // for backward compatibility.
+                            this.additionalData.paypal_order_id =
+                                (data && data.providerData && data.providerData.orderId)
+                                || (data && data.orderId)
+                                || null;
                             this.additionalData.email = email;
                             // Use inherited placeOrder method to trigger Magento's default flow
                             this.placeOrder('parent');
