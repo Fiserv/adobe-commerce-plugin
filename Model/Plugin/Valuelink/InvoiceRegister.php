@@ -17,6 +17,8 @@ use Fiserv\Payments\Gateway\Config\Valuelink\Config; // Import Config class
  */
 class InvoiceRegister
 {
+	private const CAPTURE_DELAY_MICROSECONDS = 100000;
+
 	protected $orderHelper;
 	protected $invoiceHelper;
 	protected $logger;
@@ -81,8 +83,13 @@ class InvoiceRegister
 			{
 				$authOrder = $this->invoiceHelper->getAuthCaptureSequence($valuelinkInvoiceAmount, $balancedAuths);
 				$totalCaptured = 0;
-				foreach ($authOrder as $auth)
+				foreach ($authOrder as $index => $auth)
 				{
+					if ($index > 0)
+					{
+						usleep(self::CAPTURE_DELAY_MICROSECONDS);
+					}
+
 					$capture = $this->valuelinkTransactionManager->captureValuelinkTransaction($subject, $auth["auth"], $auth["captureAmount"], $auth["captures"], $auth["final"]);
 					array_push($captures, $capture);
 				}

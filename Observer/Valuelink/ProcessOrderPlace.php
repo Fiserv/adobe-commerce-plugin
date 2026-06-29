@@ -47,6 +47,8 @@ class ProcessOrderPlace implements ObserverInterface
 
 	private $valuelinkResource;
 
+	private const TRANSACTION_DELAY_MICROSECONDS = 100000;
+
     /**
      * @param \Magento\GiftCardAccount\Helper\Data $giftCAHelper
      * @param \Fiserv\Payments\Model\Valuelink\ValuelinkTransactionFactory $valuelinkTxnFactory
@@ -121,8 +123,11 @@ class ProcessOrderPlace implements ObserverInterface
 			$chargedTxns = array();
 			try
 			{
-				foreach($valuelinkCards as $card)
+				foreach($valuelinkCards as $index => $card)
 				{
+					if ($index > 0)
+						usleep(self::TRANSACTION_DELAY_MICROSECONDS);
+
 					$this->valuelinkTxnManager->chargeValuelinkCard($order, ValuelinkQuoteRecord::createFromArray($card));
 					$txns = $this->valuelinkResource->getByChRequestLike($card['sessionId']);
 					array_push($chargedTxns, $txns);
@@ -132,8 +137,11 @@ class ProcessOrderPlace implements ObserverInterface
 			{
 				$this->logger->logError(1, "Gift Card charge failed. Reverting...");
 
-				foreach ($chargedTxns as $txn)
+				foreach ($chargedTxns as $index => $txn)
 				{
+					if ($index > 0)
+						usleep(self::TRANSACTION_DELAY_MICROSECONDS);
+
 					try {
 						$this->valuelinkTxnManager->cancelValuelinkTransaction($order, $txn[0]);
 					} catch (\Exception $cancelEx) {
