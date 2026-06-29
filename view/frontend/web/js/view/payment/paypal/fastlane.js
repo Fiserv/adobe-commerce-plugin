@@ -47,7 +47,9 @@ define([
 			fullScreenLoader.startLoader();
 
 			try {
-				const paypal = await window.fiserv.components.paypal();
+			const paypal = await window.fiserv.components.paypal(
+				chAdapter.contextId ? { contextId: chAdapter.contextId } : undefined
+			);
 
 				window.braintree = window.braintree || {};
 				window.braintree.client = chBraintreeClient;
@@ -125,10 +127,11 @@ define([
 				}
 			});
 
-			return await window.fiserv.components.address({
-				fields: fields,
-				hooks: {}
-			});
+		return await window.fiserv.components.address({
+			...(chAdapter.contextId ? { contextId: chAdapter.contextId } : {}),
+			fields: fields,
+			hooks: {}
+		});
 		},
 
 		authenticateEmailForFastlane: async function () {

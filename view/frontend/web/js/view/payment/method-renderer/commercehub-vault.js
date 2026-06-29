@@ -411,7 +411,9 @@ define([
 		},
 
 		run3DSecure: async function() {
-			const {transactionState, authenticationTransactionId} = await window.fiserv.components.threeDSecure();
+			const {transactionState, authenticationTransactionId} = await window.fiserv.components.threeDSecure(
+				chAdapter.contextId ? { contextId: chAdapter.contextId } : undefined
+			);
 			if (transactionState.toUpperCase() === "DECLINED") {
 				throw new Error("3D-Secure authentication failure.");
 			}

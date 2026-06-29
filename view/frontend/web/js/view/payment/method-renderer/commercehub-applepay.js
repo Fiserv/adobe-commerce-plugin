@@ -40,11 +40,11 @@ define([
     	initialize: async function () {
     		this._super();
             this.observeBillingAddress();
-		
+
 		    return this;
         },
 
-    	initializeApplePay: async function () 
+    	initializeApplePay: async function ()
     	{
 		// stop-gap until checkouts team fixes amount caching issue
 		let fastlaneAmount = window.checkoutConfig?.payment?.fiserv_paypal_fastlane?.initializedAmount;
@@ -76,16 +76,16 @@ define([
 		quote.totals.subscribe( (totals) => {
 			if (
 				this.getCode() === this.isChecked() &&
-				this.initializedAmount && 
-				this.initializedAmount > 0.00 && 
-				totals && 
-				totals['grand_total'] && 
+				this.initializedAmount &&
+				this.initializedAmount > 0.00 &&
+				totals &&
+				totals['grand_total'] &&
 				totals['grand_total'] != this.initializedAmount) {
 				location.reload();
 			}
 		});
 	},
-	    
+
     loadApplePayForm: async function () {
  		const config = window.checkoutConfig.payment[this.getCode()];
 		try {
@@ -100,11 +100,12 @@ define([
 
 			this.paymentPayload.sessionId = creds.ch_credentials.sessionId;
 			await chAdapter.initSdk(config, creds.ch_credentials);
-				
+
             const buttonStyle = config.applepayButtonStyle ?? 'black';
             const buttonType = config.applepayButtonType ?? 'buy';
-			await window.fiserv.components.applePay({
-				data: {
+		await window.fiserv.components.applePay({
+			...(chAdapter.contextId ? { contextId: chAdapter.contextId } : {}),
+			data: {
 					button: {
 						parentElementId: "applepay-button-container",
 						color: buttonStyle,
