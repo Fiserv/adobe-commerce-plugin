@@ -11,6 +11,8 @@ use Fiserv\Payments\Logger\MultiLevelLogger;
 
 class PaymentPlace
 {
+	private const TRANSACTION_DELAY_MICROSECONDS = 100000;
+
 	protected $eventManager;
 	protected $logger;
 	protected $orderHelper;
@@ -84,8 +86,11 @@ class PaymentPlace
 		$captures = [];
 		$authorizations = [];
 
-		foreach ($transactions as $transaction)
+		foreach ($transactions as $index => $transaction)
 		{
+			if ($index > 0)
+				usleep(self::TRANSACTION_DELAY_MICROSECONDS);
+
 			$transactionState = $transaction[ValuelinkTransaction::KEY_TRANSACTION_STATE];
 
 			if ($transactionState === ValuelinkTransaction::CAPTURED_STATE)
