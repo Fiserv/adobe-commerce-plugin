@@ -167,9 +167,6 @@ define([
                             } catch (error) {
                                 email = '';
                             }
-                            // SDK v4 (breaking): "paypalData" renamed to "providerData" for cross-component
-                            // consistency. orderId may now be on data.providerData; fall back to data.orderId
-                            // for backward compatibility.
                             this.additionalData.paypal_order_id =
                                 (data && data.providerData && data.providerData.orderId)
                                 || (data && data.orderId)

@@ -261,16 +261,6 @@ define([
 			return this.paypalComponent;
 		},
 
-		/**
-		 * Load Paze SDK (Step 4 of Paze documentation)
-		 * @param {Object} options - { displayName }
-		 * @returns {Promise<Object>} Paze component instance
-		 *
-		 * SDK 4.0.25 makes window.fiserv.init(...) mandatory for Paze.
-		 * Paze error code FAILED_TO_DECODE_PAZE_RESPONSE was also renamed
-		 * to UNEXPECTED_PROVIDER_RESPONSE — callers handling onError
-		 * should match against the new code.
-		 */
 		async loadPazeComponent(options) {
 			if (!window.fiserv || typeof window.fiserv.components.paze !== 'function') {
 				throw new Error('Fiserv SDK not loaded or window.fiserv.components.paze not available');

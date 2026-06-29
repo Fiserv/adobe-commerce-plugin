@@ -35,8 +35,6 @@ define([
 		prodEnv: "PROD",
 		certEnv: "CERT",
 		forms: {},
-        // Module-level flag: has window.fiserv.init() been called this page session?
-        // SDK v4 requires init() to be called exactly once before any other SDK call.
         sdkInitialized: false,
 
 		initializeForm: function (config, iframeReadyCallback, iframeValidCallback, cardBrandChangeCallback, fieldValidityHandler, fieldFocusHandler) {
@@ -98,12 +96,9 @@ define([
                     }
                 } catch (e) {
                     console.warn('[ch-adapter2] FiservContext.load() failed, falling back to global init:', e);
-                    // Fall through to window.fiserv.init() below
                 }
             }
 
-            // Fallback: global window.fiserv.init() used when FiservContext is unavailable
-            // or not supported. SDK v4 requires this to be called exactly once per page session.
             if (!this.sdkInitialized) {
                 await window.fiserv.init(initPayload);
                 this.sdkInitialized = true;
@@ -161,10 +156,11 @@ define([
 			return response[this.credentialsKey];
 		},
 
-        /**
-         * Instantiates CommerceHub iframe from provide script element.
-         */
-        instantiateIframe: function (
+		/**
+		 * Instantiates CommerceHub iframe
+		 * from provide script element
+		 */
+		instantiateIframe: function (
             formKey,
             paymentMethod,
             loadSuccessCb,
