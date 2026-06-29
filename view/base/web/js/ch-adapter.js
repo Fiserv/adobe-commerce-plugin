@@ -69,12 +69,6 @@ define([
 				this.contextId = contextId;
 			}
 
-			// SDK v4: window.fiserv.init() must be called exactly once per page session.
-			// Guard against re-initialization to comply with this requirement.
-			if (this.sdkInitialized) {
-				return this.fiservContext || null;
-			}
-
 			const initPayload = {
 				cspNonce: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : undefined,
 				environment: config.environment,
@@ -239,19 +233,6 @@ define([
 				});
 		},
 
-		async loadAffirmComponent(options) {
-			if (!window.fiserv || typeof window.fiserv.components.affirm !== 'function') {
-				throw new Error('Fiserv SDK not loaded or window.fiserv.components.affirm not available');
-			}
-
-			const mergedOptions = Object.assign({}, options || {});
-			if (this.contextId && mergedOptions.contextId === undefined) {
-				mergedOptions.contextId = this.contextId;
-			}
-
-			return await window.fiserv.components.affirm(mergedOptions);
-		},
-
 		/**
 		 * Load PayPal SDK
 		 * @param {Object} options - { customerId, intent }
@@ -276,10 +257,10 @@ define([
 		 * @param {Object} options - { displayName }
 		 * @returns {Promise<Object>} Paze component instance
 		 *
-		 * SDK v4 makes window.fiserv.init(...) mandatory for Paze.
-		 * Paze error code FAILED_TO_DECODE_PAZE_RESPONSE was renamed
-		 * to UNEXPECTED_PROVIDER_RESPONSE in SDK v4 — callers handling onError
-		 * must match against UNEXPECTED_PROVIDER_RESPONSE (not the old code).
+		 * SDK 4.0.25 makes window.fiserv.init(...) mandatory for Paze.
+		 * Paze error code FAILED_TO_DECODE_PAZE_RESPONSE was also renamed
+		 * to UNEXPECTED_PROVIDER_RESPONSE — callers handling onError
+		 * should match against the new code.
 		 */
 		async loadPazeComponent(options) {
 			if (!window.fiserv || typeof window.fiserv.components.paze !== 'function') {

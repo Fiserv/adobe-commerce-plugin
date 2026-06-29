@@ -215,29 +215,19 @@ define([
 					},
 					hooks: {
 						onApprove: (data) => {
-							// SDK v4: orderId is on the top-level data object for Affirm.
-							// Also check data.providerData for cross-component consistency
-							// introduced in SDK v4 (paypalData → providerData rename aligned all APMs).
-							const orderId = (data && data.orderId)
-								|| (data && data.providerData && data.providerData.orderId)
-								|| (data && data.id)
-								|| null;
-							this.additionalData.paypal_order_id = orderId;
+							this.additionalData.paypal_order_id = data.id || data.orderId;
 							this.additionalData.email = this.getCustomerEmail();
 							this.placeOrder('parent');
 						},
 						onError: (error) => {
-							// SDK v4 error codes may have shifted; log full error details for diagnosis.
-							const code = (error && error.code) || 'UNKNOWN';
-							const description = (error && (error.description || error.message)) || '';
-							console.error('[Affirm] SDK error', { code, description, error });
 							globalMessageList.addErrorMessage({
 								message: $t('Error during Affirm checkout')
 							});
 						},
 					},
 				};
-				await chAdapter.loadAffirmComponent(affirmPayload);
+
+				await globalThis.fiserv.components.affirm(affirmPayload);
 
 				const totals = quote.totals && quote.totals();
 				const grandTotal = totals ? totals.grand_total : undefined;

@@ -30,11 +30,6 @@ define(
 					}
 				};
 			});
-
-			return {
-				itemCount: items.length,
-				itemDetails: items
-			};
 		}
 
 		function getShippingAddress() {
@@ -96,7 +91,7 @@ define(
 			try {
 				return await session(payload);
 			} catch (error) {
-				throw new Error("An error occurred while creating the Affirm payment session.");
+				throw new Error("An error occurred while creating Commercehub Apple Pay payment session.");
 			}
 		};
 	}
