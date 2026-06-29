@@ -14,6 +14,8 @@ use Magento\Framework\Event\ObserverInterface;
 
 class CancelValuelinkTransactions implements ObserverInterface
 {
+	private const TRANSACTION_DELAY_MICROSECONDS = 100000;
+
 	private $valuelinkResource;
 	
 	private $valuelinkTransactionManager;
@@ -41,8 +43,11 @@ class CancelValuelinkTransactions implements ObserverInterface
 		$rawTxns = $this->valuelinkResource->getByOrderId($order->getId());
 		$rawAuths = $this->getAuthsToCancel($rawTxns);
 		
-		foreach ($rawAuths as $auth)
+		foreach ($rawAuths as $index => $auth)
 		{
+			if ($index > 0)
+				usleep(self::TRANSACTION_DELAY_MICROSECONDS);
+
 			$this->valuelinkTransactionManager->cancelValuelinkTransaction($order, $auth);
 		}	
 
