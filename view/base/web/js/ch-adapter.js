@@ -46,6 +46,7 @@ define([
 		contextId: undefined,
 		fiservContext: undefined,
 		sdkInitialized: false,
+		initializedSessionId: undefined,
 
 		initialize: function (config, iframeReadyCallback, iframeValidCallback, cardBrandChangeCallback, fieldValidityHandler, fieldFocusHandler, fieldValueChangeHandler) {
 			this.config = config;
@@ -60,6 +61,7 @@ define([
 		setContextId: function (contextId) {
 			this.contextId = contextId;
 			this.sdkInitialized = false;
+			this.initializedSessionId = undefined;
 			this.fiservContext = undefined;
 		},
 
@@ -67,6 +69,11 @@ define([
 		{
 			if (contextId) {
 				this.contextId = contextId;
+			}
+
+			const incomingSessionId = creds ? creds[this.sessionIdKey] : undefined;
+			if (this.sdkInitialized && incomingSessionId && this.initializedSessionId === incomingSessionId) {
+				return this.fiservContext || null;
 			}
 
 			const initPayload = {
@@ -93,12 +100,14 @@ define([
 					await ctx.init(initPayload);
 					this.fiservContext = ctx;
 					this.sdkInitialized = true;
+					this.initializedSessionId = incomingSessionId;
 					return ctx;
 				}
 			}
 
 			await window.fiserv.init(initPayload);
 			this.sdkInitialized = true;
+			this.initializedSessionId = incomingSessionId;
 			return null;
 		},
 
