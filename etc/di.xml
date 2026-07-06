@@ -204,6 +204,7 @@
 	<virtualType name="FiservCommerceHubAuthorizeRequest" type="Fiserv\Payments\Gateway\Request\CommerceHub\Composite\SessionAuthComposite">
 		<arguments>
 			<argument name="builders" xsi:type="array">
+				<item name="surcharge" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\SurchargeDataBuilder</item>
 				<item name="amount" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder</item>
 				<item name="source" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\SessionSourceDataBuilder</item>
 				<item name="auth_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AuthDetailsDataBuilder</item>
@@ -219,6 +220,7 @@
 	<virtualType name="FiservCommerceHubVaultAuthorizeRequest" type="Fiserv\Payments\Gateway\Request\CommerceHub\Composite\TokenAuthComposite">
 		<arguments>
 			<argument name="builders" xsi:type="array">
+				<item name="surcharge" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\SurchargeDataBuilder</item>
 				<item name="amount" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder</item>
 				<item name="source" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\TokenSourceDataBuilder</item>
 				<item name="auth_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AuthDetailsDataBuilder</item>
@@ -234,6 +236,7 @@
 	<virtualType name="FiservCommerceHubSaleRequest" type="Fiserv\Payments\Gateway\Request\CommerceHub\Composite\SessionSaleComposite">
 		<arguments>
 			<argument name="builders" xsi:type="array">
+				<item name="surcharge" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\SurchargeDataBuilder</item>
 				<item name="amount" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder</item>
 				<item name="source" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\SessionSourceDataBuilder</item>
 				<item name="sale_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\SaleDetailsDataBuilder</item>
@@ -249,6 +252,7 @@
 	<virtualType name="FiservCommerceHubVaultSaleRequest" type="Fiserv\Payments\Gateway\Request\CommerceHub\Composite\TokenSaleComposite">
 		<arguments>
 			<argument name="builders" xsi:type="array">
+				<item name="surcharge" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\SurchargeDataBuilder</item>
 				<item name="amount" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder</item>
 				<item name="source" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\TokenSourceDataBuilder</item>
 				<item name="auth_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\SaleDetailsDataBuilder</item>
