@@ -91,6 +91,9 @@ class AuthorizeResponseValidator extends TransactionResponseValidator
 		$orderIncrementId = $order->getOrderIncrementId();
 		$countryCode = $order->getBillingAddress()->getCountryId();
 
+		$payment = $this->subjectReader->readPayment($validationSubject)->getPayment();
+		$surchargeAmount = $payment->getAdditionalInformation('surcharge_estimate');
+
 		// Verify Status Code
 		$statusCode = $this->subjectReader->getValueSafely($chRawResponse, HttpClient::STATUS_CODE_KEY, $paths[HttpClient::STATUS_CODE_KEY]);
 		if (!$this->isStatusSuccessful($statusCode)) {
@@ -99,7 +102,7 @@ class AuthorizeResponseValidator extends TransactionResponseValidator
 			$this->logger->logError(2, "Transaction failure. Commerce Hub response returned with unsuccessful status", "Order ID: " . ($orderIncrementId ?? "Not found"));
 			$this->logger->logError(2, "Status Code: " . $statusCode, "Order ID: " . ($orderIncrementId ?? "Not found"));
 			
-			$this->failedTransactionManager->createFailedTransaction($orderIncrementId, $chRawResponse, $paths, $this->getPaymentAction());
+			$this->failedTransactionManager->createFailedTransaction($orderIncrementId, $chRawResponse, $paths, $this->getPaymentAction(), $surchargeAmount);
 			return $this->createResult(false, $errorMessages, $errorCodes);
 		}
 
@@ -133,8 +136,8 @@ class AuthorizeResponseValidator extends TransactionResponseValidator
 				$cancelResponse['paymentReceipt']['processorResponseDetails']['approvalStatus'] = $cancelResponse['paymentReceipt']['processorResponseDetails']['approvalStatus'] . " (PIN_ONLY CANCEL)";
 				$cancelResponseFormatted = array();
 				$cancelResponseFormatted[HttpClient::RESPONSE_KEY] = $cancelResponse;
-				$this->failedTransactionManager->createFailedTransaction($orderIncrementId, $chRawResponse, $this->paths, $this->getPaymentAction());
-				$this->failedTransactionManager->createFailedTransaction($orderIncrementId, $cancelResponseFormatted, $this->paths, $this->getPaymentAction());
+				$this->failedTransactionManager->createFailedTransaction($orderIncrementId, $chRawResponse, $this->paths, $this->getPaymentAction(), $surchargeAmount);
+				$this->failedTransactionManager->createFailedTransaction($orderIncrementId, $cancelResponseFormatted, $this->paths, $this->getPaymentAction(), $surchargeAmount);
 			} catch (\Exception $e) {	
 				$this->logger->logEmergency(1, "An error occurred while canceling PIN-ONLY authorization: " . $e->getMessage(), "Order ID: $orderIncrementId");
 				throw $e;

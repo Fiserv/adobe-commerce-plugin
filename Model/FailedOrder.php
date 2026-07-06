@@ -26,6 +26,7 @@ class FailedOrder extends AbstractModel implements FailedOrderInterface
 	public const KEY_ITEM_ID = "product_id";
 	public const KEY_STORE_CREDIT = "storeCredit";
 	public const KEY_DISCOUNT_AMOUNT = "discountAmount";
+	public const KEY_SURCHARGE_ESTIMATE = "surcharge_estimate";
 
 
 	protected function _construct()
@@ -181,5 +182,15 @@ class FailedOrder extends AbstractModel implements FailedOrderInterface
 	public function setDiscountAmount($discountAmount)
 	{
 		return $this->setData(self::KEY_DISCOUNT_AMOUNT, $discountAmount);
+	}
+
+	public function getSurchargeEstimate()
+	{
+		return $this->getData(self::KEY_SURCHARGE_ESTIMATE);
+	}
+
+	public function setSurchargeEstimate($surchargeEstimate)
+	{
+		return $this->setData(self::KEY_SURCHARGE_ESTIMATE, $surchargeEstimate);
 	}
 }

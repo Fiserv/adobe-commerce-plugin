@@ -84,6 +84,7 @@
 		<column xsi:type="varchar" name="merchantAdviceCode" nullable="true" length="255" comment="Merchant Advice Code"/>
 		<column xsi:type="varchar" name="securityCodeMatch" nullable="true" length="255" comment="Security Code Match"/>
 		<column xsi:type="varchar" name="paymentAction" nullable="true" length="255" comment="Payment Action"/>
+		<column xsi:type="decimal" name="surcharge_estimate" scale="2" precision="10" nullable="true" comment="Surcharge Estimate"/>
 
 
 	</table>
@@ -108,6 +109,7 @@
 		<column xsi:type="text" name="items" nullable="false" comment="Items"/>
 		<column xsi:type="decimal" name="storeCredit" scale="4" precision="20" unsigned="false" nullable="false" comment="Store Credit"/>
 		<column xsi:type="decimal" name="discountAmount" scale="4" precision="20" unsigned="false" nullable="false" comment="Discount Amount"/>
+		<column xsi:type="decimal" name="surcharge_estimate" scale="4" precision="20" unsigned="false" nullable="true" comment="Surcharge Estimate"/>
 	</table>
 
         <!-- Table for tracking pending transaction inquiry jobs -->
