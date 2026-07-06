@@ -66,6 +66,14 @@ class FailedOrderManager
 		$failedOrder->setStoreCredit($order->getData("customer_balance_amount"));
 		$failedOrder->setDiscountAmount($order->getData("base_discount_amount"));
 
+		$payment = $order->getPayment();
+		if ($payment) {
+			$surchargeAmount = $payment->getAdditionalInformation('surcharge_estimate');
+			if ($surchargeAmount && $surchargeAmount > 0) {
+				$failedOrder->setSurchargeEstimate($surchargeAmount);
+			}
+		}
+
 		$items = array();
 		foreach($order->getData("items") as $item)
 		{

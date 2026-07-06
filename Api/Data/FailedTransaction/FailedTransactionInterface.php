@@ -197,4 +197,7 @@ interface FailedTransactionInterface
 
 	public function getPaymentAction();
 	public function setPaymentAction($paymentAction);
+
+	public function getSurchargeEstimate();
+	public function setSurchargeEstimate($surchargeEstimate);
 }

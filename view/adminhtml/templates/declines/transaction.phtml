@@ -145,6 +145,10 @@ $transaction = $block->getTransactionDetails();
                         <div class="failed-transaction-detail-label"><?=  $block->escapeHtml(__('Currency')); ?></div>
                         <div class="failed-transaction-detail-value"><?= $block->escapeHtml(isset($transaction["currency"]) ? $transaction["currency"] : "N/A"); ?></div>
                     </div>
+                    <div class="failed-transaction-detail">
+                        <div class="failed-transaction-detail-label"><?=  $block->escapeHtml(__('Surcharge Amount')); ?></div>
+                        <div class="failed-transaction-detail-value"><?= $block->escapeHtml(isset($transaction["surcharge_estimate"]) ? $transaction["surcharge_estimate"] : "N/A"); ?></div>
+                    </div>
                 </div>
             </div>
 

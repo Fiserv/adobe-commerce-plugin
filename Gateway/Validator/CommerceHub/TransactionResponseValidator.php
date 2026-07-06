@@ -116,6 +116,9 @@ abstract class TransactionResponseValidator extends AbstractValidator
 		$orderIncrementId = $order->getOrderIncrementId();
 		$countryCode = $order->getBillingAddress()->getCountryId();
 
+		$payment = $this->subjectReader->readPayment($validationSubject)->getPayment();
+		$surchargeAmount = $payment->getAdditionalInformation('surcharge_estimate');
+
 		// Verify Status Code
 		if (!$this->isStatusSuccessful($chRawResponse[HttpClient::STATUS_CODE_KEY])) {
 			array_push($errorMessages, "Something went wrong while processing CommerceHub transaction.");
@@ -128,7 +131,7 @@ abstract class TransactionResponseValidator extends AbstractValidator
 			$this->logger->logError(2, "Transaction failure. Commerce Hub response returned with unsuccessful status", "Order ID: " . ($orderIncrementId ?? "Not found"));
 			$this->logger->logError(2, "Status Code: " . $chRawResponse[HttpClient::STATUS_CODE_KEY], "Order ID: " . ($orderIncrementId ?? "Not found"));
 			$chRawResponse[HttpClient::RESPONSE_KEY]['countryCode'] = $countryCode;
-			$this->failedTransactionManager->createFailedTransaction($orderIncrementId, $chRawResponse, $this->paths, $this->getPaymentAction());
+			$this->failedTransactionManager->createFailedTransaction($orderIncrementId, $chRawResponse, $this->paths, $this->getPaymentAction(), $surchargeAmount);
 			return $this->createResult(false, $errorMessages, $errorCodes);
 		}
 
@@ -151,7 +154,7 @@ abstract class TransactionResponseValidator extends AbstractValidator
 			$this->logger->logError(2, "Transaction failure. Commerce Hub response returned with unsuccessful transaction state: $context", "Order ID: " . ($orderIncrementId ?? "Not found"));
 			$chRawResponse[HttpClient::RESPONSE_KEY]['countryCode'] = $countryCode;
 
-			$this->failedTransactionManager->createFailedTransaction($orderIncrementId, $chRawResponse, $this->paths, $this->getPaymentAction());
+			$this->failedTransactionManager->createFailedTransaction($orderIncrementId, $chRawResponse, $this->paths, $this->getPaymentAction(), $surchargeAmount);
 			return $this->createResult(false, $errorMessages, $errorCodes);
 		}
 

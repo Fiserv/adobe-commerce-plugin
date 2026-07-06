@@ -23,7 +23,7 @@ define([
 
             this.surchargeAmount = ko.computed(function() {
                 const data = surchargeModel.surchargeData();
-                return (data && data.amount) ? data.amount : 0;
+                return (data && data.surcharge_estimate) ? data.surcharge_estimate : 0;
             }, this);
 
             this.formattedAmount = ko.computed(function() {

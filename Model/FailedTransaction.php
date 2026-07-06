@@ -34,6 +34,7 @@ class FailedTransaction extends AbstractModel implements FailedTransactionInterf
 	public const KEY_MERCHANT_ADVICE_CODE = 'merchantAdviceCode';
 	public const KEY_SECURITY_CODE_MATCH = 'securityCodeMatch';
 	public const KEY_PAYMENT_ACTION = 'paymentAction';
+	public const KEY_SURCHARGE_ESTIMATE = 'surcharge_estimate';
 
 
 	protected function _construct()
@@ -308,5 +309,15 @@ class FailedTransaction extends AbstractModel implements FailedTransactionInterf
 	public function setPaymentAction($paymentAction)
 	{
 		return $this->setData(self::KEY_PAYMENT_ACTION, $paymentAction);
+	}
+
+	public function getSurchargeEstimate()
+	{
+		return $this->getData(self::KEY_SURCHARGE_ESTIMATE);
+	}
+
+	public function setSurchargeEstimate($surchargeEstimate)
+	{
+		return $this->setData(self::KEY_SURCHARGE_ESTIMATE, $surchargeEstimate);
 	}
 }

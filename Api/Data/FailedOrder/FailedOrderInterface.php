@@ -107,4 +107,7 @@ interface FailedOrderInterface
 	public function getDiscountAmount();
 
 	public function setDiscountAmount($discountAmount);
+
+	public function getSurchargeEstimate();
+	public function setSurchargeEstimate($surchargeEstimate);
 }

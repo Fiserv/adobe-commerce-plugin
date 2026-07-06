@@ -23,11 +23,14 @@ class FailedTransactionManager
 		$this->failedTxnFactory = $failedTxnFactory;
 	}
 
-	public function createFailedTransaction($merchantOrderId, $txnResponse, $paths, $paymentAction)
+	public function createFailedTransaction($merchantOrderId, $txnResponse, $paths, $paymentAction, $surchargeAmount = null)
 	{
 		$failedTxn = $this->failedTxnFactory->create();
 		$failedTxn = $this->populateFailedTxn($failedTxn, $txnResponse, $paths, $paymentAction);
 		$failedTxn->setOrderIncrementId($merchantOrderId);
+		if ($surchargeAmount !== null && $surchargeAmount > 0) {
+			$failedTxn->setSurchargeEstimate($surchargeAmount);
+		}
 		$this->failedTxnRepo->save($failedTxn);
 		
 		return $failedTxn;
