@@ -7,6 +7,7 @@ namespace Fiserv\Payments\Gateway\Request\CommerceHub;
 
 use Magento\Payment\Gateway\Request\BuilderInterface;
 use Fiserv\Payments\Lib\CommerceHub\Model\Amount;
+use Fiserv\Payments\Gateway\Request\CommerceHub\SurchargeDataBuilder;
 use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use Magento\Payment\Helper\Formatter;
 use Fiserv\Payments\Logger\MultiLevelLogger;
@@ -24,7 +25,7 @@ class AmountDataBuilder implements BuilderInterface
 	 * @var MultiLevelLogger
 	 */
 	private $logger;
-	
+
 	/**
 	 * @var SubjectReader
 	 */
@@ -50,18 +51,24 @@ class AmountDataBuilder implements BuilderInterface
 	public function build(array $buildSubject)
 	{
 		$paymentDO = $this->subjectReader->readPayment($buildSubject);
-		$orderDO = $paymentDO->getOrder(); //Retrieve the order data object from the payment data object
+		$orderDO = $paymentDO->getOrder();
 
 		$rawTotal = $this->subjectReader->readAmount($buildSubject);
-		
+		if ($rawTotal <= 0) {
+			$payment = $paymentDO->getPayment();
+			$adjustedTotal = (float)$payment->getAdditionalInformation(SurchargeDataBuilder::SURCHARGE_ADJUSTED_TOTAL_KEY);
+			if ($adjustedTotal > 0) {
+				$rawTotal = $adjustedTotal;
+			}
+		}
+
 		$amt = new Amount();
 		$amt->setTotal(round($rawTotal, 2, PHP_ROUND_HALF_UP));
 		$amt->setCurrency($orderDO->getCurrencyCode());
 
-		//Extract order Increment ID to use as ID
 		$orderIncrementId = $orderDO->getOrderIncrementId();
 		$this->logger->logDebug(3, "Amount Data Builder:\n" . $amt->__toString(), "Order ID: $orderIncrementId");
-		
+
 		return [ self::AMOUNT_KEY => $amt ];
 	}
 }

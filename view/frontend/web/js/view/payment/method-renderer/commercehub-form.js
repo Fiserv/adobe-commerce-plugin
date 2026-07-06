@@ -373,8 +373,17 @@ define(
 			if (typeof(this.paymentPayload.threeDSecureId) !== "undefined") {
 				data['additional_data']['3DSecureId'] = this.paymentPayload.threeDSecureId;
 			}
-				data['additional_data'] = _.extend(data['additional_data'], this.additionalData);
-				this.vaultEnabler.visitAdditionalData(data);
+
+			const surchargeData = surchargeModel.surchargeData();
+			if (surchargeData && surchargeData.applied && surchargeData.amount > 0) {
+				data['additional_data']['surcharge_estimate'] = surchargeData.amount;
+				if (surchargeData.baseAmount > 0) {
+					data['additional_data']['surcharge_base_amount'] = surchargeData.baseAmount;
+				}
+			}
+
+			data['additional_data'] = _.extend(data['additional_data'], this.additionalData);
+			this.vaultEnabler.visitAdditionalData(data);
 			return data;
 		},
 
@@ -624,15 +633,21 @@ define(
 					: 0;
 
 				if (surchargeAmount > 0) {
+					const surchargeBaseAmount = (surchargeDetails.amount && surchargeDetails.amount.total)
+						? parseFloat(surchargeDetails.amount.total) - surchargeAmount
+						: 0;
+
+					const currentQuoteTotal = quote.totals() ? (parseFloat(quote.totals().grand_total) || 0) : 0;
+					const displayGrandTotal = Math.round((currentQuoteTotal + surchargeAmount) * 100) / 100;
+
 					surchargeModel.surchargeData({
 						applied: true,
 						disclosureText: (surchargeDetails.disclosureText && surchargeDetails.disclosureText.length)
 							? surchargeDetails.disclosureText[0].value
 							: '',
 						amount: surchargeAmount,
-						grandTotal: (surchargeDetails.amount && surchargeDetails.amount.total)
-							? parseFloat(surchargeDetails.amount.total)
-							: 0,
+						baseAmount: surchargeBaseAmount,
+						grandTotal: displayGrandTotal,
 						currency: (surchargeDetails.amount && surchargeDetails.amount.currency) || 'USD'
 					});
 				} else {
