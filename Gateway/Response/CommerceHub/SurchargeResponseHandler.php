@@ -63,8 +63,8 @@ class SurchargeResponseHandler implements HandlerInterface
 			return;
 		}
 
-
 		$surcharge = $this->extractSurcharge($chResponse);
+
 		if ($surcharge === null || $surcharge <= 0) {
 			return;
 		}

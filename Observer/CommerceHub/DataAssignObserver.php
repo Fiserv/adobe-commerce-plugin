@@ -27,6 +27,8 @@ class DataAssignObserver extends AbstractDataAssignObserver
 	const ACH_LEGAL_TEXT_ACCEPTED_AT_KEY = 'ach_legal_text_accepted_at';
 	const ACH_ROUTING_NUMBER_KEY = 'routingNumber';
 	const ACH_ROUTING_NUMBER_SNAKE_KEY = 'routing_number';
+	const SURCHARGE_ESTIMATE_KEY = 'surcharge_estimate';
+	const SURCHARGE_BASE_AMOUNT_KEY = 'surcharge_base_amount';
 
 	/**
 	 * @var array
@@ -43,7 +45,9 @@ class DataAssignObserver extends AbstractDataAssignObserver
 		self::ACH_LEGAL_TEXT_KEY,
 		self::ACH_LEGAL_TEXT_ACCEPTED_AT_KEY,
 		self::ACH_ROUTING_NUMBER_KEY,
-		self::ACH_ROUTING_NUMBER_SNAKE_KEY
+		self::ACH_ROUTING_NUMBER_SNAKE_KEY,
+		self::SURCHARGE_ESTIMATE_KEY,
+		self::SURCHARGE_BASE_AMOUNT_KEY,
 	];
 
 	/**

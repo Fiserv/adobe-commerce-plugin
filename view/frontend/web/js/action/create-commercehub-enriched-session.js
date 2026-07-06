@@ -54,9 +54,22 @@ define(
 
 		function getAmount()
 		{
-			let rawGrandTotal = quote.totals() ? quote.totals().grand_total : 0;
-			let grandTotal = Math.round(rawGrandTotal * 100) / 100;
-			let currency = quote.totals() ? quote.totals().quote_currency_code : "USD";
+			const totals = quote.totals();
+			let grandTotal = totals ? (totals.grand_total || 0) : 0;
+			let currency= totals ? (totals.quote_currency_code || 'USD') : 'USD';
+
+			if (totals && totals.total_segments) {
+				totals.total_segments.forEach(function (segment) {
+					if (['customerbalance', 'reward', 'giftcardaccount'].indexOf(segment.code) !== -1) {
+						const val = parseFloat(segment.value) || 0;
+						if (val < 0) {
+							grandTotal -= val;
+						}
+					}
+				});
+			}
+
+			grandTotal = Math.max(0, Math.round(grandTotal * 100) / 100);
 			return {
 				"total" : grandTotal,
 				"currency" : currency
