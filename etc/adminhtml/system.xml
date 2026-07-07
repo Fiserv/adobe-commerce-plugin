@@ -1221,56 +1221,56 @@
 						<config_path>payment/fiserv_paypal/paypal_button_label</config_path>
 					</field>
 				</group>
-                <group id="fiserv_venmo" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="9">
-                    <label>Venmo</label>
-                    <attribute type="expanded">0</attribute>
-                    <frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
-                    <field id="enabled" translate="label" type="select" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
-                        <label>Enable Venmo</label>
-                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+				<group id="fiserv_venmo" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="9">
+					<label>Venmo</label>
+					<attribute type="expanded">0</attribute>
+					<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+					<field id="enabled" translate="label" type="select" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Enable Venmo</label>
+						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 						<config_path>payment/fiserv_venmo/payment_active</config_path>
-                    </field>
+					</field>
 					<field id="venmo_button_color" translate="label" type="select" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Venmo Button Color</label>
 						<comment>Set the color for the Venmo button (e.g., blue, white).</comment>
 						<source_model>Fiserv\Payments\Model\Source\PayPal\Venmo\ButtonColor</source_model>
 						<config_path>payment/fiserv_venmo/venmo_button_color</config_path>
 					</field>
-                    <field id="venmo_button_shape" translate="label" type="select" sortOrder="121" showInDefault="1" showInWebsite="1" showInStore="0">
-                        <label>Venmo Button Shape</label>
-                        <source_model>Fiserv\Payments\Model\Source\PayPal\ButtonShape</source_model>
-                        <config_path>payment/fiserv_venmo/venmo_button_shape</config_path>
-                    </field>
-                    <field id="payment_action" translate="label" type="select" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="1">
-                        <label>Charge Type</label>
-                        <source_model>Fiserv\Payments\Model\Source\CommerceHub\TransactionType</source_model>
-                        <config_path>payment/fiserv_venmo/payment_action</config_path>
-                    </field>
-                </group>
+					<field id="venmo_button_shape" translate="label" type="select" sortOrder="121" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Venmo Button Shape</label>
+						<source_model>Fiserv\Payments\Model\Source\PayPal\ButtonShape</source_model>
+						<config_path>payment/fiserv_venmo/venmo_button_shape</config_path>
+					</field>
+					<field id="payment_action" translate="label" type="select" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="1">
+						<label>Charge Type</label>
+						<source_model>Fiserv\Payments\Model\Source\CommerceHub\TransactionType</source_model>
+						<config_path>payment/fiserv_venmo/payment_action</config_path>
+					</field>
+				</group>
 				<group id="fiserv_affirm" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="8">
-						<label>Affirm</label>
-						<attribute type="expanded">0</attribute>
-						<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
-						<field id="active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
-							<label>Enable Affirm Pay</label>
-							<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-							<config_path>payment/fiserv_affirm/payment_active</config_path>
-							<comment>Choose Yes to enable Affirm Pay as a payment method. No to disable.</comment>
-						</field>
-						<field id="title" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
-							<label>Payment Method Title</label>
-							<config_path>payment/fiserv_affirm/title</config_path>
-						</field>
-						<field id="payment_action" translate="label" type="select" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
-							<label>Charge Type</label>
-							<source_model>Fiserv\Payments\Model\Source\CommerceHub\TransactionType</source_model>
-							<config_path>payment/fiserv_affirm/payment_action</config_path>
-						</field>
-						<field id="affirm_button_color" translate="label" type="select" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="0">
-							<label>Affirm Button Color</label>
-							<config_path>payment/fiserv_affirm/affirm_button_color</config_path>
-							<source_model>Fiserv\Payments\Model\Source\Affirm\ButtonColor</source_model>
-						</field>
+					<label>Affirm</label>
+					<attribute type="expanded">0</attribute>
+					<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+					<field id="active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Enable Affirm Pay</label>
+						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+						<config_path>payment/fiserv_affirm/payment_active</config_path>
+						<comment>Choose Yes to enable Affirm Pay as a payment method. No to disable.</comment>
+					</field>
+					<field id="title" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Payment Method Title</label>
+						<config_path>payment/fiserv_affirm/title</config_path>
+					</field>
+					<field id="payment_action" translate="label" type="select" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Charge Type</label>
+						<source_model>Fiserv\Payments\Model\Source\CommerceHub\TransactionType</source_model>
+						<config_path>payment/fiserv_affirm/payment_action</config_path>
+					</field>
+					<field id="affirm_button_color" translate="label" type="select" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Affirm Button Color</label>
+						<config_path>payment/fiserv_affirm/affirm_button_color</config_path>
+						<source_model>Fiserv\Payments\Model\Source\Affirm\ButtonColor</source_model>
+					</field>
 				</group>
 				<group id="fiserv_samsung_pay" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="10">
 					<label>Samsung Pay</label>
@@ -1292,37 +1292,164 @@
 						<source_model>Fiserv\Payments\Model\Source\SamsungPay\ButtonColor</source_model>
 						<config_path>payment/fiserv_samsung_pay/samsung_pay_button_color</config_path>
 					</field>
+				</group>
+				<group id="fiserv_ach" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="11">
+					<label>ACH/Bank Transfer</label>
+					<attribute type="expanded">0</attribute>
+					<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+					<field id="active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
+						<label>Enable ACH/Bank Transfer</label>
+						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+						<config_path>payment/fiserv_ach/payment_active</config_path>
+					</field>
+					<field id="title" translate="label" type="text" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Payment Method Title</label>
+						<config_path>payment/fiserv_ach/title</config_path>
+					</field>
+				</group>
+				<group id="fiserv_paze" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="10">
+					<label>Paze</label>
+					<attribute type="expanded">0</attribute>
+					<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+					<field id="enabled" translate="label" type="select" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Enable Paze</label>
+						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+						<config_path>payment/fiserv_paze/payment_active</config_path>
+					</field>
+					<field id="payment_action" translate="label" type="select" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="1">
+						<label>Charge Type</label>
+						<source_model>Fiserv\Payments\Model\Source\CommerceHub\TransactionType</source_model>
+						<config_path>payment/fiserv_paze/payment_action</config_path>
+					</field>
+				</group>
+				<group id="fiserv_googlepay" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="12">
+					<label>Google Pay</label>
+					<attribute type="expanded">0</attribute>
+					<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+					<field id="active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Enable Google Pay</label>
+						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+						<config_path>payment/fiserv_googlepay/payment_active</config_path>
+						<comment>Choose Yes to enable Google Pay as a payment method. No to disable.</comment>
+					</field>
+					<field id="googlepay_title" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Payment Method Title</label>
+						<config_path>payment/fiserv_googlepay/title</config_path>
+					</field>
+					<field id="googlepay_payment_action" translate="label" type="select" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Charge Type</label>
+						<source_model>Fiserv\Payments\Model\Source\CommerceHub\TransactionType</source_model>
+						<config_path>payment/fiserv_googlepay/payment_action</config_path>
+					</field>
+				</group>
+				<group id="fiserv_klarna" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="14">
+					<label>Klarna</label>
+					<attribute type="expanded">0</attribute>
+					<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+					<field id="active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Enable Klarna</label>
+						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+						<config_path>payment/fiserv_klarna/payment_active</config_path>
+						<comment>Choose Yes to enable Klarna as a payment method. No to disable.</comment>
+					</field>
+					<field id="klarna_title" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Payment Method Title</label>
+						<config_path>payment/fiserv_klarna/title</config_path>
+					</field>
+					<field id="klarna_payment_action" translate="label" type="select" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Charge Type</label>
+						<source_model>Fiserv\Payments\Model\Source\CommerceHub\TransactionType</source_model>
+						<config_path>payment/fiserv_klarna/payment_action</config_path>
+					</field>
+				</group>
+				<group id="fiserv_cashapp" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="15">
+					<label>CashApp</label>
+					<attribute type="expanded">0</attribute>
+					<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+					<field id="active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Enable CashApp</label>
+						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+						<config_path>payment/fiserv_cashapp/payment_active</config_path>
+						<comment>Choose Yes to enable CashApp as a payment method. No to disable.</comment>
+					</field>
+					<field id="cashapp_title" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Payment Method Title</label>
+						<config_path>payment/fiserv_cashapp/title</config_path>
+					</field>
+					<field id="cashapp_payment_action" translate="label" type="select" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Charge Type</label>
+						<source_model>Fiserv\Payments\Model\Source\CommerceHub\TransactionType</source_model>
+						<config_path>payment/fiserv_cashapp/payment_action</config_path>
+					</field>
+				</group>
+				<group id="fiserv_ebt_online" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="16">
+					<label>EBT Online</label>
+					<attribute type="expanded">0</attribute>
+					<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+					<field id="active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Enable EBT Online</label>
+						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+						<config_path>payment/fiserv_ebt_online/payment_active</config_path>
+						<comment>Choose Yes to enable EBT Online as a payment method. No to disable.</comment>
+					</field>
+					<field id="ebt_online_title" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Payment Method Title</label>
+						<config_path>payment/fiserv_ebt_online/title</config_path>
+					</field>
+					<field id="ebt_online_payment_action" translate="label" type="select" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Charge Type</label>
+						<source_model>Fiserv\Payments\Model\Source\CommerceHub\TransactionType</source_model>
+						<config_path>payment/fiserv_ebt_online/payment_action</config_path>
+						<comment>EBT Online supports authorize_capture only.</comment>
+					</field>
+					<field id="ebt_online_allowspecific" translate="label" type="allowspecific" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Accept Payments From All Countries</label>
+						<source_model>Magento\Payment\Model\Config\Source\Allspecificcountries</source_model>
+						<config_path>payment/fiserv_ebt_online/allowspecific</config_path>
+					</field>
+					<field id="ebt_online_specificcountry" translate="label" type="multiselect" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Accept Payments From Select Countries</label>
+						<source_model>Fiserv\Payments\Model\Source\CommerceHub\FiservCountry</source_model>
+						<config_path>payment/fiserv_ebt_online/specificcountry</config_path>
+					</field>
+					<field id="ebt_card_number_parent_element" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>EBT Card Number Field Parent Element ID</label>
+						<config_path>payment/fiserv_ebt_online/sdc_custom_checkout_card_number_parent_element</config_path>
+					</field>
+					<field id="ebt_card_number_placeholder" translate="label" type="text" sortOrder="11" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>EBT Card Number Placeholder</label>
+						<config_path>payment/fiserv_ebt_online/sdc_custom_checkout_card_number_placeholder</config_path>
+					</field>
+					<field id="ebt_card_number_masking_character" translate="label" type="text" sortOrder="12" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>EBT Card Number Masking Character</label>
+						<config_path>payment/fiserv_ebt_online/sdc_custom_checkout_card_number_masking_character</config_path>
+					</field>
+					<field id="ebt_card_number_masking_mode" translate="label" type="text" sortOrder="13" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>EBT Card Number Masking Mode</label>
+						<config_path>payment/fiserv_ebt_online/sdc_custom_checkout_card_number_masking_mode</config_path>
+					</field>
+					<field id="ebt_sub_category_parent_element" translate="label" type="text" sortOrder="14" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>EBT Sub Category Field Parent Element ID</label>
+						<config_path>payment/fiserv_ebt_online/sdc_custom_checkout_ebt_sub_category_parent_element</config_path>
+					</field>
+					<field id="show_expiration" translate="label comment" type="select" sortOrder="15" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Show Expiration Fields</label>
+						<comment>Enable to display optional Expiration Month and Year dropdown fields. Required for some EBT card flows.</comment>
+						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+						<config_path>payment/fiserv_ebt_online/sdc_custom_checkout_show_expiration</config_path>
+					</field>
+					<field id="expiration_month_parent_element" translate="label" type="text" sortOrder="16" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Expiration Month Field Parent Element ID</label>
+						<config_path>payment/fiserv_ebt_online/sdc_custom_checkout_expiration_month_parent_element</config_path>
+						<depends><field id="show_expiration">1</field></depends>
+					</field>
+					<field id="expiration_year_parent_element" translate="label" type="text" sortOrder="17" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Expiration Year Field Parent Element ID</label>
+						<config_path>payment/fiserv_ebt_online/sdc_custom_checkout_expiration_year_parent_element</config_path>
+						<depends><field id="show_expiration">1</field></depends>
+					</field>
+				</group>
 			</group>
-			<group id="fiserv_ach" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="11">
-				<label>ACH/Bank Transfer</label>
-				<attribute type="expanded">0</attribute>
-				<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
-				<field id="active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
-					<label>Enable ACH/Bank Transfer</label>
-					<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-					<config_path>payment/fiserv_ach/payment_active</config_path>
-				</field>
-				<field id="title" translate="label" type="text" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
-					<label>Payment Method Title</label>
-					<config_path>payment/fiserv_ach/title</config_path>
-				</field>
-			</group>
-			<group id="fiserv_paze" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="10">
-				<label>Paze</label>
-				<attribute type="expanded">0</attribute>
-				<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
-				<field id="enabled" translate="label" type="select" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
-					<label>Enable Paze</label>
-					<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-					<config_path>payment/fiserv_paze/payment_active</config_path>
-				</field>
-				<field id="payment_action" translate="label" type="select" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="1">
-					<label>Charge Type</label>
-					<source_model>Fiserv\Payments\Model\Source\CommerceHub\TransactionType</source_model>
-					<config_path>payment/fiserv_paze/payment_action</config_path>
-				</field>
-			</group>
-		</group>
 		</section>
 		<section id="three_d_secure" translate="label" type="text" sortOrder="410" showInDefault="1" showInWebsite="1" showInStore="1">
 			<label>3D Secure</label>

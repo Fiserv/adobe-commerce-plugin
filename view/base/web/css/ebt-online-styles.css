@@ -1,0 +1,49 @@
+/**
+ * EBT Online payment method styles
+ */
+
+.payment-method .fiserv-ebt-online-logo {
+    height: 30px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.payment-method .fiserv-ebt-online-field {
+    margin-bottom: 15px;
+}
+
+.payment-method .fiserv-ebt-online-field .label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.payment-method .fiserv-sdc-field {
+    min-height: 40px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 0;
+    background: #fff;
+}
+
+.payment-method .fiserv-ebt-pin-button {
+    background-color: #1a7ab5;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background-color 0.2s ease;
+}
+
+.payment-method .fiserv-ebt-pin-button:hover {
+    background-color: #155e8e;
+}
+
+.payment-method .fiserv-ebt-pin-button:focus {
+    outline: 2px solid #1a7ab5;
+    outline-offset: 2px;
+}
+

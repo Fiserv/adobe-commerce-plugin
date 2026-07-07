@@ -407,39 +407,119 @@
 
 				<sdc_custom_checkout_id_type_parent_element>fiserv_ach-id-type</sdc_custom_checkout_id_type_parent_element>
 
-				<sdc_custom_checkout_id_value_parent_element>fiserv_ach-id-value</sdc_custom_checkout_id_value_parent_element>
-				<sdc_custom_checkout_id_value_placeholder>ID Value</sdc_custom_checkout_id_value_placeholder>
+                <sdc_custom_checkout_id_value_parent_element>fiserv_ach-id-value</sdc_custom_checkout_id_value_parent_element>
+                <sdc_custom_checkout_id_value_placeholder>ID Value</sdc_custom_checkout_id_value_placeholder>
 
-				<sdc_custom_checkout_driver_license_state_parent_element>fiserv_ach-driver-license-state</sdc_custom_checkout_driver_license_state_parent_element>
-				<sdc_custom_checkout_driver_license_state_placeholder>Driver License State</sdc_custom_checkout_driver_license_state_placeholder>
+                <sdc_custom_checkout_driver_license_state_parent_element>fiserv_ach-driver-license-state</sdc_custom_checkout_driver_license_state_parent_element>
+                <sdc_custom_checkout_driver_license_state_placeholder>Driver License State</sdc_custom_checkout_driver_license_state_placeholder>
 
-				<sdc_custom_checkout_check_type_parent_element>fiserv_ach-check-type</sdc_custom_checkout_check_type_parent_element>
-				<sdc_custom_checkout_check_type_placeholder>Check Type</sdc_custom_checkout_check_type_placeholder>
+                <sdc_custom_checkout_check_type_parent_element>fiserv_ach-check-type</sdc_custom_checkout_check_type_parent_element>
+                <sdc_custom_checkout_check_type_placeholder>Check Type</sdc_custom_checkout_check_type_placeholder>
 
-				<sdc_custom_checkout_account_type_parent_element>fiserv_ach-account-type</sdc_custom_checkout_account_type_parent_element>
-				<sdc_custom_checkout_account_type_placeholder>Account Type</sdc_custom_checkout_account_type_placeholder>
+                <sdc_custom_checkout_account_type_parent_element>fiserv_ach-account-type</sdc_custom_checkout_account_type_parent_element>
+                <sdc_custom_checkout_account_type_placeholder>Account Type</sdc_custom_checkout_account_type_placeholder>
 
-				<sdc_custom_checkout_business_name_parent_element>fiserv_ach-business-name</sdc_custom_checkout_business_name_parent_element>
-				<sdc_custom_checkout_business_name_placeholder>Business Name</sdc_custom_checkout_business_name_placeholder>
-			</fiserv_ach>
-			<fiserv_paze>
-				<active>1</active>
-				<payment_active>0</payment_active>
-				<title>Paze</title>
-				<model>FiservPazeFacade</model>
-				<payment_action>AUTH</payment_action>
-				<is_gateway>1</is_gateway>
-				<can_use_internal>0</can_use_internal>
-				<can_use_checkout>1</can_use_checkout>
-				<can_authorize>1</can_authorize>
-				<can_capture>1</can_capture>
-				<can_capture_partial>1</can_capture_partial>
-				<can_refund>1</can_refund>
-				<can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
-				<can_void>1</can_void>
-				<order_status>pending</order_status>
-				<group>fiserv_group</group>
-			</fiserv_paze>
-		</payment>
-	</default>
+                <sdc_custom_checkout_business_name_parent_element>fiserv_ach-business-name</sdc_custom_checkout_business_name_parent_element>
+                <sdc_custom_checkout_business_name_placeholder>Business Name</sdc_custom_checkout_business_name_placeholder>
+            </fiserv_ach>
+            <fiserv_paze>
+                <active>1</active>
+                <payment_active>0</payment_active>
+                <title>Paze</title>
+                <model>FiservPazeFacade</model>
+                <payment_action>AUTH</payment_action>
+                <is_gateway>1</is_gateway>
+                <can_use_internal>0</can_use_internal>
+                <can_use_checkout>1</can_use_checkout>
+                <can_authorize>1</can_authorize>
+                <can_capture>1</can_capture>
+                <can_capture_partial>1</can_capture_partial>
+                <can_refund>1</can_refund>
+                <can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
+                <can_void>1</can_void>
+                <order_status>pending</order_status>
+                <group>fiserv_group</group>
+            </fiserv_paze>
+            <fiserv_googlepay>
+                <active>1</active>
+                <payment_active>0</payment_active>
+                <title>Google Pay</title>
+                <model>FiservGooglePayFacade</model>
+                <payment_action>AUTH</payment_action>
+                <is_gateway>1</is_gateway>
+                <can_use_internal>0</can_use_internal>
+                <can_use_checkout>1</can_use_checkout>
+                <can_authorize>1</can_authorize>
+                <can_capture>1</can_capture>
+                <can_capture_partial>1</can_capture_partial>
+                <can_refund>1</can_refund>
+                <can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
+                <can_void>1</can_void>
+                <order_status>pending</order_status>
+                <group>fiserv_group</group>
+            </fiserv_googlepay>
+            <fiserv_klarna>
+                <active>1</active>
+                <payment_active>0</payment_active>
+                <title>Klarna</title>
+                <model>FiservKlarnaFacade</model>
+                <payment_action>AUTH</payment_action>
+                <is_gateway>1</is_gateway>
+                <can_use_internal>0</can_use_internal>
+                <can_use_checkout>1</can_use_checkout>
+                <can_authorize>1</can_authorize>
+                <can_capture>1</can_capture>
+                <can_capture_partial>0</can_capture_partial>
+                <can_refund>1</can_refund>
+                <can_refund_partial_per_invoice>0</can_refund_partial_per_invoice>
+                <can_void>1</can_void>
+                <order_status>pending</order_status>
+                <group>fiserv_group</group>
+            </fiserv_klarna>
+            <fiserv_cashapp>
+                <active>1</active>
+                <payment_active>0</payment_active>
+                <title>CashApp</title>
+                <payment_action>AUTH</payment_action>
+                <model>FiservCashAppFacade</model>
+                <is_gateway>1</is_gateway>
+                <can_use_checkout>1</can_use_checkout>
+                <can_authorize>1</can_authorize>
+                <can_capture>1</can_capture>
+                <can_refund>0</can_refund>
+                <can_void>0</can_void>
+            </fiserv_cashapp>
+            <fiserv_ebt_online>
+                <active>1</active>
+                <payment_active>0</payment_active>
+                <title>EBT Online</title>
+                <model>FiservEbtOnlineFacade</model>
+                <payment_action>authorize_capture</payment_action>
+                <order_status>pending</order_status>
+                <is_gateway>1</is_gateway>
+                <can_use_internal>0</can_use_internal>
+                <can_use_checkout>1</can_use_checkout>
+                <can_authorize>0</can_authorize>
+                <can_capture>1</can_capture>
+                <can_capture_partial>0</can_capture_partial>
+                <can_refund>1</can_refund>
+                <can_refund_partial_per_invoice>0</can_refund_partial_per_invoice>
+                <can_void>1</can_void>
+                <allowspecific>1</allowspecific>
+                <specificcountry>US</specificcountry>
+                <group>fiserv_group</group>
+                <!-- EBT Field Configurations -->
+                <sdc_custom_checkout_card_number_parent_element>fiserv_ebt_online-card-number</sdc_custom_checkout_card_number_parent_element>
+                <sdc_custom_checkout_card_number_placeholder>EBT Card Number</sdc_custom_checkout_card_number_placeholder>
+                <sdc_custom_checkout_card_number_masking_character>•</sdc_custom_checkout_card_number_masking_character>
+                <sdc_custom_checkout_card_number_masking_mode>ALWAYS_MASK_EXCEPT_LAST_4</sdc_custom_checkout_card_number_masking_mode>
+                <sdc_custom_checkout_ebt_sub_category_parent_element>fiserv_ebt_online-ebt-sub-category</sdc_custom_checkout_ebt_sub_category_parent_element>
+                <sdc_custom_checkout_expiration_month_parent_element>fiserv_ebt_online-expiration-month</sdc_custom_checkout_expiration_month_parent_element>
+                <sdc_custom_checkout_expiration_month_placeholder>Expiration Month</sdc_custom_checkout_expiration_month_placeholder>
+                <sdc_custom_checkout_expiration_year_parent_element>fiserv_ebt_online-expiration-year</sdc_custom_checkout_expiration_year_parent_element>
+                <sdc_custom_checkout_expiration_year_placeholder>Expiration Year</sdc_custom_checkout_expiration_year_placeholder>
+                <sdc_custom_checkout_show_expiration>0</sdc_custom_checkout_show_expiration>
+            </fiserv_ebt_online>
+        </payment>
+    </default>
 </config>

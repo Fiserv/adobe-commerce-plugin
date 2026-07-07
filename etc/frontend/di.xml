@@ -7,13 +7,17 @@
 				<item name="fiserv_commercehub_config_provider" xsi:type="object">Fiserv\Payments\Model\Config\CommerceHub\ConfigProvider</item>
 				<item name="fiserv_paypal" xsi:type="object">Fiserv\Payments\Model\Config\PayPal\ConfigProvider</item>
 				<item name="fiserv_paypal_fastlane" xsi:type="object">Fiserv\Payments\Model\Config\PayPal\Fastlane\ConfigProvider</item>
-                <item name="fiserv_applepay" xsi:type="object">Fiserv\Payments\Model\Config\ApplePay\ConfigProvider</item>
-                <item name="fiserv_venmo" xsi:type="object">Fiserv\Payments\Model\Config\Venmo\ConfigProvider</item>
+				<item name="fiserv_applepay" xsi:type="object">Fiserv\Payments\Model\Config\ApplePay\ConfigProvider</item>
+				<item name="fiserv_venmo" xsi:type="object">Fiserv\Payments\Model\Config\Venmo\ConfigProvider</item>
 				<item name="fiserv_affirm" xsi:type="object">Fiserv\Payments\Model\Config\Affirm\ConfigProvider</item>
 				<item name="fiserv_samsung_pay" xsi:type="object">Fiserv\Payments\Model\Config\SamsungPay\ConfigProvider</item>
 				<item name="fiserv_ach" xsi:type="object">Fiserv\Payments\Model\Config\Ach\ConfigProvider</item>
 				<item name="fiserv_paze" xsi:type="object">Fiserv\Payments\Model\Config\Paze\ConfigProvider</item>
-            </argument>
+				<item name="fiserv_googlepay" xsi:type="object">Fiserv\Payments\Model\Config\GooglePay\ConfigProvider</item>
+				<item name="fiserv_klarna" xsi:type="object">Fiserv\Payments\Model\Config\Klarna\ConfigProvider</item>
+				<item name="fiserv_cashapp" xsi:type="object">Fiserv\Payments\Model\Config\CashApp\ConfigProvider</item>
+				<item name="fiserv_ebt_online" xsi:type="object">Fiserv\Payments\Model\Config\EbtOnline\ConfigProvider</item>
+			</argument>
 		</arguments>
 	</type>
 	<type name="Magento\Payment\Model\CcGenericConfigProvider">
