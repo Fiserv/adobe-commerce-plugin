@@ -116,9 +116,10 @@ define([
 				sessionId = await this.captureCardFormAsync();
 				setGiftCardAction(sessionId, balance);
 
-				sdcv2.resetIframe(this.formKey);
+				sdcv2.destroyIframe(this.formKey);
 				this.endIframeFlow();
 				this.resetFormPanel();
+				this.createGiftCardForm();
 			} catch (error) {
 				console.error("Error setting gift card:", error);
 				this.showErrorMessage("An error occurred while processing the gift card.");
@@ -227,8 +228,9 @@ define([
 		},
 
 		clearFields: function() {
-			sdcv2.resetIframe(this.formKey); // Reset the entire iframe
-			this.resetFormPanel(); // Reset the form and hide the Clear button
+			sdcv2.destroyIframe(this.formKey);
+			this.resetFormPanel();
+			this.createGiftCardForm(); // remount immediately with fresh credentials
 		},
 
 		formatBalanceAsCurrency: function(balance, currency)
@@ -243,9 +245,10 @@ define([
 
 		balanceInquiryFailure: function(err)
 		{
-			sdcv2.resetIframe(this.formKey);
+			sdcv2.destroyIframe(this.formKey);
 			this.endIframeFlow();
 			this.showErrorMessage(err);
+			this.createGiftCardForm(); // remount so user can retry with a fresh session
 		},
 
 		validateBalanceInquiry: function(response)
@@ -292,7 +295,8 @@ define([
 		cardCaptureFailure: function()
 		{
 			this.endIframeFlow();
-			sdcv2.resetIframe(this.formKey);
+			sdcv2.destroyIframe(this.formKey);
+			this.createGiftCardForm(); // remount so the next attempt gets a fresh session
 		},
 
 		toggleValuelinkForm: function()

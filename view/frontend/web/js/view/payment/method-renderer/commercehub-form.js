@@ -83,6 +83,10 @@ define(
 
 			initializeChAdapter: function () 
 			{
+				if (typeof chAdapter.setContextId === 'function') {
+					chAdapter.setContextId('fiserv-cc-' + this.code + '-' + Date.now());
+				}
+
 				chAdapter.initialize(
 					window.checkoutConfig.payment[this.code],
 					() => { this.iframeLoadSuccess(); },
@@ -100,13 +104,14 @@ define(
 				}
 			},
 
-			initCheckoutSdk: async function(credentials)
-			{
-				await chAdapter.initSdk(
-					window.checkoutConfig.payment[this.code],
-					credentials
-				);
-			},
+		initCheckoutSdk: async function(credentials)
+		{
+			await chAdapter.initSdk(
+				window.checkoutConfig.payment[this.code],
+				credentials,
+				chAdapter.contextId
+			);
+		},
 
 			loadIframe: function () {
 				chAdapter.destroyIframe();
@@ -180,29 +185,21 @@ define(
 			 * @return {Promise}
 			 */
 			performAccountVerification: async function () {
-				let credsResponse;
-				try {
-					credsResponse = await chSession({ 'threeDSecure': false });
-				} catch {
-					throw new Error($t('Unable to obtain a payment session for account verification. Please try again.'));
-				}
-
-				const creds = credsResponse['ch_credentials'];
 				const sessionId = await new Promise((resolve, reject) => {
 					chAdapter.submitCardForm(
 						window.checkoutConfig.payment.fiserv_payments['storeUrl'],
 						resolve,
-						() => reject(new Error($t('Card capture failed during account verification. Please try again.'))),
-						creds
+						() => reject(new Error($t('Card capture failed during account verification. Please try again.')))
 					);
 				});
 
 				await verifyAccount({ sessionId });
 			},
 
-			run3DSecure: async function () {
-				const {transactionState, authenticationTransactionId} = await window.fiserv.components.threeDSecure();
-				if (transactionState.toUpperCase() === "DECLINED") {
+		run3DSecure: async function () {
+			const threeDSConfig = chAdapter.contextId ? { context: window.fiserv.context(chAdapter.contextId) } : undefined;
+			const {transactionState, authenticationTransactionId} = await window.fiserv.components.threeDSecure(threeDSConfig);
+			if (transactionState.toUpperCase() === "DECLINED") {
 					throw new Error("3D-Secure authentication failure.");
 				}
 
@@ -491,28 +488,31 @@ define(
 						}
 					}
 
-					let credsResponse = undefined;
-					try {
-						credsResponse = await chSession( { "threeDSecure" : this.is3DSecureEnabled() } );
-					} catch (error) {
-						console.log("An error occurred while starting Commercehub payment session: ".concat(error));
-						this.iframeRunFailure();
-						return;
-					}
-					let creds = credsResponse["ch_credentials"];
-					
-					// handle 3DS
-					if(this.is3DSecureEnabled())
-					{
+					if (this.is3DSecureEnabled()) {
+						let credsResponse = undefined;
+						try {
+							credsResponse = await chSession({ "threeDSecure": true });
+						} catch (error) {
+							console.log("An error occurred while starting Commercehub payment session: ".concat(error));
+							this.iframeRunFailure();
+							return;
+						}
+						let creds = credsResponse["ch_credentials"];
 						await this.initCheckoutSdk(creds);
+
+						chAdapter.submitCardForm(
+							window.checkoutConfig.payment.fiserv_payments['storeUrl'],
+							(sessionId) => { this.iframeRunSuccess(sessionId); },
+							() => { this.iframeRunFailure(); },
+							creds
+						);
+					} else {
+						chAdapter.submitCardForm(
+							window.checkoutConfig.payment.fiserv_payments['storeUrl'],
+							(sessionId) => { this.iframeRunSuccess(sessionId); },
+							() => { this.iframeRunFailure(); }
+						);
 					}
-						
-					chAdapter.submitCardForm(
-						window.checkoutConfig.payment.fiserv_payments['storeUrl'], 
-						(sessionId) => { this.iframeRunSuccess(sessionId); },
-						() => { this.iframeRunFailure(); },
-						creds
-					);
 				}
 			},
 
@@ -625,10 +625,11 @@ define(
 				}));
 				const credsResponse = await chSession({ 'threeDSecure': false });
 				const creds = credsResponse['ch_credentials'];
-				await chAdapter.initSdk(
-					window.checkoutConfig.payment[this.code],
-					creds
-				);
+			await chAdapter.initSdk(
+				window.checkoutConfig.payment[this.code],
+				creds,
+				chAdapter.contextId
+			);
 
 
 				const surchargeDetails = await chAdapter.getSurchargeEstimate();

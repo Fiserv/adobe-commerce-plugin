@@ -65,9 +65,8 @@ define(
 					sessionId: null,
 					type: null,
 				},
-				additionalData: {},
-                addressComponent: undefined,
-				paymentMethodName: '[name="payment[method]"',
+			additionalData: {},
+			paymentMethodName: '[name="payment[method]"',
 				isIframeValid: false,
 				credentials: undefined,
 				lastBillingAddressKey: '',
@@ -163,6 +162,11 @@ define(
 			},
 
 			initializeChAdapter() {
+				// uses a scoped Fiserv Context for the ACH payment-field form
+				if (typeof chAdapter.setContextId === 'function') {
+					chAdapter.setContextId('fiserv-ach-' + this.code + '-' + Date.now());
+				}
+
 				chAdapter.initialize(
 					this.getPaymentConfig(),
 					() => { this.iframeLoadSuccess(); },
@@ -183,47 +187,20 @@ define(
 				}
 			},
 
-			async loadIframe() {
+	async loadIframe() {
                 this.beginIframeFlow();
 
                 const billingAddress = this.getBillingAddress();
                 if (!billingAddress) throw new Error("Billing address not found.");
-                
-                await this.initCheckoutSdk(billingAddress);
-                this.addressComponent = await this.initSdkAddressComponent(billingAddress);
-		this.populateAddressComponent();
 
+                await this.initCheckoutSdk(billingAddress);
                 chAdapter.instantiateIframe(
                     () => { this.iframeLoadSuccess(); },
                     (e) => { this.iframeLoadFailure(e); },
-                    { billingAddress: this.addressComponent }
+                    undefined,
+                    this.credentials
                 );
-			},
-
-            async initSdkAddressComponent(billingAddress) {
-                const container = this.getBillingAddressContainer();
-                const fieldMap = this.mapBillingAddressFields(billingAddress);
-                const mappedFields = this.mapAddressFieldsToTempForm(container, fieldMap);
-
-                return await chAdapter.createBillingAddressComponent(mappedFields);
-            },
-
-            populateAddressComponent() {
-                if (!this.addressComponent || typeof(this.addressComponent) !== 'object') throw new Error("Address component not initialized.");
-
-                const billingAddress = this.getBillingAddress();
-                if (!billingAddress) throw new Error("Billing address not found.");
-
-                const mappedAddress = this.mapBillingAddressFields(this.buildBillingAddressPayload(billingAddress));
-                
-                this.addressComponent.populate({ "firstName": mappedAddress.firstName });
-                this.addressComponent.populate({ "lastName": mappedAddress.lastName });
-                this.addressComponent.populate({ "street": mappedAddress.street });
-                this.addressComponent.populate({ "city": mappedAddress.city });
-                this.addressComponent.populate({ "stateOrProvince": mappedAddress.stateOrProvince });
-                this.addressComponent.populate({ "postalCode": mappedAddress.postalCode });
-                this.addressComponent.populate({ "country": mappedAddress.country });
-            },
+		},
 
 			iframeLoadSuccess() {
 				this.endIframeFlow();
@@ -274,17 +251,18 @@ define(
             /**
 			 * Re-init SDK when switching payment methods.
 			 */
-			watchPaymentMethods() {
-				$(this.paymentMethodName).off('click.fiservAchMethod');
-				$(this.paymentMethodName).on('click.fiservAchMethod', (event) => {
-					if (event.currentTarget.id === this.getCode()) {
-						this.initializeChAdapter();
-						this.loadIframe();
-					} else {
-						this.destroyAchIframe(true);
-					}
-				});
-			},
+		watchPaymentMethods() {
+			$(this.paymentMethodName).off('click.fiservAchMethod');
+			$(this.paymentMethodName).on('click.fiservAchMethod', (event) => {
+				if (event.currentTarget.id === this.getCode()) {
+					this.initializeChAdapter();
+					this.loadIframe()
+						.catch((e) => { this.iframeLoadFailure(e); });
+				} else {
+					this.destroyAchIframe(true);
+				}
+			});
+		},
 
 			destroyAchIframe(resetFlags) {
 				chAdapter.destroyIframe();
@@ -390,11 +368,12 @@ define(
 				return false;
 			},
 
-			placeOrderFailureHandler() {
-				this.destroyAchIframe(true);
-				this.loadIframe(true);
-				this.resetFieldValidation();
-			},
+		placeOrderFailureHandler() {
+			this.destroyAchIframe(true);
+			this.loadIframe(true)
+				.catch((e) => { this.iframeLoadFailure(e); });
+			this.resetFieldValidation();
+		},
 
 			/**
 			 * Trigger order placing
@@ -462,14 +441,22 @@ define(
 				return $('button#fiserv-ach-checkout-submit');
 			},
 
-			async submitIframe() {
+		async submitIframe() {
                 try {
                     if (additionalValidators.validate()) {
                         fullScreenLoader.startLoader();
-    
-                        this.populateAddressComponent();
-                        
-                        const legalText = await chAdapter.getAchLegalText();
+
+                        // Build billing address payload to pass explicitly to the SDK for both
+                        // the ACH auth-language (legal text) request and the form submit.
+                        // Billing address is NOT mounted as an address component inside paymentFields
+                        // (see loadIframe comment); instead it is passed as an argument here so
+                        // the SDK includes it in the CAPTURE request without validity-tracking it.
+                        const rawBillingAddress = this.getBillingAddress();
+                        const billingPayload = rawBillingAddress
+                            ? this.buildBillingAddressPayload(rawBillingAddress)
+                            : undefined;
+
+                        const legalText = await chAdapter.getAchLegalText(billingPayload);
                         this.endIframeFlow();
     
                         const accepted = await this.showAchConsentModal(legalText);
@@ -483,20 +470,21 @@ define(
 				globalThis.checkoutConfig.payment.fiserv_payments.storeUrl,
                             (sessionId) => { this.iframeRunSuccess(sessionId); },
                             (e) => { this.iframeRunFailure(e.message || 'An error occurred during ACH processing. Please try again.'); },
-                            this.credentials
+                            this.credentials,
+                            billingPayload
                         );
                     }
                     
                 } catch (error) {
                     this.iframeRunFailure(error.message || 'An error occurred during ACH processing. Please try again.');
                 }
-			},
+		},
 
             async initCheckoutSdk(billingAddress) {
                 const billingPayload = this.buildBillingAddressPayload(billingAddress); 
                 const credsResponse = await chSession({ billingAddress: billingPayload });
 		        this.credentials = credsResponse["ch_credentials"];
-                await chAdapter.initSdk(this.getPaymentConfig(), this.credentials);
+                await chAdapter.initSdk(this.getPaymentConfig(), this.credentials, chAdapter.contextId);
             },
 
 			/**
