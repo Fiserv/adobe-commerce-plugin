@@ -43,6 +43,8 @@ define([
 		fieldValueChangeHandler: undefined,
 		sdcv2Form: undefined,
 		credentials: undefined,
+		mountCredentials: undefined,
+		contextId: undefined,
 
 		initialize: function (config, iframeReadyCallback, iframeValidCallback, cardBrandChangeCallback, fieldValidityHandler, fieldFocusHandler, fieldValueChangeHandler) {
 			this.config = config;
@@ -54,20 +56,37 @@ define([
 			this.fieldValueChangeHandler = fieldValueChangeHandler;
 		},
 
-  		initSdk: async function(config, creds)
+		/** SDK v4: Assign a scoped FiservContext id for paymentFields components*/
+		setContextId: function (contextId) {
+			this.contextId = contextId;
+		},
+
+		initSdk: async function(config, creds, contextId)
 		{
-			await window.fiserv.init({
-  				cspNonce: crypto.randomUUID(),
+			if (contextId) {
+				this.contextId = contextId;
+			}
+
+			this.credentials = creds;
+
+			const initPayload = {
+				cspNonce: crypto.randomUUID(),
 				environment: config.environment,
-				accessToken: creds[this.accessTokenKey], 
+				accessToken: creds[this.accessTokenKey],
 				apiKey: config.apiKey,
 				merchantId: config.merchantId,
 				publicKey: creds[this.publicTokenKey],
 				keyId: creds[this.keyIdKey],
 				terminalId: config[this.configTerminalIdKey],
 				sessionId: creds[this.sessionIdKey]
-			}); 
-		}, 
+			};
+
+			if (contextId) {
+				initPayload.contextId = contextId;
+			}
+
+			await window.fiserv.init(initPayload);
+		},
 
 		getChCredentials: function (storeUrl, successCb, errorCb) {
 			let validateCb = this.validateCredentialsResponse.bind(this);
@@ -120,7 +139,12 @@ define([
 		},
 
 		createBillingAddressComponent: async function (addressFields) {
-			return await window.fiserv.components.address({ fields: addressFields });
+			const addressOptions = { fields: addressFields };
+			if (this.contextId && window.fiserv) {
+				const ctx = window.fiserv.context(this.contextId);
+				if (ctx) { addressOptions.context = ctx; }
+			}
+			return await window.fiserv.components.address(addressOptions);
 		},
 
 		/**
@@ -132,53 +156,82 @@ define([
 		 * from provide script element
 		 */
 		instantiateIframe: function (
-			loadSuccessCb, 
+			loadSuccessCb,
 			loadErrorCb,
 			configData = undefined,
+			creds = undefined,
 		) {
-			let formConfig = this.buildFormConfig();
+			const ensureSdkReady = () => {
+				// If credentials were already fetched and the SDK already initialized by the
+				// caller (e.g. ACH fetches an enriched session before mounting), reuse them
+				// directly so we don't overwrite the enriched session with a basic one.
+				if (creds) {
+					this.mountCredentials = creds;
+					return Promise.resolve();
+				}
+				const storeUrl = this.config.storeUrl ||
+					(window.checkoutConfig && window.checkoutConfig.payment &&
+						window.checkoutConfig.payment.fiserv_payments &&
+						window.checkoutConfig.payment.fiserv_payments.storeUrl) || '';
+				return new Promise((resolve, reject) => {
+					this.getChCredentials(storeUrl, resolve, reject);
+				}).then(async (fetchedCreds) => {
+					this.credentials = fetchedCreds;
+					this.mountCredentials = fetchedCreds;
+					await this.initSdk(this.config, fetchedCreds, this.contextId);
+				});
+			};
 
-			if (configData) {
-				formConfig = {
-					...formConfig,
-					...configData,
-					data: {
-						...(formConfig.data || {}),
-						...((configData && configData.data) || {}),
-					},
-				};
-			}
+			ensureSdkReady()
+				.then(() => {
+					let formConfig = this.buildFormConfig();
 
-			if (!formConfig.data) {
-				formConfig.data = {};
-			}
+					if (configData) {
+						formConfig = {
+							...formConfig,
+							...configData,
+							data: {
+								...(formConfig.data || {}),
+								...((configData && configData.data) || {}),
+							},
+						};
+					}
 
-			if (!formConfig.data.environment) {
-				formConfig.data.environment =
-					this.config[this.environmentKey] ||
-					(window.checkoutConfig && window.checkoutConfig.payment && window.checkoutConfig.payment.fiserv_payments ?
-						window.checkoutConfig.payment.fiserv_payments.environment :
-						undefined);
-			}
+					if (!formConfig.data) {
+						formConfig.data = {};
+					}
 
-			window.fiserv.components.paymentFields(formConfig)
-				.then((next) => {
-					this.sdcv2Form = next;
-					this.iframeReadyCallback();
-					loadSuccessCb();
+					if (!formConfig.data.environment) {
+						formConfig.data.environment =
+							this.config[this.environmentKey] ||
+							(window.checkoutConfig && window.checkoutConfig.payment && window.checkoutConfig.payment.fiserv_payments ?
+								window.checkoutConfig.payment.fiserv_payments.environment :
+								undefined);
+					}
+
+					window.fiserv.components.paymentFields(formConfig)
+						.then((next) => {
+							this.sdcv2Form = next;
+							this.iframeReadyCallback();
+							loadSuccessCb();
+						})
+						.catch((data) => {
+							console.log(data);
+							loadErrorCb(data);
+						});
 				})
-				.catch((data) => {
-					console.log(data);
-					loadErrorCb(data);
+				.catch((err) => {
+					console.log('[ch-adapter] SDK init failure:', err);
+					loadErrorCb(err);
 				});
 		},
 
-		 /**
-         * Load PayPal SDK
-         * @param {Object} options - { customerId, intent }
-         * @returns {Promise<Object>} PayPal component instance
-         */
-        async loadPayPalComponent(options) {
+		/**
+		 * Load PayPal SDK
+		 * @param {Object} options - { customerId, intent }
+		 * @returns {Promise<Object>} PayPal component instance
+		 */
+		async loadPayPalComponent(options) {
             if (!window.fiserv || typeof window.fiserv.components.paypal !== 'function') {
                 throw new Error('Fiserv SDK not loaded or window.fiserv.components.paypal not available');
             }
@@ -188,20 +241,17 @@ define([
 
 		/**
          * Load Paze SDK (Step 4 of Paze documentation)
-         * @param {Object} options - { displayName, cspNonce }
-         * @returns {Promise<Object>} Paze component instance
+		 * @param {Object} options - { displayName, cspNonce }
+		 * @returns {Promise<Object>} Paze component instance
          */
         async loadPazeComponent(options) {
             if (!window.fiserv || typeof window.fiserv.components.paze !== 'function') {
                 throw new Error('Fiserv SDK not loaded or window.fiserv.components.paze not available');
             }
 
-            // Paze component initialization with displayName and optional cspNonce
-            const pazeOptions = {
-                displayName: options.displayName || 'My Site'
-            };
+			// Paze component initialization with displayName and optional cspNonce
+            const pazeOptions = { displayName: options.displayName || 'My Site' };
 
-            // Add cspNonce if provided (for security/CSP compliance)
             if (options.cspNonce) {
                 pazeOptions.cspNonce = options.cspNonce;
             }
@@ -215,55 +265,49 @@ define([
 			storeUrl,
 			runSuccessCb,
 			runErrorCb,
-			creds
+			creds,
+			billingAddress
 		) {
-			if (typeof(this.sdcv2Form) !== "undefined") {
-				if (typeof(creds) === "undefined") {
-					let promise = new Promise((resolve, reject) => {
-						this.getChCredentials(storeUrl, resolve, reject);
-					});
+			if (typeof(this.sdcv2Form) === "undefined") {
+				return;
+			}
 
-					promise.then((data) => {
-						let submitConfig = this.buildFormSubmitPayload(data);
-						this.sdcv2Form.submit(submitConfig)
-							.then((next) => {
-								let sessionId = data[this.sessionIdKey];
-								runSuccessCb(sessionId);
-							})
-							.catch((data) => { console.log(data); runErrorCb(); });
-					})
-					.catch((data) => {
-						runErrorCb(data);
-					});
-				}
-				else {
-					let submitConfig = this.buildFormSubmitPayload(creds);
-					this.sdcv2Form.submit(submitConfig)
-						.then((next) => {
-							let sessionId = creds[this.sessionIdKey];
-							runSuccessCb(sessionId);
-						})
-						.catch((data) => { console.log(data); runErrorCb(); });
-				}
-			};
+			const effectiveCreds = creds || this.mountCredentials || this.credentials;
+			const submitConfig = billingAddress ? { billingAddress } : undefined;
+			this.sdcv2Form.submit(submitConfig)
+				.then((next) => {
+					runSuccessCb(effectiveCreds[this.sessionIdKey]);
+				})
+				.catch((data) => { console.log(data); runErrorCb(); });
 		},
 
 		submitAchForm: function (
 			storeUrl,
 			runSuccessCb,
 			runErrorCb,
-			creds
+			creds,
+			billingAddress
 		) {
-			this.submitCardForm(storeUrl, runSuccessCb, runErrorCb, creds);
+			this.submitCardForm(storeUrl, runSuccessCb, runErrorCb, creds, billingAddress);
 		},
 
-		getAchLegalText: async function () {
-			if (this.sdcv2Form === undefined || typeof this.sdcv2Form.getAchLegalText !== 'function') throw new Error('SDC Form not found)');
+		getAchLegalText: async function (billingAddress) {
+			if (this.sdcv2Form === undefined || typeof this.sdcv2Form.getAchLegalText !== 'function') {
+				throw new Error('ACH payment form is not initialized.');
+			}
 
-			const legalTextResponse = await this.sdcv2Form.getAchLegalText();
+			// v4 SDK: getAchLegalText accepts { billingAddress } to include the billing
+			// address in the ACH auth-language request. The old v1 credentials payload is
+			// not needed here – the SDK resolves auth internally from the checkout context.
+			const submitConfig = billingAddress ? { billingAddress } : undefined;
 
-            if (!legalTextResponse.plainText) throw new Error('ACH legal text not found');
-            return legalTextResponse.plainText;
+			const legalTextResponse = await this.sdcv2Form.getAchLegalText(submitConfig);
+
+			if (!legalTextResponse.plainText) {
+				throw new Error('ACH legal text not found');
+			}
+
+			return legalTextResponse.plainText;
 		},
 
 		unmask: function (
@@ -332,11 +376,16 @@ define([
 							this.fieldValueChangeHandler(data);
 						}
 					}
-				} 
+				}
+			};
+			formConfig["data"]["environment"] = this.config[this.environmentKey];
 
-			}; 
-			formConfig["data"]["environment"] =  this.config[this.environmentKey];
-			
+			// retrieve the scoped context and attach it to the payment fields
+			if (this.contextId && window.fiserv) {
+				const ctx = window.fiserv.context(this.contextId);
+				if (ctx) { formConfig.context = ctx; }
+			}
+
 			return formConfig;
 		},
 
