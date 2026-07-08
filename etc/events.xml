@@ -30,15 +30,6 @@
 	<event name="payment_method_assign_data_fiserv_paze">
 		<observer name="fiserv_paze_data_assign" instance="Fiserv\Payments\Observer\CommerceHub\DataAssignObserver" />
 	</event>
-	<event name="payment_method_assign_data_fiserv_googlepay">
-		<observer name="fiserv_googlepay_data_assign" instance="Fiserv\Payments\Observer\CommerceHub\DataAssignObserver" />
-	</event>
-	<event name="payment_method_assign_data_fiserv_klarna">
-		<observer name="fiserv_klarna_data_assign" instance="Fiserv\Payments\Observer\CommerceHub\DataAssignObserver" />
-	</event>
-	<event name="payment_method_assign_data_fiserv_cashapp">
-		<observer name="fiserv_cashapp_data_assign" instance="Fiserv\Payments\Observer\CommerceHub\DataAssignObserver" />
-	</event>
 	<event name="payment_method_assign_data_fiserv_ebt_online">
 		<observer name="fiserv_ebt_online_gateway_data_assign" instance="Fiserv\Payments\Observer\CommerceHub\DataAssignObserver" />
 	</event>
