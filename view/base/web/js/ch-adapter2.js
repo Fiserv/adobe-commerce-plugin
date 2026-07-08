@@ -87,23 +87,14 @@ define([
                 sessionId: creds[this.sessionIdKey]
             };
 
-            if (contextId && window.fiserv && window.fiserv.FiservContext) {
-                try {
-                    const ctx = await window.fiserv.FiservContext.load(contextId);
-                    if (ctx && typeof ctx.init === 'function') {
-                        await ctx.init(initPayload);
-                        return ctx;
-                    }
-                } catch (e) {
-                    console.warn('[ch-adapter2] FiservContext.load() failed, falling back to global init:', e);
-                }
+            // SDK v4: contextId is an optional field in the init payload.
+            // When provided, creates a scoped context identified by that id.
+            if (contextId) {
+                initPayload.contextId = contextId;
             }
 
-            if (!this.sdkInitialized) {
-                await window.fiserv.init(initPayload);
-                this.sdkInitialized = true;
-            }
-            return null;
+            await window.fiserv.init(initPayload);
+            return contextId || null;
         },
 
 		getChCredentials: function (storeUrl, successCb, errorCb) {
@@ -277,10 +268,18 @@ define([
 			formConfig["data"]["environment"] =  formData.config[this.environmentKey];
 			formConfig["data"]["paymentMethod"] = paymentMethod;
 
-            if (formData.contextId) {
-                formConfig["contextId"] = formData.contextId;
-                formConfig["data"]["contextId"] = formData.contextId;
-            }
+			// SDK v4: retrieve the scoped context instance and attach it to the
+			// paymentFields config. Components expect a context object, not a string.
+			if (formData.contextId && window.fiserv) {
+				const ctx = typeof window.fiserv.context === 'function'
+					? window.fiserv.context(formData.contextId)
+					: (window.fiserv.FiservContext && window.fiserv.FiservContext.getInstance)
+						? window.fiserv.FiservContext.getInstance(formData.contextId)
+						: undefined;
+				if (ctx) {
+					formConfig.context = ctx;
+				}
+			}
 
 			return formConfig;
 		},

@@ -44,7 +44,6 @@ define([
 		sdcv2Form: undefined,
 		credentials: undefined,
 		contextId: undefined,
-		fiservContext: undefined,
 		sdkInitialized: false,
 		initializedSessionId: undefined,
 
@@ -62,7 +61,6 @@ define([
 			this.contextId = contextId;
 			this.sdkInitialized = false;
 			this.initializedSessionId = undefined;
-			this.fiservContext = undefined;
 		},
 
 		initSdk: async function(config, creds, contextId)
@@ -73,7 +71,7 @@ define([
 
 			const incomingSessionId = creds ? creds[this.sessionIdKey] : undefined;
 			if (this.sdkInitialized && incomingSessionId && this.initializedSessionId === incomingSessionId) {
-				return this.fiservContext || null;
+				return;
 			}
 
 			const initPayload = {
@@ -88,27 +86,16 @@ define([
 				sessionId: creds[this.sessionIdKey]
 			};
 
-			if (this.contextId && window.fiserv && window.fiserv.FiservContext) {
-				const FiservContext = window.fiserv.FiservContext;
-				let ctx = (typeof FiservContext.getInstance === 'function')
-					? FiservContext.getInstance(this.contextId)
-					: undefined;
-				if (!ctx) {
-					ctx = await FiservContext.load(this.contextId);
-				}
-				if (ctx && typeof ctx.init === 'function') {
-					await ctx.init(initPayload);
-					this.fiservContext = ctx;
-					this.sdkInitialized = true;
-					this.initializedSessionId = incomingSessionId;
-					return ctx;
-				}
+			// SDK v4: contextId is an optional field in the init payload.
+			// When provided, window.fiserv.init creates a scoped context
+			// identified by that id. When omitted, the global context is used.
+			if (this.contextId) {
+				initPayload.contextId = this.contextId;
 			}
 
 			await window.fiserv.init(initPayload);
 			this.sdkInitialized = true;
 			this.initializedSessionId = incomingSessionId;
-			return null;
 		},
 
 		getChCredentials: function (storeUrl, successCb, errorCb) {
@@ -163,8 +150,17 @@ define([
 
 		createBillingAddressComponent: async function (addressFields) {
 			const addressOptions = { fields: addressFields };
-			if (this.contextId) {
-				addressOptions.contextId = this.contextId;
+			// SDK v4: retrieve the scoped context instance and pass it to the
+			// component so it binds to the correct FiservContext.
+			if (this.contextId && window.fiserv) {
+				const ctx = typeof window.fiserv.context === 'function'
+					? window.fiserv.context(this.contextId)
+					: (window.fiserv.FiservContext && window.fiserv.FiservContext.getInstance)
+						? window.fiserv.FiservContext.getInstance(this.contextId)
+						: undefined;
+				if (ctx) {
+					addressOptions.context = ctx;
+				}
 			}
 			return await window.fiserv.components.address(addressOptions);
 		},
@@ -397,9 +393,17 @@ define([
 			}; 
 			formConfig["data"]["environment"] =  this.config[this.environmentKey];
 
-			if (this.contextId) {
-				formConfig["contextId"] = this.contextId;
-				formConfig["data"]["contextId"] = this.contextId;
+			// SDK v4: retrieve the scoped context instance and attach it to the
+			// paymentFields config. Components expect a context object, not a string.
+			if (this.contextId && window.fiserv) {
+				const ctx = typeof window.fiserv.context === 'function'
+					? window.fiserv.context(this.contextId)
+					: (window.fiserv.FiservContext && window.fiserv.FiservContext.getInstance)
+						? window.fiserv.FiservContext.getInstance(this.contextId)
+						: undefined;
+				if (ctx) {
+					formConfig.context = ctx;
+				}
 			}
 
 			return formConfig;

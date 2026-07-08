@@ -205,9 +205,16 @@ define(
 			},
 
 		run3DSecure: async function () {
-			const {transactionState, authenticationTransactionId} = await window.fiserv.components.threeDSecure(
-				chAdapter.contextId ? { contextId: chAdapter.contextId } : undefined
-			);
+			let threeDSConfig = undefined;
+			if (chAdapter.contextId && window.fiserv) {
+				const ctx = typeof window.fiserv.context === 'function'
+					? window.fiserv.context(chAdapter.contextId)
+					: (window.fiserv.FiservContext && window.fiserv.FiservContext.getInstance)
+						? window.fiserv.FiservContext.getInstance(chAdapter.contextId)
+						: undefined;
+				if (ctx) { threeDSConfig = { context: ctx }; }
+			}
+			const {transactionState, authenticationTransactionId} = await window.fiserv.components.threeDSecure(threeDSConfig);
 				if (transactionState.toUpperCase() === "DECLINED") {
 					throw new Error("3D-Secure authentication failure.");
 				}
