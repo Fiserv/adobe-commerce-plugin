@@ -81,9 +81,13 @@ define(
                 return this;
 			},
 
-			initializeChAdapter: function () 
-			{
-				chAdapter.initialize(
+		initializeChAdapter: function ()
+		{
+			// SDK v4: assign a scoped FiservContext id so this paymentFields
+			// component gets its own isolated context instance.
+			chAdapter.setContextId('fiserv-cc-' + this.code + '-' + Date.now());
+
+			chAdapter.initialize(
 					window.checkoutConfig.payment[this.code],
 					() => { this.iframeLoadSuccess(); },
 					(valid) => { this.iframeValidHandler(valid); },

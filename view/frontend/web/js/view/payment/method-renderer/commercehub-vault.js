@@ -110,6 +110,10 @@ define([
 		},
 
 		prepareChAdapter: function () {
+			// SDK v4: assign a scoped FiservContext id for this vault CVV
+			// paymentFields component.
+			chAdapter.setContextId('fiserv-vault-' + this.getId() + '-' + Date.now());
+
 			chAdapter.initialize(
 				window.checkoutConfig.payment[this.getCode()],
 				() => { this.iframeLoadSuccess(); },

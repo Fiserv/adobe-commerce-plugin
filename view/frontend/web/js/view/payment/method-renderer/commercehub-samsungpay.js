@@ -103,7 +103,6 @@ define([
 			const buttonStyle = this.getButtonStyle(config);
 
 		const samsungComponent = await window.fiserv.components.samsungPay({
-			...(chAdapter.contextId ? { contextId: chAdapter.contextId } : {}),
 			data: {
 					button: {
 						parentElementId: 'samsungpay-button-container',

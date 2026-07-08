@@ -252,12 +252,8 @@ define([
 				throw new Error('Fiserv SDK not loaded or window.fiserv.components.paypal not available');
 			}
 
-			const mergedOptions = Object.assign({}, options || {});
-			if (this.contextId && mergedOptions.contextId === undefined) {
-				mergedOptions.contextId = this.contextId;
-			}
-
-			this.paypalComponent = await window.fiserv.components.paypal(mergedOptions);
+			// PayPal is an APM — always use the global Fiserv context.
+			this.paypalComponent = await window.fiserv.components.paypal(options || {});
 			return this.paypalComponent;
 		},
 
@@ -266,12 +262,9 @@ define([
 				throw new Error('Fiserv SDK not loaded or window.fiserv.components.paze not available');
 			}
 
-            const pazeOptions = {displayName: options.displayName || 'My Site'};
+			// Paze is an APM — always use the global Fiserv context.
+			const pazeOptions = { displayName: options.displayName || 'My Site' };
 
-
-			if (this.contextId) {
-				pazeOptions.contextId = this.contextId;
-			}
 
             console.log('[CH-Adapter] Loading Paze component with options:', pazeOptions);
             this.pazeComponent = await window.fiserv.components.paze(pazeOptions);

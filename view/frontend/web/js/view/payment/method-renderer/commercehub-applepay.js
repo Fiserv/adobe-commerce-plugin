@@ -104,7 +104,6 @@ define([
             const buttonStyle = config.applepayButtonStyle ?? 'black';
             const buttonType = config.applepayButtonType ?? 'buy';
 		await window.fiserv.components.applePay({
-			...(chAdapter.contextId ? { contextId: chAdapter.contextId } : {}),
 			data: {
 					button: {
 						parentElementId: "applepay-button-container",

@@ -46,10 +46,9 @@ define([
 			var self = this;
 			fullScreenLoader.startLoader();
 
-			try {
-			const paypal = await window.fiserv.components.paypal(
-				chAdapter.contextId ? { contextId: chAdapter.contextId } : undefined
-			);
+		try {
+		// Fastlane is an APM — always uses the global Fiserv context.
+		const paypal = await window.fiserv.components.paypal();
 
 				window.braintree = window.braintree || {};
 				window.braintree.client = chBraintreeClient;
@@ -128,7 +127,6 @@ define([
 			});
 
 		return await window.fiserv.components.address({
-			...(chAdapter.contextId ? { contextId: chAdapter.contextId } : {}),
 			fields: fields,
 			hooks: {}
 		});
