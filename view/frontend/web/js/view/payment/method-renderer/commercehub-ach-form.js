@@ -512,7 +512,7 @@ define(
                 const billingPayload = this.buildBillingAddressPayload(billingAddress); 
                 const credsResponse = await chSession({ billingAddress: billingPayload });
 		        this.credentials = credsResponse["ch_credentials"];
-                await chAdapter.initSdk(this.getPaymentConfig(), this.credentials);
+                await chAdapter.initSdk(this.getPaymentConfig(), this.credentials, chAdapter.contextId);
             },
 
 			/**

@@ -44,8 +44,6 @@ define([
 		sdcv2Form: undefined,
 		credentials: undefined,
 		contextId: undefined,
-		sdkInitialized: false,
-		initializedSessionId: undefined,
 
 		initialize: function (config, iframeReadyCallback, iframeValidCallback, cardBrandChangeCallback, fieldValidityHandler, fieldFocusHandler, fieldValueChangeHandler) {
 			this.config = config;
@@ -59,19 +57,12 @@ define([
 
 		setContextId: function (contextId) {
 			this.contextId = contextId;
-			this.sdkInitialized = false;
-			this.initializedSessionId = undefined;
 		},
 
 		initSdk: async function(config, creds, contextId)
 		{
 			if (contextId) {
 				this.contextId = contextId;
-			}
-
-			const incomingSessionId = creds ? creds[this.sessionIdKey] : undefined;
-			if (this.sdkInitialized && incomingSessionId && this.initializedSessionId === incomingSessionId) {
-				return;
 			}
 
 			const initPayload = {
@@ -87,15 +78,13 @@ define([
 			};
 
 			// SDK v4: contextId is an optional field in the init payload.
-			// When provided, window.fiserv.init creates a scoped context
-			// identified by that id. When omitted, the global context is used.
-			if (this.contextId) {
-				initPayload.contextId = this.contextId;
+			// When provided it creates a scoped context. APMs never pass contextId
+			// so they always use/create the global context.
+			if (contextId) {
+				initPayload.contextId = contextId;
 			}
 
 			await window.fiserv.init(initPayload);
-			this.sdkInitialized = true;
-			this.initializedSessionId = incomingSessionId;
 		},
 
 		getChCredentials: function (storeUrl, successCb, errorCb) {
@@ -178,10 +167,9 @@ define([
 			loadErrorCb,
 			configData = undefined,
 		) {
+			// SDK v4: fetch fresh credentials and call initSdk (with this form's
+			// scoped contextId) each time to ensure the SDK is ready.
 			const ensureSdkReady = () => {
-				if (this.sdkInitialized) {
-					return Promise.resolve();
-				}
 				const storeUrl = this.config.storeUrl ||
 					(window.checkoutConfig && window.checkoutConfig.payment &&
 						window.checkoutConfig.payment.fiserv_payments &&
@@ -190,7 +178,7 @@ define([
 					this.getChCredentials(storeUrl, resolve, reject);
 				}).then(async (creds) => {
 					this.credentials = creds;
-					await this.initSdk(this.config, creds);
+					await this.initSdk(this.config, creds, this.contextId);
 				});
 			};
 
@@ -261,6 +249,9 @@ define([
 			// Paze is an APM — always use the global Fiserv context.
 			const pazeOptions = { displayName: options.displayName || 'My Site' };
 
+			if (options && options.cspNonce) {
+				pazeOptions.cspNonce = options.cspNonce;
+			}
 
             console.log('[CH-Adapter] Loading Paze component with options:', pazeOptions);
             this.pazeComponent = await window.fiserv.components.paze(pazeOptions);

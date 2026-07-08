@@ -411,7 +411,7 @@ define([
 			await this.setCredentials(paymentToken);
 			if (!this.credentials) throw new Error("Failed to create payment session.");
 
-			await chAdapter.initSdk(window.checkoutConfig.payment[this.getCode()], this.credentials);	
+			await chAdapter.initSdk(window.checkoutConfig.payment[this.getCode()], this.credentials, chAdapter.contextId);
 		},
 
 		run3DSecure: async function() {

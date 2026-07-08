@@ -104,13 +104,14 @@ define(
 				}
 			},
 
-			initCheckoutSdk: async function(credentials)
-			{
-				await chAdapter.initSdk(
-					window.checkoutConfig.payment[this.code],
-					credentials
-				);
-			},
+		initCheckoutSdk: async function(credentials)
+		{
+			await chAdapter.initSdk(
+				window.checkoutConfig.payment[this.code],
+				credentials,
+				chAdapter.contextId
+			);
+		},
 
 			loadIframe: function () {
 				chAdapter.destroyIframe();
@@ -638,10 +639,11 @@ define(
 				}));
 				const credsResponse = await chSession({ 'threeDSecure': false });
 				const creds = credsResponse['ch_credentials'];
-				await chAdapter.initSdk(
-					window.checkoutConfig.payment[this.code],
-					creds
-				);
+			await chAdapter.initSdk(
+				window.checkoutConfig.payment[this.code],
+				creds,
+				chAdapter.contextId
+			);
 
 
 				const surchargeDetails = await chAdapter.getSurchargeEstimate();
