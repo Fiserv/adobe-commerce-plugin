@@ -62,26 +62,72 @@ define(
 				credentials: undefined
 			},
 
-			/**
-			 * @returns {exports.initialize}
-			 */
-			initialize: async function () {
-					quote.billingAddress.subscribe(function (address) {
-					this.isPlaceOrderActionAllowed(address !== null);
-					this.checkoutValidHandler();	
-				}, this);
-			
-				this.code = 'fiserv_commercehub';
-				this.initializeChAdapter();
+		/**
+		 * @returns {exports.initialize}
+		 */
+		initialize: async function () {
+            quote.billingAddress.subscribe(function (address) {
+                this.isPlaceOrderActionAllowed(address !== null);
+				this.checkoutValidHandler();
+                }, this);
+
+			quote.totals.subscribe(function (newTotals) {
+				if (!this.isSurchargeEnabled()) {
+					return;
+				}
+				if (!newTotals) {
+					return;
+				}
+				if (this._reestimatingSurcharge) {
+					return;
+				}
+				if (surchargeModel.surchargeData() === null && !this.surchargeConfirmed()) {
+					return;
+				}
+
+				const newGrandTotal = parseFloat(newTotals.grand_total) || 0;
+				if (newGrandTotal <= 0) {
+					// Fully covered by store credit or gift card, therefore no surcharge.
+					surchargeModel.surchargeData(null);
+					this.surchargeConfirmed(false);
+					this.checkoutValidHandler();
+					return;
+				}
+
+				// Partial coverage: there is still a balance owed on the payment card, so re-estimate the
+				// surcharge against the new remaining balance
+				this._reestimatingSurcharge = true;
+				fullScreenLoader.startLoader();
+				this.fetchSurchargeEstimate()
+					.then((success) => {
+						if (!success) {
+							surchargeModel.surchargeData(null);
+							this.surchargeConfirmed(false);
+						}
+						this.checkoutValidHandler();
+					})
+					.catch(() => {
+						surchargeModel.surchargeData(null);
+						this.surchargeConfirmed(false);
+						this.checkoutValidHandler();
+					})
+					.finally(() => {
+						fullScreenLoader.stopLoader();
+						this._reestimatingSurcharge = false;
+					});
+			}, this);
+
+			this.code = 'fiserv_commercehub';
+			this.initializeChAdapter();
 
 				this._super();
 				this.vaultEnabler = new VaultEnabler();
 				this.vaultEnabler.setPaymentCode(this.getVaultCode());
-			
+
                 return this;
 			},
 
-			initializeChAdapter: function () 
+			initializeChAdapter: function ()
 			{
 				if (typeof chAdapter.setContextId === 'function') {
 					chAdapter.setContextId('fiserv-cc-' + this.code + '-' + Date.now());
@@ -164,7 +210,7 @@ define(
 
 			iframeRunSuccess: async function (sessionId) {
 				this.setPaymentPayload(sessionId);
-				
+
 				try {
 					if (this.is3DSecureEnabled()) {
 						await this.run3DSecure();
@@ -207,7 +253,7 @@ define(
 			},
 
 			handle3DSecureAuth: function (threeDSId) {
-				this.set3DSecurePayload(threeDSId);	
+				this.set3DSecurePayload(threeDSId);
 			},
 
 			is3DSecureEnabled: function()
@@ -221,7 +267,7 @@ define(
 			},
 
 			iframeRunFailure: function (message) {
-				this.showError(message ?? "Card capture failure. Please try again."); 
+				this.showError(message ?? "Card capture failure. Please try again.");
 				this.endIframeFlow();
 				this.cardBrandChangeHandler(null);
 				chAdapter.resetIframe();
@@ -247,13 +293,13 @@ define(
 
 				return this;
 			},
-	
+
 			setupPaymentMethod: function() {
 				this.watchPaymentMethods();
 				this.handleFastlaneConsent();
 			},
 
-			/** 
+			/**
 			 * Deactivates card form when fiserv_commercehub not checked.
 			 * isActive() not working with COD, for some reason.
 			 */
@@ -262,7 +308,7 @@ define(
 					if (event.currentTarget.id === this.getCode()) {
 						// must re-init SDK if other Fiserv APMs exist
 						this.initializeChAdapter();
-						this.loadIframe();	
+						this.loadIframe();
 					} else {
 						this.cardBrandChangeHandler(null);
 						chAdapter.destroyIframe();
@@ -389,7 +435,7 @@ define(
 			 *
 			 * @returns {Object}
 			 */
-			getCcAvailableTypes: function () {  
+			getCcAvailableTypes: function () {
 				return validator.getAvailableCardTypes();
 			},
 
@@ -403,7 +449,7 @@ define(
 					$(document).one("ajaxError", (ev,xhr) => { this.placeOrderFailureHandler(ev,xhr); } );
 					return self._super();
 				}
-			
+
 				return false;
 			},
 
@@ -446,7 +492,7 @@ define(
 			 *
 			 * @param {Object} paymentToken
 			 * @private
-			 */	
+			 */
 			setPaymentPayload: function (sessionId) {
 				this.paymentPayload.sessionId = sessionId;
 			},
@@ -708,7 +754,7 @@ define(
 			getContinueButton: function() {
 				return $('button#fiserv-checkout-continue');
 			},
-			
+
 			getCardBrandIcon: function() {
 				return $('#sdc-card-brand-icon');
 			},
@@ -795,7 +841,7 @@ define(
 				}
 
 				return undefined;
-				
+
 			},
 
 			getSdcInvalidFieldMessageText: function(name) {
@@ -814,7 +860,7 @@ define(
 				}
 
 				return "";
-	
+
 			},
 
 			getSdcFields: function() {
@@ -838,7 +884,7 @@ define(
 
 				if (typeof(frame) !== "undefined")
 				{
-					if (data["isValid"] === true) 
+					if (data["isValid"] === true)
 					{
 						frame.removeClass('sdc-error-field');
 						frame.addClass('sdc-valid-field');
@@ -860,7 +906,7 @@ define(
 
 			fieldFocusHandler: function(data) {
 				let frame = this.getSdcFieldFrame(data);
-				
+
 				if(typeof(frame) !== "undefined") {
 					if(frame[0].contains(document.activeElement) === true) {
 						frame.addClass('sdc-focused-field');
