@@ -55,19 +55,11 @@ define(
 		function getAmount()
 		{
 			const totals = quote.totals();
-			let grandTotal = totals ? (totals.grand_total || 0) : 0;
-			let currency= totals ? (totals.quote_currency_code || 'USD') : 'USD';
+			// grand_total already reflects all applied discounts, store credit, rewards, and gift cards,
+			// so it represents the actual amount to be charged to the credit card.
+			let grandTotal = totals ? parseFloat(totals.grand_total) || 0 : 0;
+			const currency = totals ? (totals.quote_currency_code || 'USD') : 'USD';
 
-			if (totals && totals.total_segments) {
-				totals.total_segments.forEach(function (segment) {
-					if (['customerbalance', 'reward', 'giftcardaccount'].indexOf(segment.code) !== -1) {
-						const val = parseFloat(segment.value) || 0;
-						if (val < 0) {
-							grandTotal -= val;
-						}
-					}
-				});
-			}
 
 			grandTotal = Math.max(0, Math.round(grandTotal * 100) / 100);
 			return {
