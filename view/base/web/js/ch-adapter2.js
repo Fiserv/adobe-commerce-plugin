@@ -68,10 +68,6 @@ define([
 			});
 		},
 
-		/**
-		 * SDK v4: contextId is passed as an optional field inside the init payload.
-		 * When provided, a scoped context is created for this form instance.
-		 */
 		initSdk: async function(config, creds, contextId)
 		{
 			const initPayload = {
