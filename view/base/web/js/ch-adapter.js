@@ -162,9 +162,6 @@ define([
 			creds = undefined,
 		) {
 			const ensureSdkReady = () => {
-				// If credentials were already fetched and the SDK already initialized by the
-				// caller (e.g. ACH fetches an enriched session before mounting), reuse them
-				// directly so we don't overwrite the enriched session with a basic one.
 				if (creds) {
 					this.mountCredentials = creds;
 					return Promise.resolve();
@@ -296,11 +293,7 @@ define([
 				throw new Error('ACH payment form is not initialized.');
 			}
 
-			// v4 SDK: getAchLegalText accepts { billingAddress } to include the billing
-			// address in the ACH auth-language request. The old v1 credentials payload is
-			// not needed here – the SDK resolves auth internally from the checkout context.
 			const submitConfig = billingAddress ? { billingAddress } : undefined;
-
 			const legalTextResponse = await this.sdcv2Form.getAchLegalText(submitConfig);
 
 			if (!legalTextResponse.plainText) {
