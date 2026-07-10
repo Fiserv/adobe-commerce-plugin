@@ -22,29 +22,23 @@ define([
             }, this);
 
             this.surchargeAmount = ko.computed(function() {
-                const data = surchargeModel.surchargeData();
-                return (data && data.surcharge_estimate) ? data.surcharge_estimate : 0;
+                if (!this.hasSurcharge()) return 0;
+                return surchargeModel.surchargeData().amount;
             }, this);
 
             this.formattedAmount = ko.computed(function() {
-                const amount = this.surchargeAmount();
-                if (amount > 0) {
-                    return this.getFormattedPrice(amount);
-                }
-                return '';
+                if (!this.hasSurcharge()) return '';
+                return this.getFormattedPrice(surchargeModel.surchargeData().amount);
             }, this);
 
             this.disclosureText = ko.computed(function() {
-                const data = surchargeModel.surchargeData();
-                return (data && data.disclosureText) ? data.disclosureText : '';
+                if (!this.hasSurcharge()) return '';
+                return surchargeModel.surchargeData().disclosureText;
             }, this);
 
             this.adjustedGrandTotal = ko.computed(function() {
-                const data = surchargeModel.surchargeData();
-                if (data && data.grandTotal) {
-                    return this.getFormattedPrice(data.grandTotal);
-                }
-                return '';
+                if (!this.hasSurcharge()) return '';
+                return this.getFormattedPrice(surchargeModel.surchargeData().grandTotal);
             }, this);
 
             return this;
