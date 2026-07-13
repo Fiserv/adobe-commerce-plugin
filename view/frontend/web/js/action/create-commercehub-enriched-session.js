@@ -54,9 +54,14 @@ define(
 
 		function getAmount()
 		{
-			let rawGrandTotal = quote.totals() ? quote.totals().grand_total : 0;
-			let grandTotal = Math.round(rawGrandTotal * 100) / 100;
-			let currency = quote.totals() ? quote.totals().quote_currency_code : "USD";
+			const totals = quote.totals();
+			// grand_total already reflects all applied discounts, store credit, rewards, and gift cards,
+			// so it represents the actual amount to be charged to the credit card.
+			let grandTotal = totals ? parseFloat(totals.grand_total) || 0 : 0;
+			const currency = totals ? (totals.quote_currency_code || 'USD') : 'USD';
+
+
+			grandTotal = Math.max(0, Math.round(grandTotal * 100) / 100);
 			return {
 				"total" : grandTotal,
 				"currency" : currency
