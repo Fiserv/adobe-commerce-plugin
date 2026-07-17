@@ -68,8 +68,7 @@
 						<label>Accepted Currency</label>
 						<source_model>Magento\Config\Model\Config\Source\Locale\Currency</source_model>
 						<config_path>payment/fiserv_commercehub/currency</config_path>
-						<frontend_model>Fiserv\Payments\Model\Source\CommerceHub\Disable</frontend_model>
-						<comment>This version supports USD only. Additional currencies will be added in the future.</comment>
+						<comment>Configure the transaction currency used when quote totals are unavailable for Commerce Hub session creation.</comment>
 					</field>
 					<field id="allowspecific" translate="label" type="allowspecific" sortOrder="15" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Accept Payments From All Countries</label>

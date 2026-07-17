@@ -110,23 +110,15 @@ class ValuelinkBalanceRequest
 		$data = [];
 		if ($statusCode === 201) {
 			$balanceArray = $bodyArray[self::KEY_PAYMENT_RECEIPT][self::KEY_BALANCES];
-			$arrayLength = count($balanceArray);
-			$balanceData = [];
-			for($i = 0; $i < $arrayLength; $i++)
-			{
-				if ($balanceArray[$i]['currency'] === 'USD')
-				{
-					$balanceData = $balanceArray[$i];
-					break;
-				}
-			}
+			$configuredCurrency = $this->getConfiguredCurrency();
+			$balanceData = $this->getBalanceByCurrency($balanceArray, $configuredCurrency);
 
 			$endingBalance = $balanceData[self::KEY_AVAILABLE_BALANCE] ?? 0;
 			$lockAmount = $balanceData[self::KEY_LOCK_AMOUNT] ?? 0;
 			$availableBalance = $endingBalance - $lockAmount;
 
 			$data[self::KEY_AVAILABLE_BALANCE] = $availableBalance;
-			$data[self::KEY_CURRENCY] = $balanceData[self::KEY_CURRENCY] ?? 'USD';
+			$data[self::KEY_CURRENCY] = $balanceData[self::KEY_CURRENCY] ?? $configuredCurrency;
 			$data[self::KEY_RESPONSE_MESSAGE] = $bodyArray[self::KEY_PAYMENT_RECEIPT][self::KEY_PROCESSOR_RESPONSE_DETAILS][self::KEY_RESPONSE_MESSAGE] ?? '';
 		} else {
 			throw new \Exception('CommerceHub Gift Card BalanceInquiry request HTTP error code: ' . $statusCode, 1);
@@ -139,7 +131,7 @@ class ValuelinkBalanceRequest
 		$payload = new BalanceInquiryRequest();
 		$source = new PaymentSession();
 		$balance = new Balance();
-		$balance->setCurrency('USD');
+		$balance->setCurrency($this->getConfiguredCurrency());
 		$payload->setBalance($balance);
 		$source->setSourceType(SessionSourceDataBuilder::PAYMENT_SESSION_SOURCE_TYPE);
 		$source->setSessionId($sessionId);
@@ -185,5 +177,26 @@ class ValuelinkBalanceRequest
 			return $chResponse["gatewayResponse"]["transactionProcessingDetails"]["transactionId"];
 		}
 		return null;
+	}
+
+	private function getConfiguredCurrency(): string
+	{
+		return (string)$this->chConfig->getCurrency();
+	}
+
+	private function getBalanceByCurrency(array $balances, string $targetCurrency): array
+	{
+		if (empty($balances)) {
+			return [];
+		}
+
+		$normalizedTarget = strtoupper($targetCurrency);
+		foreach ($balances as $balance) {
+			if (strtoupper((string)($balance[self::KEY_CURRENCY] ?? '')) === $normalizedTarget) {
+				return $balance;
+			}
+		}
+
+		return $balances[0];
 	}
 }

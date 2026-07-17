@@ -686,6 +686,8 @@ define(
 					const surchargeBaseAmount = (surchargeDetails.amount && surchargeDetails.amount.total)
 						? parseFloat(surchargeDetails.amount.total) - surchargeAmount
 						: 0;
+					const quoteCurrency = quote.totals() ? quote.totals().quote_currency_code : undefined;
+					const configuredCurrency = window.checkoutConfig?.payment?.fiserv_commercehub?.currency;
 
 					const currentQuoteTotal = quote.totals() ? (parseFloat(quote.totals().grand_total) || 0) : 0;
 					const displayGrandTotal = Math.round((currentQuoteTotal + surchargeAmount) * 100) / 100;
@@ -698,7 +700,7 @@ define(
 						amount: surchargeAmount,
 						baseAmount: surchargeBaseAmount,
 						grandTotal: displayGrandTotal,
-						currency: (surchargeDetails.amount && surchargeDetails.amount.currency) || 'USD'
+						currency: (surchargeDetails.amount && surchargeDetails.amount.currency) || quoteCurrency || configuredCurrency
 					});
 				} else {
 					surchargeModel.surchargeData(null);

@@ -58,7 +58,8 @@ define(
 			// grand_total already reflects all applied discounts, store credit, rewards, and gift cards,
 			// so it represents the actual amount to be charged to the credit card.
 			let grandTotal = totals ? parseFloat(totals.grand_total) || 0 : 0;
-			const currency = totals ? (totals.quote_currency_code || 'USD') : 'USD';
+			const configuredCurrency = window.checkoutConfig?.payment?.fiserv_commercehub?.currency;
+			const currency = totals ? (totals.quote_currency_code || configuredCurrency) : configuredCurrency;
 
 
 			grandTotal = Math.max(0, Math.round(grandTotal * 100) / 100);

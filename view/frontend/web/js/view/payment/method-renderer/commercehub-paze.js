@@ -119,7 +119,8 @@ define([
             let grandTotal = Math.round(rawGrandTotal * 100) / 100;
 		    let grandTotalNum = Number(rawGrandTotal) || 0;
 		    let grandTotalStr = grandTotalNum.toFixed(2);
-            let currency = quote.totals() ? quote.totals().quote_currency_code : "USD";
+		    let configuredCurrency = window.checkoutConfig?.payment?.fiserv_commercehub?.currency;
+		    let currency = quote.totals() ? (quote.totals().quote_currency_code || configuredCurrency) : configuredCurrency;
             return {
                 total: grandTotalStr,
                 currency: currency

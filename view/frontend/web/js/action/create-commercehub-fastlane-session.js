@@ -15,8 +15,10 @@ define(
 		{
 			let rawGrandTotal = quote.totals() ? quote.totals().grand_total : 0;
 			let grandTotal = Math.round(rawGrandTotal * 100) / 100;
-			let currency = quote.totals() ? quote.totals().quote_currency_code : "USD";
-			
+			let configuredCurrency = window.checkoutConfig?.payment?.fiserv_paypal?.currency
+				|| window.checkoutConfig?.payment?.fiserv_commercehub?.currency;
+			let currency = quote.totals() ? (quote.totals().quote_currency_code || configuredCurrency) : configuredCurrency;
+
 			// don't look at this
 			window.checkoutConfig.payment.fiserv_paypal_fastlane.initializedAmount = grandTotal;
 			

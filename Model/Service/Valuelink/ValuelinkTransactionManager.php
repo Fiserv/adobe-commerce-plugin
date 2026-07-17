@@ -125,9 +125,10 @@ class ValuelinkTransactionManager
 		try
 		{
 			$valuelinkTransaction = $this->valuelinkTransactionFactory->create();
+			$currency = $this->resolveOrderCurrency($order);
 			$valuelinkTransaction->setOrderIncrementId($order->getIncrementId());
 			$valuelinkTransaction->setAmount($valuelinkRecord->getAmountToCharge());
-			$valuelinkTransaction->setCurrency('USD');
+			$valuelinkTransaction->setCurrency($currency);
 			$valuelinkTransaction->setDateCreated(new \DateTime('now', new \DateTimeZone($this->_localeDate->getConfigTimezone())));
 
 			$paymentAction = $this->valuelinkConfig->getPaymentAction();
@@ -149,7 +150,7 @@ class ValuelinkTransactionManager
 			$payload = $this->valuelinkChargesAdapter->getValuelinkChargesPayload(
 				$valuelinkRecord->getSessionId(),
 				$valuelinkRecord->getAmountToCharge(),
-				'USD',
+				$currency,
 				$merchantOrderId
 			);
 
@@ -183,7 +184,7 @@ class ValuelinkTransactionManager
 			
 			$verb = $valuelinkTransaction->getTransactionState() === ValuelinkTransaction::CAPTURED_STATE ? "captured" : "authorized";
 
-			$order->addStatusHistoryComment("Gift Card " . $verb . " amount of: $" . number_format(round($valuelinkTransaction->getAmount(),2), 2, '.', '') . ". Transaction ID: \"" . $valuelinkTransaction->getTransactionId() . "\"")
+			$order->addStatusHistoryComment("Gift Card " . $verb . " amount of: " . $this->formatAmountForComment($valuelinkTransaction->getAmount(), $valuelinkTransaction->getCurrency()) . ". Transaction ID: \"" . $valuelinkTransaction->getTransactionId() . "\"")
 				->setIsCustomerNotified(false);
 
 			$this->logger->logInfo(1, "Transaction success", "Order ID: {$merchantOrderId}");
@@ -258,7 +259,7 @@ class ValuelinkTransactionManager
 				throw new \Exception(__("Gift Card response state not recognized as successful: " . $cancelTxn->getTransactionState()));
 			}
 	
-			$order->addStatusHistoryComment("Gift Card voided amount of: $" . number_format(round($cancelTxn->getAmount(),2), 2, '.', '') . ". Transaction ID: \"" . $cancelTxn->getTransactionId() . "\"")
+			$order->addStatusHistoryComment("Gift Card voided amount of: " . $this->formatAmountForComment($cancelTxn->getAmount(), $cancelTxn->getCurrency()) . ". Transaction ID: \"" . $cancelTxn->getTransactionId() . "\"")
 				->setIsCustomerNotified(false);
 
 			$this->logger->logInfo(1, "Transaction success", "Order ID: {$order->getIncrementId()}");
@@ -336,7 +337,7 @@ class ValuelinkTransactionManager
 				throw new \Exception(__("Gift Card response state not recognized as successful: " . $captureTxn->getTransactionState()));
 			}
 	
-			$order->addStatusHistoryComment("Gift Card captured amount of: $" . number_format(round($captureTxn->getAmount(),2), 2, '.', '') . ". Transaction ID: \"" . $captureTxn->getTransactionId() . "\"")
+			$order->addStatusHistoryComment("Gift Card captured amount of: " . $this->formatAmountForComment($captureTxn->getAmount(), $captureTxn->getCurrency()) . ". Transaction ID: \"" . $captureTxn->getTransactionId() . "\"")
 				->setIsCustomerNotified(false);
 
 			$this->logger->logInfo(1, "Transaction success");
@@ -394,5 +395,25 @@ class ValuelinkTransactionManager
 				isset($chResponse["paymentReceipt"]["processorResponseDetails"]) &&
 				isset($chResponse["paymentReceipt"]["processorResponseDetails"]["responseMessage"])) ?
 			$chResponse["paymentReceipt"]["processorResponseDetails"]["responseMessage"] : "Response message unavailable";
+	}
+
+	private function resolveOrderCurrency($order, ?string $fallbackCurrency = null): string
+	{
+		$currency = $order->getOrderCurrencyCode() ?: $order->getBaseCurrencyCode();
+		if (!empty($currency)) {
+			return $currency;
+		}
+
+		if (!empty($fallbackCurrency)) {
+			return $fallbackCurrency;
+		}
+
+		return 'N/A';
+	}
+
+	private function formatAmountForComment($amount, ?string $currency): string
+	{
+		$normalizedCurrency = !empty($currency) ? $currency : 'N/A';
+		return number_format(round((float)$amount, 2), 2, '.', '') . ' ' . $normalizedCurrency;
 	}
 }
