@@ -13,6 +13,7 @@
 				<item name="fiserv_samsung_pay" xsi:type="object">Fiserv\Payments\Model\Config\SamsungPay\ConfigProvider</item>
 				<item name="fiserv_ach" xsi:type="object">Fiserv\Payments\Model\Config\Ach\ConfigProvider</item>
 				<item name="fiserv_paze" xsi:type="object">Fiserv\Payments\Model\Config\Paze\ConfigProvider</item>
+			<item name="fiserv_googlepay" xsi:type="object">Fiserv\Payments\Model\Config\GooglePay\ConfigProvider</item>
             </argument>
 		</arguments>
 	</type>
