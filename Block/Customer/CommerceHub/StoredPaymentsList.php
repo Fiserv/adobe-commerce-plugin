@@ -87,6 +87,7 @@ class StoredPaymentsList extends Template
 		$config[ConfigProvider::ENV_KEY] = $chConfig[ConfigProvider::ENV_KEY];
 		$config[ConfigProvider::MERCHANT_ID_KEY] = $chConfig[ConfigProvider::MERCHANT_ID_KEY];
 		$config[ConfigProvider::API_KEY_KEY] = $chConfig[ConfigProvider::API_KEY_KEY];
+		$config[ConfigProvider::TERMINAL_ID_KEY] = $chConfig[ConfigProvider::TERMINAL_ID_KEY];
 		$config[FiservConfigProvider::STORE_URL_KEY] = $fconfig[FiservConfigProvider::STORE_URL_KEY];
 		$config[self::CUSTOMER_ID_KEY] = $this->getCustomerId();
 		$config[self::STORE_ID_KEY] = $storeId;

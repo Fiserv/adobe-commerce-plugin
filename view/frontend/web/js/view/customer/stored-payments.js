@@ -2,6 +2,7 @@ define([
 	'ko',
 		'uiComponent',
 		'Fiserv_Payments/js/ch-adapter',
+        'Fiserv_Payments/js/action/create-commercehub-session',
 		'Magento_Checkout/js/model/full-screen-loader',
 		'Magento_Ui/js/model/messageList',
 		'jquery',
@@ -10,6 +11,7 @@ define([
 		ko,
 		Component,
 		chIframe,
+        chSession,
 		fullScreenLoader,
 		globalMessageList,
 		$
@@ -20,7 +22,9 @@ define([
 			defaults: {
 				tokenConfig: {},
 				tokenizeUrl: "fiserv/vault/tokenizesession",
-				tokenizeErrorMsg: "Something went wrong. Please try again later."
+				tokenizeErrorMsg: "Something went wrong. Please try again later.",
+                paymentSessionData: undefined,
+                contextId: undefined,
 			},
 
 			/**
@@ -30,10 +34,9 @@ define([
 				if (config.tokenConfig === undefined) { 
 					throw new Error('Required parameter tokenConfig not found!');
 				}
-
-				var self = this;
 				
 				this.tokenConfig = config.tokenConfig;
+                
 				chIframe.initialize(
 					this.tokenConfig,
 					this.iframeLoadSuccess.bind(this),
@@ -46,8 +49,8 @@ define([
 				this.getFormContainer().hide();
 				this.showTokenizationContainer();
 
-				self._super();
-				return self;
+				this._super();
+				return this;
 			},
 			
 			getFormContainer: function()
@@ -123,13 +126,26 @@ define([
 			getCancelButton: function() {
 				return $('button#tokenization-builder-cancel');
 			},
-	
-			createIframe: function() {
-				var self = this;
-				let successCb = (data) => { this.iframeLoadSuccess(data); };
-				let failureCb = self.iframeLoadFailure.bind(self);
 
+            initCheckoutSdk: async function()
+            {
+                const credsResponse = await chSession();
+                this.paymentSessionData = credsResponse["ch_credentials"];
+
+                this.contextId = crypto.randomUUID();
+
+                await chIframe.initSdk(
+                    this.tokenConfig,
+                    this.paymentSessionData,
+                    this.contextId,
+                );
+            },
+	
+			createIframe: async function() {
 				this.beginAsyncFlow();
+				
+				await this.initCheckoutSdk();
+
 				let iframePromise = new Promise((resolve, reject) => {
 					chIframe.instantiateIframe(
 						resolve, 
@@ -137,9 +153,9 @@ define([
 					);
 				});
 				iframePromise.then((data) => {
-					successCb(data);
+					(data) => { this.iframeLoadSuccess(data); };
 				}).catch((error) =>{
-					failureCb(error);
+					(error) => { this.iframeLoadFailure(error); };
 				})
 
 			},
@@ -153,9 +169,8 @@ define([
 
 			submitIframe: function() {
 				this.beginAsyncFlow();
-				chIframe.submitCardForm(
-					this.tokenConfig['storeUrl'], 
-					(sessionId) => { this.beginTokenizationFlow(sessionId); },
+				chIframe.submitIframeForm(
+					() => { this.beginTokenizationFlow(); },
 					() => { this.iframeRunFailure(); }
 				);
 			},
@@ -255,23 +270,28 @@ define([
 				});
 			},
 
-			beginTokenizationFlow: function(sessionId) {
-				let self = this;
+			beginTokenizationFlow: function() {
+                if (!this.paymentSessionData || !this.paymentSessionData["sessionId"]) {
+                    this.showError("Payment session not established. Please try again.");
+                    return;
+                }
+
+                const sessionId = this.paymentSessionData["sessionId"];
 
 				// Callbacks
-				let validateCb = self.validateTokenizeResponse.bind(self);
-				let successCb = self.tokenizeSuccess.bind(self);
-				let errorCb = self.tokenizeFailure.bind(self);
-				let completeCB = self.endAsyncFlow.bind(self);
+				const validateCb = (response) => { return this.validateTokenizeResponse(response); };
+				const successCb = () => { this.tokenizeSuccess(); };
+				const errorCb = (message) => { this.tokenizeFailure(message); };
+				const completeCB = () => { this.endAsyncFlow(); };
 
 				// Data
-				let errorMsg = self.tokenizeErrorMsg;
-				let customerId = self.tokenConfig.customer_id;
-				let storeUrl = self.tokenConfig.storeUrl;
-				let tokenizeUrl = self.tokenizeUrl;
-				let websiteId = self.tokenConfig.website_id;
+				const errorMsg = this.tokenizeErrorMsg;
+				const customerId = this.tokenConfig.customer_id;
+				const storeUrl = this.tokenConfig.storeUrl;
+				const tokenizeUrl = this.tokenizeUrl;
+				const websiteId = this.tokenConfig.website_id;
 
-				self.beginAsyncFlow();
+				this.beginAsyncFlow();
 				$.post({
 					cache: false,
 					url: storeUrl.concat(tokenizeUrl).concat("?session_id=").concat(sessionId).concat("&customer_id=").concat(customerId).concat("&website_id=").concat(websiteId),
@@ -280,9 +300,7 @@ define([
 						"X-Requested-With": "XMLHttpRequest"
 					},
 					success: function(response) {
-						if (!validateCb(response)) {
-							errorCb(errorMsg);
-						}
+						if (!validateCb(response)) errorCb(errorMsg);
 						successCb();
 					},
 					error: function(err) {

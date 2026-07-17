@@ -28,7 +28,9 @@ define([
 			additionalData: {},
 			paymentPayload: { sessionId: null },
 			paymentMethodName: '[name="payment[method]"]',
-			securityIframeInitialized: false
+			securityIframeInitialized: false,
+            paymentSessionData: undefined,
+            contextId: undefined
 		},
 
 		initialize: function () {
@@ -87,7 +89,7 @@ define([
 					if (!this.shouldRequireVaultCvv()) {
 						this.updatePlaceOrderState(true);
 					} else {
-						this.loadSecurityIframe();
+						this.loadSecurityIframe().then()
 					}
 				} else {
 					this.destroySecurityIframe();
@@ -105,7 +107,7 @@ define([
 			}
 
 			if (this.isChecked() === this.getId()) {
-				this.loadSecurityIframe();
+				this.loadSecurityIframe().then();
 			}
 		},
 
@@ -134,7 +136,7 @@ define([
 			return clonedConfig;
 		},
 
-		loadSecurityIframe: function () {
+		loadSecurityIframe: async function () {
 			window.fiservVaultIframeGuards = window.fiservVaultIframeGuards || {};
 			var guardKey = this.getId();
 			if (window.fiservVaultIframeGuards[guardKey]) {
@@ -147,6 +149,9 @@ define([
 			const frameConfig = { data: this.buildSecurityCodeFormConfig() };
 			this.beginIframeFlow();
 			chAdapter.destroyIframe();
+
+            await this.initChSdk(this.paymentToken);
+
 			chAdapter.instantiateIframe(
 				() => { this.iframeLoadSuccess(); },
 				(error) => { this.iframeLoadFailure(error); },
@@ -283,13 +288,21 @@ define([
 		submitSecurityCode: async function (credentials) {
 			return new Promise((resolve, reject) => {
 				this.beginIframeFlow();
-				chAdapter.submitCardForm(
-					window.checkoutConfig.payment.fiserv_payments['storeUrl'],
-					(sessionId) => { this.setPaymentPayload(sessionId); this.endIframeFlow(); resolve(sessionId); },
-					(error) => { this.iframeRunFailure(error); reject(error); },
-					credentials
+				chAdapter.submitIframeForm(
+					() => { this.iframeRunSuccess(); resolve(); },
+					(error) => { this.iframeRunFailure(error); reject(error); }
 				);
 			});
+		},
+
+		iframeRunSuccess: function() {
+			if (!this.paymentSessionData || !this.paymentSessionData['sessionId']) {
+				this.iframeRunFailure("Payment session data not found.");
+				return;
+			}
+
+			this.setPaymentPayload(this.paymentSessionData['sessionId']);
+			this.endIframeFlow();
 		},
 
 		/**
@@ -310,7 +323,7 @@ define([
 				await this.setCredentials(this.paymentToken);
 
 				try {
-					await this.submitSecurityCode(this.credentials);
+					await this.submitSecurityCode(this.paymentSessionData);
 				} catch (error) {
 					return;
 				}
@@ -318,7 +331,7 @@ define([
 
 			if (this.is3DSecureEnabled()) {
 				try {
-					await this.begin3DSecureFlow()
+					await this.run3DSecure();
 				} catch (error) {
 					this.threeDSecureFail(error);
 					fullScreenLoader.stopLoader();
@@ -366,15 +379,10 @@ define([
 			return responseBody.paymentToken
 		},
 
-		begin3DSecureFlow: async function(sessionId) {
-			await this.initChSdk(this.paymentToken);
-			await this.run3DSecure();
-		},
-
 		threeDSecureFail: function(error) {
 			this.placeOrderFail(error);
 			this.paymentToken = undefined;
-			this.credentials = undefined;
+			this.paymentSessionData = undefined;
 		},
 
 		placeOrderFail: function (errorResponse) {
@@ -399,15 +407,20 @@ define([
 				"threeDSecure" : this.is3DSecureEnabled() 
 			});
 
-			this.credentials = credsResponse["ch_credentials"];
+			this.paymentSessionData = credsResponse["ch_credentials"];
 		},
 			
 
 		initChSdk: async function(paymentToken) {
 			await this.setCredentials(paymentToken);
-			if (!this.credentials) throw new Error("Failed to create payment session.");
+			if (!this.paymentSessionData) throw new Error("Failed to create payment session.");
 
-			await chAdapter.initSdk(window.checkoutConfig.payment[this.getCode()], this.credentials);
+            this.contextId = crypto.randomUUID();
+			await chAdapter.initSdk(
+                window.checkoutConfig.payment[this.getCode()], 
+                this.paymentSessionData, 
+                this.contextId
+            );
 		},
 
 		run3DSecure: async function() {

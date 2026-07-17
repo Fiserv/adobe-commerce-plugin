@@ -69,7 +69,6 @@ define(
                 addressComponent: undefined,
 			paymentMethodName: '[name="payment[method]"',
                 isIframeValid: false,
-                credentials: undefined,
                 lastBillingAddressKey: '',
                 adapterInitialized: false,
                 isIframeReady: false,
@@ -80,6 +79,7 @@ define(
                 achRoutingNumberKey: 'routingNumber',
                 achAccountNumberKey: 'accountNumber',
                 billingAddressContainerId: 'fiserv-ach-billing-address-container',
+                paymentSessionData: undefined
             },
 
             /**
@@ -93,8 +93,6 @@ define(
                     this.isPlaceOrderActionAllowed(address !== null);
                     this.checkoutValidHandler();
                 }, this);
-
-                this.initializeChAdapter();
 
                 return this;
             },
@@ -163,11 +161,6 @@ define(
             },
 
             initializeChAdapter() {
-                // uses a scoped Fiserv Context for the ACH payment-field form
-                if (typeof chAdapter.setContextId === 'function') {
-                    chAdapter.setContextId('fiserv-ach-' + this.code + '-' + Date.now());
-                }
-
 				chAdapter.initialize(
 					this.getPaymentConfig(),
 					() => { this.iframeLoadSuccess(); },
@@ -180,7 +173,6 @@ define(
 			},
 
             loadSdcForm() {
-                this.initializeChAdapter();
 
                 if (this.isChecked() === this.code) {
                     this.loadIframe()
@@ -192,6 +184,7 @@ define(
 
             async loadIframe() {
                 this.beginIframeFlow();
+			this.initializeChAdapter();
 
                 const billingAddress = this.getBillingAddress();
                 if (!billingAddress) throw new Error("Billing address not found.");
@@ -218,9 +211,7 @@ define(
                 // calls in submitIframe() so it still reaches the Fiserv API.
                 chAdapter.instantiateIframe(
                     () => { this.iframeLoadSuccess(); },
-                    (e) => { this.iframeLoadFailure(e); },
-                    undefined,
-                    this.credentials
+                    (e) => { this.iframeLoadFailure(e); }
                 );
             },
 
@@ -270,8 +261,13 @@ define(
                 this.endIframeFlow();
             },
 
-            iframeRunSuccess(sessionId) {
-                this.setPaymentPayload(sessionId);
+            iframeRunSuccess() {
+		if (!this.paymentSessionData || !this.paymentSessionData['sessionId'])
+		{
+			this.iframeRunFailure('Payment session data not found.');
+			return;
+		}
+                this.setPaymentPayload(this.paymentSessionData['sessionId']);
                 this.endIframeFlow();
                 this.placeOrderClick();
             },
@@ -526,16 +522,9 @@ define(
 
                         fullScreenLoader.startLoader();
 
-                        chAdapter.submitAchForm(
-                            globalThis.checkoutConfig.payment.fiserv_payments.storeUrl,
-                            (sessionId) => {
-                                this.iframeRunSuccess(sessionId);
-                            },
-                            (e) => {
-                                this.iframeRunFailure(e.message || 'An error occurred during ACH processing. Please try again.');
-                            },
-                            this.credentials,
-                            billingPayload
+                        chAdapter.submitIframeForm(
+                            () => { this.iframeRunSuccess(); },
+                            (e) => { this.iframeRunFailure(e.message || 'An error occurred during ACH processing. Please try again.'); }
                         );
                     }
 
@@ -547,8 +536,14 @@ define(
             async initCheckoutSdk(billingAddress) {
                 const billingPayload = this.buildBillingAddressPayload(billingAddress);
                 const credsResponse = await chSession({billingAddress: billingPayload});
-                this.credentials = credsResponse["ch_credentials"];
-                await chAdapter.initSdk(this.getPaymentConfig(), this.credentials, chAdapter.contextId);
+                this.paymentSessionData = credsResponse["ch_credentials"];
+
+                this.contextId = crypto.randomUUID();
+                await chAdapter.initSdk(
+                    this.getPaymentConfig(), 
+                    this.paymentSessionData, 
+                    this.contextId
+                );
             },
 
             /**
