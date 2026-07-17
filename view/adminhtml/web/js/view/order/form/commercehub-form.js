@@ -2,6 +2,7 @@ define([
 		'ko',
 		'uiComponent',
 		'Fiserv_Payments/js/action/ensure-array-entries',
+        'Fiserv_Payments/js/action/create-commercehub-session',
 		'Fiserv_Payments/js/ch-adapter',
 		'Magento_Ui/js/modal/alert',
 		'Magento_Ui/js/lib/view/utils/dom-observer',
@@ -11,6 +12,7 @@ define([
 		ko,
 		Component,
 		ensureArrayEntries,
+        chSession,
 		chIframe,
 		alert,
 		domObserver,
@@ -22,9 +24,9 @@ define([
 			defaults: {
 				paymentSessionInputId: 'fiserv_commercehub_payment_session',
 				iframeValid: false,
-				imports: {
-					onActiveChange: 'active'
-				}
+				imports: { onActiveChange: 'active' },
+                paymentSessionData: undefined,
+                contextId: undefined
 			},
 
 			/**
@@ -125,14 +127,28 @@ define([
 				return $('button#tokenization-builder-create');
 			},
 
+			createIframe: async function() {
+				this.beginAsyncFlow();
+				
+                let credsResponse = undefined;
+                try {
+                    credsResponse = await chSession();
+                    this.paymentSessionData = credsResponse["ch_credentials"];
+                } catch (error) {
+                    console.log("An error occurred while starting Commercehub payment session: ".concat(error));
+                    this.iframeLoadFailure();
+                    return;
+                }
 
-			createIframe: function() {
-				var self = this;
-				let successCb = self.iframeLoadSuccess.bind(self);
-				let failureCb = self.iframeLoadFailure.bind(self);
+                this.contextId = crypto.randomUUID();
 
-				self.beginAsyncFlow();
-				let iframePromise = new Promise((resolve, reject) => {
+                await chAdapter.initSdk(
+                    window.checkoutConfig.payment[this.code],
+                    this.paymentSessionData,
+                    this.contextId
+                );
+
+                let iframePromise = new Promise((resolve, reject) => {
 					chIframe.instantiateIframe(
 						resolve,
 						reject
@@ -141,8 +157,8 @@ define([
 				iframePromise.then((data) => {
 
 				}).catch((error) =>{
-					failureCb(error);
-				})
+					() => { this.iframeLoadFailure(error); }
+				});
 
 			},
 
@@ -189,8 +205,12 @@ define([
 				});
 			},
 
-			placeOrder: function(sessionId) {
-				this.setPaymentSessionInput(sessionId);
+			placeOrder: function() {
+                if (!this.paymentSessionData || !this.paymentSessionData["sessionId"]) {
+                    this.showError("Payment session not established. Please try again.");
+                    return;
+                }
+				this.setPaymentSessionInput(this.paymentSessionData["sessionId"]);
 				$('#' + this.selector).trigger('realOrder');
 			},
 
@@ -207,9 +227,8 @@ define([
 			 */
 			startOrderFlow: function () {
 				if (this.iframeValid) {
-					chIframe.submitCardForm(
-						this.paymentConfig['storeUrl'],
-						(sessionId) => { this.placeOrder(sessionId); },
+					chIframe.submitIframeForm(
+						(sessionId) => { this.placeOrder(); },
 						() => { this.iframeRunFailure(); }
 					)
 				} else {

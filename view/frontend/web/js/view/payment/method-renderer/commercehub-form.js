@@ -59,7 +59,8 @@ define(
 				additionalData: {},
 				paymentMethodName: '[name="payment[method]"',
 				isIframeValid: false,
-				credentials: undefined
+                paymentSessionData: undefined,
+                contextId: undefined
 			},
 
 		/**
@@ -118,7 +119,6 @@ define(
 			}, this);
 
 			this.code = 'fiserv_commercehub';
-			this.initializeChAdapter();
 
 				this._super();
 				this.vaultEnabler = new VaultEnabler();
@@ -129,10 +129,6 @@ define(
 
 			initializeChAdapter: function ()
 			{
-				if (typeof chAdapter.setContextId === 'function') {
-					chAdapter.setContextId('fiserv-cc-' + this.code + '-' + Date.now());
-				}
-
 				chAdapter.initialize(
 					window.checkoutConfig.payment[this.code],
 					() => { this.iframeLoadSuccess(); },
@@ -150,43 +146,59 @@ define(
 				}
 			},
 
-		initCheckoutSdk: async function(credentials)
-		{
-			await chAdapter.initSdk(
-				window.checkoutConfig.payment[this.code],
-				credentials,
-				chAdapter.contextId
-			);
-		},
+        initCheckoutSdk: async function(credentials)
+        {
+            const credsResponse = await chSession({
+                threeDSecure: this.is3DSecureEnabled(),
+                billingAddress: this.buildBillingAddressValues()
+            });
 
-			loadIframe: function () {
-				chAdapter.destroyIframe();
-				this.cardBrandChangeHandler(null);
+            this.paymentSessionData = credsResponse['ch_credentials'];
+            this.contextId = crypto.randomUUID();
 
-			const self = this;
-			let failureCb = this.iframeLoadFailure.bind(this);
+            await chAdapter.initSdk(
+                window.checkoutConfig.payment[this.code],
+                this.paymentSessionData,
+                this.contextId
+            );
+        },
 
-			let iframePromise = new Promise((resolve, reject) => {
-				this.beginIframeFlow();
-				const addressValues = this.buildBillingAddressValues();
-				chAdapter.instantiateIframe(
-					resolve,
-					reject,
-					{
-						data: {
-							billingAddress: addressValues
-						}
-					},
-				)
-			});
-			iframePromise.then((data) => {}).catch((error) =>{
-				failureCb(error);
-			})
-		},
 
-			/**
-			 * Builds a static billing address values object from the current quote for the CH SDK address component.
-			 */
+        loadIframe: async function () {
+            chAdapter.destroyIframe();
+		this.initializeChAdapter();
+            this.cardBrandChangeHandler(null);
+
+
+		fullScreenLoader.startLoader();
+            try {
+                await this.initCheckoutSdk();
+            } catch (error) {
+                console.log("An error occurred while initializing Commercehub SDK: ".concat(error));
+                this.iframeLoadFailure();
+                return;
+            }
+
+            this.beginIframeFlow();
+            const addressValues = this.buildBillingAddressValues();
+
+            try {
+                await chAdapter.instantiateIframe(
+                    () => { this.iframeLoadSuccess(); },
+                    (error) => { this.iframeLoadFailure(error); },
+                    { data: { billingAddress: addressValues } },
+                )
+            } catch (error) {
+                console.log("An error occurred while loading Commercehub iframe: ".concat(error));
+                this.iframeLoadFailure();
+                return;
+            }
+	
+	},
+
+        /**
+         * Builds a static billing address values object from the current quote for the CH SDK address component.
+         */
 		buildBillingAddressValues: function() {
 			const billingAddress = quote.billingAddress();
 			if (!billingAddress) {
@@ -208,8 +220,20 @@ define(
 				this.endIframeFlow();
 			},
 
-			iframeRunSuccess: async function (sessionId) {
-				this.setPaymentPayload(sessionId);
+			iframeRunSuccess: async function () {
+                if (!this.paymentSessionData || !this.paymentSessionData["sessionId"]) {
+                    this.iframeRunFailure("Payment session not established. Please try again.");
+                    this.endIframeFlow();
+                    return;
+                }
+
+                if (!this.contextId) {
+                    this.iframeRunFailure("Context ID not established. Please try again.");
+                    this.endIframeFlow();
+                    return;
+                }   
+
+				this.setPaymentPayload(this.paymentSessionData["sessionId"]);
 
 				try {
 					if (this.is3DSecureEnabled()) {
@@ -231,15 +255,10 @@ define(
 			 * @return {Promise}
 			 */
 			performAccountVerification: async function () {
-				const sessionId = await new Promise((resolve, reject) => {
-					chAdapter.submitCardForm(
-						window.checkoutConfig.payment.fiserv_payments['storeUrl'],
-						resolve,
-						() => reject(new Error($t('Card capture failed during account verification. Please try again.')))
-					);
-				});
-
-				await verifyAccount({ sessionId });
+				await chAdapter.submitIframeForm(
+					async () => { await verifyAccount({ 'sessionId' : this.paymentSessionData['sessionId'] }); },
+					() => { this.showError('Card capture failed during account verification. Please try again.'); }
+				);
 			},
 
 		run3DSecure: async function () {
@@ -307,7 +326,6 @@ define(
 				$(this.paymentMethodName).on("click", (event) => {
 					if (event.currentTarget.id === this.getCode()) {
 						// must re-init SDK if other Fiserv APMs exist
-						this.initializeChAdapter();
 						this.loadIframe();
 					} else {
 						this.cardBrandChangeHandler(null);
@@ -540,31 +558,10 @@ define(
 						}
 					}
 
-					if (this.is3DSecureEnabled()) {
-						let credsResponse = undefined;
-						try {
-							credsResponse = await chSession({ "threeDSecure": true });
-						} catch (error) {
-							console.log("An error occurred while starting Commercehub payment session: ".concat(error));
-							this.iframeRunFailure();
-							return;
-						}
-						let creds = credsResponse["ch_credentials"];
-						await this.initCheckoutSdk(creds);
-
-						chAdapter.submitCardForm(
-							window.checkoutConfig.payment.fiserv_payments['storeUrl'],
-							(sessionId) => { this.iframeRunSuccess(sessionId); },
-							() => { this.iframeRunFailure(); },
-							creds
-						);
-					} else {
-						chAdapter.submitCardForm(
-							window.checkoutConfig.payment.fiserv_payments['storeUrl'],
-							(sessionId) => { this.iframeRunSuccess(sessionId); },
-							() => { this.iframeRunFailure(); }
-						);
-					}
+					await chAdapter.submitIframeForm(
+						() => { this.iframeRunSuccess(); },
+						() => { this.iframeRunFailure(); }
+					);
 				}
 			},
 
@@ -669,12 +666,15 @@ define(
 		fetchSurchargeEstimate: async function() {
 			try {
 				const credsResponse = await chSession({ 'threeDSecure': false });
-				const creds = credsResponse['ch_credentials'];
-			await chAdapter.initSdk(
-				window.checkoutConfig.payment[this.code],
-				creds,
-				chAdapter.contextId
-			);
+				this.paymentSessionData = credsResponse['ch_credentials'];
+
+                this.contextId = crypto.randomUUID();
+
+				await chAdapter.initSdk(
+					window.checkoutConfig.payment[this.code],
+					this.paymentSessionData,
+					this.contextId
+				);
 
 				const surchargeDetails = await chAdapter.getSurchargeEstimate();
 				const surchargeAmount = (surchargeDetails && surchargeDetails.amountComponent
