@@ -99,10 +99,7 @@ define([
 				dataType: 'json',
 				type: "POST",
 				success: function(response) {
-					if (!validateCb(response)) {
-						errorCb(errorMsg)
-					}
-					console.log(response);
+					if (!validateCb(response)) errorCb(errorMsg);
 					successCb(parseResponseCb(response));
 				},
 				error: function(err) {
@@ -158,69 +155,43 @@ define([
 		instantiateIframe: function (
 			loadSuccessCb,
 			loadErrorCb,
-			configData = undefined,
-			creds = undefined,
+			configData = undefined
 		) {
-			const ensureSdkReady = () => {
-				if (creds) {
-					this.mountCredentials = creds;
-					return Promise.resolve();
-				}
-				const storeUrl = this.config.storeUrl ||
-					(window.checkoutConfig && window.checkoutConfig.payment &&
-						window.checkoutConfig.payment.fiserv_payments &&
-						window.checkoutConfig.payment.fiserv_payments.storeUrl) || '';
-				return new Promise((resolve, reject) => {
-					this.getChCredentials(storeUrl, resolve, reject);
-				}).then(async (fetchedCreds) => {
-					this.credentials = fetchedCreds;
-					this.mountCredentials = fetchedCreds;
-					await this.initSdk(this.config, fetchedCreds, this.contextId);
-				});
-			};
+            let formConfig = this.buildFormConfig();
 
-			ensureSdkReady()
-				.then(() => {
-					let formConfig = this.buildFormConfig();
+            if (configData) {
+                formConfig = {
+                    ...formConfig,
+                    ...configData,
+                    data: {
+                        ...(formConfig.data || {}),
+                        ...((configData && configData.data) || {}),
+                    },
+                };
+            }
 
-					if (configData) {
-						formConfig = {
-							...formConfig,
-							...configData,
-							data: {
-								...(formConfig.data || {}),
-								...((configData && configData.data) || {}),
-							},
-						};
-					}
+            if (!formConfig.data) {
+                formConfig.data = {};
+            }
 
-					if (!formConfig.data) {
-						formConfig.data = {};
-					}
+            if (!formConfig.data.environment) {
+                formConfig.data.environment =
+                    this.config[this.environmentKey] ||
+                    (window.checkoutConfig && window.checkoutConfig.payment && window.checkoutConfig.payment.fiserv_payments ?
+                        window.checkoutConfig.payment.fiserv_payments.environment :
+                        undefined);
+            }
 
-					if (!formConfig.data.environment) {
-						formConfig.data.environment =
-							this.config[this.environmentKey] ||
-							(window.checkoutConfig && window.checkoutConfig.payment && window.checkoutConfig.payment.fiserv_payments ?
-								window.checkoutConfig.payment.fiserv_payments.environment :
-								undefined);
-					}
-
-					window.fiserv.components.paymentFields(formConfig)
-						.then((next) => {
-							this.sdcv2Form = next;
-							this.iframeReadyCallback();
-							loadSuccessCb();
-						})
-						.catch((data) => {
-							console.log(data);
-							loadErrorCb(data);
-						});
-				})
-				.catch((err) => {
-					console.log('[ch-adapter] SDK init failure:', err);
-					loadErrorCb(err);
-				});
+            window.fiserv.components.paymentFields(formConfig)
+                .then((next) => {
+                    this.sdcv2Form = next;
+                    this.iframeReadyCallback();
+                    loadSuccessCb();
+                })
+                .catch((data) => {
+                    console.log(data);
+                    loadErrorCb(data);
+                });
 		},
 
 		/**
@@ -258,34 +229,17 @@ define([
             return this.pazeComponent;
         },
 
-		submitCardForm: function (
-			storeUrl,
+		submitIframeForm: function (
 			runSuccessCb,
 			runErrorCb,
-			creds,
-			billingAddress
+			billingAddress = undefined
 		) {
-			if (typeof(this.sdcv2Form) === "undefined") {
-				return;
-			}
-
-			const effectiveCreds = creds || this.mountCredentials || this.credentials;
+			if (!this.sdcv2Form) throw new Error("Card capture form not found.");
 			const submitConfig = billingAddress ? { billingAddress } : undefined;
+			
 			this.sdcv2Form.submit(submitConfig)
-				.then((next) => {
-					runSuccessCb(effectiveCreds[this.sessionIdKey]);
-				})
+				.then((next) => { runSuccessCb(); })
 				.catch((data) => { console.log(data); runErrorCb(); });
-		},
-
-		submitAchForm: function (
-			storeUrl,
-			runSuccessCb,
-			runErrorCb,
-			creds,
-			billingAddress
-		) {
-			this.submitCardForm(storeUrl, runSuccessCb, runErrorCb, creds, billingAddress);
 		},
 
 		getAchLegalText: async function (billingAddress) {
