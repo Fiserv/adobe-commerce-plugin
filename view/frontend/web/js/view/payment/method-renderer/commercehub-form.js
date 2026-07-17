@@ -639,8 +639,7 @@ define(
 			iframeValidHandler: function(valid) {
 				this.isIframeValid = valid;
 				if (!valid) {
-					this.clearSurcharge();
-					this.surchargeConfirmed(false);
+					this.resetSurchargeEstimateState();
 				}
 				this.checkoutValidHandler();
 			},
@@ -742,6 +741,16 @@ define(
 				surchargeModel.surchargeData(null);
 			},
 
+			resetSurchargeEstimateState: function() {
+				if (!this.isSurchargeEnabled() || !this.surchargeConfirmed()) {
+					return;
+				}
+
+				this.clearSurcharge();
+				this.surchargeConfirmed(false);
+				this.checkoutValidHandler();
+			},
+
 
 			enableContinueButton: function() {
 				this.getContinueButton().prop('disabled', false);
@@ -771,6 +780,12 @@ define(
 
 			cardBrandChangeHandler: function(brand) {
 				let icon = this.getCardBrandIcon();
+
+
+				if (this._lastCardBrand && brand && this._lastCardBrand !== brand) {
+					this.resetSurchargeEstimateState();
+				}
+				this._lastCardBrand = brand || null;
 
 				switch (brand) {
 					case null:
@@ -882,6 +897,11 @@ define(
 				let frame = this.getSdcFieldFrame(data["field"]);
 				let mess = this.getSdcFieldInvalidMessageContainer(data["field"]);
 
+				// Reset surcharge confirmation so the user must click Continue for a new estimate.
+				if (data && data["field"] === "cardNumber") {
+					this.resetSurchargeEstimateState();
+				}
+
 				if (typeof(frame) !== "undefined")
 				{
 					if (data["isValid"] === true)
@@ -913,15 +933,15 @@ define(
 					} else
 					{
 						frame.removeClass('sdc-focused-field');
+
+						if (data === 'cardNumber') {
+							this.resetSurchargeEstimateState();
+						}
 					}
 				}
 			},
 			fieldValueChangeHandler: function(data) {
-				if (this.isSurchargeEnabled() && this.surchargeConfirmed()) {
-					this.clearSurcharge();
-					this.surchargeConfirmed(false);
-					this.checkoutValidHandler();
-				}
+				this.resetSurchargeEstimateState();
 			}
 		});
 	}
