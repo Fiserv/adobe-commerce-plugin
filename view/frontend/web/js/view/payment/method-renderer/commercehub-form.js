@@ -664,17 +664,6 @@ define(
 
 		fetchSurchargeEstimate: async function() {
 			try {
-				const credsResponse = await chSession({ 'threeDSecure': false });
-				this.paymentSessionData = credsResponse['ch_credentials'];
-
-                this.contextId = crypto.randomUUID();
-
-				await chAdapter.initSdk(
-					window.checkoutConfig.payment[this.code],
-					this.paymentSessionData,
-					this.contextId
-				);
-
 				const surchargeDetails = await chAdapter.getSurchargeEstimate();
 				const surchargeAmount = (surchargeDetails && surchargeDetails.amountComponent
 					&& surchargeDetails.amountComponent.surcharge)
