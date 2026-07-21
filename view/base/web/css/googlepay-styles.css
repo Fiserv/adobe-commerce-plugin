@@ -4,6 +4,11 @@
     min-width: 90px;
     min-height: 40px;
 }
+
+#googlepay-button-container > div {
+    width: 100%;
+}
+
 #googlepay-button-container .gpay-button {
     width: 100%;
     min-height: 40px;
