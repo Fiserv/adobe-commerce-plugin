@@ -132,21 +132,33 @@ define([
 				
                 let credsResponse = undefined;
                 try {
-                    credsResponse = await chSession();
+                    credsResponse = await chSession({ storeUrl: this.paymentConfig.storeUrl });
                     this.paymentSessionData = credsResponse["ch_credentials"];
                 } catch (error) {
                     console.log("An error occurred while starting Commercehub payment session: ".concat(error));
-                    this.iframeLoadFailure();
+                    this.iframeLoadFailure("Unable to start payment session. Please try again.");
+                    return;
+                }
+
+                if (!this.paymentSessionData) {
+                    this.iframeLoadFailure("Unable to start payment session. Please try again.");
                     return;
                 }
 
                 this.contextId = crypto.randomUUID();
 
-                await chAdapter.initSdk(
-                    window.checkoutConfig.payment[this.code],
-                    this.paymentSessionData,
-                    this.contextId
-                );
+                try {
+                    await chIframe.initSdk(
+                        this.paymentConfig,
+                        this.paymentSessionData,
+                        this.contextId
+                    );
+                } catch (error) {
+                    let errDetail = (error && error.message) ? error.message : String(error);
+                    console.error("An error occurred while initializing Commercehub SDK:", error);
+                    this.iframeLoadFailure("Unable to initialize payment: " + errDetail + ". Please try again.");
+                    return;
+                }
 
                 let iframePromise = new Promise((resolve, reject) => {
 					chIframe.instantiateIframe(
@@ -156,8 +168,8 @@ define([
 				});
 				iframePromise.then((data) => {
 
-				}).catch((error) =>{
-					() => { this.iframeLoadFailure(error); }
+				}).catch((error) => {
+					this.iframeLoadFailure(error);
 				});
 
 			},
