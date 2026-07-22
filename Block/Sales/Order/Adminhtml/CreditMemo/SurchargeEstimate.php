@@ -8,51 +8,47 @@ use Magento\Framework\View\Element\Template;
 
 class SurchargeEstimate extends Template
 {
-
-    /** Returns the order attached to the current credit memo session */
+    /** Returns the order attached to the current credit memo — used by the template. */
     public function getOrder(): ?\Magento\Sales\Model\Order
     {
-        $creditmemo = $this->getParentBlock()->getCreditmemo();
-        return $creditmemo ? $creditmemo->getOrder() : null;
+        return ($cm = $this->getCreditMemo()) ? $cm->getOrder() : null;
     }
 
-    /** Returns the current (in-memory) credit memo being constructed. */
-    public function getCreditMemo(): ?\Magento\Sales\Model\Order\Creditmemo
-    {
-        return $this->getParentBlock()->getCreditmemo();
-    }
-
+    /**
+     * Returns the proportional surcharge refund for the items currently being credited which
+     * recalculates dynamically whenever the admin changes quantities
+     */
     public function getEstimatedSurchargeRefund(): ?float
     {
-        $order = $this->getOrder();
-        if (!$order) {
-            return null;
-        }
-
-        $payment = $order->getPayment();
-        if (!$payment) {
-            return null;
-        }
-
-        $surcharge = (float)$payment->getAdditionalInformation(SurchargeResponseHandler::SURCHARGE_AMOUNT_KEY);
-        if ($surcharge <= 0) {
-            return null;
-        }
-
-        $orderGrandTotal = (float)$order->getGrandTotal();
-        if ($orderGrandTotal <= 0) {
-            return null;
-        }
-
         $creditMemo = $this->getCreditMemo();
         if (!$creditMemo) {
             return null;
         }
 
-        $creditMemoTotal = (float)$creditMemo->getGrandTotal();
-        $estimated = round($creditMemoTotal * $surcharge / $orderGrandTotal, 4);
+        $order = $creditMemo->getOrder();
+        $payment = $order->getPayment();
+        if (!$payment) {
+            return null;
+        }
 
-        return $estimated > 0 ? $estimated : null;
+        $invoicedSurcharge = (float)$payment->getAdditionalInformation(SurchargeResponseHandler::SURCHARGE_INVOICED_KEY);
+        if ($invoicedSurcharge <= 0) {
+            return null;
+        }
+
+        $orderMerchandiseTotal = (float)$order->getGrandTotal() - $invoicedSurcharge;
+        if ($orderMerchandiseTotal <= 0) {
+            return null;
+        }
+
+        $refundMerchandiseTotal = (float)$creditMemo->getSubtotal() + (float)$creditMemo->getShippingAmount();
+        if ($refundMerchandiseTotal <= 0) {
+            return null;
+        }
+
+        $proportionalSurchargeRefund = round($refundMerchandiseTotal / $orderMerchandiseTotal * $invoicedSurcharge, 4);
+
+        return $proportionalSurchargeRefund > 0 ? $proportionalSurchargeRefund : null;
     }
 
     /** Registers this block as a totals row inserted just before Grand Total.*/
@@ -62,13 +58,19 @@ class SurchargeEstimate extends Template
             return $this;
         }
 
-        $total = new DataObject([
-            'code' => $this->getNameInLayout(),
-            'block_name' => $this->getNameInLayout(),
-        ]);
-
-        $this->getParentBlock()->addTotalBefore($total, 'grand_total');
+        $this->getParentBlock()->addTotalBefore(
+            new DataObject([
+                'code' => $this->getNameInLayout(),
+                'block_name' => $this->getNameInLayout(),
+            ]),
+            'grand_total'
+        );
 
         return $this;
+    }
+
+    private function getCreditMemo(): ?\Magento\Sales\Model\Order\Creditmemo
+    {
+        return $this->getParentBlock()->getCreditmemo();
     }
 }
