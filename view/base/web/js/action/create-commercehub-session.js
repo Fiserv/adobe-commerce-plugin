@@ -73,15 +73,20 @@ define(
              */
             makeRequest: async function(params) {
                 let serviceUrl = 'fiserv/commercehub/getcredentials';
-                
+                let requestParams = params ? Object.assign({}, params) : {};
+                let storeUrl = requestParams.storeUrl || '';
+                delete requestParams.storeUrl;
+
+                let requestUrl = storeUrl ? storeUrl + serviceUrl : urlBuilder.build(serviceUrl);
+
                 try {
-                    let response = await fetch(urlBuilder.build(serviceUrl), {
+                    let response = await fetch(requestUrl, {
                         method: 'POST',
                         headers: { 
                             'Content-Type': 'application/json',
                             'X-Requested-With': 'XMLHttpRequest'    
                         },
-                        body: JSON.stringify(params),
+                        body: JSON.stringify(requestParams),
                         credentials: 'same-origin'
                     });
                     
