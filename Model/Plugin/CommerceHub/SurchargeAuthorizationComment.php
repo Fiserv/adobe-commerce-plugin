@@ -7,96 +7,67 @@ namespace Fiserv\Payments\Model\Plugin\CommerceHub;
 
 use Fiserv\Payments\Gateway\Response\CommerceHub\PaymentDetailsHandler;
 use Fiserv\Payments\Gateway\Response\CommerceHub\SurchargeResponseHandler;
+use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Payment;
 
 class SurchargeAuthorizationComment
 {
-
 	public function afterAuthorize(Payment $subject, Payment $result): Payment
 	{
-		$surcharge = $subject->getAdditionalInformation(SurchargeResponseHandler::SURCHARGE_AMOUNT_KEY);
-		if (!$surcharge || (float)$surcharge <= 0) {
+		if ((float)$subject->getAdditionalInformation(SurchargeResponseHandler::SURCHARGE_AMOUNT_KEY) <= 0) {
 			return $result;
 		}
 
-		$order = $subject->getOrder();
-		if (!$order) {
-			return $result;
-		}
-
-		$correctedAmount = (float)$subject->getAmountAuthorized();
-		$formattedAmount = $order->formatPrice($correctedAmount);
-
-		foreach ($order->getStatusHistories() as $history) {
-			if (!$history) {
-				continue;
-			}
-			$comment = (string)$history->getComment();
-			if (strpos($comment, 'Authorized amount of') === false) {
-				continue;
-			}
-			if (preg_match('/Authorized amount of (.+?)\.(?:\s|$)/u', $comment, $matches)) {
-				$corrected = str_replace(
-					'Authorized amount of ' . $matches[1] . '.',
-					'Authorized amount of ' . $formattedAmount . '.',
-					$comment
-				);
-				$history->setComment($corrected);
-			}
-			break;
-		}
+		$this->replaceAmountInStatusComment(
+			$subject->getOrder(),
+			'/Authorized amount of (.+?)\.(?:\s|$)/u',
+			'Authorized amount of %s.',
+			$subject->getOrder()->formatPrice((float)$subject->getAmountAuthorized())
+		);
 
 		return $result;
 	}
 
-    public function afterCapture(Payment $subject, Payment $result, $invoice = null): Payment
-    {
-        $captureSurcharge = $subject->getAdditionalInformation(SurchargeResponseHandler::SURCHARGE_CAPTURED_KEY);
-        $authSurcharge    = $subject->getAdditionalInformation(SurchargeResponseHandler::SURCHARGE_AMOUNT_KEY);
-
-        $txnInfo = $subject->getTransactionAdditionalInfo();
-        $approvedAmount = isset($txnInfo[PaymentDetailsHandler::KEY_AMOUNT])
-            ? (float)$txnInfo[PaymentDetailsHandler::KEY_AMOUNT]
-            : 0.0;
-
-        if ($captureSurcharge && (float)$captureSurcharge > 0) {
-            $totalCaptured = $approvedAmount + (float)$captureSurcharge;
-        } elseif ($authSurcharge && (float)$authSurcharge > 0) {
-            $totalCaptured = $approvedAmount;
-        } else {
-            return $result;
-        }
-
-        if ($totalCaptured <= 0) {
-            return $result;
-        }
-
-		$order = $subject->getOrder();
-		if (!$order) {
+	public function afterCapture(Payment $subject, Payment $result, $invoice = null): Payment
+	{
+		if ((float)$subject->getAdditionalInformation(SurchargeResponseHandler::SURCHARGE_AMOUNT_KEY) <= 0) {
 			return $result;
 		}
 
-        $formattedAmount = $order->formatPrice($totalCaptured);
-
-		foreach ($order->getStatusHistories() as $history) {
-			if (!$history) {
-				continue;
-			}
-			$comment = (string)$history->getComment();
-			if (strpos($comment, 'Captured amount of') === false) {
-				continue;
-			}
-			if (preg_match('/Captured amount of (.+?) online/u', $comment, $matches)) {
-				$corrected = str_replace(
-					'Captured amount of ' . $matches[1] . ' online',
-					'Captured amount of ' . $formattedAmount . ' online',
-					$comment
-				);
-				$history->setComment($corrected);
-			}
-			break;
+		$transactionInfo = $subject->getTransactionAdditionalInfo();
+		$captureAmount = (float)($transactionInfo[PaymentDetailsHandler::KEY_AMOUNT] ?? 0);
+		if ($captureAmount <= 0) {
+			return $result;
 		}
 
+		$order = $subject->getOrder();
+		$this->replaceAmountInStatusComment(
+			$order,
+			'/Captured amount of (.+?) online/u',
+			'Captured amount of %s online',
+			$order->formatPrice($captureAmount)
+		);
+
 		return $result;
+	}
+
+	private function replaceAmountInStatusComment(
+		Order $order,
+		string $searchPattern,
+		string $commentTemplate,
+		string $correctedAmount
+	): void {
+		foreach ($order->getStatusHistories() as $history) {
+			$comment = (string)$history->getComment();
+			if (!preg_match($searchPattern, $comment, $matches)) {
+				continue;
+			}
+			$history->setComment(str_replace(
+				sprintf($commentTemplate, $matches[1]),
+				sprintf($commentTemplate, $correctedAmount),
+				$comment
+			));
+			break;
+		}
 	}
 }

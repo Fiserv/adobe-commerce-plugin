@@ -7,7 +7,6 @@ namespace Fiserv\Payments\Gateway\Request\CommerceHub;
 
 use Magento\Payment\Gateway\Request\BuilderInterface;
 use Fiserv\Payments\Lib\CommerceHub\Model\Amount;
-use Fiserv\Payments\Gateway\Request\CommerceHub\SurchargeDataBuilder;
 use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use Magento\Payment\Helper\Formatter;
 use Fiserv\Payments\Logger\MultiLevelLogger;
@@ -54,13 +53,6 @@ class AmountDataBuilder implements BuilderInterface
 		$orderDO = $paymentDO->getOrder();
 
 		$rawTotal = $this->subjectReader->readAmount($buildSubject);
-		if ($rawTotal <= 0) {
-			$payment = $paymentDO->getPayment();
-			$adjustedTotal = (float)$payment->getAdditionalInformation(SurchargeDataBuilder::SURCHARGE_ADJUSTED_TOTAL_KEY);
-			if ($adjustedTotal > 0) {
-				$rawTotal = $adjustedTotal;
-			}
-		}
 
 		$amt = new Amount();
 		$amt->setTotal(round($rawTotal, 2, PHP_ROUND_HALF_UP));

@@ -32,37 +32,50 @@ class SurchargeEstimate extends \Magento\Sales\Block\Adminhtml\Order\Totals\Item
     /** Returns the order attached to the in-progress invoice. */
     public function getOrder(): ?Order
     {
-        $invoice = $this->getInvoice();
-        return $invoice ? $invoice->getOrder() : null;
+        return ($invoice = $this->getInvoice()) ? $invoice->getOrder() : null;
     }
 
+    /**
+     * Returns the proportional surcharge for the items currently being invoiced
+     * which recalculates whenever the admin changes quantities
+     */
     public function getSurchargeAmount(): ?float
     {
-        $order = $this->getOrder();
-        if (!$order) {
+        $invoice = $this->getInvoice();
+        if (!$invoice) {
             return null;
         }
 
+        $order = $invoice->getOrder();
         $payment = $order->getPayment();
         if (!$payment) {
             return null;
         }
 
-        $surcharge = (float)$payment->getAdditionalInformation(SurchargeResponseHandler::SURCHARGE_AMOUNT_KEY);
-        if ($surcharge <= 0) {
+        $surchargeResponse = (float)$payment->getAdditionalInformation(SurchargeResponseHandler::SURCHARGE_AMOUNT_KEY);
+        if ($surchargeResponse <= 0) {
             return null;
         }
 
-        $invoiced = (float)$payment->getAdditionalInformation(SurchargeResponseHandler::SURCHARGE_INVOICED_KEY);
-        $remaining = round($surcharge - $invoiced, 4);
+        $orderMerchandiseTotal = (float)$order->getGrandTotal() - $surchargeResponse;
+        if ($orderMerchandiseTotal <= 0) {
+            return null;
+        }
 
-        return $remaining > 0 ? $remaining : null;
+        $invoiceMerchandiseTotal = (float)$invoice->getSubtotal() + (float)$invoice->getShippingAmount();
+        if ($invoiceMerchandiseTotal <= 0) {
+            return null;
+        }
+
+        $proportionalSurcharge = round($invoiceMerchandiseTotal / $orderMerchandiseTotal * $surchargeResponse, 4);
+
+        return $proportionalSurcharge > 0 ? $proportionalSurcharge : null;
     }
 
     public function initTotals(): self
     {
-        $surcharge = $this->getSurchargeAmount();
-        if ($surcharge === null) {
+        $proportionalSurcharge = $this->getSurchargeAmount();
+        if ($proportionalSurcharge === null) {
             return $this;
         }
 
@@ -79,10 +92,9 @@ class SurchargeEstimate extends \Magento\Sales\Block\Adminhtml\Order\Totals\Item
         $totals = $parent->getTotals();
         if (isset($totals['grand_total'])) {
             $grandTotal = $totals['grand_total'];
-            $grandTotal->setValue((float)$grandTotal->getValue() + $surcharge);
+            $grandTotal->setValue((float)$grandTotal->getValue() + $proportionalSurcharge);
         }
 
         return $this;
     }
 }
-

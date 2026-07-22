@@ -17,7 +17,6 @@ class SurchargeResponseHandler implements HandlerInterface
 {
 	const SURCHARGE_AMOUNT_KEY = 'surcharge_amount';
 	const SURCHARGE_INVOICED_KEY = 'surcharge_invoiced';
-	const SURCHARGE_CAPTURED_KEY = 'surcharge_capture_amount';
 
 	/** @var SubjectReader */
 	private $subjectReader;
@@ -45,32 +44,20 @@ class SurchargeResponseHandler implements HandlerInterface
 		ContextHelper::assertOrderPayment($payment);
 
 		$order = $payment->getOrder();
-		if (!$order) {return;}
-		if (!$this->config->isSurchargeEnabled((int)$order->getStoreId())) {return;}
+		if (!$this->config->isSurchargeEnabled((int)$order->getStoreId())) { return; }
 
-		$alreadyApplied = $payment->getAdditionalInformation(self::SURCHARGE_AMOUNT_KEY);
-
-		$chResponse = $this->subjectReader->readChResponse($response)[HttpClient::RESPONSE_KEY];
-
-		if ($alreadyApplied !== null && (float)$alreadyApplied > 0) {
-			// Surcharge was already applied during auth — do not modify order totals again.
-			// Store the capture-specific surcharge so SurchargeAuthorizationComment can
-			// correct the "Captured amount of $X" comment to show the actual gateway total.
-			$captureSurcharge = $this->extractSurcharge($chResponse);
-			if ($captureSurcharge !== null && $captureSurcharge > 0) {
-				$payment->setAdditionalInformation(self::SURCHARGE_CAPTURED_KEY, $captureSurcharge);
-			}
+		// Surcharge already applied at authorization; CommerceHub is the source of truth.
+		if ((float)$payment->getAdditionalInformation(self::SURCHARGE_AMOUNT_KEY) > 0) {
 			return;
 		}
 
+		$chResponse = $this->subjectReader->readChResponse($response)[HttpClient::RESPONSE_KEY];
 		$surcharge = $this->extractSurcharge($chResponse);
-
-		if ($surcharge === null || $surcharge <= 0) {
+		if ($surcharge <= 0) {
 			return;
 		}
 
 		$payment->setAdditionalInformation(self::SURCHARGE_AMOUNT_KEY, $surcharge);
-
 
 		$originalGrandTotal = (float)$order->getGrandTotal();
 		$originalBaseGrandTotal = (float)$order->getBaseGrandTotal();
@@ -92,15 +79,12 @@ class SurchargeResponseHandler implements HandlerInterface
 		}
 
 		$baseCurrency = $order->getBaseCurrency();
-		$surchargeFormatted = $baseCurrency ? $baseCurrency->formatTxt($surcharge) : (string)$surcharge;
-		$originalGrandTotalFormatted = $baseCurrency ? $baseCurrency->formatTxt($originalGrandTotal) : (string)$originalGrandTotal;
-		$newGrandTotalFormatted = $baseCurrency ? $baseCurrency->formatTxt($newGrandTotal) : (string)$newGrandTotal;
 		$order->addCommentToStatusHistory(
 			sprintf(
 				'Surcharge applied by gateway: %s. Previous order total: %s. Updated order total: %s',
-				$surchargeFormatted,
-				$originalGrandTotalFormatted,
-				$newGrandTotalFormatted
+				$this->formatAmount($baseCurrency, $surcharge),
+				$this->formatAmount($baseCurrency, $originalGrandTotal),
+				$this->formatAmount($baseCurrency, $newGrandTotal)
 			)
 		);
 
@@ -116,10 +100,13 @@ class SurchargeResponseHandler implements HandlerInterface
 		);
 	}
 
-	private function extractSurcharge(array $chResponse): ?float
+	private function extractSurcharge(array $chResponse): float
 	{
-		$value = $chResponse['paymentReceipt']['amountComponents']['surcharge'] ?? null;
-		return $value === null ? null : (float)$value;
+		return (float)($chResponse['paymentReceipt']['amountComponents']['surcharge'] ?? 0);
+	}
+
+	private function formatAmount(\Magento\Directory\Model\Currency $currency, float $amount): string
+	{
+		return $currency->formatTxt($amount);
 	}
 }
-

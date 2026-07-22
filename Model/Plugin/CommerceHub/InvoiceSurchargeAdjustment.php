@@ -22,24 +22,21 @@ class InvoiceSurchargeAdjustment
 			return;
 		}
 
-		$surcharge = (float)$payment->getAdditionalInformation(SurchargeResponseHandler::SURCHARGE_AMOUNT_KEY);
-		if ($surcharge <= 0) {
+		$surchargeResponse = (float)$payment->getAdditionalInformation(SurchargeResponseHandler::SURCHARGE_AMOUNT_KEY);
+		if ($surchargeResponse <= 0) {
 			return;
 		}
 
-		$invoiced = (float)$payment->getAdditionalInformation(SurchargeResponseHandler::SURCHARGE_INVOICED_KEY);
+		$alreadyInvoicedSurcharge = (float)$payment->getAdditionalInformation(SurchargeResponseHandler::SURCHARGE_INVOICED_KEY);
 
-		$allowed = round($surcharge - $invoiced, 4);
-		if ($allowed <= 0) {
+		$remainingSurchargeToInvoice = round($surchargeResponse - $alreadyInvoicedSurcharge, 4);
+		if ($remainingSurchargeToInvoice <= 0) {
 			return;
 		}
 
-		$subject->setGrandTotal((float)$subject->getGrandTotal() + $allowed);
-		$subject->setBaseGrandTotal((float)$subject->getBaseGrandTotal() + $allowed);
+		$subject->setGrandTotal((float)$subject->getGrandTotal() + $remainingSurchargeToInvoice);
+		$subject->setBaseGrandTotal((float)$subject->getBaseGrandTotal() + $remainingSurchargeToInvoice);
 
-		$payment->setAdditionalInformation(
-			SurchargeResponseHandler::SURCHARGE_INVOICED_KEY,
-			round($invoiced + $allowed, 4)
-		);
+		$payment->setAdditionalInformation(SurchargeResponseHandler::SURCHARGE_INVOICED_KEY, $surchargeResponse);
 	}
 }

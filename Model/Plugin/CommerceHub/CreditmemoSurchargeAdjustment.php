@@ -19,7 +19,13 @@ class CreditmemoSurchargeAdjustment
 		Order $order,
 		array $data = []
 	) {
-		$this->applyEstimatedSurchargeToGrandTotal($result, $order);
+		$payment = $order->getPayment();
+		if (!$payment) {
+            return $result;
+        }
+
+		$invoicedSurcharge = (float)$payment->getAdditionalInformation(SurchargeResponseHandler::SURCHARGE_INVOICED_KEY);
+		$this->addProportionalSurchargeRefund($result, $order, $invoicedSurcharge);
 		return $result;
 	}
 
@@ -29,37 +35,52 @@ class CreditmemoSurchargeAdjustment
 		Invoice $invoice,
 		array $data = []
 	) {
-		$this->applyEstimatedSurchargeToGrandTotal($result, $invoice->getOrder());
+		$order = $invoice->getOrder();
+		if (!$order) {
+			return $result;
+		}
+
+		$payment = $order->getPayment();
+		if (!$payment) {
+			return $result;
+		}
+
+		$invoicedSurcharge = (float)$payment->getAdditionalInformation(SurchargeResponseHandler::SURCHARGE_INVOICED_KEY);
+		$this->addProportionalSurchargeRefund($result, $order, $invoicedSurcharge);
 		return $result;
 	}
 
-	private function applyEstimatedSurchargeToGrandTotal(Creditmemo $creditmemo, Order $order): void
+	private function addProportionalSurchargeRefund(Creditmemo $creditmemo, Order $order, float $invoicedSurcharge): void
 	{
-		$payment = $order->getPayment();
-		if (!$payment) {
-			return;
-		}
-
-		$surcharge = (float)$payment->getAdditionalInformation(SurchargeResponseHandler::SURCHARGE_AMOUNT_KEY);
-		if ($surcharge <= 0) {
+		if ($invoicedSurcharge <= 0) {
 			return;
 		}
 
 		$orderGrandTotal = (float)$order->getGrandTotal();
-		$baseAmount = $orderGrandTotal - $surcharge; // non-surcharge portion of the order
-
-		if ($baseAmount <= 0) {
+		if ($orderGrandTotal <= 0) {
 			return;
 		}
 
-		$creditMemoTotal = (float)$creditmemo->getGrandTotal();
-		$estimate = round($creditMemoTotal * $surcharge / $baseAmount, 4);
-
-		if ($estimate <= 0) {
+		$orderMerchandiseTotal = $orderGrandTotal - $invoicedSurcharge;
+		if ($orderMerchandiseTotal <= 0) {
 			return;
 		}
 
-		$creditmemo->setGrandTotal($creditMemoTotal + $estimate);
-		$creditmemo->setBaseGrandTotal((float)$creditmemo->getBaseGrandTotal() + $estimate);
+		$creditMemoMerchandiseTotal = (float)$creditmemo->getGrandTotal();
+		$proportionalSurchargeRefund = round($creditMemoMerchandiseTotal * $invoicedSurcharge / $orderMerchandiseTotal, 4);
+
+		if ($proportionalSurchargeRefund <= 0) {
+			return;
+		}
+
+		$alreadyRefunded = (float)$order->getTotalRefunded();
+		$remainingOrderBalanceAfterRefund = round($orderGrandTotal - $alreadyRefunded - $creditMemoMerchandiseTotal - $proportionalSurchargeRefund, 4);
+
+		if ($remainingOrderBalanceAfterRefund > 0 && $remainingOrderBalanceAfterRefund <= 0.50) {
+			$proportionalSurchargeRefund = round($proportionalSurchargeRefund + $remainingOrderBalanceAfterRefund, 4);
+		}
+
+		$creditmemo->setGrandTotal($creditMemoMerchandiseTotal + $proportionalSurchargeRefund);
+		$creditmemo->setBaseGrandTotal((float)$creditmemo->getBaseGrandTotal() + $proportionalSurchargeRefund);
 	}
 }
