@@ -45,6 +45,8 @@ define([
 					this.initPayment();
 					this.onActiveChange(true);
 				}
+
+				return this;
 			},
 
 			/**
@@ -129,24 +131,34 @@ define([
 
 			createIframe: async function() {
 				this.beginAsyncFlow();
-				
-                let credsResponse = undefined;
-                try {
-                    credsResponse = await chSession();
-                    this.paymentSessionData = credsResponse["ch_credentials"];
-                } catch (error) {
-                    console.log("An error occurred while starting Commercehub payment session: ".concat(error));
-                    this.iframeLoadFailure();
-                    return;
-                }
+
+				try {
+					let credsResponse = await chSession({ storeUrl: this.paymentConfig.storeUrl });
+					this.paymentSessionData = credsResponse["ch_credentials"];
+				} catch (error) {
+					console.log("An error occurred while starting Commercehub payment session: ".concat(error));
+					this.iframeLoadFailure("Unable to start payment session. Please try again.");
+					return;
+				}
 
                 this.contextId = crypto.randomUUID();
 
-                await chAdapter.initSdk(
-                    window.checkoutConfig.payment[this.code],
-                    this.paymentSessionData,
-                    this.contextId
-                );
+				if (!this.paymentSessionData) {
+					this.iframeLoadFailure("Unable to start payment session. Please try again.");
+					return;
+				}
+				try {
+					await chIframe.initSdk(
+						this.paymentConfig,
+						this.paymentSessionData,
+						this.contextId
+					);
+				} catch (error) {
+					let errDetail = (error && error.message) ? error.message : String(error);
+					console.error("An error occurred while initializing Commercehub SDK:", error);
+					this.iframeLoadFailure("Unable to initialize payment: " + errDetail + ". Please try again.");
+					return;
+				}
 
                 let iframePromise = new Promise((resolve, reject) => {
 					chIframe.instantiateIframe(

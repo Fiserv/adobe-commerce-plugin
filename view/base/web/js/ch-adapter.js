@@ -340,6 +340,7 @@ define([
 			if (typeof(this.sdcv2Form) !== "undefined")
 			{
 				this.sdcv2Form.destroy();
+				this.sdcv2Form = undefined;
 			}
 		},
 
