@@ -166,6 +166,7 @@ class Form extends Cc
 		$config[ConfigProvider::ENV_KEY] = $chConfig[ConfigProvider::ENV_KEY];
 		$config[ConfigProvider::MERCHANT_ID_KEY] = $chConfig[ConfigProvider::MERCHANT_ID_KEY];
 		$config[ConfigProvider::API_KEY_KEY] = $chConfig[ConfigProvider::API_KEY_KEY];
+		$config[ConfigProvider::TERMINAL_ID_KEY] = $chConfig[ConfigProvider::TERMINAL_ID_KEY];
 		$config[FiservConfigProvider::STORE_URL_KEY] = $fconfig[FiservConfigProvider::STORE_URL_KEY];
 		$config[self::FORM_CONFIG_KEY] = $this->configProvider->buildFormConfig(GatewayConfig::KEY_SDC_ADMIN, $fconfig[FiservConfigProvider::STORE_ID_KEY]);
 		$config[self::INVALID_FIELDS_KEY] = $this->configProvider->getInvalidFieldMessages(GatewayConfig::KEY_SDC_ADMIN, $fconfig[FiservConfigProvider::STORE_ID_KEY]);
