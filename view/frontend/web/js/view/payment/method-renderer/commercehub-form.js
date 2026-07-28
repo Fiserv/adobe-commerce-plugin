@@ -196,6 +196,23 @@ define(
 	
 	},
 
+		/** Builds a nested billing address object required by the surcharge estimates API */
+		buildEstimateBillingAddress: function() {
+			const billingAddress = quote.billingAddress();
+			return {
+				firstName: billingAddress.firstname,
+				lastName: billingAddress.lastname,
+				address: {
+					street: billingAddress.street[0],
+					houseNumberOrName: billingAddress.street[1],
+					city: billingAddress.city,
+					stateOrProvince: billingAddress.regionCode || billingAddress.region,
+					postalCode: billingAddress.postcode,
+					country: billingAddress.countryId
+				}
+			};
+		},
+
         /**
          * Builds a static billing address values object from the current quote for the CH SDK address component.
          */
@@ -664,7 +681,7 @@ define(
 
 		fetchSurchargeEstimate: async function() {
 			try {
-				const surchargeDetails = await chAdapter.getSurchargeEstimate();
+				const surchargeDetails = await chAdapter.getSurchargeEstimate(this.buildEstimateBillingAddress());
 				const surchargeAmount = (surchargeDetails && surchargeDetails.amountComponent
 					&& surchargeDetails.amountComponent.surcharge)
 					? parseFloat(surchargeDetails.amountComponent.surcharge)
