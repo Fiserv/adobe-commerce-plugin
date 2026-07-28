@@ -351,11 +351,11 @@ define([
 		},
 
 
-		getSurchargeEstimate: async function() {
+		getSurchargeEstimate: async function(billingAddress) {
 			if (typeof(this.sdcv2Form) === "undefined") {
 				throw new Error("Payment form not initialized.");
 			}
-			return await this.sdcv2Form.getSurchargeEstimate();
+			return await this.sdcv2Form.getSurchargeEstimate({ billingAddress });
 		}
 	};
 });
