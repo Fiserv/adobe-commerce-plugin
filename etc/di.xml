@@ -316,6 +316,8 @@
 				<item name="payment_details" xsi:type="string">Fiserv\Payments\Gateway\Response\CommerceHub\PaymentDetailsHandler</item>
 				<item name="card_details" xsi:type="string">Fiserv\Payments\Gateway\Response\CommerceHub\CardDetailsHandler</item>
 				<item name="vault_details" xsi:type="string">Fiserv\Payments\Gateway\Response\CommerceHub\VaultDetailsHandler</item>
+				<!-- TEST: Added surcharge handler to verify if vault/paymentToken payments return surcharge from CommerceHub -->
+				<item name="surcharge" xsi:type="string">Fiserv\Payments\Gateway\Response\CommerceHub\SurchargeResponseHandler</item>
 			</argument>
 		</arguments>
 	</virtualType>
