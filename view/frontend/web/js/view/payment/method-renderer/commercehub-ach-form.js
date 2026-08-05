@@ -533,9 +533,14 @@ define(
                 }
             },
 
+            getSessionIntent: function () {
+                const config = window.checkoutConfig.payment[this.code] || {};
+                return (config.paymentAction && config.paymentAction.toLowerCase() === 'authorize_capture') ? 'CAPTURE' : 'AUTHORIZE';
+            },
+
             async initCheckoutSdk(billingAddress) {
                 const billingPayload = this.buildBillingAddressPayload(billingAddress);
-                const credsResponse = await chSession({billingAddress: billingPayload});
+                const credsResponse = await chSession({ billingAddress: billingPayload, session: { intent: this.getSessionIntent() } });
                 this.paymentSessionData = credsResponse["ch_credentials"];
 
                 this.contextId = crypto.randomUUID();

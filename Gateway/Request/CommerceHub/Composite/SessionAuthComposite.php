@@ -6,7 +6,6 @@
 namespace Fiserv\Payments\Gateway\Request\CommerceHub\Composite;
 
 use Fiserv\Payments\Gateway\Request\CommerceHub\Composite\ChCompositeBase;
-use Fiserv\Payments\Lib\CommerceHub\Model\ChargesRequest;
 use Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\SessionSourceDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\TransactionDetailsDataBuilder;
@@ -24,7 +23,7 @@ use Fiserv\Payments\Gateway\Config\CommerceHub\Config;
  */
 class SessionAuthComposite extends ChCompositeBase
 {	
-	const ENDPOINT = "payments/v1/charges";
+	const ENDPOINT = "v1/sessions/completions";
 
 	/**
 	 * @var MultiLevelLogger
@@ -39,10 +38,10 @@ class SessionAuthComposite extends ChCompositeBase
 	 * @param array $builders
 	 */
 	public function __construct(
-			MultiLevelLogger $logger, 
-			TMapFactory $tmapFactory, 
-			Config $chConfig,
-			array $builders = []
+		MultiLevelLogger $logger,
+		TMapFactory $tmapFactory,
+		Config $chConfig,
+		array $builders = []
 	) {
 		parent::__construct($tmapFactory, $builders);
 		$this->logger = $logger;
@@ -54,32 +53,31 @@ class SessionAuthComposite extends ChCompositeBase
 	 */
 	public function build(array $buildSubject)
 	{
-		
+		$this->logger->logInfo(1, "Initiating Auth Transaction");
 		$result = parent::build($buildSubject);
-		$orderIncrementId = $result[TransactionDetailsDataBuilder::TXN_DETAILS_KEY]['merchant_order_id'] ?? null;
-		if ($orderIncrementId !== null) {
-			$this->logger->logInfo(1, "Initiating Auth Transaction", "Order ID:" . $orderIncrementId);
-		} else {
-			$this->logger->logInfo(1, "Initiating Auth Transaction");
-		}
 
-		$req = new ChargesRequest();
-		$req->setAmount($result[AmountDataBuilder::AMOUNT_KEY]);
-		$req->setSource($result[SessionSourceDataBuilder::SESSION_SOURCE_KEY]);
-		$req->setTransactionDetails($result[TransactionDetailsDataBuilder::TXN_DETAILS_KEY]);
-		$req->setTransactionInteraction($result[TransactionInteractionDataBuilder::TXN_INTERACTION_KEY]);
-		$req->setMerchantDetails($result[MerchantDetailsDataBuilder::MERCHANT_DETAILS_KEY]);
-		$req->setBillingAddress($result[BillingAddressDataBuilder::BILLING_ADDRESS_KEY]);
-		$req->setCustomer($result[CustomerDataBuilder::CUSTOMER_KEY]);
+		$sessionSource = $result[SessionSourceDataBuilder::SESSION_SOURCE_KEY];
+	    $sessionId = $sessionSource->getSessionId();
+
+	    $payload = [
+	        'session' => ['sessionId' => $sessionId],
+            'amount' => $result[AmountDataBuilder::AMOUNT_KEY],
+            'transactionDetails' => $result[TransactionDetailsDataBuilder::TXN_DETAILS_KEY],
+            'transactionInteraction' => $result[TransactionInteractionDataBuilder::TXN_INTERACTION_KEY],
+            'merchantDetails' => $result[MerchantDetailsDataBuilder::MERCHANT_DETAILS_KEY],
+            'billingAddress' => $result[BillingAddressDataBuilder::BILLING_ADDRESS_KEY],
+            'customer' => $result[CustomerDataBuilder::CUSTOMER_KEY]
+        ];
+
 
 		// 3D Secure can be enabled but not run (e.g. admin panel order creation)
 		if ($this->chConfig->isThreeDSEnabled() && isset($result[ThreeDSecureDataBuilder::KEY_3DS_DATA]))
 		{
-			$req->setAdditionalData3Ds($result[ThreeDSecureDataBuilder::KEY_3DS_DATA]);
+			 $payload['additionalData3DS'] = $result[ThreeDSecureDataBuilder::KEY_3DS_DATA];
 		}
 
-		return [ 
-			self::REQUEST_KEY => $req,
+		return [
+			self::REQUEST_KEY => $payload,
 			self::ENDPOINT_KEY => self::ENDPOINT
 		];
 	}

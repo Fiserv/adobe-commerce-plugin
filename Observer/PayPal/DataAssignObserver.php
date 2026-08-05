@@ -2,6 +2,7 @@
 
 namespace Fiserv\Payments\Observer\PayPal;
 
+use Fiserv\Payments\Observer\CommerceHub\DataAssignObserver as CommerceHubDataAssignObserver;
 use Magento\Framework\Event\Observer;
 use Magento\Payment\Observer\AbstractDataAssignObserver;
 use Magento\Quote\Api\Data\PaymentInterface;
@@ -14,11 +15,11 @@ class DataAssignObserver extends AbstractDataAssignObserver
     /**
      * Keys for PayPal-specific additional information.
      */
-    public const ORDER_ID      = 'paypal_order_id';
-    public const REF_TXN_KEY   = 'paypal_txn_id';
-    public const EMAIL         = 'paypal_email';
+    public const ORDER_ID = 'paypal_order_id';
+    public const REF_TXN_KEY = 'paypal_txn_id';
+    public const EMAIL = 'paypal_email';
     public const TRANSACTION_ID = 'paypal_transaction_id';
-    public const INTENT        = 'paypal_intent';
+    public const INTENT = 'paypal_intent';
 
     /**
      * List of PayPal data keys to assign.
@@ -30,7 +31,8 @@ class DataAssignObserver extends AbstractDataAssignObserver
         self::REF_TXN_KEY,
         self::EMAIL,
         self::TRANSACTION_ID,
-        self::INTENT
+        self::INTENT,
+        CommerceHubDataAssignObserver::SESSION_ID_KEY,
     ];
 
     /**

@@ -168,6 +168,14 @@ define([
 			}, 300);
 		},
 
+		getSessionIntent: function () {
+			const config = globalThis.checkoutConfig && globalThis.checkoutConfig.payment
+				? globalThis.checkoutConfig.payment[this.getCode()] || {}
+				: {};
+			const action = (config.paymentAction || config.payment_action || '').toLowerCase();
+			return (action.includes('capture') || action.includes('sale')) ? 'CAPTURE' : 'AUTHORIZE';
+		},
+
 		async initializeAffirm() {
 			if (!this.canDisplayAffirm() || this.isInitializing) {
 				return;
@@ -186,7 +194,7 @@ define([
 
 			try {
 				$('#affirm-button-container').empty();
-				const creds = await chSession({ merchantName: config.storeName });
+				const creds = await chSession({ merchantName: config.storeName, session: { intent: this.getSessionIntent() } });
 
 				if (!creds || !creds.ch_credentials) {
 					throw new Error('No credentials returned from backend');

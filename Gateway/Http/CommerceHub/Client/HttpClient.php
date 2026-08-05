@@ -71,9 +71,37 @@ class HttpClient implements ClientInterface
 		];
 		
 		$orderIncrementId = "";
-		if (isset($payload['transaction_details']) && isset($payload['transaction_details']['merchant_order_id']))
+		if (is_object($payload) && method_exists($payload, 'getTransactionDetails'))
 		{
-			$orderIncrementId = $payload['transaction_details']['merchant_order_id'];
+			$txnDetails = $payload->getTransactionDetails();
+			if ($txnDetails !== null && method_exists($txnDetails, 'getMerchantOrderId'))
+			{
+				$orderIncrementId = $txnDetails->getMerchantOrderId() ?? "";
+			}
+		}
+		elseif (isset($payload['transaction_details']))
+		{
+			$txnDetails = $payload['transaction_details'];
+			if (is_object($txnDetails) && method_exists($txnDetails, 'getMerchantOrderId'))
+			{
+				$orderIncrementId = $txnDetails->getMerchantOrderId() ?? "";
+			}
+			elseif (is_array($txnDetails) && isset($txnDetails['merchantOrderId']))
+			{
+				$orderIncrementId = $txnDetails['merchantOrderId'];
+			}
+		}
+		elseif (is_array($payload) && isset($payload['transactionDetails']))
+		{
+			$txnDetails = $payload['transactionDetails'];
+			if (is_object($txnDetails) && method_exists($txnDetails, 'getMerchantOrderId'))
+			{
+				$orderIncrementId = $txnDetails->getMerchantOrderId() ?? "";
+			}
+			elseif (is_array($txnDetails) && isset($txnDetails['merchantOrderId']))
+			{
+				$orderIncrementId = $txnDetails['merchantOrderId'];
+			}
 		}
 
 		$this->logger->logInfo(1, "Sending request to Commerce Hub", "Order ID: $orderIncrementId");

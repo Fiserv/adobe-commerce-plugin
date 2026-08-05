@@ -25,49 +25,39 @@ class GetCredentials extends Action implements HttpPostActionInterface
     const HTTP_UNAUTHORIZED = 401;
     const KEY_STORE_ID = "store_id";
 
-    /**
-     * @var CredentialsRequest
-     */
-    private $chAdapter;
+    /** @var CredentialsRequest */
+    private $credentialsRequest;
 
-    /**
-     * @var MultiLevelLogger
-     */
+    /** @var MultiLevelLogger */
     private $logger;
 
-    /**
-     * @var CustomerSession
-     */
+    /** @var CustomerSession */
     private $customerSession;
 
-    /**
-     * @var ProviderCustomerIdFactory
-     */
+    /** @var ProviderCustomerIdFactory */
     private $providerCustomerIdFactory;
 
-    /**
-     * @var PayPalConfig
-     */
+    /** @var PayPalConfig */
     private $paypalConfig;
 
     /**
-    * @param Context $context
-    * @param CredentialsRequest $chAdapter
-    * @param MultiLevelLogger $logger
-    * @param CustomerSession $customerSession
-    * @param ProviderCustomerIdFactory $providerCustomerIdFactory
-    * @param PayPalConfig $paypalConfig
-    */
+     * @param Context $context
+     * @param CredentialsRequest $credentialsRequest
+     * @param MultiLevelLogger $logger
+     * @param CustomerSession|null $customerSession
+     * @param ProviderCustomerIdFactory|null $providerCustomerIdFactory
+     * @param PayPalConfig|null $paypalConfig
+     */
     public function __construct(
         Context $context,
-        CredentialsRequest $chAdapter,
+        CredentialsRequest $credentialsRequest,
         MultiLevelLogger $logger,
         CustomerSession $customerSession = null,
         ProviderCustomerIdFactory $providerCustomerIdFactory = null,
         PayPalConfig $paypalConfig = null
     ) {
         parent::__construct($context);
-        $this->chAdapter = $chAdapter;
+        $this->credentialsRequest = $credentialsRequest;
         $this->logger = $logger;
         $this->customerSession = $customerSession;
         $this->providerCustomerIdFactory = $providerCustomerIdFactory;
@@ -83,7 +73,8 @@ class GetCredentials extends Action implements HttpPostActionInterface
 
         try {
             $data = $this->getRequest()->getContent();
-            $sessionData = json_decode($data, true) ?? array();
+            $sessionData = json_decode($data, true) ?? [];
+
             // Add customer id if logged in
             if ($this->customerSession !== null && $this->customerSession->isLoggedIn()) {
                 $sessionData['customer']['id'] = $this->customerSession->getCustomerId();
@@ -106,7 +97,8 @@ class GetCredentials extends Action implements HttpPostActionInterface
                     }
                 }
             }
-            $response->setData(['ch_credentials' => $this->chAdapter->requestCredentials($sessionData)]);
+
+            $response->setData(['ch_credentials' => $this->credentialsRequest->requestCredentials($sessionData)]);
         } catch (\Exception $e) {
 			$this->logger->logCritical(1, "An error occured in the retrieval of credentials");
             $this->logger->logCritical(2, $e);

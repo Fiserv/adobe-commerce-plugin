@@ -166,6 +166,11 @@ define([
             };
         },
 
+        getSessionIntent: function () {
+            const config = window.checkoutConfig.payment[this.getCode()] || {};
+            return (config.paymentAction && config.paymentAction.toLowerCase() === 'authorize_capture') ? 'CAPTURE' : 'AUTHORIZE';
+        },
+
         loadPazeForm: async function () {
             const config = window.checkoutConfig.payment[this.getCode()];
             try {
@@ -181,7 +186,7 @@ define([
                 };
 
                 // Get credentials from session
-                const creds = await chSession({});
+                const creds = await chSession({ session: { intent: this.getSessionIntent() } });
 
                 if (!creds?.ch_credentials) {
                     throw new Error('No credentials returned from backend');
