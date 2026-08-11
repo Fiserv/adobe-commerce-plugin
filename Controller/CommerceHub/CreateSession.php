@@ -18,9 +18,9 @@ use Fiserv\Payments\Model\PayPal\ProviderCustomerIdFactory;
 use Fiserv\Payments\Gateway\Config\PayPal\Config as PayPalConfig;
 
 /**
- * Class GetCredentials
+ * Creates a CommerceHub payment session via the v1/sessions/create API.
  */
-class GetCredentials extends Action implements HttpPostActionInterface
+class CreateSession extends Action implements HttpPostActionInterface
 {
     const HTTP_UNAUTHORIZED = 401;
     const KEY_STORE_ID = "store_id";
