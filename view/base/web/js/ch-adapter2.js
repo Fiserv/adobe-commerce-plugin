@@ -18,7 +18,7 @@ define([
 	//		c. Symmetric Encryption Algorithm generated during initial credentials request
 	return {
 		credentialsErrorMsg: "Oops! Something went wrong...",	
-		credentialsUrl: "fiserv/valuelink/getvaluelinkcredentials",
+           credentialsUrl: "fiserv/valuelink/getcredentials",
 		clientScriptId: "commercehub",
 		configApiKeyKey: "apiKey",
 		configMerchantIdKey: "merchantId",

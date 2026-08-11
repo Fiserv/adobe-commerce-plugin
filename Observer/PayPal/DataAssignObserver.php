@@ -19,7 +19,10 @@ class DataAssignObserver extends AbstractDataAssignObserver
     public const REF_TXN_KEY = 'paypal_txn_id';
     public const EMAIL = 'paypal_email';
     public const TRANSACTION_ID = 'paypal_transaction_id';
-    public const INTENT = 'paypal_intent';
+    // NOTE: INTENT is intentionally not stored from additional_data.
+    // The session intent is always determined server-side from the configured
+    // payment action (see CreateSession::getConfiguredIntent()), so we must
+    // never allow the browser to influence it.
 
     /**
      * List of PayPal data keys to assign.
@@ -31,7 +34,6 @@ class DataAssignObserver extends AbstractDataAssignObserver
         self::REF_TXN_KEY,
         self::EMAIL,
         self::TRANSACTION_ID,
-        self::INTENT,
         CommerceHubDataAssignObserver::SESSION_ID_KEY,
     ];
 

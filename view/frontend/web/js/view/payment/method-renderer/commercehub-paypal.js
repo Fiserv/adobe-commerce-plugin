@@ -71,12 +71,6 @@ define([
             }
         },
 
-        getSessionIntent: function () {
-            const config = (window.checkoutConfig && window.checkoutConfig.payment) ? window.checkoutConfig.payment[this.getCode()] || {} : {};
-            const action = (config.paymentAction || config.payment_action || '').toLowerCase();
-            return action === 'authorize_capture' ? 'CAPTURE' : 'AUTHORIZE';
-        },
-
         initchAdapter: async function () {
             var self = this;
             var config = (window.checkoutConfig && window.checkoutConfig.payment) ? window.checkoutConfig.payment[self.getCode()] : {};
@@ -91,7 +85,9 @@ define([
                 chAdapter.initialize(config);
                 var credsResponse, creds;
 
-                credsResponse = await commercehubSession({ session: { intent: this.getSessionIntent() } });
+                // Do not send intent from the browser — the server derives it from
+                // the configured payment action to prevent client-side manipulation.
+                credsResponse = await commercehubSession({});
                 creds = credsResponse && credsResponse[chAdapter.credentialsKey];
                 if (!creds) {
                     throw new Error('No credentials returned from PayPal session');

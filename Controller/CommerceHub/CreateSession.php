@@ -74,6 +74,7 @@ class GetCredentials extends Action implements HttpPostActionInterface
         try {
             $data = $this->getRequest()->getContent();
             $sessionData = json_decode($data, true) ?? [];
+            $sessionData['session']['intent'] = $this->getConfiguredIntent();
 
             // Add customer id if logged in
             if ($this->customerSession !== null && $this->customerSession->isLoggedIn()) {
@@ -124,5 +125,23 @@ class GetCredentials extends Action implements HttpPostActionInterface
     private function validateStoreId($storeId)
     {
         return true;	    
+    }
+
+    /**
+     * Determine the session intent from server-side config.
+     * PayPal sessions use the PayPal payment action; all others default to AUTHORIZE.
+     *
+     * @return string One of the CredentialsRequest::INTENT_* constants
+     */
+    private function getConfiguredIntent(): string
+    {
+        if ($this->paypalConfig !== null) {
+            $action = strtolower($this->paypalConfig->getPaymentAction() ?? '');
+            return $action === 'authorize_capture'
+                ? CredentialsRequest::INTENT_CAPTURE
+                : CredentialsRequest::INTENT_AUTHORIZE;
+        }
+
+        return CredentialsRequest::INTENT_AUTHORIZE;
     }
 }

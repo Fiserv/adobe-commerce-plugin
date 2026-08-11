@@ -10,7 +10,10 @@ use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Webapi\Exception;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 
-class GetValuelinkCredentials extends Action implements HttpPostActionInterface
+/**
+ * Fetches Valuelink (gift card) credentials from the payments-vas/v1/security/credentials endpoint.
+ */
+class GetCredentials extends Action implements HttpPostActionInterface
 {
 	/** @var ValuelinkCredentialsRequest */
 	private $chAdapter;

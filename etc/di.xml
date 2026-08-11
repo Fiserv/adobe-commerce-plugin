@@ -925,7 +925,7 @@
 		</arguments>
 	</virtualType>
 
-	<type name="Fiserv\Payments\Controller\CommerceHub\GetCredentials">
+        <type name="Fiserv\Payments\Controller\CommerceHub\CreateSession">
 		<arguments>
 			<argument name="credentialsRequest" xsi:type="object">Fiserv\Payments\Model\Adapter\CommerceHub\CredentialsRequest</argument>
 			<argument name="customerSession" xsi:type="object">Magento\Customer\Model\Session</argument>

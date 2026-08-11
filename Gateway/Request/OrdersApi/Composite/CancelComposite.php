@@ -47,15 +47,18 @@ class CancelComposite extends OrderApiCompositeBase
 		$this->logger->logInfo(1, "Initiating Cancel Transaction");
 
 		$result = parent::build($buildSubject);
+		$txnDetails = $result[OrderApiTransactionDetailsDataBuilder::TXN_DETAILS_KEY];
+		$orderIncrementId = $txnDetails->getMerchantOrderId() ?? "";
 
 		$req = new CancelRequest();
-		$req->setTransactionDetails($result[OrderApiTransactionDetailsDataBuilder::TXN_DETAILS_KEY]);
+		$req->setTransactionDetails($txnDetails);
 		$req->setReferenceTransactionDetails($result[ReferenceTransactionDataBuilder::REF_TXN_KEY]);
 		$req->setMerchantDetails($result[MerchantDetailsDataBuilder::MERCHANT_DETAILS_KEY]);
 
 		return [
 			self::REQUEST_KEY => $req,
-			self::ENDPOINT_KEY => self::ENDPOINT
+			self::ENDPOINT_KEY => self::ENDPOINT,
+			self::ORDER_INCREMENT_ID_KEY => $orderIncrementId
 		];
 	}
 }
