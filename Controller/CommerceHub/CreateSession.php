@@ -127,19 +127,12 @@ class CreateSession extends Action implements HttpPostActionInterface
         return true;	    
     }
 
-    /**
-     * Determine the session intent from server-side config.
-     * PayPal sessions use the PayPal payment action; all others default to AUTHORIZE.
-     *
-     * @return string One of the CredentialsRequest::INTENT_* constants
-     */
+    /** Determine the session intent from server-side config.*/
     private function getConfiguredIntent(): string
     {
         if ($this->paypalConfig !== null) {
             $action = strtolower($this->paypalConfig->getPaymentAction() ?? '');
-            return $action === 'authorize_capture'
-                ? CredentialsRequest::INTENT_CAPTURE
-                : CredentialsRequest::INTENT_AUTHORIZE;
+            return $action === 'authorize_capture' ? CredentialsRequest::INTENT_CAPTURE: CredentialsRequest::INTENT_AUTHORIZE;
         }
 
         return CredentialsRequest::INTENT_AUTHORIZE;

@@ -58,13 +58,13 @@ class SessionSaleComposite extends ChCompositeBase
 		$orderIncrementId = $txnDetails->getMerchantOrderId() ?? "";
 
 		$payload = [
-			'session'              => ['sessionId' => $result[SessionSourceDataBuilder::SESSION_SOURCE_KEY]->getSessionId()],
-			'amount'               => $result[AmountDataBuilder::AMOUNT_KEY],
-			'transactionDetails'   => $txnDetails,
+			'session' => ['sessionId' => $result[SessionSourceDataBuilder::SESSION_SOURCE_KEY]->getSessionId()],
+			'amount' => $result[AmountDataBuilder::AMOUNT_KEY],
+			'transactionDetails' => $txnDetails,
 			'transactionInteraction' => $result[TransactionInteractionDataBuilder::TXN_INTERACTION_KEY],
-			'merchantDetails'      => $result[MerchantDetailsDataBuilder::MERCHANT_DETAILS_KEY],
-			'billingAddress'       => $result[BillingAddressDataBuilder::BILLING_ADDRESS_KEY],
-			'customer'             => $result[CustomerDataBuilder::CUSTOMER_KEY],
+			'merchantDetails' => $result[MerchantDetailsDataBuilder::MERCHANT_DETAILS_KEY],
+			'billingAddress' => $result[BillingAddressDataBuilder::BILLING_ADDRESS_KEY],
+			'customer' => $result[CustomerDataBuilder::CUSTOMER_KEY],
 		];
 
 		// 3D Secure can be enabled but not run (e.g. admin panel order creation)
@@ -74,8 +74,8 @@ class SessionSaleComposite extends ChCompositeBase
 		}
 
 		return [
-			self::REQUEST_KEY            => $payload,
-			self::ENDPOINT_KEY           => self::ENDPOINT,
+			self::REQUEST_KEY => $payload,
+			self::ENDPOINT_KEY => self::ENDPOINT,
 			self::ORDER_INCREMENT_ID_KEY => $orderIncrementId,
 		];
 	}
