@@ -85,9 +85,7 @@ define([
                 chAdapter.initialize(config);
                 var credsResponse, creds;
 
-                // Do not send intent from the browser — the server derives it from
-                // the configured payment action to prevent client-side manipulation.
-                credsResponse = await commercehubSession({});
+                credsResponse = await commercehubSession({ paymentCode: this.getCode() });
                 creds = credsResponse && credsResponse[chAdapter.credentialsKey];
                 if (!creds) {
                     throw new Error('No credentials returned from PayPal session');
@@ -95,10 +93,7 @@ define([
 
                 self.paymentPayload.sessionId = creds[chAdapter.sessionIdKey];
                 await chAdapter.initSdk(config, creds);
-                var intent = 'authorize';
-                if (config.payment_action.toLowerCase() === 'authorize_capture') {
-                    intent = 'capture';
-                }
+                const intent = (config.payment_action || '').toLowerCase() === 'authorize_capture' ? 'capture' : 'authorize';
                 const shippingAddress = this.getMapShippingAddress(this.getShippingAddress());
                 const paypalComponentConfig = {
                     intent: intent,

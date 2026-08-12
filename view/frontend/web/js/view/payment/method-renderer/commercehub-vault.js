@@ -401,16 +401,11 @@ define([
 			return window.checkoutConfig.payment[this.getCode()]["threeDSecure"] === '1'
 		},
 
-		getSessionIntent: function () {
-			const config = window.checkoutConfig.payment[this.commercehubCode] || {};
-			return (config.paymentAction && config.paymentAction.toLowerCase() === 'authorize_capture') ? 'CAPTURE' : 'AUTHORIZE';
-		},
-
 		setCredentials: async function(paymentToken) {
 			const credsResponse = await chSession({
 				"paymentToken" : paymentToken,
 				"threeDSecure" : this.is3DSecureEnabled(),
-				session: { intent: this.getSessionIntent() }
+				paymentCode: this.commercehubCode
 			});
 
 			this.paymentSessionData = credsResponse["ch_credentials"];

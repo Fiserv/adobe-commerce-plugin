@@ -168,14 +168,6 @@ define([
 			}, 300);
 		},
 
-		getSessionIntent: function () {
-			const config = globalThis.checkoutConfig && globalThis.checkoutConfig.payment
-				? globalThis.checkoutConfig.payment[this.getCode()] || {}
-				: {};
-			const action = (config.paymentAction || config.payment_action || '').toLowerCase();
-			return (action.includes('capture') || action.includes('sale')) ? 'CAPTURE' : 'AUTHORIZE';
-		},
-
 		async initializeAffirm() {
 			if (!this.canDisplayAffirm() || this.isInitializing) {
 				return;
@@ -194,7 +186,7 @@ define([
 
 			try {
 				$('#affirm-button-container').empty();
-				const creds = await chSession({ merchantName: config.storeName, session: { intent: this.getSessionIntent() } });
+				const creds = await chSession({ merchantName: config.storeName, paymentCode: this.getCode() });
 
 				if (!creds || !creds.ch_credentials) {
 					throw new Error('No credentials returned from backend');
@@ -204,14 +196,9 @@ define([
 				await chAdapter.initSdk(config, creds.ch_credentials);
 
 				const buttonStyle = config.affirmButtonColor || config.affirmButtonStyle || 'default';
-				const backendAction = config.paymentAction || config.affirmPaymentAction || config.payment_action || '';
-				const actionLower = backendAction.toString().toLowerCase();
-
-				let affirmIntent = 'AUTHORIZE';
-
-				if (actionLower.includes('capture') || actionLower.includes('sale')) {
-					affirmIntent = 'CAPTURE';
-				}
+				const affirmIntent = (config.paymentAction || config.payment_action || '').toLowerCase() === 'authorize_capture'
+					? 'CAPTURE'
+					: 'AUTHORIZE';
 
 				const affirmPayload = {
 					data: {

@@ -9,13 +9,14 @@ use Fiserv\Payments\Model\Adapter\CommerceHub\CredentialsRequest;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Webapi\Exception;
+use Magento\Store\Model\ScopeInterface;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 use Magento\Customer\Model\Session as CustomerSession;
 use Fiserv\Payments\Model\PayPal\ProviderCustomerIdFactory;
-use Fiserv\Payments\Gateway\Config\PayPal\Config as PayPalConfig;
 
 /**
  * Creates a CommerceHub payment session via the v1/sessions/create API.
@@ -37,31 +38,31 @@ class CreateSession extends Action implements HttpPostActionInterface
     /** @var ProviderCustomerIdFactory */
     private $providerCustomerIdFactory;
 
-    /** @var PayPalConfig */
-    private $paypalConfig;
+    /** @var ScopeConfigInterface */
+    private $scopeConfig;
 
     /**
      * @param Context $context
      * @param CredentialsRequest $credentialsRequest
      * @param MultiLevelLogger $logger
+     * @param ScopeConfigInterface $scopeConfig
      * @param CustomerSession|null $customerSession
      * @param ProviderCustomerIdFactory|null $providerCustomerIdFactory
-     * @param PayPalConfig|null $paypalConfig
      */
     public function __construct(
         Context $context,
         CredentialsRequest $credentialsRequest,
         MultiLevelLogger $logger,
+        ScopeConfigInterface $scopeConfig,
         CustomerSession $customerSession = null,
-        ProviderCustomerIdFactory $providerCustomerIdFactory = null,
-        PayPalConfig $paypalConfig = null
+        ProviderCustomerIdFactory $providerCustomerIdFactory = null
     ) {
         parent::__construct($context);
         $this->credentialsRequest = $credentialsRequest;
         $this->logger = $logger;
+        $this->scopeConfig = $scopeConfig;
         $this->customerSession = $customerSession;
         $this->providerCustomerIdFactory = $providerCustomerIdFactory;
-        $this->paypalConfig = $paypalConfig;
     }
 
     /**
@@ -74,13 +75,21 @@ class CreateSession extends Action implements HttpPostActionInterface
         try {
             $data = $this->getRequest()->getContent();
             $sessionData = json_decode($data, true) ?? [];
-            $sessionData['session']['intent'] = $this->getConfiguredIntent();
+
+            // Derive the session intent from the payment method's server-side config.
+            // The JS passes paymentCode so we can look up the correct payment_action
+            // without exposing intent derivation logic to the client.
+            $paymentCode = $sessionData['paymentCode'] ?? null;
+            unset($sessionData['paymentCode']); // not a CommerceHub API field
+            if ($paymentCode) {
+                $sessionData['session']['intent'] = $this->getIntentForPaymentMethod($paymentCode);
+            }
 
             // Add customer id if logged in
             if ($this->customerSession !== null && $this->customerSession->isLoggedIn()) {
                 $sessionData['customer']['id'] = $this->customerSession->getCustomerId();
-                // Only add providerCustomerId if vaulting is active (PayPal logic)
-                if ($this->paypalConfig !== null && $this->paypalConfig->isVaultActive()) {
+                // Add providerCustomerId when available (e.g. PayPal vault)
+                if ($this->providerCustomerIdFactory !== null) {
                     $customerId = $this->customerSession->getCustomerId();
                     try {
                         $providerCustomerIdModel = $this->providerCustomerIdFactory->create()->getCollection()
@@ -127,14 +136,19 @@ class CreateSession extends Action implements HttpPostActionInterface
         return true;	    
     }
 
-    /** Determine the session intent from server-side config.*/
-    private function getConfiguredIntent(): string
+    /**
+     * Derive the CommerceHub session intent from a payment method's store configuration.
+     * Returns INTENT_CAPTURE when payment_action is authorize_capture, otherwise INTENT_AUTHORIZE.
+     */
+    private function getIntentForPaymentMethod(string $paymentCode): string
     {
-        if ($this->paypalConfig !== null) {
-            $action = strtolower($this->paypalConfig->getPaymentAction() ?? '');
-            return $action === 'authorize_capture' ? CredentialsRequest::INTENT_CAPTURE: CredentialsRequest::INTENT_AUTHORIZE;
-        }
+        $paymentAction = (string) $this->scopeConfig->getValue(
+            'payment/' . $paymentCode . '/payment_action',
+            ScopeInterface::SCOPE_STORE
+        );
 
-        return CredentialsRequest::INTENT_AUTHORIZE;
+        return strtolower($paymentAction) === 'authorize_capture'
+            ? CredentialsRequest::INTENT_CAPTURE
+            : CredentialsRequest::INTENT_AUTHORIZE;
     }
 }

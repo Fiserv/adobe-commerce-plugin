@@ -140,15 +140,10 @@ define(
 				);
 			},
 
-			loadSdcForm: function () {
-				if (this.isChecked() === this.code) {
-					this.loadIframe();
-				}
-			},
-
-		getSessionIntent: function() {
-			const config = window.checkoutConfig.payment[this.code] || {};
-			return (config.paymentAction && config.paymentAction.toLowerCase() === 'authorize_capture') ? 'CAPTURE' : 'AUTHORIZE';
+		loadSdcForm: function () {
+			if (this.isChecked() === this.code) {
+				this.loadIframe();
+			}
 		},
 
         initCheckoutSdk: async function(credentials)
@@ -156,7 +151,7 @@ define(
             const credsResponse = await chSession({
                 threeDSecure: this.is3DSecureEnabled(),
                 billingAddress: this.buildBillingAddressValues(),
-                session: { intent: this.getSessionIntent() }
+                paymentCode: this.code
             });
 
             this.paymentSessionData = credsResponse['ch_credentials'];

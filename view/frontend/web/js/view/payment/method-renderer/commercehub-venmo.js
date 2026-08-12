@@ -1,9 +1,3 @@
-/**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
- */
-/*browser:true*/
-/*global define*/
 define([
     'jquery',
     'Magento_Payment/js/view/payment/cc-form',
@@ -76,12 +70,6 @@ define([
             }
         },
 
-        getSessionIntent: function () {
-            const config = (window.checkoutConfig && window.checkoutConfig.payment) ? window.checkoutConfig.payment[this.getCode()] || {} : {};
-            const action = (config.paymentAction || config.payment_action || '').toLowerCase();
-            return action === 'authorize_capture' ? 'CAPTURE' : 'AUTHORIZE';
-        },
-
         initchAdapter: async function () {
             var self = this;
             var config = (window.checkoutConfig && window.checkoutConfig.payment) ? window.checkoutConfig.payment[self.getCode()] : {};
@@ -96,7 +84,7 @@ define([
                 chAdapter.initialize(config);
                 var credsResponse, creds;
 
-                credsResponse = await commercehubSession({ session: { intent: this.getSessionIntent() } });
+                credsResponse = await commercehubSession({ paymentCode: this.getCode() });
                 creds = credsResponse && credsResponse[chAdapter.credentialsKey];
                 if (!creds) {
                     throw new Error('No credentials returned from Venmo session');
@@ -104,10 +92,7 @@ define([
 
                 self.paymentPayload.sessionId = creds[chAdapter.sessionIdKey];
                 await chAdapter.initSdk(config, creds);
-                var intent = 'authorize';
-                if (config.payment_action.toLowerCase() === 'authorize_capture') {
-                    intent = 'capture';
-                }
+                const intent = (config.payment_action || '').toLowerCase() === 'authorize_capture' ? 'capture' : 'authorize';
                 const shippingAddress = this.getMapShippingAddress(this.getShippingAddress());
                 const paypalComponentConfig = {
                     intent: intent,

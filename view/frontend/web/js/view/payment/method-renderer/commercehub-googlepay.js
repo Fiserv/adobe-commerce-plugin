@@ -70,10 +70,6 @@ define([
             });
         },
 
-        getSessionIntent: function () {
-            const config = this.getPaymentConfig() || {};
-            return (config.paymentAction && config.paymentAction.toLowerCase() === 'authorize_capture') ? 'CAPTURE' : 'AUTHORIZE';
-        },
 
         loadGooglePayForm: async function () {
             const config = this.getPaymentConfig();
@@ -86,7 +82,7 @@ define([
                 fullScreenLoader.startLoader();
                 $('#googlepay-button-container').empty();
 
-                const creds = await chSession({ merchantName: config.storeName, session: { intent: this.getSessionIntent() } });
+                const creds = await chSession({ merchantName: config.storeName, paymentCode: this.getCode() });
                 if (!creds?.ch_credentials) {
                     throw new Error('Error creating payment session');
                 }
