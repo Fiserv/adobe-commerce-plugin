@@ -16,7 +16,6 @@ use Magento\Framework\Webapi\Exception;
 use Magento\Store\Model\ScopeInterface;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 use Magento\Customer\Model\Session as CustomerSession;
-use Fiserv\Payments\Model\PayPal\ProviderCustomerIdFactory;
 
 /**
  * Creates a CommerceHub payment session via the v1/sessions/create API.
@@ -35,9 +34,6 @@ class CreateSession extends Action implements HttpPostActionInterface
     /** @var CustomerSession */
     private $customerSession;
 
-    /** @var ProviderCustomerIdFactory */
-    private $providerCustomerIdFactory;
-
     /** @var ScopeConfigInterface */
     private $scopeConfig;
 
@@ -47,22 +43,19 @@ class CreateSession extends Action implements HttpPostActionInterface
      * @param MultiLevelLogger $logger
      * @param ScopeConfigInterface $scopeConfig
      * @param CustomerSession|null $customerSession
-     * @param ProviderCustomerIdFactory|null $providerCustomerIdFactory
      */
     public function __construct(
         Context $context,
         CredentialsRequest $credentialsRequest,
         MultiLevelLogger $logger,
         ScopeConfigInterface $scopeConfig,
-        CustomerSession $customerSession = null,
-        ProviderCustomerIdFactory $providerCustomerIdFactory = null
+        CustomerSession $customerSession = null
     ) {
         parent::__construct($context);
         $this->credentialsRequest = $credentialsRequest;
         $this->logger = $logger;
         $this->scopeConfig = $scopeConfig;
         $this->customerSession = $customerSession;
-        $this->providerCustomerIdFactory = $providerCustomerIdFactory;
     }
 
     /**
@@ -88,24 +81,6 @@ class CreateSession extends Action implements HttpPostActionInterface
             // Add customer id if logged in
             if ($this->customerSession !== null && $this->customerSession->isLoggedIn()) {
                 $sessionData['customer']['id'] = $this->customerSession->getCustomerId();
-                // Add providerCustomerId when available (e.g. PayPal vault)
-                if ($this->providerCustomerIdFactory !== null) {
-                    $customerId = $this->customerSession->getCustomerId();
-                    try {
-                        $providerCustomerIdModel = $this->providerCustomerIdFactory->create()->getCollection()
-                            ->addFieldToFilter('customer_id', $customerId)
-                            ->getFirstItem();
-                        if ($providerCustomerIdModel->getId()) {
-                            $storedProviderCustomerId = $providerCustomerIdModel->getPaypalProviderCustomerId();
-                            if ($storedProviderCustomerId) {
-                                $sessionData['customer']['providerCustomerId'] = $storedProviderCustomerId;
-                                $this->logger->logInfo(1, "Using stored providerCustomerId for customer " . $customerId);
-                            }
-                        }
-                    } catch (\Exception $e) {
-                        $this->logger->logError(1, "Error retrieving providerCustomerId: " . $e->getMessage());
-                    }
-                }
             }
 
             $response->setData(['ch_credentials' => $this->credentialsRequest->requestCredentials($sessionData)]);
