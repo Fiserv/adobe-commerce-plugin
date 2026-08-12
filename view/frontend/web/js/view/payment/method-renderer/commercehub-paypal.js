@@ -91,12 +91,13 @@ define([
                     throw new Error('No credentials returned from PayPal session');
                 }
 
+                const sessionIntent = (credsResponse.session_intent || 'AUTHORIZE').toLowerCase();
+
                 self.paymentPayload.sessionId = creds[chAdapter.sessionIdKey];
                 await chAdapter.initSdk(config, creds);
-                const intent = (config.payment_action || '').toLowerCase() === 'authorize_capture' ? 'capture' : 'authorize';
                 const shippingAddress = this.getMapShippingAddress(this.getShippingAddress());
                 const paypalComponentConfig = {
-                    intent: intent,
+                    intent: sessionIntent,
                     shippingAddress: shippingAddress,
                 };
                 const paypalComponent = await chAdapter.loadPayPalComponent(paypalComponentConfig);

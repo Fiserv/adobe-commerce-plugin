@@ -192,13 +192,12 @@ define([
 					throw new Error('No credentials returned from backend');
 				}
 
+				const affirmIntent = creds.session_intent || 'AUTHORIZE';
+
 				this.paymentPayload.sessionId = creds.ch_credentials.sessionId;
 				await chAdapter.initSdk(config, creds.ch_credentials);
 
 				const buttonStyle = config.affirmButtonColor || config.affirmButtonStyle || 'default';
-				const affirmIntent = (config.paymentAction || config.payment_action || '').toLowerCase() === 'authorize_capture'
-					? 'CAPTURE'
-					: 'AUTHORIZE';
 
 				const affirmPayload = {
 					data: {

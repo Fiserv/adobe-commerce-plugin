@@ -69,21 +69,28 @@ class CreateSession extends Action implements HttpPostActionInterface
             $data = $this->getRequest()->getContent();
             $sessionData = json_decode($data, true) ?? [];
 
-            // Derive the session intent from the payment method's server-side config.
-            // The JS passes paymentCode so we can look up the correct payment_action
-            // without exposing intent derivation logic to the client.
-            $paymentCode = $sessionData['paymentCode'] ?? null;
-            unset($sessionData['paymentCode']); // not a CommerceHub API field
-            if ($paymentCode) {
-                $sessionData['session']['intent'] = $this->getIntentForPaymentMethod($paymentCode);
-            }
+            // Route 1: Tokenization request (e.g. standalone stored-payment account creation).
+            // Route 2: Primary transaction — the sub-type (Authorize vs Authorize+Capture/Sale)
+            // Route2 : is derived strictly from the server to avoid any client-side manipulation
+            $paymentCode = $sessionData['paymentCode'];
+            $isTokenization = !empty($sessionData['isTokenization']);
+            unset($sessionData['paymentCode'], $sessionData['isTokenization']);
+
+            $intent = $isTokenization
+                ? CredentialsRequest::INTENT_CHECKOUT
+                : $this->getPrimaryTransactionIntent($paymentCode);
+
+            $sessionData['session']['intent'] = $intent;
 
             // Add customer id if logged in
             if ($this->customerSession !== null && $this->customerSession->isLoggedIn()) {
                 $sessionData['customer']['id'] = $this->customerSession->getCustomerId();
             }
 
-            $response->setData(['ch_credentials' => $this->credentialsRequest->requestCredentials($sessionData)]);
+            $response->setData([
+                'ch_credentials' => $this->credentialsRequest->requestCredentials($sessionData),
+                'session_intent' => $intent,
+            ]);
         } catch (\Exception $e) {
 			$this->logger->logCritical(1, "An error occured in the retrieval of credentials");
             $this->logger->logCritical(2, $e);
@@ -112,11 +119,15 @@ class CreateSession extends Action implements HttpPostActionInterface
     }
 
     /**
-     * Derive the CommerceHub session intent from a payment method's store configuration.
-     * Returns INTENT_CAPTURE when payment_action is authorize_capture, otherwise INTENT_AUTHORIZE.
+     * Derive the primary-transaction intent from the admin panel store configuration.
+     * Returns INTENT_CAPTURE when payment_action is authorize_capture (sale), otherwise INTENT_AUTHORIZE.
      */
-    private function getIntentForPaymentMethod(string $paymentCode): string
+    private function getPrimaryTransactionIntent(string $paymentCode): string
     {
+        if (!$paymentCode) {
+            return CredentialsRequest::INTENT_AUTHORIZE;
+        }
+
         $paymentAction = (string) $this->scopeConfig->getValue(
             'payment/' . $paymentCode . '/payment_action',
             ScopeInterface::SCOPE_STORE
