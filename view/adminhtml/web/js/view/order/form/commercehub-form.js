@@ -24,9 +24,7 @@ define([
 			defaults: {
 				paymentSessionInputId: 'fiserv_commercehub_payment_session',
 				iframeValid: false,
-				imports: { onActiveChange: 'active' },
-                paymentSessionData: undefined,
-                contextId: undefined
+				imports: { onActiveChange: 'active' }
 			},
 
 			/**
@@ -39,7 +37,6 @@ define([
 				}
 				this.paymentConfig = config.paymentConfig;
 
-				window.instantiateIframe = () => { this.remoteInstantiate(); };
 
 				if($('input#p_method_fiserv_commercehub').is(':checked')) {
 					this.initPayment();
@@ -82,18 +79,6 @@ define([
 			},
 
 
-			remoteInstantiate: function()
-			{
-				if (typeof(window.shouldInstantiateIframe) !== 'undefined' &&
-					window.shouldInstantiateIframe === true)
-				{
-					this.disableEventListeners();
-					this.enableEventListeners();
-					this.destroyIframe();
-					this.createIframe();
-					window.shouldInstantiateIframe = false;
-				}
-			},
 
 			/**
 			 * Set list of observable attributes
@@ -115,24 +100,13 @@ define([
 				return this;
 			},
 
-			enableSubmitButton: function() {
-				this.getSubmitButton().prop("disabled", false);
-			},
-
-			disableSubmitButton: function() {
-				this.getSubmitButton().prop("disabled", true);
-			},
-
-			getSubmitButton: function() {
-				return $('button#tokenization-builder-create');
-			},
 
 			createIframe: async function() {
 				this.beginAsyncFlow();
-				
+
                 let credsResponse = undefined;
                 try {
-                    credsResponse = await chSession({ storeUrl: this.paymentConfig.storeUrl });
+                    credsResponse = await chSession(this.buildSessionPayload());
                     this.paymentSessionData = credsResponse["ch_credentials"];
                 } catch (error) {
                     console.log("An error occurred while starting Commercehub payment session: ".concat(error));
@@ -191,6 +165,7 @@ define([
 				this.endAsyncFlow();
 				this.showError("Card capture failure. Please try again.");
 				chIframe.resetIframe();
+				this.hideSurchargeConfirmStep();
 			},
 
 			iframeValidHandler: function(valid) {
@@ -238,15 +213,33 @@ define([
 			 * Begin order flow (i.e. secure card capture)
 			 */
 			startOrderFlow: function () {
-				if (this.iframeValid) {
-					chIframe.submitIframeForm(
-						(sessionId) => { this.placeOrder(); },
-						() => { this.iframeRunFailure(); }
-					)
-				} else {
-					this.endAsyncFlow();
+				if (!this.iframeValid) {
+					this.dismissAdminLoader();
+					return false;
 				}
+
+			if (!this.isSurchargeEnabled()) {
+				this._captureCard();
 				return false;
+			}
+
+				if (this.surchargeShown) {
+					this.dismissAdminLoader();
+					return false;
+				}
+
+				this.fetchAndShowSurcharge();
+				return false;
+			},
+
+			dismissAdminLoader: function() {
+				const stop = () => {
+					$('body').trigger('processStop');
+					$('#' + this.selector).trigger('processStop');
+					$('.popup.popup-loading').hide();
+				};
+				stop();
+				setTimeout(stop, 0);
 			},
 
 			// Handle payment method switching
@@ -264,6 +257,7 @@ define([
 				if (!isActive) {
 					this.$selector.off('submitOrder.' + this.code);
 					this.destroyIframe();
+					this.hideSurchargeConfirmStep();
 					return;
 				}
 
@@ -274,22 +268,6 @@ define([
 				this.createIframe();
 			},
 
-			/**
-			 * Destroys SCC form when fiserv_commercehub not checked.
-			 * isActive() not working with COD for some reason.
-			 */
-			watchPaymentMethods: function () {
-				let self = this;
-				$(self.paymentMethodName).click(function() {
-					let selected = $(this).attr('value');
-					if (selected === self.code) {
-						self.destroyIframe();
-						self.createIframe();
-					} else {
-						self.destroyIframe();
-					}
-				});
-			},
 
 			/**
 			 * Enable/disable current payment method
@@ -342,6 +320,11 @@ define([
 
 			cardBrandChangeHandler: function(brand) {
 				let icon = this.getCardBrandIcon();
+
+				if (this._lastCardBrand && brand && this._lastCardBrand !== brand) {
+					this.hideSurchargeConfirmStep();
+				}
+				this._lastCardBrand = brand || null;
 
 				switch (brand) {
 					case null:
@@ -441,6 +424,10 @@ define([
 				let frame = this.getSdcFieldFrame(data["field"]);
 				let mess = this.getSdcFieldInvalidMessageContainer(data["field"]);
 
+				if (data?.field === "cardNumber") {
+					this.hideSurchargeConfirmStep();
+				}
+
 				if (typeof(frame) !== "undefined")
 				{
 					if (data["isValid"] === true)
@@ -523,7 +510,168 @@ define([
 				let maskButton = this.getSecurityMaskButton();
 				unmaskButton.removeClass('sdc-hidden');
 				maskButton.addClass('sdc-hidden');
+			},
+
+			isSurchargeEnabled: function() {
+				return !!this.paymentConfig["surchargeEnabled"];
+			},
+
+	getGrandTotalPriceElement: function() {
+		return $('#grand-total').find('.price').first();
+	},
+
+	parseCurrencyAmount: function(text) {
+		return parseFloat((text || '').replace(/[^0-9.]/g, '')) || 0;
+	},
+
+	buildSessionPayload: function() {
+		const total = this.parseCurrencyAmount(this.getGrandTotalPriceElement().text());
+
+		const payload = {
+			storeUrl: this.paymentConfig.storeUrl,
+			amount: { total: total, currency: this.paymentConfig['currencyCode'] ?? 'USD' },
+			country: 'US'
+		};
+
+		const full = this.buildAdminBillingAddress();
+		if (full) payload.billingAddress = full.address;
+		return payload;
+	},
+
+		buildAdminBillingAddress: function() {
+			try {
+				const $regionSelect = $('#order-billing_address_region_id');
+				const stateOrProvince = ($regionSelect.length && $regionSelect.val())
+					? $regionSelect.find('option:selected').text()
+					: $('#order-billing_address_region').val();
+
+				return {
+					firstName: $('#order-billing_address_firstname').val(),
+					lastName: $('#order-billing_address_lastname').val(),
+					address: {
+						street: $('#order-billing_address_street0').val(),
+						houseNumberOrName: $('#order-billing_address_street1').val(),
+						city: $('#order-billing_address_city').val(),
+						stateOrProvince: stateOrProvince,
+						postalCode: $('#order-billing_address_postcode').val(),
+						country: $('#order-billing_address_country_id').val()
+					}
+				};
+			} catch (e) {
+				return undefined;
 			}
+		},
+
+		_captureCard: function() {
+			chIframe.submitIframeForm(
+				() => { this.placeOrder(); },
+				() => { this.iframeRunFailure(); }
+			);
+		},
+
+		fetchAndShowSurcharge: async function() {
+			if (this.surchargeLoading) { return; }
+			this.surchargeLoading = true;
+			this.dismissAdminLoader();
+
+			try {
+				const surchargeDetails = await chIframe.getSurchargeEstimate(this.buildAdminBillingAddress());
+
+				if (surchargeDetails?.error?.length) {
+					this.showError('Unable to retrieve surcharge estimate: ' + surchargeDetails.error[0].message);
+					return;
+				}
+
+				const surchargeAmount = parseFloat(surchargeDetails?.amountComponent?.surcharge) || 0;
+
+				if (surchargeAmount > 0) {
+					this.showSurchargeConfirmStep(surchargeAmount);
+				} else {
+					// Card is not surcharge-eligible — proceed straight to capture.
+					this.beginAsyncFlow();
+					this._captureCard();
+				}
+			} catch (e) {
+				this.showError('Unable to retrieve surcharge estimate. Please try again.');
+			} finally {
+				this.surchargeLoading = false;
+			}
+		},
+
+			showSurchargeConfirmStep: function(amount) {
+				const $submitBtn = $('#submit_order_top_button');
+				if ($submitBtn.length && !$('#fiserv-surcharge-confirm-btn').length) {
+					const $confirmBtn = $('<button>', {
+						id: 'fiserv-surcharge-confirm-btn',
+						type: 'button',
+						'class': $submitBtn.attr('class'),
+						title: 'Confirm & Place Order'
+					}).html('<span>Confirm & Place Order</span>');
+
+				$confirmBtn.on('click', () => {
+					this.beginAsyncFlow();
+					this._captureCard();
+				});
+
+					$submitBtn.after($confirmBtn);
+					$submitBtn.hide();
+				}
+				this.getOtherSubmitButtons().hide();
+
+				this.injectSurchargeRow(amount);
+				this.surchargeShown = true;
+			},
+
+		hideSurchargeConfirmStep: function() {
+			$('#fiserv-surcharge-confirm-btn').remove();
+			$('#submit_order_top_button').show();
+			this.getOtherSubmitButtons().show();
+			this.removeSurchargeRow();
+			this.surchargeLoading = false;
+			this.surchargeShown = false;
+		},
+
+			getOtherSubmitButtons: function() {
+				return $('#submit_order_bottom_button, .order-totals-actions .actions button');
+			},
+
+		injectSurchargeRow: function(amount) {
+				this.removeSurchargeRow();
+
+				const $grandTotalRow = $('#grand-total');
+				if (!$grandTotalRow.length) {
+					return;
+				}
+
+			const formattedAmount = '$' + amount.toFixed(2);
+
+			const $row = $(
+				'<tr id="fiserv-admin-surcharge-total-row" class="row-totals">' +
+					'<td class="admin__total-mark" colspan="1">Surcharge</td>' +
+					'<td class="admin__total-amount">' +
+						'<span class="price">' + formattedAmount + '</span>' +
+					'</td>' +
+				'</tr>'
+			);
+			$grandTotalRow.before($row);
+
+			const $grandTotalPrice = this.getGrandTotalPriceElement();
+			if ($grandTotalPrice.length) {
+				if (!this._originalGrandTotalText) {
+					this._originalGrandTotalText = $grandTotalPrice.text();
+				}
+				const base = this.parseCurrencyAmount(this._originalGrandTotalText);
+				$grandTotalPrice.text('$' + (base + amount).toFixed(2));
+			}
+		},
+
+		removeSurchargeRow: function() {
+			$('#fiserv-admin-surcharge-total-row').remove();
+			if (this._originalGrandTotalText) {
+				this.getGrandTotalPriceElement().text(this._originalGrandTotalText);
+				this._originalGrandTotalText = undefined;
+			}
+		}
 		});
 	}
 );
