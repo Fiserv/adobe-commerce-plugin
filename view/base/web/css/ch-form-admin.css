@@ -147,3 +147,14 @@
 #payment_form_fiserv_commercehub.admin__fieldset {
 	overflow-x: auto;
 }
+
+
+#fiserv-admin-surcharge-total-row td {
+	color: #333;
+}
+
+#fiserv-admin-surcharge-loading-row td {
+	color: #777;
+	font-style: italic;
+}
+
