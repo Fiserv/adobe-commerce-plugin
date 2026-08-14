@@ -129,7 +129,7 @@ define([
 
             initCheckoutSdk: async function()
             {
-                const credsResponse = await chSession({ session: { intent: 'TOKENIZE' } });
+                const credsResponse = await chSession({ isTokenization: true });
                 this.paymentSessionData = credsResponse["ch_credentials"];
 
                 this.contextId = crypto.randomUUID();
