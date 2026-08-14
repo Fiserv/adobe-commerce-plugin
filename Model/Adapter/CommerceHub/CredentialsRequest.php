@@ -1,6 +1,5 @@
 <?php
 namespace Fiserv\Payments\Model\Adapter\CommerceHub;
-
 use Fiserv\Payments\Gateway\Config\CommerceHub\Config;
 use Fiserv\Payments\Model\Source\CommerceHub\ApiEnvironment;
 use Fiserv\Payments\Model\Adapter\CommerceHub\ChHttpAdapter;
@@ -9,7 +8,8 @@ use Fiserv\Payments\Logger\MultiLevelLogger;
 use Fiserv\Payments\Model\System\Utils\VaultPaymentTokenUtils;
 use Fiserv\Payments\Lib\CommerceHub\Model\DynamicDescriptors;
 use Fiserv\Payments\Lib\CommerceHub\Model\Address;
-
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Store\Model\ScopeInterface;
 class CredentialsRequest
 {
     // Commercehub Sessions Request Keys
@@ -50,38 +50,38 @@ class CredentialsRequest
     const KEY_DYNAMIC_DESCRIPTORS = 'dynamicDescriptors';
     const KEY_MERCHANT_NAME = 'merchantName';
     const KEY_COUNTRY = 'country';
-
 	const CODE_PAYMENT_METHOD_COMMERCEHUB = "fiserv_commercehub";
 	const CODE_PAYMENT_METHOD_PAYPAL = "fiserv_paypal";
-
 	// CommerceHub Credentials Response Keys
 	const KEY_SYMMETRIC_ENCRYPTION_ALGO = 'symmetricEncryptionAlgorithm';
 	const KEY_ACCESS_TOKEN = 'accessToken';
 	const KEY_SESSION_ID = 'sessionId';
 	const KEY_PUBLIC_KEY = 'publicKey';
-
+	// Session data keys consumed/derived by this request builder
+	const KEY_PAYMENT_CODE = 'paymentCode';
+	const KEY_IS_TOKENIZATION = 'isTokenization';
+	const KEY_INTENT = 'intent';
 	/**
 	 * @var MultiLevelLogger
 	 */
 	private $logger;
-	
 	/**
 	 * @var Config
 	 */
 	private $chConfig;
-
 	private $vaultUtils;
-
 	/**
 	 * @ChHttpAdapter
 	 */
 	private $httpAdapter;
-	
 	/**
 	 * @StoreManagerInterface
 	 */
 	private $storeManager;
-
+	/**
+	 * @var ScopeConfigInterface
+	 */
+	private $scopeConfig;
 	/**
 	 * Constructor
 	 *
@@ -90,35 +90,68 @@ class CredentialsRequest
 	 * @param StoreManagerInterface $storeManager
 	 * @param MultiLevelLogger $logger
 	 * @param VaultPaymentTokenUtils $vaultUtils
+	 * @param ScopeConfigInterface $scopeConfig
 	 */
 	public function __construct(
 		Config $config,
 		ChHttpAdapter $chHttpAdapter,
 		StoreManagerInterface $storeManager,
 		MultiLevelLogger $logger,
-		VaultPaymentTokenUtils $vaultUtils
+		VaultPaymentTokenUtils $vaultUtils,
+		ScopeConfigInterface $scopeConfig
 	) {
 		$this->chConfig = $config;
 		$this->storeManager = $storeManager;
 		$this->logger = $logger;
 		$this->vaultUtils = $vaultUtils;
 		$this->httpAdapter = $chHttpAdapter;
+		$this->scopeConfig = $scopeConfig;
 	}
-
 	/**
 	 * Retrieve assoc array of CredentialsRequest info
-	 *
+	 * Determines the session intent  from the raw session payload, then builds and sends thesessions/create request.
+	 * @param array $sessionData
 	 * @return array
 	 */
-	public function requestCredentials(Array $sessionData) {
-	    $this->logger->logInfo(1, "Initiating Credentials Request");
+	public function requestCredentials(array $sessionData) {
+		$this->logger->logInfo(1, "Initiating Credentials Request");
+		$intent = $this->determineIntent($sessionData);
+		unset($sessionData[self::KEY_PAYMENT_CODE], $sessionData[self::KEY_IS_TOKENIZATION]);
+		$sessionData[self::KEY_SESSION][self::KEY_INTENT] = $intent;
 		$data = $this->getCredentialsPayload($this->getMerchantId(), $sessionData);
 		$this->logger->logDebug(3, "Credentials Request Payload\n" . json_encode($data));
 		$chResponse = $this->httpAdapter->sendRequest($data, self::CREDENTIALS_ENDPOINT);
-		return $this->parseChCredentialsResponse($chResponse);
+		$result = $this->parseChCredentialsResponse($chResponse);
+		$result[self::KEY_INTENT] = $intent;
+		return $result;
 	}
-
-
+	/**
+	 * Route 1: Tokenization request
+	 * Route 2: Primary transaction - Auth or Sale
+	 */
+	private function determineIntent(array $sessionData): string {
+		$paymentCode = $sessionData[self::KEY_PAYMENT_CODE] ?? '';
+		$isTokenization = !empty($sessionData[self::KEY_IS_TOKENIZATION]);
+		return $isTokenization
+			? self::INTENT_CHECKOUT
+			: $this->getPrimaryTransactionIntent((string) $paymentCode);
+	}
+	/**
+	 * Derive the primary-transaction intent from the admin panel store configuration.
+	 * Returns INTENT_CAPTURE when payment_action is authorize_capture (sale), otherwise INTENT_AUTHORIZE.
+	 */
+	private function getPrimaryTransactionIntent(string $paymentCode): string {
+		if (!$paymentCode) {
+			return self::INTENT_AUTHORIZE;
+		}
+		$paymentAction = (string) $this->scopeConfig->getValue(
+			'payment/' . $paymentCode . '/payment_action',
+			ScopeInterface::SCOPE_STORE
+		);
+		return strtolower($paymentAction) === 'authorize_capture'
+			? self::INTENT_CAPTURE
+			: self::INTENT_AUTHORIZE;
+	}
 	private function parseChCredentialsResponse($chResponse) {
 	    $statusCode = $chResponse->getStatusCode();
         $body = $chResponse->getBody();
@@ -136,12 +169,11 @@ class CredentialsRequest
         $this->logger->logInfo(1, "sessions/create request success");
         return $data;
     }
-
 	/**
 	* Build the request body for POST /ch/v1/sessions/create.
     */
 	private function getCredentialsPayload($merchantId, $sessionData) {
-	    $intent = $sessionData[self::KEY_SESSION]['intent'] ?? self::INTENT_AUTHORIZE;
+		$intent = $sessionData[self::KEY_SESSION]['intent'] ?? self::INTENT_AUTHORIZE;
         $payload = [
             self::KEY_MERCHANT_DETAILS => [
                 self::KEY_MERCHANT_ID => $merchantId, self::KEY_TERMINAL_ID => $this->chConfig->getTerminalId(),],
@@ -160,9 +192,8 @@ class CredentialsRequest
             }
             return $payload;
         }
-
 	private function buildPaymentTokenSource(string $tokenData, string $customerId): array {
-	    $token = $this->vaultUtils->getByGatewayToken($tokenData, self::CODE_PAYMENT_METHOD_COMMERCEHUB, $customerId);
+		$token = $this->vaultUtils->getByGatewayToken($tokenData, self::CODE_PAYMENT_METHOD_COMMERCEHUB, $customerId);
         if (is_null($token) || count($token) < 1) {
             throw new \Exception("Unable to locate payment token for Commercehub payment session with source.");
         }
@@ -178,8 +209,6 @@ class CredentialsRequest
         "card" => array("expirationMonth" => $month, "expirationYear" => $year)
             );
         }
-
-
 	/**
 	 * Retreive base url of Magento store
 	 *
@@ -188,7 +217,6 @@ class CredentialsRequest
 	private function getStoreBaseUrl() {
 		return $this->storeManager->getStore()->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_WEB);
 	}
-
 	private function getMerchantId() {
 		return $this->chConfig->getMerchantId();
 	}
