@@ -27,7 +27,9 @@ class Form extends Cc
 	const FORM_CONFIG_KEY = "formConfig";
 	const INVALID_FIELDS_KEY = "invalidFields";
 	const USE_VALUELINK_KEY = "useValuelink";
-	
+	const GRAND_TOTAL_KEY = "grandTotal";
+	const CURRENCY_CODE_KEY = "currencyCode";
+
 	/**
 	 * @var Quote
 	 */
@@ -170,6 +172,11 @@ class Form extends Cc
 		$config[FiservConfigProvider::STORE_URL_KEY] = $fconfig[FiservConfigProvider::STORE_URL_KEY];
 		$config[self::FORM_CONFIG_KEY] = $this->configProvider->buildFormConfig(GatewayConfig::KEY_SDC_ADMIN, $fconfig[FiservConfigProvider::STORE_ID_KEY]);
 		$config[self::INVALID_FIELDS_KEY] = $this->configProvider->getInvalidFieldMessages(GatewayConfig::KEY_SDC_ADMIN, $fconfig[FiservConfigProvider::STORE_ID_KEY]);
+		$config[ConfigProvider::SURCHARGE_ENABLED_KEY] = $chConfig[ConfigProvider::SURCHARGE_ENABLED_KEY];
+
+		$quote = $this->orderCreate->getQuote();
+		$config[self::GRAND_TOTAL_KEY] = (float)$quote->getGrandTotal();
+		$config[self::CURRENCY_CODE_KEY] = $quote->getQuoteCurrencyCode() ?: 'USD';
 
 		$config[self::USE_VALUELINK_KEY] = $fconfig[FiservConfigProvider::FISERV_VALUELINK_KEY][FiservConfigProvider::IS_ACTIVE_KEY];
 		if ( $chConfig[ConfigProvider::IS_ACTIVE_KEY] && $fconfig[FiservConfigProvider::FISERV_VALUELINK_KEY][FiservConfigProvider::IS_ACTIVE_KEY])
