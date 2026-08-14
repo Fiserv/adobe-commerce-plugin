@@ -16,7 +16,7 @@ class CredentialsRequest
 	const CREDENTIALS_ENDPOINT = 'v1/sessions/create';
 	const KEY_SESSION = 'session';
     const INTENT_AUTHORIZE = 'AUTHORIZE';
-    const INTENT_CHECKOUT = 'CHECKOUT';
+    const INTENT_TOKENIZE = 'TOKENIZE';
     const INTENT_CAPTURE = 'CAPTURE';
     const INTENT_INITIATOR_MERCHANT = 'MERCHANT';
     const CHECKOUT_TYPE_SDK = 'SDK';
@@ -133,7 +133,7 @@ class CredentialsRequest
 		$paymentCode = $sessionData[self::KEY_PAYMENT_CODE] ?? '';
 		$isTokenization = !empty($sessionData[self::KEY_IS_TOKENIZATION]);
 		return $isTokenization
-			? self::INTENT_CHECKOUT
+			? self::INTENT_TOKENIZE
 			: $this->getPrimaryTransactionIntent((string) $paymentCode);
 	}
 	/**
