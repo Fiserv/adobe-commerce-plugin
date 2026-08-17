@@ -73,7 +73,6 @@ class CreateSession extends Action implements HttpPostActionInterface
 
             $response->setData([
                 'ch_credentials' => $credentials,
-                'session_intent' => $intent,
             ]);
         } catch (\Exception $e) {
 			$this->logger->logCritical(1, "An error occured in the retrieval of credentials");
