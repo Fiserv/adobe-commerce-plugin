@@ -122,7 +122,6 @@ class CredentialsRequest
 		$this->logger->logDebug(3, "Credentials Request Payload\n" . json_encode($data));
 		$chResponse = $this->httpAdapter->sendRequest($data, self::CREDENTIALS_ENDPOINT);
 		$result = $this->parseChCredentialsResponse($chResponse);
-		$result[self::KEY_INTENT] = $intent;
 		return $result;
 	}
 	/**
