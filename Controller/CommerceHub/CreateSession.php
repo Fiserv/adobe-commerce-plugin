@@ -68,8 +68,6 @@ class CreateSession extends Action implements HttpPostActionInterface
 
             // Intent determination (tokenization vs. primary transaction Authorize/Capture)
             $credentials = $this->credentialsRequest->requestCredentials($sessionData);
-            $intent = $credentials['intent'] ?? null;
-            unset($credentials['intent']);
 
             $response->setData([
                 'ch_credentials' => $credentials,
