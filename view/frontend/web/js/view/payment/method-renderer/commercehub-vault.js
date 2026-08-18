@@ -76,7 +76,14 @@ define([
 
 		getExpirationYear: function() {
 			let idx = this.getExpirationDate().indexOf("/");
-			return this.getExpirationDate().substring(idx+1);
+			let year = this.getExpirationDate().substring(idx + 1);
+			// Normalize 2-digit year to 4-digit (e.g. "25" → "2025").
+			// CommerceHub requires exactly 4 digits; some older stored tokens
+			// may have been saved with a 2-digit year.
+			if (year.length === 2 && /^\d{2}$/.test(year)) {
+				year = '20' + year;
+			}
+			return year;
 		},
 
 		getTokenSource: function () {

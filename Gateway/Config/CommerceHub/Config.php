@@ -45,6 +45,10 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     const KEY_SURCHARGE = 'surcharge_enabled';
     const KEY_ACCOUNT_VERIFICATION_ENABLED = 'account_verification_enabled';
 
+    const KEY_OPEN_REFUND_ENABLED = 'open_refund_enabled';
+    const KEY_OPEN_REFUND_MAX_AMOUNT = 'open_refund_max_amount';
+    const KEY_OPEN_REFUND_CAPTURE_FLAG = 'open_refund_capture_flag';
+
 	// Iframe Customization Fields
 	const KEY_SDC_CUSTOM = 'sdc_custom';
 	
@@ -538,6 +542,39 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	public function isSurchargeEnabled($storeId = null)
 	{
 		return (bool) $this->getValue(self::KEY_SURCHARGE, $storeId);
+	}
+
+	/**
+	 * Returns whether Open Refunds are enabled.
+	 *
+	 * @param int|null $storeId
+	 * @return bool
+	 */
+	public function isOpenRefundEnabled($storeId = null): bool
+	{
+		return (bool) $this->getValue(self::KEY_OPEN_REFUND_ENABLED, $storeId);
+	}
+
+	/**
+	 * Returns the maximum allowed open refund amount. 0 means no limit.
+	 *
+	 * @param int|null $storeId
+	 * @return float
+	 */
+	public function getOpenRefundMaxAmount($storeId = null): float
+	{
+		return (float) $this->getValue(self::KEY_OPEN_REFUND_MAX_AMOUNT, $storeId);
+	}
+
+	/**
+	 * Returns whether open refunds should be captured immediately.
+	 *
+	 * @param int|null $storeId
+	 * @return bool
+	 */
+	public function getOpenRefundCaptureFlag($storeId = null): bool
+	{
+		return (bool) $this->getValue(self::KEY_OPEN_REFUND_CAPTURE_FLAG, $storeId);
 	}
 
 	private function validateFormId($formId)

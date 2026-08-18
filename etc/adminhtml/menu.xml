@@ -2,6 +2,13 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:noNamespaceSchemaLocation="urn:magento:framework:Config/etc/menu.xsd">
     <menu>
+		<add id="Fiserv_Payments::open_refunds"
+			title="Open Refunds"
+			module="Fiserv_Payments"
+			sortOrder="95"
+			parent="Magento_Sales::sales"
+			action="fiserv/openrefund/index"
+			resource="Fiserv_Payments::open_refund_view"/>
 		<add id="Fiserv_Payments::failed_transactions_preview"
 			title="Unsuccessful Orders"
 			module="Fiserv_Payments"
