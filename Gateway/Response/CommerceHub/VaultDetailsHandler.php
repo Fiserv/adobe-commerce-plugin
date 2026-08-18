@@ -167,7 +167,7 @@ class VaultDetailsHandler implements HandlerInterface
 		$details = $this->convertDetailsToJSON([
 			"type" => !empty($rawScheme) ? $this->getCreditCardType($rawScheme) : "",
 			"maskedCC" => "************" . $cardArray["last4"],
-			"expirationDate" => $cardArray["expirationMonth"] . "/" . $cardArray["expirationYear"],
+			"expirationDate" => $cardArray["expirationMonth"] . "/" . $this->normalizeExpirationYear($cardArray["expirationYear"]),
 			"tokenSource" => $tokenArray["tokenSource"],
 			"tokenResponseCode" => $tokenArray["tokenResponseCode"],
 			"tokenResponseDescription" => $tokenArray["tokenResponseDescription"],
@@ -190,6 +190,18 @@ class VaultDetailsHandler implements HandlerInterface
 		$mapper = $this->config->getCcTypesMapper();
 
 		return $mapper[strtoupper($replaced)];
+	}
+
+	/**
+	 * Ensure expiration year is always stored as 4 digits.
+	 * CommerceHub may return 2-digit years in some edge cases.
+	 */
+	private function normalizeExpirationYear(string $year): string
+	{
+		if (strlen($year) === 2 && ctype_digit($year)) {
+			return '20' . $year;
+		}
+		return $year;
 	}
 
 	/**

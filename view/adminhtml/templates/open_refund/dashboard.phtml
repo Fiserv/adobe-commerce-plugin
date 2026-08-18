@@ -1,0 +1,189 @@
+<?php
+/** @var \Fiserv\Payments\Block\Adminhtml\OpenRefund\Dashboard $block */
+$rows = $block->getRows();
+$createUrl = $block->escapeUrl($block->getCreateUrl());
+$ajaxUrl = $block->escapeUrl($block->getAjaxUrl());
+$currentPage = (int)$block->getCurrentPage();
+$totalPages = (int)$block->getTotalPages();
+$pageSize = (int)$block->getPageSize();
+$allowedPageSizes = $block->getAllowedPageSizes();
+?>
+
+<div class="admin__page-section open-refund-dashboard">
+
+    <div class="admin__page-section-title">
+        <span class="title"><?= $block->escapeHtml(__('Open Refunds')) ?></span>
+    </div>
+
+    <div class="or-search-row">
+        <input type="text"
+               id="or-search"
+               class="admin__control-text"
+               placeholder="<?= $block->escapeHtml(__('Search by ID or customer...')) ?>" />
+    </div>
+
+    <div class="or-toolbar-row">
+        <div class="or-toolbar-left">
+            <a class="action-primary open-refund-btn-create" href="<?= $createUrl ?>">
+                <span><?= $block->escapeHtml(__('Create New Open Refund')) ?></span>
+            </a>
+
+            <span id="or-record-count"></span>
+        </div>
+
+        <div class="or-toolbar-right">
+            <select id="or-status-filter" class="admin__control-select">
+                <option value=""><?= $block->escapeHtml(__('All Statuses')) ?></option>
+                <option value="APPROVED"><?= $block->escapeHtml(__('Approved')) ?></option>
+                <option value="OPEN"><?= $block->escapeHtml(__('Open')) ?></option>
+                <option value="DECLINED"><?= $block->escapeHtml(__('Declined')) ?></option>
+                <option value="ERROR"><?= $block->escapeHtml(__('Error')) ?></option>
+            </select>
+
+            <label for="or-rows-per-page"><?= $block->escapeHtml(__('Limit:')) ?></label>
+            <select id="or-rows-per-page" class="admin__control-select">
+                <?php foreach ($allowedPageSizes as $allowedSize): ?>
+                    <option value="<?= $block->escapeHtmlAttr((string)$allowedSize) ?>"
+                        <?= $allowedSize === $pageSize ? 'selected="selected"' : '' ?>>
+                        <?= $block->escapeHtml((string)$allowedSize) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+            <span id="or-pagination-info-top" class="or-pagination-info">
+                <?= $block->escapeHtml((string)$currentPage) ?> <?= $block->escapeHtml(__('of')) ?> <?= $block->escapeHtml((string)$totalPages) ?>
+            </span>
+        </div>
+    </div>
+
+    <?php if (empty($rows)): ?>
+        <div id="or-empty" class="open-refund-empty">
+            <?= $block->escapeHtml(__('No open refunds found.')) ?>
+        </div>
+    <?php else: ?>
+        <div id="or-empty" class="open-refund-empty" style="display: none;">
+            <?= $block->escapeHtml(__('No open refunds found.')) ?>
+        </div>
+    <?php endif; ?>
+
+    <div class="admin__table-wrapper" id="or-table-wrapper" <?= empty($rows) ? 'style="display: none;"' : '' ?>>
+        <table id="open-refund-table" class="data-table">
+
+            <thead>
+                <tr>
+                    <th class="or-sortable" data-col="created_at">
+                        <?= $block->escapeHtml(__('Date')) ?>
+                        <span class="or-sort-icon">↕</span>
+                    </th>
+
+                    <th class="or-sortable" data-col="amount">
+                        <?= $block->escapeHtml(__('Amount')) ?>
+                        <span class="or-sort-icon">↕</span>
+                    </th>
+
+                    <th>
+                        <?= $block->escapeHtml(__('Currency')) ?>
+                    </th>
+
+                    <th class="or-sortable" data-col="customer_id">
+                        <?= $block->escapeHtml(__('Customer')) ?>
+                        <span class="or-sort-icon">↕</span>
+                    </th>
+
+                    <th>
+                        <?= $block->escapeHtml(__('Open Refund ID')) ?>
+                    </th>
+
+                    <th>
+                        <?= $block->escapeHtml(__('Status')) ?>
+                    </th>
+
+                    <th>
+                        <?= $block->escapeHtml(__('Action')) ?>
+                    </th>
+                </tr>
+            </thead>
+
+            <tbody id="or-table-body">
+
+            <?php foreach ($rows as $row): ?>
+
+                <?php
+                $status = (string)$row->getData('status');
+                $statusClass = 'or-status-' . strtolower($status);
+
+                $viewUrl = $block->escapeUrl(
+                    $block->getViewUrl((int)$row->getData('entity_id'))
+                );
+                $customerDisplay = $block->getCustomerDisplayById($row->getData('customer_id'));
+                ?>
+
+                <tr class="or-row"
+                    data-search="<?= $block->escapeHtml(
+                        strtolower(
+                            (string)$row->getData('open_refund_id') . ' ' .
+                            (string)$row->getData('customer_id') . ' ' .
+                            (string)$customerDisplay
+                        )
+                    ) ?>"
+                    data-status="<?= $block->escapeHtml($status) ?>">
+
+                    <td>
+                        <?= $block->escapeHtml((string)$row->getData('created_at')) ?>
+                    </td>
+
+                    <td>
+                        <?= $block->escapeHtml(number_format((float)$row->getData('amount'), 2)) ?>
+                    </td>
+
+                    <td>
+                        <?= $block->escapeHtml((string)$row->getData('currency_code')) ?>
+                    </td>
+
+                    <td>
+                        <?= $block->escapeHtml($customerDisplay) ?>
+                    </td>
+
+                    <td>
+                        <code>
+                            <?= $block->escapeHtml((string)$row->getData('open_refund_id')) ?>
+                        </code>
+                    </td>
+
+                    <td>
+                        <span class="or-status-badge <?= $block->escapeHtml($statusClass) ?>">
+                            <?= $block->escapeHtml($status) ?>
+                        </span>
+                    </td>
+
+                    <td>
+                        <a href="<?= $viewUrl ?>">
+                            <?= $block->escapeHtml(__('View')) ?>
+                        </a>
+                    </td>
+
+                </tr>
+
+            <?php endforeach; ?>
+
+            </tbody>
+
+        </table>
+
+        <div id="or-pagination-controls"
+             data-total-pages="<?= $block->escapeHtmlAttr((string)$totalPages) ?>"
+             data-current-page="<?= $block->escapeHtmlAttr((string)$currentPage) ?>"
+             data-page-size="<?= $block->escapeHtmlAttr((string)$pageSize) ?>"></div>
+    </div>
+
+</div>
+
+<script type="text/x-magento-init">
+{
+    "*": {
+        "Fiserv_Payments/js/view/open_refund/dashboard": {
+            "recordsFoundLabel": "<?= $block->escapeHtml(__('records found')) ?>",
+            "ajaxUrl": "<?= $ajaxUrl ?>"
+        }
+    }
+}
+</script>

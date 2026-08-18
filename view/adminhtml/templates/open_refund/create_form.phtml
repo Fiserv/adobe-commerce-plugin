@@ -1,0 +1,311 @@
+<?php
+/** @var \Fiserv\Payments\Block\Adminhtml\OpenRefund\CreateForm $block */
+$maxAmount   = $block->getMaxAmount();
+$sdkScope    = 'fiserv-open-refund-form';
+$acceptedCurrencies = $block->getAcceptedCurrencyCodes();
+$defaultCurrency = $block->getDefaultCurrencyCode();
+?>
+<div class="admin__page-section open-refund-create-form">
+
+    <div class="open-refund-breadcrumb">
+        <a href="<?= $block->escapeUrl($block->getIndexUrl()) ?>">
+            &larr; <?= $block->escapeHtml(__('Back to Open Refunds')) ?>
+        </a>
+    </div>
+
+    <div class="admin__page-section-title">
+        <span class="title"><?= $block->escapeHtml(__('Open Refund')) ?></span>
+    </div>
+
+    <?php if (!$block->isEnabled()): ?>
+        <div class="message message-warning warning">
+            <div>
+                <?= $block->escapeHtml(__('Open Refunds are currently disabled. Enable them under Stores → Configuration → Fiserv Payments → Open Refunds.')) ?>
+            </div>
+        </div>
+    <?php else: ?>
+
+        <form id="open-refund-form"
+              method="post"
+              action="<?= $block->escapeUrl($block->getSubmitUrl()) ?>"
+              novalidate>
+            <?= $block->getBlockHtml('formkey') ?>
+
+            <!-- Hidden session field — populated by SDK component after submitCardForm() -->
+            <input type="hidden" name="payment_session" id="or_payment_session"/>
+            <input type="hidden" name="tokenized_payment_token" id="or_tokenized_payment_token"/>
+
+            <!-- ── Refund Details ── -->
+            <fieldset class="admin__fieldset">
+                <div class="admin__field field">
+                    <div class="admin__field-control control">
+                        <p class="admin__field-note or-section-description">
+                            <?= $block->escapeHtml(__('Issue a refund without referencing a prior transaction. Use only when a standard refund is not available. Open refunds bypass standard transaction linking. Use only for time-sensitive or exceptional cases.')) ?>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="or-two-col">
+                    <div class="or-col">
+                        <div class="admin__field field required _required">
+                            <label class="label admin__field-label" for="amount"><span><?= $block->escapeHtml(__('Refund Amount')) ?></span></label>
+                            <div class="admin__field-control control">
+                                <input class="admin__control-text" type="number" name="amount" id="amount"
+                                       step="0.01" min="0.01"
+                                       <?php if ($maxAmount > 0): ?>max="<?= $block->escapeHtml((string)$maxAmount) ?>"<?php endif; ?>
+                                       placeholder="0.00" required/>
+                                <?php if ($maxAmount > 0): ?>
+                                    <p class="admin__field-note"><?= $block->escapeHtml(__('Maximum allowed: %1', number_format($maxAmount, 2))) ?></p>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
+                        <div class="admin__field field required _required">
+                            <label class="label admin__field-label" for="currency_code"><span><?= $block->escapeHtml(__('Currency Code')) ?></span></label>
+                            <div class="admin__field-control control">
+                                <select name="currency_code" id="currency_code" class="admin__control-select" required>
+				<?php foreach ($acceptedCurrencies as $currencyCode): ?>
+					<option value="<?= $block->escapeHtmlAttr($currencyCode) ?>" <?= $currencyCode === $defaultCurrency ? 'selected' : '' ?>>
+						<?= $block->escapeHtml($currencyCode) ?>
+					</option>
+				<?php endforeach; ?>
+			</select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="or-col">
+                        <div class="admin__field field required _required">
+                            <label class="label admin__field-label" for="refund_reason"><span><?= $block->escapeHtml(__('Refund Reason')) ?></span></label>
+                            <div class="admin__field-control control">
+                                <select name="refund_reason" id="refund_reason" class="admin__control-select" required>
+                                    <option value="CUSTOMER_APPEASEMENT"><?= $block->escapeHtml(__('Customer Appeasement')) ?></option>
+                                    <option value="TIME_SENSITIVE_REFUND"><?= $block->escapeHtml(__('Time-sensitive refund')) ?></option>
+                                    <option value="FRAUD_CORRECTION"><?= $block->escapeHtml(__('Fraud correction')) ?></option>
+                                    <option value="DUPLICATE_CHARGE"><?= $block->escapeHtml(__('Duplicate charge')) ?></option>
+                                    <option value="OTHER"><?= $block->escapeHtml(__('Other')) ?></option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </fieldset>
+
+            <!-- ── Reference and Tracking ── -->
+            <fieldset class="admin__fieldset">
+		<div class="or-subsection-header">
+			<span><?= $block->escapeHtml(__('Reference and Tracking')) ?></span>
+		</div>
+
+                <div class="admin__field field required _required">
+                    <label class="label admin__field-label">
+                        <span><?= $block->escapeHtml(__('Customer')) ?></span>
+                    </label>
+                    <div class="admin__field-control control">
+                        <div id="or-customer-search-wrap" class="or-customer-search-wrap">
+                            <input class="admin__control-text"
+                                   type="text" id="or-customer-search" autocomplete="off"
+                                   placeholder="<?= $block->escapeHtml(__('Search by name or email…')) ?>" required/>
+                            <ul id="or-customer-results" class="or-autocomplete-list"></ul>
+                        </div>
+                        <div id="or-selected-customer"></div>
+                        <!-- Hidden field actually submitted -->
+                        <input type="hidden" name="customer_id" id="customer_id" required/>
+                        <p class="admin__field-note">
+                            <?= $block->escapeHtml(__('Search and select a customer. This field is required.')) ?>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="or-two-col">
+                    <div class="or-col">
+                        <div class="admin__field field">
+                            <label class="label admin__field-label" for="linked_identifier">
+                                <span><?= $block->escapeHtml(__('Internal Reference')) ?></span>
+                                <span class="or-optional"><?= $block->escapeHtml(__('(optional)')) ?></span>
+                            </label>
+                            <div class="admin__field-control control">
+                                <input class="admin__control-text" type="text" name="linked_identifier" id="linked_identifier"
+                                       placeholder="<?= $block->escapeHtml(__('e.g. internal ticket or reference')) ?>"/>
+                            </div>
+                        </div>
+
+                        <div class="admin__field field">
+                            <label class="label admin__field-label" for="order_id">
+                                <span><?= $block->escapeHtml(__('Order ID')) ?></span>
+                                <span class="or-optional"><?= $block->escapeHtml(__('(optional)')) ?></span>
+                            </label>
+                            <div class="admin__field-control control">
+                                <input class="admin__control-text" type="text" name="order_id" id="order_id"
+                                       placeholder="<?= $block->escapeHtml(__('Order increment or reference ID')) ?>"/>
+                            </div>
+                        </div>
+
+                        <div class="admin__field field">
+                            <label class="label admin__field-label" for="case_number">
+                                <span><?= $block->escapeHtml(__('Case Number')) ?></span>
+                                <span class="or-optional"><?= $block->escapeHtml(__('(optional)')) ?></span>
+                            </label>
+                            <div class="admin__field-control control">
+                                <input class="admin__control-text" type="text" name="case_number" id="case_number"
+                                       placeholder="<?= $block->escapeHtml(__('Support or dispute case number')) ?>"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="or-col">
+                        <div class="admin__field field">
+                            <label class="label admin__field-label" for="notes">
+                                <span><?= $block->escapeHtml(__('Refund Notes')) ?></span>
+                                <span class="or-optional"><?= $block->escapeHtml(__('(optional)')) ?></span>
+                            </label>
+                            <div class="admin__field-control control">
+                                <textarea class="admin__control-textarea" name="notes" id="notes" rows="3"
+                                          placeholder="<?= $block->escapeHtml(__('Add notes for this refund...')) ?>"></textarea>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </fieldset>
+
+            <!-- ── Payment Information ── -->
+            <fieldset class="admin__fieldset">
+		<div class="or-subsection-header">
+			<span><?= $block->escapeHtml(__('Payment Information')) ?></span>
+		</div>
+
+                <div class="admin__field field required _required">
+                    <label class="label admin__field-label" for="source_type"><span><?= $block->escapeHtml(__('Source Type')) ?></span></label>
+                    <div class="admin__field-control control">
+                        <select name="source_type" id="source_type" class="admin__control-select">
+                            <option value="TOKEN"><?= $block->escapeHtml(__('Stored Payment Token')) ?></option>
+                            <option value="HOSTED_FIELDS" selected><?= $block->escapeHtml(__('New Card (Hosted Fields)')) ?></option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Token section -->
+                <div id="tokenized-section">
+                    <div class="admin__field field">
+                        <label class="label admin__field-label" for="payment_token_hash">
+                            <span><?= $block->escapeHtml(__('Stored Card')) ?></span>
+                        </label>
+                        <div class="admin__field-control control">
+                            <span id="tokenized-loading">
+                                <?= $block->escapeHtml(__('Loading stored cards…')) ?>
+                            </span>
+                            <!-- Populated via AJAX after customer is selected -->
+                            <select name="payment_token_hash" id="payment_token_hash"
+                                    class="admin__control-select">
+                            </select>
+                            <span id="tokenized-none"></span>
+                            <p class="admin__field-note">
+                                <?= $block->escapeHtml(__('Select a customer above to load their stored cards.')) ?>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hosted Fields (SDK) section -->
+                <div id="or-card-section">
+                    <div id="or-sdc-container" class="sdc-container">
+
+                        <div class="sdc-row">
+                            <div id="or-sdc-card-number-frame" class="sdc-field-frame sdc-text">
+                                <div id="or-sdc-card-brand-icon" class="sdc-card-brand-icon"></div>
+                                <div id="fiserv_commercehub-card-number" class="sdc-field"></div>
+                                <div id="or-sdc-unmask-number" class="sdc-unmasking-icon"></div>
+                                <div id="or-sdc-mask-number"   class="sdc-masking-icon sdc-hidden"></div>
+                            </div>
+                            <span id="or-sdc-card-number-msg" class="sdc-error-message sdc-hidden"></span>
+                        </div>
+
+                        <div class="sdc-row">
+                            <div id="or-sdc-card-name-frame" class="sdc-field-frame sdc-text">
+                                <div id="fiserv_commercehub-name-on-card" class="sdc-field"></div>
+                            </div>
+                            <span id="or-sdc-card-name-msg" class="sdc-error-message sdc-hidden"></span>
+                        </div>
+
+                        <div class="sdc-row">
+                            <div id="or-sdc-security-code-frame" class="sdc-field-frame sdc-text">
+                                <div id="fiserv_commercehub-security-code" class="sdc-field"></div>
+                                <div id="or-sdc-unmask-security" class="sdc-unmasking-icon"></div>
+                                <div id="or-sdc-mask-security"   class="sdc-masking-icon sdc-hidden"></div>
+                            </div>
+                            <span id="or-sdc-security-code-msg" class="sdc-error-message sdc-hidden"></span>
+                        </div>
+
+                        <div class="sdc-column">
+                            <div class="sdc-row">
+                                <div id="or-sdc-exp-month-frame" class="sdc-field-frame sdc-dropdown">
+                                    <div id="fiserv_commercehub-expiration-month" class="sdc-field"></div>
+                                </div>
+                                <span id="or-sdc-exp-month-msg" class="sdc-error-message sdc-hidden"></span>
+                            </div>
+                            <div class="sdc-row">
+                                <div id="or-sdc-exp-year-frame" class="sdc-field-frame sdc-dropdown">
+                                    <div id="fiserv_commercehub-expiration-year" class="sdc-field"></div>
+                                </div>
+                                <span id="or-sdc-exp-year-msg" class="sdc-error-message sdc-hidden"></span>
+                            </div>
+                        </div>
+
+                    </div><!-- /or-sdc-container -->
+
+                </div><!-- /or-card-section -->
+
+
+            </fieldset>
+
+            <!-- ── Actions ── -->
+            <div class="page-actions">
+                <div class="page-actions-inner">
+                    <a class="action-secondary" href="<?= $block->escapeUrl($block->getIndexUrl()) ?>">
+                        <span><?= $block->escapeHtml(__('Cancel')) ?></span>
+                    </a>
+                    <button type="submit" id="or-submit-btn" class="action-primary" disabled>
+                        <span><?= $block->escapeHtml(__('Submit Refund')) ?></span>
+                    </button>
+                </div>
+            </div>
+
+        </form>
+
+        <!-- Knockout scope anchor required by uiComponent init -->
+        <div data-bind="scope: '<?= /* @noEscape */ $sdkScope ?>'">
+            <input type="hidden" data-bind="afterRender: function(){}" />
+        </div>
+
+        <!-- Initialise the open-refund SDK component -->
+        <script type="text/x-magento-init">
+        {
+            "*": {
+                "Magento_Ui/js/core/app": {
+                    "components": {
+                        "<?= /* @noEscape */ $sdkScope ?>": {
+                            "component": "Fiserv_Payments/js/view/open_refund/form",
+                            "paymentConfig":      <?= /* @escapeNotVerified */ $block->getPaymentConfig() ?>,
+                            "customerSearchUrl":  "<?= $block->escapeUrl($block->getCustomerSearchUrl()) ?>",
+                            "customerTokensUrl":  "<?= $block->escapeUrl($block->getCustomerTokensUrl()) ?>",
+                            "tokenizeSessionUrl": "<?= $block->escapeUrl($block->getTokenizeSessionUrl()) ?>"
+                        }
+                    }
+                }
+            }
+        }
+        </script>
+
+        <script type="text/x-magento-init">
+        {
+            "*": {
+                "Fiserv_Payments/js/view/open_refund/create-form": {}
+            }
+        }
+        </script>
+
+    <?php endif; ?>
+</div>
+

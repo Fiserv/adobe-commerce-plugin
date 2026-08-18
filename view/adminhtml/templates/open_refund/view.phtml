@@ -1,0 +1,123 @@
+<?php
+/** @var \Fiserv\Payments\Block\Adminhtml\OpenRefund\View $block */
+$openRefund = $block->getOpenRefund();
+$fieldLabels = $block->getFieldLabels();
+$or = \Fiserv\Payments\Model\OpenRefund::class;
+
+$overviewFields = [
+    $or::KEY_ENTITY_ID,
+    $or::KEY_OPEN_REFUND_ID,
+    $or::KEY_CUSTOMER_ID,
+    $or::KEY_REFUND_REASON,
+    $or::KEY_STATUS,
+    $or::KEY_CH_REFUND_ID,
+];
+
+$referenceFields = [
+    $or::KEY_ORDER_ID,
+    $or::KEY_CASE_NUMBER,
+    $or::KEY_LINKED_IDENTIFIER,
+];
+
+$auditFields = [
+    $or::KEY_ADMIN_USERNAME,
+    $or::KEY_CREATED_AT,
+    $or::KEY_UPDATED_AT,
+];
+?>
+
+<div class="admin__page-section open-refund-view">
+    <div class="open-refund-breadcrumb">
+        <a href="<?= $block->escapeUrl($block->getBackUrl()) ?>">
+            &larr; <?= $block->escapeHtml(__('Back to Open Refunds')) ?>
+        </a>
+    </div>
+
+    <div class="admin__page-section-title">
+        <span class="title"><?= $block->escapeHtml(__('Open Refund Details')) ?></span>
+    </div>
+
+    <?php if (!$openRefund): ?>
+        <div class="message message-error error">
+            <div><?= $block->escapeHtml(__('Unable to load this open refund record.')) ?></div>
+        </div>
+    <?php else: ?>
+        <?php
+        $statusValue = $block->formatValue($or::KEY_STATUS, $openRefund->getData($or::KEY_STATUS));
+        $statusClass = 'or-status-' . strtolower((string)$openRefund->getData($or::KEY_STATUS));
+        $amountValue = $block->formatValue($or::KEY_AMOUNT, $openRefund->getData($or::KEY_AMOUNT));
+        $currencyValue = $block->formatValue($or::KEY_CURRENCY_CODE, $openRefund->getData($or::KEY_CURRENCY_CODE));
+        $notesValue = $block->formatValue($or::KEY_NOTES, $openRefund->getData($or::KEY_NOTES));
+        $errorValue = $block->formatValue($or::KEY_ERROR_MESSAGE, $openRefund->getData($or::KEY_ERROR_MESSAGE));
+        ?>
+
+        <div class="or-summary-grid">
+            <div class="or-summary-card">
+                <span class="or-summary-label"><?= $block->escapeHtml(__('Status')) ?></span>
+                <span class="or-status-badge <?= $block->escapeHtml($statusClass) ?>">
+                    <?= $block->escapeHtml($statusValue) ?>
+                </span>
+            </div>
+
+            <div class="or-summary-card">
+                <span class="or-summary-label"><?= $block->escapeHtml(__('Amount')) ?></span>
+                <span class="or-summary-value"><?= $block->escapeHtml(trim($amountValue . ' ' . $currencyValue)) ?></span>
+            </div>
+
+            <div class="or-summary-card">
+                <span class="or-summary-label"><?= $block->escapeHtml(__('Open Refund ID')) ?></span>
+                <code class="or-summary-code"><?= $block->escapeHtml($block->formatValue($or::KEY_OPEN_REFUND_ID, $openRefund->getData($or::KEY_OPEN_REFUND_ID))) ?></code>
+            </div>
+        </div>
+
+        <div class="or-details-grid">
+            <section class="or-details-card">
+                <h3><?= $block->escapeHtml(__('Overview')) ?></h3>
+                <?php foreach ($overviewFields as $field): ?>
+                    <?php if (!isset($fieldLabels[$field])) { continue; } ?>
+                    <div class="or-kv-row">
+                        <div class="or-kv-label"><?= $block->escapeHtml(__($fieldLabels[$field])) ?></div>
+                        <div class="or-kv-value"><?= $block->escapeHtml($block->formatValue($field, $openRefund->getData($field))) ?></div>
+                    </div>
+                <?php endforeach; ?>
+            </section>
+
+            <section class="or-details-card">
+                <h3><?= $block->escapeHtml(__('Reference Details')) ?></h3>
+                <?php foreach ($referenceFields as $field): ?>
+                    <?php if (!isset($fieldLabels[$field])) { continue; } ?>
+                    <div class="or-kv-row">
+                        <div class="or-kv-label"><?= $block->escapeHtml(__($fieldLabels[$field])) ?></div>
+                        <div class="or-kv-value"><?= $block->escapeHtml($block->formatValue($field, $openRefund->getData($field))) ?></div>
+                    </div>
+                <?php endforeach; ?>
+            </section>
+
+            <section class="or-details-card">
+                <h3><?= $block->escapeHtml(__('Audit')) ?></h3>
+                <?php foreach ($auditFields as $field): ?>
+                    <?php if (!isset($fieldLabels[$field])) { continue; } ?>
+                    <div class="or-kv-row">
+                        <div class="or-kv-label"><?= $block->escapeHtml(__($fieldLabels[$field])) ?></div>
+                        <div class="or-kv-value"><?= $block->escapeHtml($block->formatValue($field, $openRefund->getData($field))) ?></div>
+                    </div>
+                <?php endforeach; ?>
+            </section>
+
+            <?php if ($notesValue !== '—'): ?>
+                <section class="or-details-card or-details-card-wide">
+                    <h3><?= $block->escapeHtml(__('Notes')) ?></h3>
+                    <div class="or-long-text"><?= $block->escapeHtml($notesValue) ?></div>
+                </section>
+            <?php endif; ?>
+
+            <?php if ($errorValue !== '—'): ?>
+                <section class="or-details-card or-details-card-wide or-details-card-error">
+                    <h3><?= $block->escapeHtml(__('Error Message')) ?></h3>
+                    <div class="or-long-text"><?= $block->escapeHtml($errorValue) ?></div>
+                </section>
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>
+</div>
+

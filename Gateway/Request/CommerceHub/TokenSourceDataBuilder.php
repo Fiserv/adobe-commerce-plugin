@@ -78,6 +78,12 @@ class TokenSourceDataBuilder implements BuilderInterface
 		$expMonth = $payment->getAdditionalInformation(DataAssignObserver::EXP_MONTH_KEY);
 		$expYear = $payment->getAdditionalInformation(DataAssignObserver::EXP_YEAR_KEY);
 
+		// Normalize expiration year: CommerceHub requires exactly 4 digits.
+		// Some stored vault tokens may have a 2-digit year (e.g. "25" instead of "2025").
+		if (!empty($expYear) && strlen((string)$expYear) === 2 && ctype_digit((string)$expYear)) {
+			$expYear = '20' . $expYear;
+		}
+
 		$nameOnCard = '';
 		$vaultPaymentToken = $payment->getExtensionAttributes()->getVaultPaymentToken();
 		if ($vaultPaymentToken instanceof \Magento\Vault\Api\Data\PaymentTokenInterface) {

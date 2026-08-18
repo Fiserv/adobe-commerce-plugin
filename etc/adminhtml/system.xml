@@ -196,6 +196,36 @@
                         <tooltip><![CDATA[Basic tier does not allow for multiple partial captures of gift card transactions]]></tooltip>
                     </field>
 				</group>
+				<!-- Open Refunds Settings -->
+				<group id="open_refund" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="6">
+					<label>Open Refunds</label>
+					<attribute type="expanded">0</attribute>
+					<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+					<field id="open_refund_enabled" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Enable Open Refunds</label>
+						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+						<config_path>payment/fiserv_commercehub/open_refund_enabled</config_path>
+						<comment>Allow admins to issue open refunds to customers directly through Commerce Hub without an associated order.</comment>
+					</field>
+					<field id="open_refund_max_amount" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Maximum Refund Amount</label>
+						<config_path>payment/fiserv_commercehub/open_refund_max_amount</config_path>
+						<validate>validate-number validate-zero-or-greater</validate>
+						<comment>Maximum amount allowed per open refund. Set to 0 for no limit.</comment>
+						<depends>
+							<field id="open_refund_enabled">1</field>
+						</depends>
+					</field>
+					<field id="open_refund_capture_flag" translate="label" type="select" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Capture Immediately</label>
+						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+						<config_path>payment/fiserv_commercehub/open_refund_capture_flag</config_path>
+						<comment>When enabled, open refunds are captured immediately upon creation. When disabled, they are authorized only.</comment>
+						<depends>
+							<field id="open_refund_enabled">1</field>
+						</depends>
+					</field>
+				</group>
                 <group id="fiserv_applepay" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="8">
                     <label>Apple Pay</label>
                     <attribute type="expanded">0</attribute>
