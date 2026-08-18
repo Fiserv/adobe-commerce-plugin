@@ -7,8 +7,11 @@
 		<payment>
 			<fiserv_commercehub>
 				<active>1</active>
-				<three_d_secure>0</three_d_secure>
-				<surcharge_enabled>0</surcharge_enabled>
+			<three_d_secure>0</three_d_secure>
+			<surcharge_enabled>0</surcharge_enabled>
+			<open_refund_enabled>0</open_refund_enabled>
+			<open_refund_max_amount>0</open_refund_max_amount>
+			<open_refund_capture_flag>1</open_refund_capture_flag>
 				<payment_active>1</payment_active>
 				<title>Credit/Debit Card</title>
 				<model>FiservCommerceHubFacade</model>
