@@ -98,10 +98,17 @@ define([
 
                 self.paymentPayload.sessionId = creds[chAdapter.sessionIdKey];
                 await chAdapter.initSdk(config, creds);
+
+                // NOTE: The Venmo order approved by the buyer must always be created with
+                // intent "authorize", regardless of the configured payment_action. Magento's
+                // Order\Payment::place() always calls authorize() first for both "Authorize"
+                // and "Authorize and Capture" (Sale) actions - it only calls capture()
+                // immediately after for Sale. Creating the order with intent "capture" here
+                // causes CommerceHub to reject the subsequent AUTHORIZE call with gateway
+                // error 708 "Invalid Action Attempted". The immediate "Sale" case is handled
+                // server-side by OrdersApiSaleCommand, which performs AUTHORIZE then CAPTURE
+                // (referencing the returned transactionId) as two calls.
                 var intent = 'authorize';
-                if (config.payment_action.toLowerCase() === 'authorize_capture') {
-                    intent = 'capture';
-                }
                 const shippingAddress = this.getMapShippingAddress(this.getShippingAddress());
                 const paypalComponentConfig = {
                     intent: intent,

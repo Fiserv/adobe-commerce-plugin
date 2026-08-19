@@ -196,14 +196,17 @@ define([
 				await chAdapter.initSdk(config, creds.ch_credentials);
 
 				const buttonStyle = config.affirmButtonColor || config.affirmButtonStyle || 'default';
-				const backendAction = config.paymentAction || config.affirmPaymentAction || config.payment_action || '';
-				const actionLower = backendAction.toString().toLowerCase();
 
-				let affirmIntent = 'AUTHORIZE';
-
-				if (actionLower.includes('capture') || actionLower.includes('sale')) {
-					affirmIntent = 'CAPTURE';
-				}
+				// NOTE: The Affirm order approved by the buyer must always be created with
+				// intent "AUTHORIZE", regardless of the configured payment_action. Magento's
+				// Order\Payment::place() always calls authorize() first for both "Authorize"
+				// and "Authorize and Capture" (Sale) actions - it only calls capture()
+				// immediately after for Sale. Creating the order with intent "CAPTURE" here
+				// causes CommerceHub to reject the subsequent AUTHORIZE call with gateway
+				// error 708 "Invalid Action Attempted". The immediate "Sale" case is handled
+				// server-side by OrdersApiSaleCommand, which performs AUTHORIZE then CAPTURE
+				// (referencing the returned transactionId) as two calls.
+				const affirmIntent = 'AUTHORIZE';
 
 				const affirmPayload = {
 					data: {
