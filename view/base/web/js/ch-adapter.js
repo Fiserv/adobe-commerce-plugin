@@ -87,6 +87,14 @@ define([
 				initPayload.contextId = contextId;
 			}
 
+			// Some SDK components (e.g. Apple Pay button text) may key their localized
+			// assets off the global session locale set during init, rather than (or in
+			// addition to) a per-component "locale" param. Pass it through here too when
+			// the calling config provides one, so either resolution strategy works.
+			if (config.locale) {
+				initPayload.locale = config.locale;
+			}
+
 			await window.fiserv.init(initPayload);
 		},
 

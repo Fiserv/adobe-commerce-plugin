@@ -6,6 +6,7 @@ define([
     'Fiserv_Payments/js/ch-adapter',
     'Fiserv_Payments/js/action/create-commercehub-enriched-session',
     'Magento_Checkout/js/model/quote',
+    'Fiserv_Payments/js/model/googlepay-locale',
     'ko',
     'mage/translate'
 ], function (
@@ -16,6 +17,7 @@ define([
     chAdapter,
     chSession,
     quote,
+    googlePayLocale,
     ko,
     $t
 ) {
@@ -89,6 +91,7 @@ define([
 
                 this.paymentPayload.sessionId = creds.ch_credentials.sessionId;
                 await chAdapter.initSdk(config, creds.ch_credentials);
+                await this.applySdkLocale(config);
 
                 await this.mountGooglePayComponent(config);
                 this.initializedAmount = quote.totals()['grand_total'];
@@ -98,6 +101,50 @@ define([
                 this.showError($t('Google Pay error: ') + (error?.message || error));
             } finally {
                 fullScreenLoader.stopLoader();
+            }
+        },
+
+        /**
+         * Force the CommerceHub SDK session's locale, which is what actually
+         * drives the rendered language of the Google Pay button (and other
+         * SDK-rendered wallet buttons/text).
+         *
+         * IMPORTANT (reverse-engineered from the shipped `checkout.js`
+         * bundle — there is no published SDK reference for this):
+         * `window.fiserv.components.googlePay({ data: { button: {...} } })`
+         * does NOT read any per-call locale/buttonLocale field we pass in.
+         * The button's language is always read from the SDK's internal
+         * `checkoutContext.locale` (`config.customer.locale`), which is
+         * normally seeded server-side during session creation. The only
+         * supported client-side way to override it is the context's
+         * `setLocale()` method, which must be called with one of the SDK's
+         * exact supported BCP47 tags (see `Fiserv_Payments/js/model/googlepay-locale`)
+         * — passing an unsupported/malformed tag throws, so this is wrapped
+         * defensively and simply falls back to the SDK's default (English)
+         * on failure.
+         *
+         * @param {Object} config
+         * @returns {Promise<void>}
+         */
+        applySdkLocale: async function (config) {
+            const rawLocale = config.locale || document.documentElement.lang || navigator.language;
+            const sdkLocale = googlePayLocale.mapToSdkLocale(rawLocale);
+
+            if (!window.fiserv || typeof window.fiserv.context !== 'function') {
+                return;
+            }
+
+            try {
+                const context = window.fiserv.context();
+
+                if (context && typeof context.setLocale === 'function') {
+                    await context.setLocale(sdkLocale);
+                }
+            } catch (error) {
+                // Unsupported/malformed locale for this SDK version - SDK keeps
+                // rendering in its default (English). Not fatal to checkout.
+                // eslint-disable-next-line no-console
+                console.warn('[GooglePay] Unable to set SDK locale to ' + sdkLocale + ':', error);
             }
         },
 
@@ -130,6 +177,7 @@ define([
                 this.googlepayInitialized = true;
             }
         },
+
 
         getPaymentConfig: function () {
             return window.checkoutConfig.payment[this.getCode()];

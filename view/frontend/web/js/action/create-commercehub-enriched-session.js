@@ -44,12 +44,22 @@ define(
 			let firstName = customer.isLoggedIn() ? customer.customerData.firstname : quote.billingAddress()?.firstname;
 			let lastName = customer.isLoggedIn() ? customer.customerData.lastname : quote.billingAddress()?.lastname;
 			let id = customer.isLoggedIn() ? customer.customerData.id : "guest";
+			let locale = getLocale();
 			return {
 				"id" : id,
 				"firstName" : firstName,
 				"lastName" : lastName,
-				"email" : email
+				"email" : email,
+				"locale" : locale
 			};
+		}
+
+		function getLocale()
+		{
+			// IETF BCP47 (e.g. "en-US") locale of the current storefront/session,
+			// used by Commerce Hub to localize wallet UIs (e.g. Apple Pay button text).
+			let locale = document.documentElement.lang || (navigator.language || navigator.userLanguage);
+			return locale ? locale.replace('_', '-') : 'en-US';
 		}
 
 		function getAmount()

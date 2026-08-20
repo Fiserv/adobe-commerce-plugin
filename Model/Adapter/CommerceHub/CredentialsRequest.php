@@ -189,6 +189,11 @@ class CredentialsRequest
             if (isset($sessionData[self::KEY_SHIPPING_ADDRESS])) {
                 $payload[self::KEY_SHIPPING_ADDRESS] = $sessionData[self::KEY_SHIPPING_ADDRESS];
             }
+            // customer (including locale, when supplied by the storefront) is forwarded so
+            // Commerce Hub can localize wallet UIs (e.g. Apple Pay) tied to this session.
+            if (isset($sessionData[self::KEY_CUSTOMER])) {
+                $payload[self::KEY_CUSTOMER] = $sessionData[self::KEY_CUSTOMER];
+            }
             return $payload;
         }
 	private function buildPaymentTokenSource(string $tokenData, string $customerId): array {
