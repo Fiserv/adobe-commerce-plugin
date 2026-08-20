@@ -3,9 +3,11 @@
 define([
 	'jquery',
 	'SDCv2Library',
+	'mage/translate',
 ], function (
 	$,
 	sdcv2,
+	$t,
 ) {
 	'use strict';
 
@@ -17,7 +19,7 @@ define([
 	//		b. Public Key generated during initial credentials request
 	//		c. Symmetric Encryption Algorithm generated during initial credentials request
 	return {
-		credentialsErrorMsg: "Oops! Something went wrong...",	
+		credentialsErrorMsg: $t('Oops! Something went wrong...'),
            credentialsUrl: "fiserv/valuelink/getcredentials",
 		clientScriptId: "commercehub",
 		configApiKeyKey: "apiKey",
@@ -286,7 +288,7 @@ define([
 			let formData = this.forms[formId];
 			if (typeof(formData) === "undefined")
 			{
-				throw new Error("SDC Form not form with id: " + formId + " not found");
+				throw new Error($t('SDC Form not form with id: %1 not found').replace('%1', formId));
 			}
 
 			return formData;

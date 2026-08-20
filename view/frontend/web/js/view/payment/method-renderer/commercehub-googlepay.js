@@ -6,7 +6,7 @@ define([
     'Fiserv_Payments/js/ch-adapter',
     'Fiserv_Payments/js/action/create-commercehub-enriched-session',
     'Magento_Checkout/js/model/quote',
-    'Fiserv_Payments/js/model/googlepay-locale',
+    'Fiserv_Payments/js/model/commercehub-sdk-locale',
     'ko',
     'mage/translate'
 ], function (
@@ -17,7 +17,7 @@ define([
     chAdapter,
     chSession,
     quote,
-    googlePayLocale,
+    commercehubSdkLocale,
     ko,
     $t
 ) {
@@ -86,7 +86,7 @@ define([
 
                 const creds = await chSession({ merchantName: config.storeName, paymentCode: this.getCode() });
                 if (!creds?.ch_credentials) {
-                    throw new Error('Error creating payment session');
+                    throw new Error($t('Error creating payment session'));
                 }
 
                 this.paymentPayload.sessionId = creds.ch_credentials.sessionId;
@@ -107,7 +107,7 @@ define([
         /**
          * Force the CommerceHub SDK session's locale, which is what actually
          * drives the rendered language of the Google Pay button (and other
-         * SDK-rendered wallet buttons/text).
+         * SDK-rendered wallet buttons/text sharing the same session context).
          *
          * IMPORTANT (reverse-engineered from the shipped `checkout.js`
          * bundle — there is no published SDK reference for this):
@@ -118,17 +118,17 @@ define([
          * normally seeded server-side during session creation. The only
          * supported client-side way to override it is the context's
          * `setLocale()` method, which must be called with one of the SDK's
-         * exact supported BCP47 tags (see `Fiserv_Payments/js/model/googlepay-locale`)
-         * — passing an unsupported/malformed tag throws, so this is wrapped
-         * defensively and simply falls back to the SDK's default (English)
-         * on failure.
+         * exact supported BCP47 tags (see `Fiserv_Payments/js/model/commercehub-sdk-locale`,
+         * which is shared/reusable for any APM needing this) — passing an
+         * unsupported/malformed tag throws, so this is wrapped defensively
+         * and simply falls back to the SDK's default (English) on failure.
          *
          * @param {Object} config
          * @returns {Promise<void>}
          */
         applySdkLocale: async function (config) {
             const rawLocale = config.locale || document.documentElement.lang || navigator.language;
-            const sdkLocale = googlePayLocale.mapToSdkLocale(rawLocale);
+            const sdkLocale = commercehubSdkLocale.mapToSdkLocale(rawLocale);
 
             if (!window.fiserv || typeof window.fiserv.context !== 'function') {
                 return;

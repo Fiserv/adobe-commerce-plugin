@@ -7,6 +7,7 @@ define([
 		'Magento_Ui/js/modal/alert',
 		'Magento_Ui/js/lib/view/utils/dom-observer',
 		'jquery',
+		'mage/translate',
 		'domReady!'
 	], function(
 		ko,
@@ -16,7 +17,8 @@ define([
 		chIframe,
 		alert,
 		domObserver,
-		$
+		$,
+		$t
 	) {
 		'use strict';
 
@@ -35,7 +37,7 @@ define([
 			initialize: function (config) {
 
 				if (typeof(config.paymentConfig) === "undefined") {
-					throw new Error('Required parameter paymentConfig not found!');
+					throw new Error($t('Required parameter paymentConfig not found!'));
 				}
 				this.paymentConfig = config.paymentConfig;
 
@@ -56,7 +58,7 @@ define([
 				}
 				let config = this.paymentConfig;
 				if (typeof(config) === "undefined") {
-					throw new Error('Required parameter paymentConfig not found!');
+					throw new Error($t('Required parameter paymentConfig not found!'));
 				}
 
 				var self = this;
@@ -189,7 +191,7 @@ define([
 
 			iframeRunFailure: function() {
 				this.endAsyncFlow();
-				this.showError("Card capture failure. Please try again.");
+				this.showError($t('Card capture failure. Please try again.'));
 				chIframe.resetIframe();
 			},
 
@@ -219,7 +221,7 @@ define([
 
 			placeOrder: function() {
                 if (!this.paymentSessionData || !this.paymentSessionData["sessionId"]) {
-                    this.showError("Payment session not established. Please try again.");
+                    this.showError($t('Payment session not established. Please try again.'));
                     return;
                 }
 				this.setPaymentSessionInput(this.paymentSessionData["sessionId"]);

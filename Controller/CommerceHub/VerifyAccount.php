@@ -66,7 +66,7 @@ class VerifyAccount extends Action implements HttpPostActionInterface
         // If the admin toggle is off, skip verification and let the order proceed.
         if (!$this->config->isAccountVerificationEnabled()) {
             $this->logger->logInfo(2, "VerifyAccount – feature disabled in admin, skipping");
-            return $resultJson->setData(["success" => true, "message" => "Verification skipped (disabled)",]);
+            return $resultJson->setData(["success" => true, "message" => (string) __("Verification skipped (disabled)"),]);
         }
 
         // Parse fields from the request body.
@@ -97,7 +97,7 @@ class VerifyAccount extends Action implements HttpPostActionInterface
         if (empty($sessionId) && empty($paymentToken)) {
             $this->logger->logError(2, "VerifyAccount – missing sessionId and paymentToken in request body");
             return $resultJson->setHttpResponseCode(400)->
-            setData(["success" => false, "message" => "Missing payment session ID or payment token.",]);
+            setData(["success" => false, "message" => (string) __("Missing payment session ID or payment token."),]);
         }
 
         // Delegate to the appropriate service method.

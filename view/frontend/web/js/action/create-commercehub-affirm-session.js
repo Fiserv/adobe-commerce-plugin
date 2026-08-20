@@ -2,10 +2,12 @@ define(
 	[
         'Fiserv_Payments/js/action/create-commercehub-enriched-session',
 		'Magento_Checkout/js/model/quote',
+		'mage/translate'
 	],
 	function (
 		session,
 		quote,
+		$t
 	) {
 		'use strict';
 
@@ -30,6 +32,9 @@ define(
 					}
 				};
 			});
+
+			const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+			return { itemDetails: items, itemCount: itemCount };
 		}
 
 		function getShippingAddress() {
@@ -58,8 +63,8 @@ define(
 			return addr;
 		}
 
-        function getMerchantDetails()
-        {
+		function getMerchantDetails()
+		{
 			const cfg = window.checkoutConfig && window.checkoutConfig.payment && window.checkoutConfig.payment.fiserv_affirm ? window.checkoutConfig.payment.fiserv_affirm : {};
 			return {
 				merchantId: cfg.merchantId || window.checkoutConfig.merchantId || '',
@@ -91,7 +96,7 @@ define(
 			try {
 				return await session(payload);
 			} catch (error) {
-				throw new Error("An error occurred while creating Commercehub Apple Pay payment session.");
+				throw new Error($t('An error occurred while creating Commercehub Affirm payment session.'));
 			}
 		};
 	}

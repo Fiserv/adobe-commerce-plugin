@@ -71,17 +71,17 @@ class ApplyValuelinkCard extends CartAction implements HttpPostActionInterface
 			$data = $this->getRequest()->getPostValue();
 			if(!isset($data[ValuelinkQuoteRecord::SESSION_ID_KEY]))
 			{
-					throw new InvalidArgumentException("Required Session ID parameter not found.");
+					throw new \InvalidArgumentException(__("Required Session ID parameter not found.")->render());
 			}			
 
 			if(!isset($data[ValuelinkQuoteRecord::BALANCE_KEY]))
 			{
-					throw new InvalidArgumentException("Required balance parameter not found.");
+					throw new \InvalidArgumentException(__("Required balance parameter not found.")->render());
 			}
 
 			if(!isset($data[self::CART_ID_KEY]))
 			{
-					throw new InvalidArgumentException("Required cart ID parameter not found.");
+					throw new \InvalidArgumentException(__("Required cart ID parameter not found.")->render());
 			}
 
 			$data[ValuelinkQuoteRecord::TIMESTAMP_KEY] = time();
@@ -93,7 +93,7 @@ class ApplyValuelinkCard extends CartAction implements HttpPostActionInterface
 			$this->logger->logInfo(1, "Gift card has been applied to cart");
 			$this->messageManager->addSuccess(__("Gift card has been applied to cart."));
 			
-			$response->setData(['valuelink' => "Gift card has been applied to cart."]);
+			$response->setData(['valuelink' => __("Gift card has been applied to cart.")->render()]);
 		} catch(\Exception $e) {
 			$this->logger->logError(1, "Gift card failed to be applied");
 			$this->logger->logCritical(2, $e);

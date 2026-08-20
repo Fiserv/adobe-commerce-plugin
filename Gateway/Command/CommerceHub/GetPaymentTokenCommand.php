@@ -67,7 +67,7 @@ class GetPaymentTokenCommand implements CommandInterface
         $paymentToken = $this->tokenManagement->getByPublicHash($publicHash, $customerId);
         if (!$paymentToken) {
 			$this->logger->logWarning(1, "No available payment tokens");
-            throw new \Exception('No available payment tokens');
+            throw new \Exception((string) __('No available payment tokens'));
         }
 
 		$this->logger->logInfo(1, "Payment tokens retrieved");

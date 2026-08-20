@@ -185,7 +185,7 @@ define([
                 const creds = await chSession({ paymentCode: this.getCode() });
 
                 if (!creds?.ch_credentials) {
-                    throw new Error('No credentials returned from backend');
+                    throw new Error($t('No credentials returned from backend'));
                 }
 
                 this.paymentPayload.sessionId = creds.ch_credentials.sessionId;
@@ -259,7 +259,7 @@ define([
 
             try {
                 if (!this.pazeComponent || typeof this.pazeComponent.selectPaymentMethod !== 'function') {
-                    throw new Error('Paze component not initialized or selectPaymentMethod not available');
+                    throw new Error($t('Paze component not initialized or selectPaymentMethod not available'));
                 }
 
                 // Step 5: Launch Paze UI and get user selection
@@ -269,7 +269,7 @@ define([
                 const result = await this.pazeComponent.selectPaymentMethod(params);
 
                 if (!result) {
-                    throw new Error('No result returned from selectPaymentMethod');
+                    throw new Error($t('No result returned from selectPaymentMethod'));
                 }
 
                 // Step 6: Submit the Paze payment method

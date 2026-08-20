@@ -151,7 +151,7 @@ define([
 		},
 
 		placeOrder: function () {
-			if (this.isEngaged === false) { this.showError("PayPal Fastlane is not an active payment method."); return; }
+			if (this.isEngaged === false) { this.showError($t('PayPal Fastlane is not an active payment method.')); return; }
 
 			return this._super();
 		},

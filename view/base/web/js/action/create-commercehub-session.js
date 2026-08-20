@@ -1,9 +1,11 @@
 define(
     [
-        'mage/url'
+        'mage/url',
+        'mage/translate'
     ],
     function (
-        urlBuilder
+        urlBuilder,
+        $t
     ) {
         'use strict';
         
@@ -91,11 +93,11 @@ define(
                     });
                     
                     if (!response.ok) {
-                        throw new Error("Credentials request failure");
+                        throw new Error($t('Credentials request failure'));
                     }
                     return await response.json();
                 } catch (error) {
-                    throw new Error("An error occurred while creating Commercehub payment session.");
+                    throw new Error($t('An error occurred while creating Commercehub payment session.'));
                 }
             }
         };

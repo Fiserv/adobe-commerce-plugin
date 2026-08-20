@@ -2,10 +2,12 @@
 /*global define*/
 define([
 	'jquery',
-	'SDCv2Library'
+	'SDCv2Library',
+	'mage/translate'
 ], function (
 	$,
-	sdcv2
+	sdcv2,
+	$t
 ) {
 	'use strict';
 
@@ -17,7 +19,7 @@ define([
 	//		b. Public Key generated during initial credentials request
 	//		c. Symmetric Encryption Algorithm generated during initial credentials request
 	return {
-		credentialsErrorMsg: "Oops! Something went wrong...",
+		credentialsErrorMsg: $t('Oops! Something went wrong...'),
 		credentialsUrl: "fiserv/commercehub/createsession",
 		clientScriptId: "commercehub",
 		configApiKeyKey: "apiKey",
@@ -208,9 +210,9 @@ define([
 		 * @param {Object} options - { customerId, intent }
 		 * @returns {Promise<Object>} PayPal component instance
 		 */
-		async loadPayPalComponent(options) {
+        async loadPayPalComponent(options) {
             if (!window.fiserv || typeof window.fiserv.components.paypal !== 'function') {
-                throw new Error('Fiserv SDK not loaded or window.fiserv.components.paypal not available');
+                throw new Error($t('Fiserv SDK not loaded or window.fiserv.components.paypal not available'));
             }
             this.paypalComponent = await window.fiserv.components.paypal(options);
             return this.paypalComponent;
@@ -223,7 +225,7 @@ define([
          */
         async loadPazeComponent(options) {
             if (!window.fiserv || typeof window.fiserv.components.paze !== 'function') {
-                throw new Error('Fiserv SDK not loaded or window.fiserv.components.paze not available');
+                throw new Error($t('Fiserv SDK not loaded or window.fiserv.components.paze not available'));
             }
 
 			// Paze component initialization with displayName and optional cspNonce
@@ -243,7 +245,7 @@ define([
 			runErrorCb,
 			billingAddress = undefined
 		) {
-			if (!this.sdcv2Form) throw new Error("Card capture form not found.");
+			if (!this.sdcv2Form) throw new Error($t('Card capture form not found.'));
 			const submitConfig = billingAddress ? { billingAddress } : undefined;
 			
 			this.sdcv2Form.submit(submitConfig)
@@ -253,14 +255,14 @@ define([
 
 		getAchLegalText: async function (billingAddress) {
 			if (this.sdcv2Form === undefined || typeof this.sdcv2Form.getAchLegalText !== 'function') {
-				throw new Error('ACH payment form is not initialized.');
+				throw new Error($t('ACH payment form is not initialized.'));
 			}
 
 			const submitConfig = billingAddress ? { billingAddress } : undefined;
 			const legalTextResponse = await this.sdcv2Form.getAchLegalText(submitConfig);
 
 			if (!legalTextResponse.plainText) {
-				throw new Error('ACH legal text not found');
+				throw new Error($t('ACH legal text not found'));
 			}
 
 			return legalTextResponse.plainText;
@@ -363,7 +365,7 @@ define([
 
 		getSurchargeEstimate: async function(billingAddress) {
 			if (typeof(this.sdcv2Form) === "undefined") {
-				throw new Error("Payment form not initialized.");
+				throw new Error($t('Payment form not initialized.'));
 			}
 			return await this.sdcv2Form.getSurchargeEstimate({ billingAddress });
 		}

@@ -1,22 +1,29 @@
 define([], function () {
 
     /**
-     * NOTE on how the CommerceHub Checkout SDK actually resolves button language
-     * (reverse-engineered from the shipped `checkout.js` bundle — there is no
-     * published reference for this, see AGENTS.md/Docs/Solutioning which only
-     * covers Apple Pay):
+     * NOTE on how the CommerceHub Checkout SDK actually resolves button/UI
+     * language (reverse-engineered from the shipped `checkout.js` bundle —
+     * there is no published reference for this, see AGENTS.md/Docs/Solutioning
+     * which only covers Apple Pay):
      *
-     * The Google Pay (and other wallet) button's displayed language is driven
+     * A wallet button's displayed language (Google Pay, and potentially other
+     * SDK-rendered components sharing the same session context) is driven
      * entirely by the SDK's internal `checkoutContext.locale` getter
      * (`config.customer.locale`). Anything passed as `data.button.buttonLocale`
-     * (or similar) directly into `window.fiserv.components.googlePay({...})` is
-     * NOT read by the SDK — it's silently ignored dead configuration.
+     * (or similar) directly into a component factory such as
+     * `window.fiserv.components.googlePay({...})` is NOT read by the SDK —
+     * it's silently ignored dead configuration.
      *
      * The *only* supported way to change it client-side is calling the explicit
      * `setLocale()` method on the session context returned by
      * `window.fiserv.context()`, e.g.:
      *
      *   await window.fiserv.context().setLocale('fr-FR');
+     *
+     * This is a session/context-level setting, not per-component — so it
+     * applies to every SDK-rendered UI sharing that context, not just
+     * Google Pay. Any current or future APM that needs SDK-driven
+     * localization should reuse this module rather than reimplementing it.
      *
      * `setLocale()` validates its argument against the SDK's internal
      * `SupportedLocale` enum using a lookup table keyed by the *full* BCP47 tag
