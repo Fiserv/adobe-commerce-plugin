@@ -43,11 +43,22 @@ define([
 
 		fastlaneInit: async function() {
 
-			var self = this;
 			fullScreenLoader.startLoader();
 
+			if (!window.fiserv || typeof window.fiserv.components !== 'object' || typeof window.fiserv.components.paypal !== 'function') {
+				console.error("[Fastlane] window.fiserv.components.paypal is not available. Was chAdapter.initSdk() called/awaited successfully before fastlaneInit()?");
+				fullScreenLoader.stopLoader();
+				return undefined;
+			}
+
+			const paypalConfig = (window.checkoutConfig && window.checkoutConfig.payment && window.checkoutConfig.payment.fiserv_paypal) || {};
+			let intent = 'authorize';
+			if (paypalConfig.payment_action && paypalConfig.payment_action.toLowerCase() === 'authorize_capture') {
+				intent = 'capture';
+			}
+
 			try {
-				const paypal = await window.fiserv.components.paypal();
+				const paypal = await window.fiserv.components.paypal({ intent: intent });
 
 				window.braintree = window.braintree || {};
 				window.braintree.client = chBraintreeClient;
@@ -55,15 +66,13 @@ define([
 
 				this.fastlane = await paypal.fastlane();
 				this.addressComponent = await this.getAddressComponent();
-			
-				fullScreenLoader.stopLoader();
-	
+
 				return this.fastlane;
-			}
-			catch(e) {
-				console.log("unable to load PayPal Fastlane component.");
-				fullScreenLoader.stopLoader();
+			} catch (e) {
+				console.error("[Fastlane] unable to load PayPal Fastlane component:", e);
 				return undefined;
+			} finally {
+				fullScreenLoader.stopLoader();
 			}
 		},
 
@@ -89,7 +98,7 @@ define([
 				"telephone"
 			];
 
-			const fields = [];
+			const fields = {};
 
 			$.each(inputNames, function(_, name) {
 				const $input = $('input[name="' + name + '"]');
@@ -220,7 +229,6 @@ define([
 		},
 
 		getConfigData: function() {
-			var self = this;
 			let formConfig = {};
 			if(this.fastlane) {
 				formConfig.paypalFastlane = {
