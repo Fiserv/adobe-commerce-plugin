@@ -11,6 +11,7 @@ use Magento\Checkout\Model\ConfigProviderInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Directory\Model\ResourceModel\Region\Collection;
 use Magento\Checkout\Helper\Data as CheckoutHelper;
+use Magento\Framework\Locale\ResolverInterface as LocaleResolver;
 
 /**
  * Class ConfigProvider
@@ -33,6 +34,7 @@ class ConfigProvider implements ConfigProviderInterface
 	const PROD_CLIENT_KEY = 'prodClientUrl';
 	const CERT_CLIENT_KEY = 'certClientUrl';
 	const IS_ONEPAGE_CHECKOUT_KEY = 'onepageCheckoutEnabled';
+	const LOCALE_KEY = 'locale';
 
 	/** @var PayPalConfig */
 	private $paypalConfig;
@@ -45,18 +47,30 @@ class ConfigProvider implements ConfigProviderInterface
 
 	private $checkoutHelper;
 
+	/** @var LocaleResolver */
+	private $localeResolver;
+
 	public function __construct(
 		PayPalConfig $paypalConfig,
 		CommerceHubConfig $commerceHubConfig,
 		StoreManagerInterface $storeManager,
 		Collection $regionCollection,
-		CheckoutHelper $checkoutHelper
+		CheckoutHelper $checkoutHelper,
+		LocaleResolver $localeResolver
 	){
 		$this->paypalConfig = $paypalConfig;
 		$this->commerceHubConfig = $commerceHubConfig;
 		$this->storeManager = $storeManager;
 		$this->regionCollection = $regionCollection;
 		$this->checkoutHelper = $checkoutHelper;
+		$this->localeResolver = $localeResolver;
+	}
+
+	/** Convert the locale into  IETF BCP47 format */
+	private function getBcp47Locale(): string
+	{
+		$locale = (string) $this->localeResolver->getLocale();
+		return $locale ? str_replace('_', '-', $locale) : 'en-US';
 	}
 
 	public function getConfig()
@@ -120,6 +134,7 @@ class ConfigProvider implements ConfigProviderInterface
 			self::CURRENCY_KEY => $this->commerceHubConfig->getCurrency($storeId),
 			self::PROD_CLIENT_KEY => $this->commerceHubConfig->getProdClientUrl(),
 			self::CERT_CLIENT_KEY => $this->commerceHubConfig->getCertClientUrl(),
+			self::LOCALE_KEY => $this->getBcp47Locale(),
 			'regionsData' => $regionsByCountry
 		];
 		return [

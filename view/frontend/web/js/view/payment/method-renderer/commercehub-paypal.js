@@ -7,6 +7,7 @@ define([
     'Magento_Ui/js/model/messageList',
     'Magento_Checkout/js/checkout-data',
     'Magento_Checkout/js/model/full-screen-loader',
+    'Fiserv_Payments/js/model/commercehub-sdk-locale',
     'ko',
     'mage/translate',
     'domReady!'
@@ -19,6 +20,7 @@ define([
     globalMessageList,
     checkoutData,
     fullScreenLoader,
+    commercehubSdkLocale,
     ko,
     $t
 ) {
@@ -95,6 +97,7 @@ define([
 
                 self.paymentPayload.sessionId = creds[chAdapter.sessionIdKey];
                 await chAdapter.initSdk(config, creds);
+                await this.applySdkLocale(config);
                 const shippingAddress = this.getMapShippingAddress(this.getShippingAddress());
                 const paypalComponentConfig = {
                     intent: sessionIntent,
@@ -111,6 +114,50 @@ define([
                 console.error('[PayPal] Error in initchAdapter:', error);
             } finally {
                 fullScreenLoader.stopLoader();
+            }
+        },
+
+        /**
+         * Force the CommerceHub SDK session's locale, which is what actually
+         * drives the rendered language of the PayPal button/checkout UI (and
+         * other SDK-rendered wallet buttons/text sharing the same session
+         * context).
+         *
+         * IMPORTANT (reverse-engineered from the shipped `checkout.js`
+         * bundle — there is no published SDK reference for this, see the
+         * Google Pay implementation this was originally discovered for):
+         * `window.fiserv.components.paypal({...})` does NOT read any
+         * per-call locale field we pass in. The rendered language is always
+         * read from the SDK's internal `checkoutContext.locale`
+         * (`config.customer.locale`), which is normally seeded server-side
+         * during session creation. The only supported client-side way to
+         * override it is the context's `setLocale()` method, which must be
+         * called with one of the SDK's exact supported BCP47 tags (see
+         * `Fiserv_Payments/js/model/commercehub-sdk-locale`) — passing an
+         * unsupported/malformed tag throws, so this is wrapped defensively
+         * and simply falls back to the SDK's default (English) on failure.
+         *
+         * @param {Object} config
+         * @returns {Promise<void>}
+         */
+        applySdkLocale: async function (config) {
+            const rawLocale = config.locale || document.documentElement.lang || navigator.language;
+            const sdkLocale = commercehubSdkLocale.mapToSdkLocale(rawLocale);
+
+            if (!window.fiserv || typeof window.fiserv.context !== 'function') {
+                return;
+            }
+
+            try {
+                const context = window.fiserv.context();
+
+                if (context && typeof context.setLocale === 'function') {
+                    await context.setLocale(sdkLocale);
+                }
+            } catch (error) {
+                // Unsupported/malformed locale for this SDK version - SDK keeps
+                // rendering in its default (English). Not fatal to checkout.
+                console.warn('[PayPal] Unable to set SDK locale to ' + sdkLocale + ':', error);
             }
         },
 
