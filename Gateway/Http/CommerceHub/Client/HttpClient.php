@@ -70,11 +70,7 @@ class HttpClient implements ClientInterface
 			'request' => $requestBody,
 		];
 		
-		$orderIncrementId = "";
-		if (isset($payload['transaction_details']) && isset($payload['transaction_details']['merchant_order_id']))
-		{
-			$orderIncrementId = $payload['transaction_details']['merchant_order_id'];
-		}
+		$orderIncrementId = $requestBody[ChCompositeBase::ORDER_INCREMENT_ID_KEY] ?? "";
 
 		$this->logger->logInfo(1, "Sending request to Commerce Hub", "Order ID: $orderIncrementId");
 		$this->logger->logDebug(3, "TXN REQUEST INFO", "Order ID: $orderIncrementId");

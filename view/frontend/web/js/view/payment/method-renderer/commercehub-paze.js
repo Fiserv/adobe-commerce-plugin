@@ -166,6 +166,7 @@ define([
             };
         },
 
+
         loadPazeForm: async function () {
             const config = window.checkoutConfig.payment[this.getCode()];
             try {
@@ -181,7 +182,7 @@ define([
                 };
 
                 // Get credentials from session
-                const creds = await chSession({});
+                const creds = await chSession({ paymentCode: this.getCode() });
 
                 if (!creds?.ch_credentials) {
                     throw new Error('No credentials returned from backend');

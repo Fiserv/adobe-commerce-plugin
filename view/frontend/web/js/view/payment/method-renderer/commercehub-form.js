@@ -140,17 +140,18 @@ define(
 				);
 			},
 
-			loadSdcForm: function () {
-				if (this.isChecked() === this.code) {
-					this.loadIframe();
-				}
-			},
+		loadSdcForm: function () {
+			if (this.isChecked() === this.code) {
+				this.loadIframe();
+			}
+		},
 
         initCheckoutSdk: async function(credentials)
         {
             const credsResponse = await chSession({
                 threeDSecure: this.is3DSecureEnabled(),
-                billingAddress: this.buildBillingAddressValues()
+                billingAddress: this.buildBillingAddressValues(),
+                paymentCode: this.code
             });
 
             this.paymentSessionData = credsResponse['ch_credentials'];
@@ -193,7 +194,7 @@ define(
                 this.iframeLoadFailure();
                 return;
             }
-	
+
 	},
 
 		/** Builds a nested billing address object required by the surcharge estimates API */
@@ -679,9 +680,13 @@ define(
 				return !!window.checkoutConfig.payment[this.code]["surchargeEnabled"];
 			},
 
-		fetchSurchargeEstimate: async function() {
-			try {
-				const surchargeDetails = await chAdapter.getSurchargeEstimate(this.buildEstimateBillingAddress());
+	fetchSurchargeEstimate: async function() {
+		try {
+			if (!this.paymentSessionData || !this.paymentSessionData['sessionId']) {
+				surchargeModel.surchargeData(null);
+				return false;
+			}
+			const surchargeDetails = await chAdapter.getSurchargeEstimate();
 				const surchargeAmount = (surchargeDetails && surchargeDetails.amountComponent
 					&& surchargeDetails.amountComponent.surcharge)
 					? parseFloat(surchargeDetails.amountComponent.surcharge)
