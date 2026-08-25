@@ -3,12 +3,14 @@ define(
         'Fiserv_Payments/js/action/create-commercehub-session',
 		'Magento_Customer/js/model/customer',
 		'Magento_Checkout/js/model/quote',
+		'Fiserv_Payments/js/model/commercehub-sdk-locale',
 		'mage/translate'
 	],
 	function (
 		session,
 		customer,
 		quote,
+		commercehubSdkLocale,
 		$t
 	) {
 		'use strict';
@@ -60,8 +62,12 @@ define(
 		{
 			// IETF BCP47 (e.g. "en-US") locale of the current storefront/session,
 			// used by Commerce Hub to localize wallet UIs (e.g. Apple Pay button text).
+			// Normalized through the shared SDK locale mapping table so a bare
+			// language code like "fr" becomes the full tag ("fr-FR") the
+			// CommerceHub session-create endpoint (and SDK) actually expects,
+			// instead of being sent as-is and silently ignored/defaulted.
 			let locale = document.documentElement.lang || (navigator.language || navigator.userLanguage);
-			return locale ? locale.replace('_', '-') : 'en-US';
+			return commercehubSdkLocale.mapToSdkLocale(locale);
 		}
 
 		function getAmount()
