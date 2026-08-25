@@ -86,13 +86,13 @@ define([
 		});
 	},
 	    
-    loadApplePayForm: async function () {
+	loadApplePayForm: async function () {
  		const config = window.checkoutConfig.payment[this.getCode()];
 		try {
 			fullScreenLoader.startLoader();
 			$('#applepay-button-container').empty();
 			let merchantName = window.checkoutConfig.payment[this.getCode()]["storeName"];
-			const creds = await chSession({ "merchantName" : merchantName });
+			const creds = await chSession({ "merchantName": merchantName, paymentCode: this.getCode() });
 
 			if (!creds?.ch_credentials) {
 				throw new Error('No credentials returned from backend');

@@ -70,6 +70,7 @@ define([
 			});
 		},
 
+
 		loadSamsungPayForm: async function () {
 			const config = this.getPaymentConfig();
 
@@ -81,7 +82,7 @@ define([
 				fullScreenLoader.startLoader();
 				$('#samsungpay-button-container').empty();
 
-				const creds = await chSession({merchantName: config.storeName});
+				const creds = await chSession({ merchantName: config.storeName, paymentCode: this.getCode() });
 				if (!creds?.ch_credentials) {
 					throw new Error('Error creating payment session');
 				}
