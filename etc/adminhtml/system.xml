@@ -1119,7 +1119,7 @@
 								<backend_model>Fiserv\Payments\Model\System\Config\Backend\CommerceHub\CssJson</backend_model>
 								<config_path>payment/fiserv_commercehub/sdc_custom_token_expiration_month_option_labels</config_path>
 							</field>
-							<field id="token_expiration_month_invalid" translate="label" type="text" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
+							<field id="token_expiration_month_invalid" translate="label" type="text" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="1">
 								<label>Invalid Field Message</label>
 								<config_path>payment/fiserv_commercehub/sdc_custom_token_expiration_month_invalid_message</config_path>
 							</field>
@@ -1129,11 +1129,11 @@
 							<label>Expiration Year Field</label>
 							<attribute type="expanded">0</attribute>
 							<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
-							<field id="token_expiration_year_placeholder" translate="label" type="text" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+							<field id="token_expiration_year_placeholder" translate="label" type="text" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
 								<label>Placeholder</label>
 								<config_path>payment/fiserv_commercehub/sdc_custom_token_expiration_year_placeholder</config_path>
 							</field>
-							<field id="token_expiration_year_invalid" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+							<field id="token_expiration_year_invalid" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="1">
 								<label>Invalid Field Message</label>
 								<config_path>payment/fiserv_commercehub/sdc_custom_token_expiration_year_invalid_message</config_path>
 							</field>
