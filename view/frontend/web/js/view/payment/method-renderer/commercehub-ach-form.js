@@ -535,7 +535,7 @@ define(
 
             async initCheckoutSdk(billingAddress) {
                 const billingPayload = this.buildBillingAddressPayload(billingAddress);
-                const credsResponse = await chSession({billingAddress: billingPayload});
+                const credsResponse = await chSession({ billingAddress: billingPayload, paymentCode: this.code });
                 this.paymentSessionData = credsResponse["ch_credentials"];
 
                 this.contextId = crypto.randomUUID();
