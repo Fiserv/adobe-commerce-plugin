@@ -76,6 +76,7 @@ define([
         initchAdapter: async function () {
             var self = this;
             var config = (window.checkoutConfig && window.checkoutConfig.payment) ? window.checkoutConfig.payment[self.getCode()] : {};
+            this.logPayPalScriptTags('start of initchAdapter (baseline)');
             fullScreenLoader.startLoader();
             try {
                 if (!window.fiserv || typeof window.fiserv.components.paypal !== 'function') {
@@ -97,7 +98,9 @@ define([
 
                 self.paymentPayload.sessionId = creds[chAdapter.sessionIdKey];
                 await chAdapter.initSdk(config, creds);
+                this.logPayPalScriptTags('after initSdk (before setLocale)');
                 await this.applySdkLocale(config);
+                this.logPayPalScriptTags('after applySdkLocale');
                 const shippingAddress = this.getMapShippingAddress(this.getShippingAddress());
                 const paypalComponentConfig = {
                     intent: sessionIntent,
@@ -105,8 +108,10 @@ define([
                 };
                 const paypalComponent = await chAdapter.loadPayPalComponent(paypalComponentConfig);
                 this.paypalComponent = paypalComponent;
+                this.logPayPalScriptTags('after loadPayPalComponent');
                 const buttonsConfig = config.buttonConfig;
                 await this.renderPayPalButtons(buttonsConfig);
+                this.logPayPalScriptTags('after renderPayPalButtons');
                 this.initializedAmount = quote.totals()['grand_total'];
                 this.observeTotals();
             } catch (error) {
@@ -144,20 +149,78 @@ define([
             const rawLocale = config.locale || document.documentElement.lang || navigator.language;
             const sdkLocale = commercehubSdkLocale.mapToSdkLocale(rawLocale);
 
+            // eslint-disable-next-line no-console
+            console.log(
+                '[PayPal locale debug] config.locale=%o | document.documentElement.lang=%o | navigator.language=%o | resolved rawLocale=%o | mapped sdkLocale=%o',
+                config.locale,
+                document.documentElement.lang,
+                navigator.language,
+                rawLocale,
+                sdkLocale
+            );
+
             if (!window.fiserv || typeof window.fiserv.context !== 'function') {
+                // eslint-disable-next-line no-console
+                console.warn('[PayPal locale debug] window.fiserv.context() is not available - cannot set SDK locale.');
                 return;
             }
 
             try {
                 const context = window.fiserv.context();
 
+                // eslint-disable-next-line no-console
+                console.log(
+                    '[PayPal locale debug] window.fiserv.context() returned:',
+                    context,
+                    '| typeof context.setLocale =',
+                    context && typeof context.setLocale
+                );
+
                 if (context && typeof context.setLocale === 'function') {
-                    await context.setLocale(sdkLocale);
+                    const result = await context.setLocale(sdkLocale);
+                    // eslint-disable-next-line no-console
+                    console.log('[PayPal locale debug] context.setLocale(' + sdkLocale + ') resolved with:', result);
+                } else {
+                    // eslint-disable-next-line no-console
+                    console.warn('[PayPal locale debug] context.setLocale is not a function - SDK version may not support it for this component.');
                 }
             } catch (error) {
                 // Unsupported/malformed locale for this SDK version - SDK keeps
                 // rendering in its default (English). Not fatal to checkout.
                 console.warn('[PayPal] Unable to set SDK locale to ' + sdkLocale + ':', error);
+            }
+        },
+
+        /**
+         * DIAGNOSTIC ONLY (temporary): scans the document for any script tags
+         * that look like they belong to PayPal's own JS SDK (loaded by the
+         * CommerceHub `paypal()` component under the hood) and logs their
+         * `src` (including any `locale` query param baked into the URL) plus
+         * the current `document.documentElement.lang`. PayPal's official SDK
+         * bakes its display locale into the script URL at LOAD time - if this
+         * never changes across checkpoints, or never contains our resolved
+         * locale, that confirms CommerceHub's `context().setLocale()` call
+         * (which only affects `checkoutContext.locale`) is not propagating to
+         * the underlying PayPal script, and the button's language is coming
+         * from somewhere else entirely (or is simply not configurable here).
+         *
+         * @param {String} checkpoint - label identifying where in the flow this was called
+         */
+        logPayPalScriptTags: function (checkpoint) {
+            try {
+                const scripts = Array.prototype.slice.call(document.querySelectorAll('script[src]'))
+                    .filter((s) => /paypal/i.test(s.src))
+                    .map((s) => s.src);
+
+                // eslint-disable-next-line no-console
+                console.log(
+                    '[PayPal script-tag debug] checkpoint="' + checkpoint + '" | document.documentElement.lang=' +
+                    document.documentElement.lang + ' | matching <script> tags:',
+                    scripts.length ? scripts : '(none found yet)'
+                );
+            } catch (error) {
+                // eslint-disable-next-line no-console
+                console.warn('[PayPal script-tag debug] Failed to scan script tags at checkpoint "' + checkpoint + '":', error);
             }
         },
 
