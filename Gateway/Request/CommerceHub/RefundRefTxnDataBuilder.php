@@ -8,6 +8,7 @@ namespace Fiserv\Payments\Gateway\Request\CommerceHub;
 use \Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use \Fiserv\Payments\Lib\CommerceHub\Model\ReferenceTransactionDetails;
 use \Magento\Payment\Gateway\Request\BuilderInterface;
+use \Magento\Framework\Exception\LocalizedException;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 
 /**
@@ -50,17 +51,24 @@ class RefundRefTxnDataBuilder implements BuilderInterface
 		$orderDO = $paymentDO->getOrder();
 		$orderIncrementId = $orderDO->getOrderIncrementId();
 
-		$captureToRefund = $payment->getParentTransactionId() ?: $payment->getLastTransId();
-		// $captureToRefund = $payment->getAuthorizationTransaction()->getAdditionalInformation('bluepay_capture_transaction_id');
-		// if (!empty($captureToRefund)) {
-		// 	$paymentToken = $captureToRefund;
-		// }
+		// Pay by Link: the primary charge happens externally when the shopper
+		// completes the hosted link, so the referenceable financial transaction
+		// id lives only in `pbl_transaction_id`. The parent/last transaction id
+		// is NOT a referenceable transaction and would fail with CommerceHub
+		// error 801. Mirror the capture/settle and cancel builders here.
+		$captureToRefund = '';
+		if ($payment->getMethod() === 'fiserv_pay_by_link') {
+			$captureToRefund = (string) $payment->getAdditionalInformation('pbl_transaction_id');
+		}
 
-		// $chargeTransaction = $payment->getAuthorizationTransaction();
+		if ($captureToRefund === '') {
+			$captureToRefund = $payment->getParentTransactionId() ?: $payment->getLastTransId();
+		}
+
 		if (empty($captureToRefund)) 
 		{
 			$this->logger->logError(2, "Refund reference transaction data builder was unable to find auth transaction to refund", "Order ID: $orderIncrementId");
-			throw new Exception("Unable to locate charge transaction to refund.");
+			throw new LocalizedException(__("Unable to locate charge transaction to refund."));
 		}
 		//$chargeTxnId = $chargeTransaction->getTxnId(); //NOTE: NOT "getTransactionId()", which seems to return primary key
 		

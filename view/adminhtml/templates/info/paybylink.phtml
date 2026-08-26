@@ -1,0 +1,80 @@
+<?php
+/** @var \Fiserv\Payments\Block\Info\PayByLink $block */
+$url = $block->getPayByLinkUrl();
+$transactionId = $block->getTransactionId();
+$createdAt = $block->getCreatedAt();
+$expiresAt = $block->getExpiresAt();
+$status = $block->getPblStatus();
+$error = $block->getPblError();
+$errorGuidance = $block->getPblErrorGuidance();
+$errorCode = $block->getPblErrorCode();
+$isExpired = $block->isExpired();
+
+$displayStatus = $status;
+if ($isExpired && $status === 'unpaid') {
+    $displayStatus = 'expired';
+}
+?>
+<table class="data-table admin__table-secondary" style="width:100%;">
+    <tbody>
+        <tr>
+            <th><?= $block->escapeHtml(__('Payment Method')) ?></th>
+            <td><?= $block->escapeHtml(__('Pay by Link')) ?></td>
+        </tr>
+        <?php if ($url): ?>
+        <tr>
+            <th><?= $block->escapeHtml(__('Payment Link')) ?></th>
+            <td>
+                <a href="<?= $block->escapeUrl($url) ?>" target="_blank" rel="noopener noreferrer">
+                    <?= $block->escapeHtml($url) ?>
+                </a>
+            </td>
+        </tr>
+        <?php endif; ?>
+
+        <?php if ($transactionId): ?>
+        <tr>
+            <th><?= $block->escapeHtml(__('Transaction ID')) ?></th>
+            <td><?= $block->escapeHtml($transactionId) ?></td>
+        </tr>
+        <?php endif; ?>
+        <?php if ($createdAt): ?>
+        <tr>
+            <th><?= $block->escapeHtml(__('Link Created')) ?></th>
+            <td><?= $block->escapeHtml($createdAt) ?></td>
+        </tr>
+        <?php endif; ?>
+        <?php if ($expiresAt): ?>
+        <tr>
+            <th><?= $block->escapeHtml(__('Link Expires')) ?></th>
+            <td><?= $block->escapeHtml($expiresAt) ?></td>
+        </tr>
+        <?php endif; ?>
+        <tr>
+            <th><?= $block->escapeHtml(__('Status')) ?></th>
+            <td>
+                <span class="pbl-status pbl-status-<?= $block->escapeHtmlAttr($displayStatus) ?>">
+                    <?= $block->escapeHtml(ucfirst($displayStatus)) ?>
+                </span>
+            </td>
+        </tr>
+        <?php if ($error): ?>
+        <tr>
+            <th><?= $block->escapeHtml(__('Error')) ?></th>
+            <td style="color:#e22626;"><?= $block->escapeHtml($error) ?></td>
+        </tr>
+        <?php endif; ?>
+        <?php if ($errorGuidance): ?>
+        <tr>
+            <th><?= $block->escapeHtml(__('Recommended Next Step')) ?></th>
+            <td><?= $block->escapeHtml($errorGuidance) ?></td>
+        </tr>
+        <?php endif; ?>
+        <?php if ($errorCode): ?>
+        <tr>
+            <th><?= $block->escapeHtml(__('Reference Code')) ?></th>
+            <td><?= $block->escapeHtml($errorCode) ?></td>
+        </tr>
+        <?php endif; ?>
+    </tbody>
+</table>

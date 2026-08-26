@@ -25,7 +25,7 @@
 				<prod_client_url><![CDATA[https://prod.api.fiservapps.com/ch/sdk/v1/commercehub-client-sdk.js]]></prod_client_url>
 				<cert_client_url><![CDATA[https://cert.api.fiservapps.com/ch/sdk/v1/commercehub-client-sdk.js]]></cert_client_url>
 				<qa_client_url><![CDATA[https://qa.api.fiservapis.com/ch/sdk/v1/commercehub-client-sdk.js]]></qa_client_url>
-				<api_environment>CERT</api_environment>
+				<api_environment>QA</api_environment>
 				<payment_action>AUTH</payment_action>
 				<cc_types>AE,VI,MC,DI,JCB,DN</cc_types>
 				<tokenization_strategy>CUSTOMER</tokenization_strategy>
@@ -460,6 +460,29 @@
 				<can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
 				<can_void>1</can_void>
 			</fiserv_googlepay>
+			<fiserv_pay_by_link>
+				<title>Pay by Link</title>
+				<active>1</active>
+				<max_expiry>2880</max_expiry>
+				<expiry_time>{"days":1,"hours":23,"minutes":59}</expiry_time>
+				<payment_page_id></payment_page_id>
+				<optional_note>0</optional_note>
+				<order_status>pending</order_status>
+				<group>fiserv_group</group>
+				<model>FiservPayByLinkFacade</model>
+				<payment_action>AUTH</payment_action>
+				<is_gateway>0</is_gateway>
+				<can_initialize>0</can_initialize>
+				<can_order>1</can_order>
+				<can_use_internal>1</can_use_internal>
+				<can_use_checkout>0</can_use_checkout>
+				<can_authorize>0</can_authorize>
+				<can_capture>1</can_capture>
+				<can_capture_partial>1</can_capture_partial>
+				<can_refund>1</can_refund>
+				<can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
+				<can_void>1</can_void>
+			</fiserv_pay_by_link>
 		</payment>
 	</default>
 </config>

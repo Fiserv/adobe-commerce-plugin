@@ -148,7 +148,6 @@
 	overflow-x: auto;
 }
 
-
 #fiserv-admin-surcharge-total-row td {
 	color: #333;
 }
@@ -158,3 +157,14 @@
 	font-style: italic;
 }
 
+.pbl-expr-picker {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin-bottom: 20px;
+	margin-top: 10px;
+}
+
+.pbl-expr-picker .section-heading {
+	width: 100%;
+}
