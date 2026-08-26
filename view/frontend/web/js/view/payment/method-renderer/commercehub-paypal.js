@@ -260,9 +260,9 @@ define([
             const mappedAddress = {
                 street: streetArr[0] || undefined,
                 city: address.city || undefined,
-                stateOrProvince: address.region || address.region_id || undefined,
+                stateOrProvince: address.region || undefined,
                 postalCode: address.postcode || undefined,
-                country: address.country_id || address.countryId || address.country || undefined
+                country: address.countryId || undefined
             };
             return {
                 firstName: address.firstname || undefined,
