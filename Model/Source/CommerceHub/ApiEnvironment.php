@@ -44,6 +44,10 @@ class ApiEnvironment implements ArrayInterface
 	{
 		return [
 			[
+				'value' => self::ENVIRONMENT_QA,
+				'label' => __(self::ENVIRONMENT_QA)
+			],
+			[
 				'value' => self::ENVIRONMENT_CERT,
 				'label' => __(self::ENVIRONMENT_CERT)
 			],

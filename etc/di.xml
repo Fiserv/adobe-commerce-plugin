@@ -110,10 +110,141 @@
 		<arguments>
 			<argument name="executors" xsi:type="array">
 				<item name="fiserv_commercehub" xsi:type="string">FiservChargesCommandManager</item>
-				<item name="fiserv_applepay" xsi:type="string">FiservChargesCommandManager</item>-
+				<item name="fiserv_applepay" xsi:type="string">FiservChargesCommandManager</item>
 				<item name="fiserv_samsung_pay" xsi:type="string">FiservChargesCommandManager</item>
 				<item name="fiserv_ach" xsi:type="string">FiservAchCommandManager</item>
+				<item name="fiserv_pay_by_link" xsi:type="string">FiservPayByLinkCommandManager</item>
 			</argument>
+		</arguments>
+	</type>
+
+	<virtualType name="FiservPayByLinkFacade" type="Magento\Payment\Model\Method\Adapter">
+		<arguments>
+			<argument name="code" xsi:type="const">Fiserv\Payments\Model\Config\PayByLink\ConfigProvider::CODE</argument>
+			<argument name="formBlockType" xsi:type="string">Fiserv\Payments\Block\CommerceHub\Pbl\Form</argument>
+			<argument name="infoBlockType" xsi:type="string">Fiserv\Payments\Block\Info\PayByLink</argument>
+			<argument name="valueHandlerPool" xsi:type="object">FiservPayByLinkValueHandlerPool</argument>
+			<argument name="commandPool" xsi:type="object">FiservPayByLinkCommandPool</argument>
+		</arguments>
+	</virtualType>
+
+	<type name="Fiserv\Payments\Model\PayByLink\Method">
+		<arguments>
+			<argument name="commandPool" xsi:type="object">FiservCommerceHubCommandPool</argument>
+		</arguments>
+	</type>
+
+	<!-- Value Handlers -->
+	<virtualType name="FiservPayByLinkValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+		<arguments>
+			<argument name="configInterface" xsi:type="object">Fiserv\Payments\Gateway\Config\PayByLink\Config</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservPayByLinkValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+		<arguments>
+			<argument name="handlers" xsi:type="array">
+				<item name="default" xsi:type="string">FiservPayByLinkValueHandler</item>
+				<item name="payment_action" xsi:type="string">Fiserv\Payments\Gateway\Config\PayByLink\PaymentActionHandler</item>
+				<item name="can_void" xsi:type="string">Fiserv\Payments\Gateway\Config\CanVoidHandler</item>
+				<item name="can_refund" xsi:type="string">Fiserv\Payments\Gateway\Config\CanRefundHandler</item>
+				<item name="can_cancel" xsi:type="string">Fiserv\Payments\Gateway\Config\CanVoidHandler</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<!-- Command Pool -->
+	<!--
+		Secondary transactions (capture/settle, refund, void, cancel) are routed to
+		the command pool of the payment method the shopper actually used to pay the
+		link. The paid method is persisted on the payment as `pbl_paid_method` on
+		completion and read by SecondaryTransactionRouter.
+	-->
+	<virtualType name="FiservPayByLinkCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
+		<arguments>
+			<argument name="commands" xsi:type="array">
+				<item name="order" xsi:type="string">Fiserv\Payments\Gateway\Command\PayByLink\CreateSessionCommand</item>
+				<item name="capture" xsi:type="string">FiservPayByLinkCaptureRouter</item>
+				<item name="settle" xsi:type="string">FiservPayByLinkSettleRouter</item>
+				<item name="refund" xsi:type="string">FiservPayByLinkRefundRouter</item>
+				<item name="void" xsi:type="string">FiservPayByLinkVoidRouter</item>
+				<item name="cancel" xsi:type="string">FiservPayByLinkCancelRouter</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<!-- Secondary transaction routers: forward the command to the paid method's command pool -->
+	<virtualType name="FiservPayByLinkCaptureRouter" type="Fiserv\Payments\Gateway\Command\PayByLink\SecondaryTransactionRouter">
+		<arguments>
+			<argument name="commandCode" xsi:type="string">capture</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservPayByLinkSettleRouter" type="Fiserv\Payments\Gateway\Command\PayByLink\SecondaryTransactionRouter">
+		<arguments>
+			<argument name="commandCode" xsi:type="string">settle</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservPayByLinkRefundRouter" type="Fiserv\Payments\Gateway\Command\PayByLink\SecondaryTransactionRouter">
+		<arguments>
+			<argument name="commandCode" xsi:type="string">refund</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservPayByLinkVoidRouter" type="Fiserv\Payments\Gateway\Command\PayByLink\SecondaryTransactionRouter">
+		<arguments>
+			<argument name="commandCode" xsi:type="string">void</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservPayByLinkCancelRouter" type="Fiserv\Payments\Gateway\Command\PayByLink\SecondaryTransactionRouter">
+		<arguments>
+			<argument name="commandCode" xsi:type="string">cancel</argument>
+		</arguments>
+	</virtualType>
+
+	<!-- Shared router configuration: pools, method map, default -->
+	<type name="Fiserv\Payments\Gateway\Command\PayByLink\SecondaryTransactionRouter">
+		<arguments>
+			<argument name="pools" xsi:type="array">
+				<item name="commercehub" xsi:type="object">FiservCommerceHubCommandPool</item>
+				<item name="orderapi" xsi:type="object">FiservOrderApiCommandPool</item>
+			</argument>
+			<argument name="methodMap" xsi:type="array">
+				<item name="CARD" xsi:type="string">commercehub</item>
+				<item name="PAYMENTCARD" xsi:type="string">commercehub</item>
+				<item name="CREDITCARD" xsi:type="string">commercehub</item>
+				<item name="APPLEPAY" xsi:type="string">commercehub</item>
+				<item name="APPLE" xsi:type="string">commercehub</item>
+				<item name="GOOGLEPAY" xsi:type="string">commercehub</item>
+				<item name="GOOGLE" xsi:type="string">commercehub</item>
+				<item name="PAYPAL" xsi:type="string">orderapi</item>
+				<item name="VENMO" xsi:type="string">orderapi</item>
+			</argument>
+			<argument name="defaultPoolKey" xsi:type="string">commercehub</argument>
+		</arguments>
+	</type>
+
+	<!-- Command Manager (resolves PBL commands via CommandManagerPool by method code) -->
+	<virtualType name="FiservPayByLinkCommandManager" type="Magento\Payment\Gateway\Command\CommandManager">
+		<arguments>
+			<argument name="commandPool" xsi:type="object">FiservPayByLinkCommandPool</argument>
+		</arguments>
+	</virtualType>
+
+	<!-- Bind the PBL gateway config to the method code -->
+	<type name="Fiserv\Payments\Gateway\Config\PayByLink\Config">
+		<arguments>
+			<argument name="methodCode" xsi:type="const">Fiserv\Payments\Model\Config\PayByLink\ConfigProvider::CODE</argument>
+		</arguments>
+	</type>
+
+	<!-- Pay by Link order command: creates the payment-link session at order placement -->
+	<type name="Fiserv\Payments\Gateway\Command\PayByLink\CreateSessionCommand">
+		<arguments>
+			<argument name="requestBuilder" xsi:type="object">Fiserv\Payments\Gateway\Request\PayByLink\SessionDataBuilder</argument>
+			<argument name="handler" xsi:type="object">Fiserv\Payments\Gateway\Response\PayByLink\SessionHandler</argument>
 		</arguments>
 	</type>
 
@@ -419,12 +550,22 @@
 		<plugin name="valueLinkPaymentPlace" type="Fiserv\Payments\Model\Plugin\Valuelink\PaymentPlace" />
 		<plugin name="fiservSurchargeOrderTotal" type="Fiserv\Payments\Model\Plugin\CommerceHub\SurchargeOrderTotalPlugin" sortOrder="100"/>
 		<plugin name="fiservSurchargeAuthorizationComment" type="Fiserv\Payments\Model\Plugin\CommerceHub\SurchargeAuthorizationComment" sortOrder="200"/>
+		<plugin name="fiservPayByLinkPaymentSanitizer" type="Fiserv\Payments\Model\Plugin\PayByLink\PaymentSanitizer" />
 	</type>
 	<type name="Magento\Sales\Model\Order\CreditmemoFactory">
 		<plugin name="commerceHubCreditmemoSurchargeAdjustment" type="Fiserv\Payments\Model\Plugin\CommerceHub\CreditmemoSurchargeAdjustment" sortOrder="100"/>
 	</type>
 	<type name="Magento\Sales\Model\Order\Invoice">
 		<plugin name="commerceHubInvoiceSurchargeAdjustment" type="Fiserv\Payments\Model\Plugin\CommerceHub\InvoiceSurchargeAdjustment" sortOrder="100"/>
+	</type>
+	<type name="Magento\Quote\Model\Quote\Payment">
+		<plugin name="fiservPayByLinkQuotePaymentSanitizer" type="Fiserv\Payments\Model\Plugin\PayByLink\PaymentSanitizer" />
+	</type>
+	<type name="Magento\Quote\Model\ResourceModel\Quote\Payment">
+		<plugin name="fiservPayByLinkQuotePaymentResourceSanitizer" type="Fiserv\Payments\Model\Plugin\PayByLink\PaymentResourceSanitizer" />
+	</type>
+	<type name="Magento\Sales\Model\ResourceModel\Order\Payment">
+		<plugin name="fiservPayByLinkOrderPaymentResourceSanitizer" type="Fiserv\Payments\Model\Plugin\PayByLink\PaymentResourceSanitizer" />
 	</type>
 	<type name="Magento\Quote\Model\Quote\TotalsReader">
 		<plugin name="valueLinkTotalsReader" type="Fiserv\Payments\Model\Plugin\Valuelink\TotalsReader" />
@@ -1349,4 +1490,33 @@
 			</argument>
 		</arguments>
 	</type>
+
+	<!-- Payment Link Cancel Request Adapter -->
+	<type name="Fiserv\Payments\Model\Adapter\CommerceHub\PaymentLinkCancelRequest">
+		<arguments>
+			<argument name="chConfig" xsi:type="object">Fiserv\Payments\Gateway\Config\CommerceHub\Config</argument>
+			<argument name="httpAdapter" xsi:type="object">Fiserv\Payments\Model\Adapter\CommerceHub\ChHttpAdapter</argument>
+			<argument name="logger" xsi:type="object">Fiserv\Payments\Logger\MultiLevelLogger</argument>
+		</arguments>
+	</type>
+
+	<!-- Payment Link Session Create Request Adapter -->
+	<type name="Fiserv\Payments\Model\Adapter\CommerceHub\PaymentLinkSessionRequest">
+		<arguments>
+			<argument name="chConfig" xsi:type="object">Fiserv\Payments\Gateway\Config\CommerceHub\Config</argument>
+			<argument name="pblConfig" xsi:type="object">Fiserv\Payments\Gateway\Config\PayByLink\Config</argument>
+			<argument name="httpAdapter" xsi:type="object">Fiserv\Payments\Model\Adapter\CommerceHub\ChHttpAdapter</argument>
+			<argument name="logger" xsi:type="object">Fiserv\Payments\Logger\MultiLevelLogger</argument>
+			<!-- Force the frontend URL builder so PBL return URLs are never admin-scoped (avoids post-payment 404 from admin order creation). -->
+			<argument name="urlBuilder" xsi:type="object">Magento\Framework\Url</argument>
+		</arguments>
+	</type>
+	<!-- Plugin: attach Manage PayByLink block to sales order grid after setLayout -->
+	<type name="Magento\Backend\Block\Widget\Grid\Extended">
+		<plugin name="fiserv_payments_grid_setlayout_plugin" type="Fiserv\Payments\Plugin\Grid\SetLayoutPlugin" sortOrder="10"/>
+	</type>
+	<type name="Magento\Backend\Block\Dashboard\Grids">
+		<plugin name="fiserv_payments_dashboard_setlayout_plugin" type="Fiserv\Payments\Plugin\Grid\SetLayoutPlugin" sortOrder="10"/>
+	</type>
+
 </config>

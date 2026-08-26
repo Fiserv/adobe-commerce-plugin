@@ -1,0 +1,150 @@
+<?php
+	/** @var \Fiserv\Payments\Block\CommerceHub\Pbl\Form $block */
+	$code = $block->escapeHtml($block->getMethodCode());
+	$dayOptions = $block->getDayOptions();
+	$hourOptions = $block->getHourOptions();
+	$minuteOptions = $block->getMinuteOptions();
+	$notes = $block->areNotesEnabled();
+?>
+<link rel="stylesheet" type="text/css" href="<?= $block->escapeUrl($block->getViewFileUrl('Fiserv_Payments/css/ch-form-admin.css')); ?>">
+
+<fieldset class="admin__fieldset payment-method" id="payment_form_<?= /* @noEscape */ $code ?>_pbl"
+		style="display:none">
+	<div>
+		<div>
+			<div class="duration-field" style="margin-bottom: 12px;">
+				<label for="pbl_use_default_expiry">
+					<input type="checkbox" id="pbl_use_default_expiry" name="payment[additional_data][pbl_use_default_expiry]" value="1" />
+					<?= $block->escapeHtml(__('Use default expiration time')) ?>
+				</label>
+			</div>
+
+			<div class="pbl-expr-picker" id="pbl_custom_expiry_fields" role="group" aria-label="Pay-by-Link Expiration Picker">
+				<div class="section-heading">Link Expiration</div>
+				<div class="duration-field">
+					<label for="pbl-expr_days">Days</label>
+					<select name="payment[additional_data][pbl_expr_days]" id="pbl_expr_days">
+						<?php foreach ($dayOptions as $option): ?>
+							<?= /* @noEscape */ $option ?>
+						<?php endforeach; ?>
+					</select>
+				</div>
+
+				<div class="duration-field">
+					<label for="pbl-expr_hours">Hours</label>
+					<select name="payment[additional_data][pbl_expr_hours]" id="pbl_expr_hours">
+						<?php foreach ($hourOptions as $option): ?>
+							<?= /* @noEscape */ $option ?>
+						<?php endforeach; ?>
+					</select>
+				</div>
+
+				<div class="duration-field">
+					<label for="pbl-expr_minutes_">Minutes</label>
+					<select name="payment[additional_data][pbl_expr_minutes]" id="pbl_expr_minutes">
+						<?php foreach ($minuteOptions as $option): ?>
+							<?= /* @noEscape */ $option ?>
+						<?php endforeach; ?>
+					</select>
+				</div>
+			</div>
+			<?php if($notes): ?>
+				<div>Notes</div>
+				<div id="notes_container">
+					<textarea id="pbl_notes_input" name="payment[additional_data][pbl_notes]" rows="4" cols="50"></textarea>
+				</div>
+			<?php endif; ?>
+		</div>
+	</div>
+</fieldset>
+
+<script type="application/javascript">
+	(function () {
+		var METHOD_CODE = 'fiserv_pay_by_link';
+		var PAY_BY_LINK_SECTION = '#payment_form_fiserv_pay_by_link_pbl';
+		var PAYMENT_RADIO_SELECTOR = '[name="payment[method]"]';
+		var DEFAULT_EXPIRY_SELECTOR = '#pbl_use_default_expiry';
+		var CUSTOM_EXPIRY_SELECTOR = '#pbl_custom_expiry_fields';
+
+		function updateExpiryInputsState() {
+			var toggle = document.querySelector(DEFAULT_EXPIRY_SELECTOR);
+			var customWrap = document.querySelector(CUSTOM_EXPIRY_SELECTOR);
+			if (!toggle || !customWrap) {
+				return;
+			}
+
+			var useDefault = !!toggle.checked;
+			customWrap.style.opacity = useDefault ? '0.6' : '1';
+			customWrap.querySelectorAll('select').forEach(function (input) {
+				if (useDefault) {
+					input.setAttribute('disabled', 'disabled');
+				} else {
+					input.removeAttribute('disabled');
+				}
+			});
+		}
+
+		function updateMessageVisibility(isActive) {
+			var el = document.querySelector(PAY_BY_LINK_SECTION);
+			if (!el) return;
+			el.style.display = isActive ? 'block' : 'none';
+			if (isActive) {
+				el.classList.remove('sdc-hidden');
+				updateExpiryInputsState();
+				el.querySelectorAll('textarea').forEach(function(input) {
+					input.removeAttribute('disabled');
+				});
+			} else {
+				el.classList.add('sdc-hidden');
+				el.querySelectorAll('select, textarea').forEach(function(input) {
+					input.setAttribute('disabled', 'disabled');
+				});
+			}
+		}
+
+		function getSelectedPaymentMethodValue() {
+			var selected = null;
+			var radios = document.querySelectorAll(PAYMENT_RADIO_SELECTOR);
+			radios.forEach(function (r) {
+				if (r.checked) selected = r.value;
+			});
+			return selected;
+		}
+
+		if (typeof require === 'function') {
+			require(['jquery', 'domReady!'], function ($) {
+				var selected = $(PAYMENT_RADIO_SELECTOR + ':checked').val();
+				updateExpiryInputsState();
+				updateMessageVisibility(selected === METHOD_CODE);
+
+				$(document).off('change.paybylinkDefaultExpiry', DEFAULT_EXPIRY_SELECTOR)
+					.on('change.paybylinkDefaultExpiry', DEFAULT_EXPIRY_SELECTOR, function () {
+						updateExpiryInputsState();
+					});
+
+				$(document).off('change.paybylink', PAYMENT_RADIO_SELECTOR)
+					.on('change.paybylink', PAYMENT_RADIO_SELECTOR, function () {
+						updateMessageVisibility(this.value === METHOD_CODE);
+					});
+			});
+		} else {
+			document.addEventListener('DOMContentLoaded', function () {
+				updateExpiryInputsState();
+				updateMessageVisibility(getSelectedPaymentMethodValue() === METHOD_CODE);
+
+				var defaultToggle = document.querySelector(DEFAULT_EXPIRY_SELECTOR);
+				if (defaultToggle) {
+					defaultToggle.addEventListener('change', updateExpiryInputsState);
+				}
+
+				var radios = document.querySelectorAll(PAYMENT_RADIO_SELECTOR);
+				radios.forEach(function (r) {
+					r.addEventListener('change', function () {
+						updateMessageVisibility(this.value === METHOD_CODE);
+					});
+				});
+			});
+		}
+	})();
+</script>
+
