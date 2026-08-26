@@ -21,9 +21,9 @@ define(
 
 			let addr = {
 				"city" : quote.billingAddress().city,
-				"stateOrProvince" : quote.billingAddress().region,
+				"stateOrProvince" : getRegionCode(quote.billingAddress()) || quote.billingAddress().region,
 				"postalCode" : quote.billingAddress().postcode,
-				"country" : quote.billingAddress().country_id
+				"country" : quote.billingAddress().countryId
 			};
 
 			if (quote.billingAddress().street[0])
@@ -33,6 +33,48 @@ define(
 			if (quote.billingAddress().street[1])
 			{
 				addr["houseNumberOrName"] = quote.billingAddress().street[1];
+			}
+
+			return addr;
+		}
+
+		function getRegionCode(address)
+		{
+			if (!address) {
+				return undefined;
+			}
+			const region = address.region;
+			if (region && typeof region === 'object') {
+				return region.region_code || region.regionCode || region.code || undefined;
+			}
+			return address.regionCode || address.region_code || undefined;
+		}
+
+		function getShippingAddress()
+		{
+			const ship = quote.shippingAddress();
+			if (!ship) {
+				return undefined;
+			}
+
+			let addr = {
+				"firstName" : ship.firstname || undefined,
+				"lastName" : ship.lastname || undefined,
+				"address" : {
+					"city" : ship.city || undefined,
+					"stateOrProvince" : getRegionCode(ship),
+					"postalCode" : ship.postcode || undefined,
+					"country" : ship.countryId || undefined
+				}
+			};
+
+			if (ship.street && ship.street[0])
+			{
+				addr.address["street"] = ship.street[0];
+			}
+			if (ship.street && ship.street[1])
+			{
+				addr.address["houseNumberOrName"] = ship.street[1];
 			}
 
 			return addr;
@@ -73,10 +115,12 @@ define(
 			let amount = getAmount();
 			let customer = getCustomer();
 			let billingAddress = getBillingAddress();
+			let shippingAddress = getShippingAddress();
 			return {
 				"amount" : amount,
 				"customer" : customer,
 				"billingAddress" : billingAddress,
+				"shippingAddress" : shippingAddress,
 				"country" : "US"
 			};
 		}
