@@ -8,6 +8,7 @@ namespace Fiserv\Payments\Gateway\Request\CommerceHub;
 use \Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use \Fiserv\Payments\Lib\CommerceHub\Model\ReferenceTransactionDetails;
 use \Magento\Payment\Gateway\Request\BuilderInterface;
+use \Magento\Framework\Exception\LocalizedException;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 
 /**
@@ -50,17 +51,23 @@ class ReferenceTransactionDataBuilder implements BuilderInterface
 		$orderDO = $paymentDO->getOrder();
 		$orderIncrementId = $orderDO->getOrderIncrementId();
 
-
-		$authTransaction = $payment->getAuthorizationTransaction();
-		if ($authTransaction == null) 
-		{
-			$this->logger->logError(2, "Reference transaction data builder was unable to find auth transaction" , "Order ID: $orderIncrementId");
-			throw new \Exception("Unable to locate auth transaction for capture.");
+		$referenceTxnId = '';
+		if ($payment->getMethod() === 'fiserv_pay_by_link') {
+			$referenceTxnId = (string) $payment->getAdditionalInformation('pbl_transaction_id');
 		}
-		$authTxnId = $authTransaction->getTxnId(); //NOTE: NOT "getTransactionId()", which seems to return primary key
+
+		if ($referenceTxnId === '') {
+			$authTransaction = $payment->getAuthorizationTransaction();
+			if ($authTransaction == null)
+			{
+				$this->logger->logError(2, "Reference transaction data builder was unable to find auth transaction" , "Order ID: $orderIncrementId");
+				throw new LocalizedException(__("Unable to locate auth transaction for capture."));
+			}
+			$referenceTxnId = (string) $authTransaction->getTxnId(); // NOTE: NOT getTransactionId()
+		}
 		
 		$refTxn = new ReferenceTransactionDetails();
-		$refTxn->setReferenceTransactionId($authTxnId);
+		$refTxn->setReferenceTransactionId($referenceTxnId);
 
 		$this->logger->logDebug(3, "Reference Transaction Data Builder:\n" . $refTxn->__toString(), "Order ID: $orderIncrementId");
 

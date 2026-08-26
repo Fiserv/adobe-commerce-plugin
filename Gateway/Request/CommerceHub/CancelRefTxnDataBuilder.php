@@ -8,6 +8,7 @@ namespace Fiserv\Payments\Gateway\Request\CommerceHub;
 use \Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use \Fiserv\Payments\Lib\CommerceHub\Model\ReferenceTransactionDetails;
 use \Magento\Payment\Gateway\Request\BuilderInterface;
+use \Magento\Framework\Exception\LocalizedException;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 
 
@@ -50,16 +51,22 @@ class CancelRefTxnDataBuilder implements BuilderInterface
 		$payment = $paymentDO->getPayment();
 		$orderDO = $paymentDO->getOrder();
 
-
-		$authTransaction = $payment->getAuthorizationTransaction();
-		if ($authTransaction == null) 
-		{
-			throw new Exception("Unable to locate auth transaction to cancel.");
+		$referenceTxnId = '';
+		if ($payment->getMethod() === 'fiserv_pay_by_link') {
+			$referenceTxnId = (string) $payment->getAdditionalInformation('pbl_transaction_id');
 		}
-		$authTxnId = $authTransaction->getTxnId(); //NOTE: NOT "getTransactionId()", which seems to return primary key
+
+		if ($referenceTxnId === '') {
+			$authTransaction = $payment->getAuthorizationTransaction();
+			if ($authTransaction == null)
+			{
+				throw new LocalizedException(__("Unable to locate auth transaction to cancel."));
+			}
+			$referenceTxnId = (string) $authTransaction->getTxnId(); // NOTE: NOT getTransactionId()
+		}
 		
 		$refTxn = new ReferenceTransactionDetails();
-		$refTxn->setReferenceTransactionId($authTxnId);
+		$refTxn->setReferenceTransactionId($referenceTxnId);
 
 		$orderIncrementId = $orderDO->getOrderIncrementId();
 		$this->logger->logDebug(3, "Cancel Reference Transaction Data Builder:\n" . $refTxn->__toString(),"Order ID: $orderIncrementId");
