@@ -1,0 +1,261 @@
+/* PayByLink Dashboard Styles */
+
+/* Block and Title */
+.block-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+/* Status styling */
+.status-expired {
+    color: #f44336;
+    font-weight: 600;
+}
+
+/* Date display */
+.date-wrap {
+    display: flex;
+    flex-direction: column;
+}
+.date-main {
+    font-weight: 600;
+    line-height: 1;
+}
+.date-time {
+    font-size: 0.85em;
+    color: #6b6b6b;
+    line-height: 1;
+}
+
+/* Action icons */
+.action-icons .action-retry svg,
+.action-icons .action-copy svg {
+    vertical-align: middle;
+    display: inline-block;
+}
+.action-retry.disabled {
+    opacity: 0.45;
+    pointer-events: none;
+}
+.action-icons a.action-retry {
+    text-decoration: none;
+}
+
+/* Copy Link Button Styles */
+.copy-link-btn {
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: #0074c6;
+    font-size: 13px;
+    font-weight: 600;
+}
+.copy-link-btn:hover {
+    text-decoration: underline;
+}
+
+/* Compact Modal Styles */
+.copy-link-modal .modal-content,
+.copy-link-modal .modal-inner-content {
+    padding: 20px !important;
+}
+.copy-link-modal .modal-header {
+    display: none !important;
+}
+.copy-link-modal .modal-footer {
+    display: none !important;
+}
+.copy-link-modal {
+    background: transparent !important;
+    box-shadow: none !important;
+}
+.copy-link-modal .modal-inner-content {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+    max-width: 480px !important;
+    width: 480px !important;
+    position: relative !important;
+    border: 1px solid #e0e0e0;
+}
+.copy-link-modal .modal-popup {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    margin: 0 !important;
+}
+.modal-close-btn {
+    position: absolute !important;
+    top: 12px !important;
+    right: 12px !important;
+    background: #f5f5f5 !important;
+    border: none !important;
+    font-size: 22px !important;
+    cursor: pointer !important;
+    color: #666 !important;
+    padding: 6px 10px !important;
+    line-height: 1 !important;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 50%;
+    transition: all 0.2s ease !important;
+}
+.modal-close-btn:hover {
+    background: #e0e0e0 !important;
+    color: #333 !important;
+}
+.modal-success {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: #008000;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+    border-radius: 6px;
+    margin-bottom: 15px;
+    border: 1px solid #a5d6a7;
+}
+.modal-success.show {
+    display: flex;
+}
+.modal-success svg {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+}
+.modal-link-row {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 12px;
+    align-items: center;
+    width: 100%;
+    margin-top: 5px;
+}
+.modal-link-row .modal-link-box {
+    flex: 1 1 auto !important;
+    display: block !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: calc(100% - 110px) !important;
+}
+.modal-link-row .modal-btn-copy {
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: auto !important;
+    height: auto !important;
+    background: linear-gradient(135deg, #f26322 0%, #e05515 100%) !important;
+    padding: 12px 24px !important;
+    border-radius: 6px !important;
+    box-shadow: 0 2px 8px rgba(242, 99, 34, 0.3) !important;
+    transition: all 0.2s ease !important;
+}
+.modal-link-row .modal-btn-copy:hover {
+    background: linear-gradient(135deg, #e05515 0%, #c94a10 100%) !important;
+    box-shadow: 0 4px 12px rgba(242, 99, 34, 0.4) !important;
+    transform: translateY(-1px);
+}
+.modal-link-box {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 12px 14px;
+    word-break: break-all;
+    font-size: 13px;
+    color: #495057;
+    max-height: 42px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+}
+.modal-btn-copy {
+    color: #fff;
+    border: 0;
+    padding: 10px 18px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* Filter Panel Styles */
+.admin__filter-panel {
+    background: #f8f9fa;
+    border: 1px solid #dcdcdc;
+    border-radius: 4px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+.admin__filter-panel-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+.filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 180px;
+}
+.filter-field-inline {
+    flex-direction: row;
+    align-items: center;
+    min-width: auto;
+}
+.filter-field-inline label {
+    min-width: 130px;
+    margin-bottom: 0;
+}
+.filter-range {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.range-separator {
+    color: #666;
+}
+.filter-range .admin__control-text {
+    width: 120px;
+}
+.filter-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e0e0e0;
+}
+.filter-actions .action-primary {
+    background: #f26322;
+    border-color: #f26322;
+}
+.filter-actions .action-primary:hover {
+    background: #e05515;
+    border-color: #e05515;
+}
+/* Calendar icon background */
+.admin__datepicker {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    padding-right: 32px;
+}
