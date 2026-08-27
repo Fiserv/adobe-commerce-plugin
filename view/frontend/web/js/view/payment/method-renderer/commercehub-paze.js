@@ -36,8 +36,9 @@ define([
             isPlaceOrderActionAllowed: ko.observable(false),
             initializedAmount: 0.00,
             reloadOnRender: false,
-            pazeComponent: null,
-            pazeInitialized: false
+            pazeInitialized: false,
+            totalsSubscription: null,
+            paymentMethodsWatcherAttached: false
         },
 
         initialize: async function () {
@@ -75,14 +76,24 @@ define([
         },
 
         observeTotals: function () {
-            quote.totals.subscribe((totals) => {
+            if (this.totalsSubscription) {
+                return;
+            }
+
+            this.totalsSubscription = quote.totals.subscribe((totals) => {
+                if (!totals || typeof totals.grand_total === 'undefined') {
+                    return;
+                }
+
+                const currentTotal = Number(totals.grand_total);
+                const initialTotal = Number(this.initializedAmount);
+
                 if (
                     this.getCode() === this.isChecked() &&
-                    this.initializedAmount &&
-                    this.initializedAmount > 0.00 &&
-                    totals &&
-                    totals['grand_total'] &&
-                    totals['grand_total'] != this.initializedAmount
+                    initialTotal > 0 &&
+                    Number.isFinite(currentTotal) &&
+                    Number.isFinite(initialTotal) &&
+                    currentTotal !== initialTotal
                 ) {
                     location.reload();
                 }
@@ -154,35 +165,16 @@ define([
             };
         },
 
-        /**
-         * Build Paze selectPaymentMethod parameters (Step 5 of Paze documentation)
-         * @returns {Object}
-         */
-        buildPazeSelectParams: function () {
-            const amount = this.getAmount();
-
-            return {
-                amount: amount,
-            };
-        },
-
-
         loadPazeForm: async function () {
             const config = window.checkoutConfig.payment[this.getCode()];
             try {
                 fullScreenLoader.startLoader();
                 $('#paze-button-container').empty();
 
-                // Initialize Paze component (Step 4 of documentation)
-                const displayName = config.displayName || 'My Site';
-                const cspNonce = config.cspNonce || crypto.randomUUID();
-                const pazeComponentConfig = {
-                    displayName: displayName,
-                    cspNonce: cspNonce
-                };
-
-                // Get credentials from session
-                const creds = await chSession({ paymentCode: this.getCode() });
+		const [creds, transactionData] = await Promise.all([
+                    chSession({}),
+                    this.getOrderData()
+                ]);
 
                 if (!creds?.ch_credentials) {
                     throw new Error('No credentials returned from backend');
@@ -190,108 +182,137 @@ define([
 
                 this.paymentPayload.sessionId = creds.ch_credentials.sessionId;
                 this.paymentPayload.accessToken = creds.ch_credentials.accessToken;
+
+                // Keep Adobe flow, but initialize SDK before rendering Paze button.
                 await chAdapter.initSdk(config, creds.ch_credentials);
 
-                this.pazeComponent = await chAdapter.loadPazeComponent(pazeComponentConfig);
-                this.pazeInitialized = true;
+                // Enforce context-based render path only.
+                if (!this.renderPazeContext(config, transactionData)) {
+                    throw new Error('Unable to render Paze with SDK context path');
+                }
 
-                // Create Paze payment button
-                await this.renderPazeButton();
                 this.initializedAmount = quote.totals()['grand_total'];
                 this.observeTotals();
 
             } catch (error) {
-                globalMessageList.addErrorMessage({
-                    message: $t('Paze error: ') + error.message
-                });
-                console.error('[Paze] Error loading Paze form:', error);
+                this.sdkLoadFailure(error);
             } finally {
+                // Do not keep checkout blocked while waiting for async Paze events.
                 fullScreenLoader.stopLoader();
             }
         },
 
-        /**
-         * Renders Paze payment button
-         * @returns {Promise}
-         */
-        renderPazeButton: async function () {
-            try {
-                const container = document.querySelector('#paze-button-container');
-                if (container) {
-                    while (container.children.length > 0) {
-                        container.removeChild(container.lastChild);
-                    }
-                }
-
-		// Create Paze payment button
-		const pazeButton = document.createElement('button');
-		pazeButton.type = 'button';
-
-                pazeButton.className = 'action paze-pay-button';
-                pazeButton.id = 'paze-pay-button';
-
-		pazeButton.textContent = $t('Pay with Paze');
-		pazeButton.style.cssText = 'background-color: #0066b2; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%;';
-
-                pazeButton.addEventListener('click', async () => {
-                    try {
-                        await this.selectPazePaymentMethod();
-                    } catch (error) {
-                        console.error('[Paze] Button click error:', error);
-                    }
-                });
-
-                if (container) {
-                    container.appendChild(pazeButton);
-                }
-
-            } catch (error) {
-                console.error('[Paze] Error rendering Paze button:', error);
+        renderPazeContext: function (config, transactionData) {
+            const container = document.getElementById('paze-button-container');
+            if (!container) {
+                return false;
             }
+
+            if (!window.fiserv || typeof window.fiserv.context !== 'function') {
+                return false;
+            }
+
+            const context = window.fiserv.context();
+            if (!context) {
+                return false;
+            }
+
+            if (!context.config) {
+                context.config = {};
+            }
+
+            // Inject order amount onto the active SDK context before rendering the button.
+            context.config.amount = transactionData.amount;
+
+            const pazeButtonElement = this.createPazeButtonElement(config, context, transactionData);
+            if (!pazeButtonElement) {
+                return false;
+            }
+
+            container.replaceChildren(pazeButtonElement);
+            container.setAttribute('data-paze-render-mode', 'context');
+            window.__pazeRenderMode = 'context';
+            this.pazeInitialized = true;
+
+            return true;
         },
 
-        /**
-         * Select Paze payment method - launches Paze UI (Step 5) and submits (Step 6)
-         * @returns {Promise}
-         */
-        selectPazePaymentMethod: async function () {
-            fullScreenLoader.startLoader();
+        createPazeButtonElement: function (config, context, transactionData) {
+            const pazeButtonElement = document.createElement('fiserv-paze-button');
+            pazeButtonElement.displayName = config.displayName || config.storeName || 'My Site';
+            pazeButtonElement.context = context;
+            pazeButtonElement.transactionData = transactionData;
 
-            try {
-                if (!this.pazeComponent || typeof this.pazeComponent.selectPaymentMethod !== 'function') {
-                    throw new Error('Paze component not initialized or selectPaymentMethod not available');
+            pazeButtonElement.addEventListener('fiserv-paze-success', (event) => {
+                fullScreenLoader.startLoader();
+                try {
+                    this.handlePazeButtonSuccess(event);
+                } catch (error) {
+                    this.handlePazeError(error);
+                } finally {
+                    fullScreenLoader.stopLoader();
+                }
+            });
+
+            pazeButtonElement.addEventListener('fiserv-paze-error', (event) => {
+                const detail = event?.detail || {};
+                if (detail?.description === 'Paze operation cancelled') {
+                    this.handlePazeCancel();
+                    return;
                 }
 
-                // Step 5: Launch Paze UI and get user selection
-                // Returns: { customer: {...}, card: {...} }
-                const params = this.buildPazeSelectParams();
+                this.handlePazeError(detail);
+            });
 
-                const result = await this.pazeComponent.selectPaymentMethod(params);
+            return pazeButtonElement;
+        },
 
-                if (!result) {
-                    throw new Error('No result returned from selectPaymentMethod');
+        handlePazeButtonSuccess: function (event) {
+            const detail = event?.detail || {};
+            const selectResult = {
+                card: detail.card,
+                customer: detail.customer
+            };
+            const submitResult = detail.submitResult || detail;
+
+            this.paymentPayload.pazePaymentToken = JSON.stringify({
+                submitResult: submitResult,
+                card: selectResult.card,
+                customer: selectResult.customer
+            });
+
+            this.onPazeSuccess(selectResult, submitResult);
+        },
+
+        getOrderData: async function () {
+            const amount = this.getAmount();
+
+            return {
+                amount: {
+                    currency: amount.currency,
+                    total: amount.total
                 }
+            };
+        },
 
-                // Step 6: Submit the Paze payment method
-                // Params are optional if amount hasn't changed since selectPaymentMethod
-                const submitResult = await this.pazeComponent.submit(params);
+        handlePazeCancel: function () {
+            console.log('[Paze] Payment cancelled by customer.');
+        },
 
-                // Store the card data and submit result for backend processing
-                // Note: Paze never returns orderId - that's generated by backend Charges API
-                this.paymentPayload.pazePaymentToken = JSON.stringify({
-                    submitResult: submitResult,
-                    card: result.card,
-                    customer: result.customer
-                });
-                this.onPazeSuccess(result, submitResult);
+        handlePazeError: function (error) {
+            const message = error?.message || error?.description || error;
+            globalMessageList.addErrorMessage({
+                message: $t('Paze payment error: ') + message
+            });
+        },
 
-            } catch (error) {
-                if (error?.message !== 'INCOMPLETE' && error?.description !== 'Paze operation cancelled') {
-			globalMessageList.addErrorMessage({ message: $t('Paze payment error: ') + (error.message || error) });
-		}
-            } finally {
-                fullScreenLoader.stopLoader();
-            }
+        sdkLoadFailure: function (error) {
+            console.error('[Paze] Error loading Paze form:', error);
+            window.__pazeRenderMode = 'context-failed';
+            globalMessageList.addErrorMessage({
+                message: $t('Paze error: ') + (error?.message || error)
+            });
+            fullScreenLoader.stopLoader();
         },
 
         /**
@@ -336,6 +357,11 @@ define([
         },
 
         watchPaymentMethods: function () {
+            if (this.paymentMethodsWatcherAttached) {
+                return;
+            }
+
+            this.paymentMethodsWatcherAttached = true;
             $('[name="payment[method]"]').on("click", (event) => {
                 if (event.currentTarget.id === this.getCode()) {
                     if (this.reloadOnRender) {
