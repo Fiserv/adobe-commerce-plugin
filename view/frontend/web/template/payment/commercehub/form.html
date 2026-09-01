@@ -84,6 +84,28 @@
 					<span><!-- ko i18n: 'Save for later use.'--><!-- /ko --></span>
 				</label>
 			</div>
+
+			<!-- ko if: isSavingPaymentToken() -->
+			<div class="field choice fiserv-token-use-type">
+				<label class="label"><span><!-- ko i18n: 'Save card as:'--><!-- /ko --></span></label>
+				<div class="control">
+					<label>
+						<input type="radio"
+							name="fiserv_token_use_type"
+							value="MULTI_USE"
+							data-bind="checked: tokenUseType"/>
+						<span><!-- ko i18n: 'Reusable card (recommended)'--><!-- /ko --></span>
+					</label>
+					<label>
+						<input type="radio"
+							name="fiserv_token_use_type"
+							value="SINGLE_USE"
+							data-bind="checked: tokenUseType"/>
+						<span><!-- ko i18n: 'One-time use only'--><!-- /ko --></span>
+					</label>
+				</div>
+			</div>
+			<!-- /ko -->
 		<!-- /ko -->
 
 		<div class="checkout-agreements-block">

@@ -47,6 +47,7 @@ define(
 		return Component.extend({
 			isPlaceOrderActionAllowed: ko.observable(quote.billingAddress() != null),
 			surchargeConfirmed: ko.observable(false),
+			tokenUseType: ko.observable('MULTI_USE'),
 			defaults: {
 				template: 'Fiserv_Payments/payment/commercehub/form',
 				active: false,
@@ -389,6 +390,13 @@ define(
 			},
 
 			/**
+			 * Whether the shopper has opted to save this card for later use.
+			 */
+			isSavingPaymentToken: function () {
+				return this.isVaultEnabled() && !!this.vaultEnabler.isActivePaymentTokenEnabler();
+			},
+
+			/**
 			 * Returns vault code.
 			 *
 			 * @returns {String}
@@ -462,6 +470,11 @@ define(
 			}
 
 			data['additional_data'] = _.extend(data['additional_data'], this.additionalData);
+
+			if (this.isSavingPaymentToken()) {
+				data['additional_data']['token_use_type'] = this.tokenUseType();
+			}
+
 			this.vaultEnabler.visitAdditionalData(data);
 			return data;
 		},

@@ -10,6 +10,8 @@ use Fiserv\Payments\Model\Config\CommerceHub\ConfigProvider;
 use Fiserv\Payments\Model\System\Utils\VaultPaymentTokenUtils;
 use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use Fiserv\Payments\Gateway\Request\CommerceHub\TransactionDetailsDataBuilder;
+use Fiserv\Payments\Gateway\Request\CommerceHub\StoredCredentialsDataBuilder;
+use Fiserv\Payments\Observer\CommerceHub\DataAssignObserver;
 use Fiserv\Payments\Model\Source\CommerceHub\TokenizationStrategy;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Serialize\Serializer\Json;
@@ -33,54 +35,18 @@ use Fiserv\Payments\Logger\MultiLevelLogger;
  */
 class VaultDetailsHandler implements HandlerInterface
 {
-	/**
-	 * @var Config
-	 */
+
 	private $config;
-	
-	
 	protected $vaultPaymentTokenUtils;
-	/**
-	 * @var PaymentTokenFactoryInterface
-	 */
 	protected $paymentTokenFactory;
-
-	/**
-	 * @var OrderPaymentExtensionInterfaceFactory
-	 */
 	protected $paymentExtensionFactory;
-
-	/**
-	 * @var SubjectReader
-	 */
 	protected $subjectReader;
-
-	/**
-	 * @var Json
-	 */
 	private $serializer;
-	
-	/**
-	** @var MultiLevelLogger
-	**/
 	private $logger;
-
 	private $paymentTokenRepository;
-
 	private $paymentTokenManager;
-	
 	private $encryptor;
-	
-	/**
-	 * VaultDetailsHandler constructor.
-	 *
-	 * @param PaymentTokenFactoryInterface $paymentTokenFactory
-	 * @param OrderPaymentExtensionInterfaceFactory $paymentExtensionFactory
-	 * @param SubjectReader $subjectReader
-	 * @param Json|null $serializer
-	 * @param MultiLevelLogger $logger
-	 * @throws \RuntimeException
-	 */
+
 	public function __construct(
 		Config $config,
 		VaultPaymentTokenUtils $vaultPaymentTokenUtils,
@@ -131,7 +97,7 @@ class VaultDetailsHandler implements HandlerInterface
 
 			if ($existingToken === false || (isset($existingToken["is_visible"]) && $existingToken["is_visible"] != $visible))
 			{	
-				$paymentToken = $this->getVaultCardToken($chResponse, $visible);
+				$paymentToken = $this->getVaultCardToken($chResponse, $visible, $payment);
 				$extensionAttributes = $this->getExtensionAttributes($payment);
 				$extensionAttributes->setVaultPaymentToken($paymentToken);
 			}
@@ -142,9 +108,11 @@ class VaultDetailsHandler implements HandlerInterface
 	 * Get vault payment token entity for payment card
 	 *
 	 * @param array $chResponse
+	 * @param bool $visible
+	 * @param InfoInterface|null $payment
 	 * @return PaymentTokenInterface|null
 	 */
-	public function getVaultCardToken($chResponse, $visible)
+	public function getVaultCardToken($chResponse, $visible, $payment = null)
 	{
 		$paymentToken = $this->paymentTokenFactory->create(PaymentTokenFactoryInterface::TOKEN_TYPE_CREDIT_CARD);
 		
@@ -164,6 +132,18 @@ class VaultDetailsHandler implements HandlerInterface
 				) ? "" : $chResponse["cardDetails"][0]["detailedCardProduct"]
 			);
 
+		// Explicit single-use vs multi-use token, driven by the checkout
+		$tokenUseType = StoredCredentialsDataBuilder::TOKEN_USE_TYPE_MULTI;
+		if ($payment !== null) {
+			$selected = $payment->getAdditionalInformation(DataAssignObserver::TOKEN_USE_TYPE_KEY);
+			if ($selected === StoredCredentialsDataBuilder::TOKEN_USE_TYPE_SINGLE) {
+				$tokenUseType = StoredCredentialsDataBuilder::TOKEN_USE_TYPE_SINGLE;
+			}
+		}
+
+		// CommerceHub "stored account reference" for replaying this stored credential on a subsequent transaction.
+		$storedAccountReference = $chResponse["storedCredentials"]["schemeReferenceTransactionId"] ?? null;
+
 		$details = $this->convertDetailsToJSON([
 			"type" => !empty($rawScheme) ? $this->getCreditCardType($rawScheme) : "",
 			"maskedCC" => "************" . $cardArray["last4"],
@@ -171,7 +151,9 @@ class VaultDetailsHandler implements HandlerInterface
 			"tokenSource" => $tokenArray["tokenSource"],
 			"tokenResponseCode" => $tokenArray["tokenResponseCode"],
 			"tokenResponseDescription" => $tokenArray["tokenResponseDescription"],
-			"nameOnCard" => $cardArray["nameOnCard"] ?? ''
+			"nameOnCard" => $cardArray["nameOnCard"] ?? '',
+			"tokenUseType" => $tokenUseType,
+			"storedAccountReference" => $storedAccountReference
 		]);
 		$paymentToken->setGatewayToken(PaymentTokenUtil::formatTokenDataForPersistence($tokenArray["tokenData"]));
 		$paymentToken->setExpiresAt($this->getExpirationDate($cardArray));
