@@ -93,7 +93,7 @@ class Form extends Cc
 		$_types = $this->gatewayConfig->getPaymentType();
 		$paymentTypes = array();
 		
-		$paymentTypes[self::KEY_CARD] = "Payment Card";
+		$paymentTypes[self::KEY_CARD] = __('Payment Card');
 
 		return $paymentTypes;
 	}

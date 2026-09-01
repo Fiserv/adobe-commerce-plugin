@@ -11,9 +11,15 @@ use Fiserv\Payments\Block\Checkout\Valuelink\Cart\Total;
  * @var SecureHtmlRenderer $secureRenderer
  * @var Escaper $escaper
  */
-
+?>
 <tr class="totals valuelink">
-	<th colspan="<?= $escaper->escapeHtmlAttr($block->getColspan()) ?>"
-		<span>HELLO HI HELLO</span>
-	</th>	
+	<th class="mark" scope="row" colspan="<?= $escaper->escapeHtmlAttr($block->getColspan()) ?>">
+		<span class="label"><?= $block->escapeHtml(__($block->getTotal()->getTitle())) ?></span>
+	</th>
+	<td class="amount">
+		<span class="price" data-th="<?= $escaper->escapeHtmlAttr(__($block->getTotal()->getTitle())) ?>">
+			<?= /* @noEscape */ $block->getTotalHtml($block->getTotal()) ?>
+		</span>
+	</td>
 </tr>
+

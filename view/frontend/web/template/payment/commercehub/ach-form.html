@@ -25,7 +25,11 @@
 			<div id="sdc-account-type-frame" class="sdc-field-frame sdc-text">
 				<div id="fiserv_ach-account-type" class="sdc-field"></div>
 			</div>
-			<span id="sdc-account-type-invalid-message" class="sdc-error-message sdc-hidden">Invalid Account Type</span>
+			<span
+				id="sdc-account-type-invalid-message"
+				class="sdc-error-message sdc-hidden"
+				translate="'Invalid Account Type'"
+			></span>
 		</div>
 
 		<!-- Check Type -->
@@ -33,7 +37,11 @@
 			<div id="sdc-check-type-frame" class="sdc-field-frame sdc-text">
 				<div id="fiserv_ach-check-type" class="sdc-field"></div>
 			</div>
-			<span id="sdc-check-type-invalid-message" class="sdc-error-message sdc-hidden">Invalid Check Type</span>
+			<span
+				id="sdc-check-type-invalid-message"
+				class="sdc-error-message sdc-hidden"
+				translate="'Invalid Check Type'"
+			></span>
 		</div>
 
 		<!-- Business Name -->
@@ -41,7 +49,11 @@
 			<div id="sdc-business-name-frame" class="sdc-field-frame sdc-text">
 				<div id="fiserv_ach-business-name" class="sdc-field"></div>
 			</div>
-			<span id="sdc-business-name-invalid-message" class="sdc-error-message sdc-hidden">Invalid Business Name</span>
+			<span
+				id="sdc-business-name-invalid-message"
+				class="sdc-error-message sdc-hidden"
+				translate="'Invalid Business Name'"
+			></span>
 		</div>
 
 		<!-- Account Number -->
@@ -63,7 +75,11 @@
 				>
 				</button>
 			</div>
-			<span id="sdc-account-number-invalid-message" class="sdc-error-message sdc-hidden">Invalid Account Number</span>
+			<span
+				id="sdc-account-number-invalid-message"
+				class="sdc-error-message sdc-hidden"
+				translate="'Invalid Account Number'"
+			></span>
 		</div>
 
 		<!-- Routing Number -->
@@ -85,7 +101,11 @@
 				>
 				</button>
 			</div>
-			<span id="sdc-routing-number-invalid-message" class="sdc-error-message sdc-hidden">Invalid Routing Number</span>
+			<span
+				id="sdc-routing-number-invalid-message"
+				class="sdc-error-message sdc-hidden"
+				translate="'Invalid Routing Number'"
+			></span>
 		</div>
 
 		<!-- ID Type -->
@@ -93,7 +113,11 @@
 			<div id="sdc-id-type-frame" class="sdc-field-frame sdc-text">
 				<div id="fiserv_ach-id-type" class="sdc-field"></div>
 			</div>
-			<span id="sdc-id-type-invalid-message" class="sdc-error-message sdc-hidden">Invalid Identification Type</span>
+			<span
+				id="sdc-id-type-invalid-message"
+				class="sdc-error-message sdc-hidden"
+				translate="'Invalid Identification Type'"
+			></span>
 		</div>
 
 		<!-- Driver License State -->
@@ -101,7 +125,11 @@
 			<div id="sdc-dl-state-frame" class="sdc-field-frame sdc-text">
 				<div id="fiserv_ach-driver-license-state" class="sdc-field"></div>
 			</div>
-			<span id="sdc-dl-state-invalid-message" class="sdc-error-message sdc-hidden">Invalid Driver License State</span>
+			<span
+				id="sdc-dl-state-invalid-message"
+				class="sdc-error-message sdc-hidden"
+				translate="'Invalid Driver License State'"
+			></span>
 		</div>
 
 		<!-- ID Value -->
@@ -113,7 +141,11 @@
 					data-bind="afterRender: loadSdcForm"
 				></div>
 			</div>
-			<span id="sdc-id-value-invalid-message" class="sdc-error-message sdc-hidden">Invalid Identification Value</span>
+			<span
+				id="sdc-id-value-invalid-message"
+				class="sdc-error-message sdc-hidden"
+				translate="'Invalid Identification Value'"
+			></span>
 		</div>
 
 		<div class="checkout-agreements-block">
@@ -138,7 +170,7 @@
 		</div>
 
 		<div class="privacyPolicy">
-			<span></span>Payments Powered by Fiserv.&nbsp; <a target="_blank" href="https://www.fiserv.com/privacy">Privacy Notice</a>.
+			<span class="privacy-icon"></span><span><!-- ko i18n: 'Payments Powered by Fiserv.'--><!-- /ko --></span>&nbsp; <a target="_blank" href="https://www.fiserv.com/privacy"><!-- ko i18n: 'Privacy Notice'--><!-- /ko --></a>.
 		</div>
 
 	</div>

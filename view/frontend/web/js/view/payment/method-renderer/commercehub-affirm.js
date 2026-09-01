@@ -189,7 +189,7 @@ define([
 				const creds = await chSession({ merchantName: config.storeName, paymentCode: this.getCode() });
 
 				if (!creds || !creds.ch_credentials) {
-					throw new Error('No credentials returned from backend');
+					throw new Error($t('No credentials returned from backend'));
 				}
 
 				const affirmIntent = creds.session_intent || 'AUTHORIZE';

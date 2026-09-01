@@ -140,7 +140,7 @@ class DeclinedOrdersHelper
 	private function getRemoteIp(array $failedTxnData, string $orderIncrementId)
 	{
 		$data = $failedTxnData[$orderIncrementId] ?? null;
-		return $data ? $data['remote_ip'] : 'Admin';
+		return $data ? $data['remote_ip'] : (string) __('Admin');
 	}
 
 	private function getOrderIncrementIdsFromFailedTxns($page, $pageSize, $search = null, $approvalStatus = null, $orderState = null, $fromDate = null, $toDate = null)

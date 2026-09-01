@@ -88,7 +88,7 @@ define([
                 credsResponse = await commercehubSession({ paymentCode: this.getCode() });
                 creds = credsResponse && credsResponse[chAdapter.credentialsKey];
                 if (!creds) {
-                    throw new Error('No credentials returned from PayPal session');
+                    throw new Error($t('No credentials returned from PayPal session'));
                 }
 
                 const sessionIntent = (credsResponse.session_intent || 'AUTHORIZE').toLowerCase();

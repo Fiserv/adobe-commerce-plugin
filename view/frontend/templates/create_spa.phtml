@@ -10,14 +10,14 @@
 	<link rel="stylesheet" type="text/css" href="<?= $block->escapeUrl($block->getViewFileUrl('Fiserv_Payments/css/ch-form-token.css')); ?>">
 	<div id="tokenization-builder-container" style="display:none "data-bind="scope: 'standalone-spa'">
 		<div id="tokenization-builder-title">
-			<h3>Add a Stored Payment Account</h3>
+			<h3><?= $block->escapeHtml(__('Add a Stored Payment Account')) ?></h3>
 		</div>
 	<div id="message-container" data-bind="scope:'message'">
 	<!-- ko template: getTemplate() --><!-- /ko -->
 	</div>
 		<div id="tokenization-builder-button-container">
 			<button data-bind="click: createIframe" id="tokenization-builder-add">
-				Add
+				<?= $block->escapeHtml(__('Add')) ?>
 			</button>
 		</div>
         <div id="sdc-container">
@@ -77,8 +77,8 @@
 		</div>
 
 		<div id="tokenization-iframe-buttons" style="display:none">
-			<button data-bind="click: destroyIframe" id="tokenization-builder-cancel" disabled="true">Cancel</button>
-			<button data-bind="click: submitIframe" id="tokenization-builder-create" disabled="true">Create</button>
+			<button data-bind="click: destroyIframe" id="tokenization-builder-cancel" disabled="true"><?= $block->escapeHtml(__('Cancel')) ?></button>
+			<button data-bind="click: submitIframe" id="tokenization-builder-create" disabled="true"><?= $block->escapeHtml(__('Create')) ?></button>
 		</div>
 	</div>
 <?php endif ?>

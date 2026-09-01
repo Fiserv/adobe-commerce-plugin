@@ -65,7 +65,7 @@ class FailedTransactionHelper
 	 */
 	public function getFailedOrder($order)
 	{
-		$failedOrder = $order ?? throw new \Exception("Unable to locate failed orders.");
+		$failedOrder = $order ?? throw new \Exception((string) __('Unable to locate failed orders.'));
 		if (isset($failedOrder[0]["real_order_id"]))
 		{
 			$failedOrder[0][self::KEY_SUCCESSFUL] = true;
@@ -89,7 +89,7 @@ class FailedTransactionHelper
 			$failedTransaction[self::KEY_TXN_URL] = $this->_urlBuilder->getUrl('fiserv/declines/transaction', ['transaction_id' => $failedTransaction['transaction_id']]);
 			if ($failedTransaction[TxnModel::KEY_PAYMENT_ACTION] != SaleResponseValidator::PAYMENT_ACTION && $failedTransaction[TxnModel::KEY_PAYMENT_ACTION] != AuthorizeResponseValidator::PAYMENT_ACTION)
 			{
-				$failedTransaction[TxnModel::KEY_REMOTE_IP] = self::ADMIN_PANEL_LABEL;
+				$failedTransaction[TxnModel::KEY_REMOTE_IP] = (string) __(self::ADMIN_PANEL_LABEL);
 			}
 		}
 		
@@ -175,11 +175,11 @@ class FailedTransactionHelper
 		$fTxn = array();
 		$fTxn[TxnModel::KEY_DATE_TIME] = $this->extractTimestampFromGiftTxn($giftTxn);
 		$fTxn[TxnModel::KEY_ORDER_INCREMENT_ID] = $giftTxn[GiftModel::KEY_ORDER_INCREMENT_ID];
-		$fTxn[TxnModel::KEY_TRANSACTION_STATE] = $giftTxn[GiftModel::KEY_TRANSACTION_STATE] . " (GIFT)";
-		$fTxn[TxnModel::KEY_APPROVAL_STATUS] = $this->extractApprovalStatusFromGiftTxn($giftTxn) . " (GIFT)";
+		$fTxn[TxnModel::KEY_TRANSACTION_STATE] = $giftTxn[GiftModel::KEY_TRANSACTION_STATE] . ' ' . (string) __('(GIFT)');
+		$fTxn[TxnModel::KEY_APPROVAL_STATUS] = $this->extractApprovalStatusFromGiftTxn($giftTxn) . ' ' . (string) __('(GIFT)');
 		$fTxn[TxnModel::KEY_TOTAL_AMOUNT] = $giftTxn[GiftModel::KEY_AMOUNT];
-		$fTxn[TxnModel::KEY_REMOTE_IP] = "N/A";
-		$fTxn[TxnModel::KEY_TRANSACTION_ID] = "N/A";
+		$fTxn[TxnModel::KEY_REMOTE_IP] = (string) __('N/A');
+		$fTxn[TxnModel::KEY_TRANSACTION_ID] = (string) __('N/A');
 		$fTxn[self::KEY_TXN_URL] = '';
 
 		return $fTxn;
@@ -207,7 +207,7 @@ class FailedTransactionHelper
 		$fTxn[TxnModel::KEY_DATE_TIME] = $txn["created_at"];
 		$fTxn[TxnModel::KEY_ORDER_INCREMENT_ID] = $orderIncrementId;
 		$fTxn[TxnModel::KEY_APPROVAL_STATUS] = $txn["txn_type"];
-		$fTxn[TxnModel::KEY_TRANSACTION_STATE] = $txn["is_closed"] == true ? "CLOSED" : "OPEN";
+		$fTxn[TxnModel::KEY_TRANSACTION_STATE] = $txn["is_closed"] == true ? (string) __('CLOSED') : (string) __('OPEN');
 		$fTxn[TxnModel::KEY_TOTAL_AMOUNT] = $txn->getAdditionalInformation("amount");
 		$fTxn[TxnModel::KEY_REMOTE_IP] = $this->getRealTxnIp($txn);
 		$fTxn[TxnModel::KEY_TRANSACTION_ID] = $txn["txn_id"];
@@ -227,15 +227,15 @@ class FailedTransactionHelper
 			case TransactionInterface::TYPE_AUTH:
 				return $this->getPrimaryTxnIp($txn);
 			case TransactionInterface::TYPE_CAPTURE:
-				return $this->isCaptureSale($txn) ? $this->getPrimaryTxnIp($txn) : self::ADMIN_PANEL_LABEL;
+				return $this->isCaptureSale($txn) ? $this->getPrimaryTxnIp($txn) : (string) __(self::ADMIN_PANEL_LABEL);
 			default:
-				return self::ADMIN_PANEL_LABEL;
+				return (string) __(self::ADMIN_PANEL_LABEL);
 		}
 	}
 
 	private function getPrimaryTxnIp($txn)
 	{
-		return !is_null($txn->getOrder()->getData("remote_ip")) ? $txn->getOrder()->getData("remote_ip") : self::ADMIN_PANEL_LABEL;
+		return !is_null($txn->getOrder()->getData("remote_ip")) ? $txn->getOrder()->getData("remote_ip") : (string) __(self::ADMIN_PANEL_LABEL);
 	}
 
 	private function isCaptureSale($txn)

@@ -58,7 +58,7 @@ class GetValuelinkBalance extends Action implements HttpGetActionInterface
 			$sessionId = $this->getRequest()->getParam(self::SESSION_ID_KEY);
 			if(!isset($sessionId))
 			{
-				throw new InvalidArgumentException("Required Session ID parameter not found.");
+				throw new \InvalidArgumentException(__("Required Session ID parameter not found.")->render());
 			}
 
 			$response->setData(['valuelink_balance' => $this->chAdapter->requestBalance($sessionId)]);

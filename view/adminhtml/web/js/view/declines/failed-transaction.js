@@ -1,7 +1,8 @@
 define([
 	'jquery',
-	'mage/url'
-], function ($, url) {
+	'mage/url',
+	'mage/translate'
+], function ($, url, $t) {
 	var currentPage = 1;
 	var rowsPerPage = 20;
 	var searchFilter = '';
@@ -165,7 +166,7 @@ define([
 		}
 		$paginationControls.append($nextButton);
 
-		$('#paginationInfoTop').text(currentPage + ' of ' + totalPages);
+		$('#paginationInfoTop').text(currentPage + ' ' + $t('of') + ' ' + totalPages);
 	}
 
 	function changeRowsPerPage() {
@@ -334,7 +335,7 @@ define([
 			},
 			error: function (jqXHR, textStatus, errorThrown) {
 				console.error('Failed to export file:', textStatus, errorThrown);
-				alert('Export failed. Please try again.');
+				alert($t('Export failed. Please try again.'));
 			}
 		});
 	};

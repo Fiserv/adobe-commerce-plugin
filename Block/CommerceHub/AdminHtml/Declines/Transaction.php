@@ -18,7 +18,7 @@ class Transaction extends \Magento\Backend\Block\Template
 		$transaction = $this->getData(self::KEY_TRANSACTION);
 		if (!isset($transaction) || empty($transaction) || !isset($transaction[0]))
 		{
-			throw new \Exception("Unable to locate transaction.");
+			throw new \Exception((string) __('Unable to locate transaction.'));
 		}
 
 		return $transaction[0];

@@ -95,7 +95,7 @@ define([
 			const creds = await chSession({ "merchantName": merchantName, paymentCode: this.getCode() });
 
 			if (!creds?.ch_credentials) {
-				throw new Error('No credentials returned from backend');
+				throw new Error($t('No credentials returned from backend'));
 			}
 
 			this.paymentPayload.sessionId = creds.ch_credentials.sessionId;

@@ -186,8 +186,7 @@ define(
                 this.beginIframeFlow();
 			this.initializeChAdapter();
 
-                const billingAddress = this.getBillingAddress();
-                if (!billingAddress) throw new Error("Billing address not found.");
+                if (!billingAddress) throw new Error($t('Billing address not found.'));
 
                 await this.initCheckoutSdk(billingAddress);
 
@@ -553,7 +552,7 @@ define(
              * @returns {Object} Billing address with first/last name and address details
              */
             buildBillingAddressPayload(billingAddress) {
-                if (!billingAddress) throw new Error("Billing address not found.");
+                if (!billingAddress) throw new Error($t('Billing address not found.'));
 
                 const streetValue = Array.isArray(billingAddress.street) ?
                     billingAddress.street.filter(Boolean).join(' ').trim() :
@@ -760,17 +759,17 @@ define(
 
             getSdcInvalidFieldMessageText(fieldName) {
                 const messages = {
-                    accountNumber: 'Invalid Account Number',
-                    routingNumber: 'Invalid Routing Number',
-                    idType: 'Invalid Identification Type',
-                    idValue: 'Invalid Identification Value',
-                    driverLicenseState: 'Invalid Driver License State',
-                    accountType: 'Invalid Account Type',
-                    checkType: 'Invalid Check Type',
-                    businessName: 'Invalid Business Name',
+                    accountNumber: $t('Invalid Account Number'),
+                    routingNumber: $t('Invalid Routing Number'),
+                    idType: $t('Invalid Identification Type'),
+                    idValue: $t('Invalid Identification Value'),
+                    driverLicenseState: $t('Invalid Driver License State'),
+                    accountType: $t('Invalid Account Type'),
+                    checkType: $t('Invalid Check Type'),
+                    businessName: $t('Invalid Business Name'),
                 };
 
-                return messages[fieldName] || 'Invalid field value';
+                return messages[fieldName] || $t('Invalid field value');
             },
 
             getSdcFields() {

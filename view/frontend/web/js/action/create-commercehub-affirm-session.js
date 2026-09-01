@@ -2,10 +2,12 @@ define(
 	[
         'Fiserv_Payments/js/action/create-commercehub-enriched-session',
 		'Magento_Checkout/js/model/quote',
+		'mage/translate'
 	],
 	function (
 		session,
 		quote,
+		$t
 	) {
 		'use strict';
 
@@ -94,7 +96,7 @@ define(
 			try {
 				return await session(payload);
 			} catch (error) {
-				throw new Error("An error occurred while creating Commercehub Apple Pay payment session.");
+				throw new Error($t('An error occurred while creating Commercehub Affirm payment session.'));
 			}
 		};
 	}

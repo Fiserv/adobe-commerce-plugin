@@ -5,6 +5,7 @@ define([
 		'Magento_Ui/js/modal/alert',
 		'Magento_Ui/js/lib/view/utils/dom-observer',
 		'jquery',
+		'mage/translate',
 		'domReady!'
 	], function(
 		ko,
@@ -12,7 +13,8 @@ define([
 		sdcv2,
 		alert,
 		domObserver,
-		$
+		$,
+		$t
 	) {
 		'use strict';
 
@@ -24,18 +26,18 @@ define([
 					onActiveChange: 'active'
 				}
 			},
-			balanceInquiryGeneralErrorMessage: 'Invalid gift card. Please try again or use another form of payment.',
+			balanceInquiryGeneralErrorMessage: $t('Invalid gift card. Please try again or use another form of payment.'),
 			valuelinkBalanceUrl: "fiserv/valuelink/getvaluelinkbalance",
-			addedMessage: "Gift card added successfully",
-			emptyMessage: "Gift card has no balance",
-			addErrorMessage: "An error occurred. Gift card was not added.",
+			addedMessage: $t('Gift card added successfully'),
+			emptyMessage: $t('Gift card has no balance'),
+			addErrorMessage: $t('An error occurred. Gift card was not added.'),
 
 			/**
 			* @returns {exports.initialize}
 			*/
 			initialize: function (config) {
 				if (typeof(config.valuelinkConfig) === "undefined") { 
-					throw new Error('Required parameter valuelinkConfig not found!');
+					throw new Error($t('Required parameter valuelinkConfig not found!'));
 				}
 				this.paymentConfig = config;
 				this.paymentConfig.formConfig = this.paymentConfig.valuelinkConfig;
@@ -175,7 +177,7 @@ define([
 			},
 
 			iframeRunFailure: function() {
-				this.showError("Card capture failure. Please try again."); 
+				this.showError($t('Card capture failure. Please try again.'));
 				this.resetFormPanel();
 			},
 
@@ -348,7 +350,7 @@ define([
 				if(typeof err === 'string')
 					this.showErrorMessage(err);
 				else
-					this.showErrorMessage("Invalid Gift Card or CVV");
+					this.showErrorMessage($t('Invalid Gift Card or CVV'));
 			},
 
 			validateBalanceInquiry: function(response)
@@ -366,7 +368,7 @@ define([
 						response.valuelink_balance.responseMessage : this.balanceInquiryGeneralErrorMessage;
 
 				// Remove this line one day with a propper message mapper...
-				message = message === "Invalid SKU/EAN/SCV" ? "Invalid security code provided" : this.balanceInquiryGeneralErrorMessage;
+				message = message === "Invalid SKU/EAN/SCV" ? $t('Invalid security code provided') : this.balanceInquiryGeneralErrorMessage;
 
 				return { "isValid": valid, "message": message };
 			},

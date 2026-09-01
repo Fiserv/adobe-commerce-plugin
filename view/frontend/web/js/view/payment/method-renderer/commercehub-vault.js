@@ -7,7 +7,8 @@ define([
 	'Magento_Checkout/js/model/full-screen-loader',
 	'Fiserv_Payments/js/ch-adapter',
 	'Fiserv_Payments/js/action/create-commercehub-enriched-session',
-	'Fiserv_Payments/js/action/verify-account'
+	'Fiserv_Payments/js/action/verify-account',
+	'mage/translate'
 ], function(
 	_,
 	$,
@@ -17,7 +18,8 @@ define([
 	fullScreenLoader,
 	chAdapter,
 	chSession,
-	verifyAccount
+	verifyAccount,
+	$t
 ){
 	'use_strict';
 
@@ -304,7 +306,7 @@ define([
 
 		iframeRunSuccess: function() {
 			if (!this.paymentSessionData || !this.paymentSessionData['sessionId']) {
-				this.iframeRunFailure("Payment session data not found.");
+				this.iframeRunFailure($t("Payment session data not found."));
 				return;
 			}
 
@@ -421,7 +423,7 @@ define([
 
 		initChSdk: async function(paymentToken) {
 			await this.setCredentials(paymentToken);
-			if (!this.paymentSessionData) throw new Error("Failed to create payment session.");
+			if (!this.paymentSessionData) throw new Error($t('Failed to create payment session.'));
 
             this.contextId = crypto.randomUUID();
 			await chAdapter.initSdk(
@@ -434,7 +436,7 @@ define([
 		run3DSecure: async function() {
 			const {transactionState, authenticationTransactionId} = await window.fiserv.components.threeDSecure();
 			if (transactionState.toUpperCase() === "DECLINED") {
-				throw new Error("3D-Secure authentication failure.");
+				throw new Error($t('3D-Secure authentication failure.'));
 			}
 
 			this.handle3DSecureAuth(authenticationTransactionId);

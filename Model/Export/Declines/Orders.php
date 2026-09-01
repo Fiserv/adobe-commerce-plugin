@@ -88,7 +88,15 @@ class Orders
 	{
 		$rows = [];
 		if (!empty($orders)) {
-			$rows[] = ['Date/Time (UTC)', 'Order ID', 'Customer Name', 'Order State', 'Order Amount', 'Cause of Failure', 'IP Address'];
+			$rows[] = [
+				(string) __('Date/Time (UTC)'),
+				(string) __('Order ID'),
+				(string) __('Customer Name'),
+				(string) __('Order State'),
+				(string) __('Order Amount'),
+				(string) __('Cause of Failure'),
+				(string) __('IP Address')
+			];
 			foreach ($orders as $order) {
 				$rows[] = [
 					$order['date_time'] ?? '',
@@ -101,7 +109,7 @@ class Orders
 				];
 			}
 		} else {
-			$rows[] = ['No data available'];
+			$rows[] = [(string) __('No data available')];
 		}
 		return $rows;
 	}

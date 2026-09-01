@@ -240,13 +240,13 @@ define(
 
 			iframeRunSuccess: async function () {
                 if (!this.paymentSessionData || !this.paymentSessionData["sessionId"]) {
-                    this.iframeRunFailure("Payment session not established. Please try again.");
+                    this.iframeRunFailure($t("Payment session not established. Please try again."));
                     this.endIframeFlow();
                     return;
                 }
 
                 if (!this.contextId) {
-                    this.iframeRunFailure("Context ID not established. Please try again.");
+                    this.iframeRunFailure($t("Context ID not established. Please try again."));
                     this.endIframeFlow();
                     return;
                 }   
@@ -275,7 +275,7 @@ define(
 			performAccountVerification: async function () {
 				await chAdapter.submitIframeForm(
 					async () => { await verifyAccount({ 'sessionId' : this.paymentSessionData['sessionId'] }); },
-					() => { this.showError('Card capture failed during account verification. Please try again.'); }
+					() => { this.showError($t('Card capture failed during account verification. Please try again.')); }
 				);
 			},
 
@@ -283,7 +283,7 @@ define(
 			const threeDSConfig = chAdapter.contextId ? { context: window.fiserv.context(chAdapter.contextId) } : undefined;
 			const {transactionState, authenticationTransactionId} = await window.fiserv.components.threeDSecure(threeDSConfig);
 			if (transactionState.toUpperCase() === "DECLINED") {
-					throw new Error("3D-Secure authentication failure.");
+					throw new Error($t('3D-Secure authentication failure.'));
 				}
 
 				this.handle3DSecureAuth(authenticationTransactionId);
@@ -304,7 +304,7 @@ define(
 			},
 
 			iframeRunFailure: function (message) {
-				this.showError(message ?? "Card capture failure. Please try again.");
+				this.showError(message ?? $t('Card capture failure. Please try again.'));
 				this.endIframeFlow();
 				this.cardBrandChangeHandler(null);
 				chAdapter.resetIframe();
@@ -733,7 +733,7 @@ define(
 						this.surchargeConfirmed(true);
 						this.enableSubmitButton();
 					} else {
-						this.showError('Unable to retrieve surcharge estimate. Please try again.');
+						this.showError($t('Unable to retrieve surcharge estimate. Please try again.'));
 						this.enableContinueButton();
 					}
 				} else {
@@ -741,7 +741,7 @@ define(
 					this.enableSubmitButton();
 				}
 			} catch (e) {
-				this.showError('Unable to retrieve surcharge estimate. Please try again.');
+				this.showError($t('Unable to retrieve surcharge estimate. Please try again.'));
 				this.enableContinueButton();
 			} finally {
 				fullScreenLoader.stopLoader();

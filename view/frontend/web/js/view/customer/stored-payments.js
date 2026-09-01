@@ -6,6 +6,7 @@ define([
 		'Magento_Checkout/js/model/full-screen-loader',
 		'Magento_Ui/js/model/messageList',
 		'jquery',
+		'mage/translate',
 		'domReady!'
 	], function(
 		ko,
@@ -14,7 +15,8 @@ define([
         chSession,
 		fullScreenLoader,
 		globalMessageList,
-		$
+		$,
+		$t
 	) {
 		'use strict';
 
@@ -22,7 +24,7 @@ define([
 			defaults: {
 				tokenConfig: {},
 				tokenizeUrl: "fiserv/vault/tokenizesession",
-				tokenizeErrorMsg: "Something went wrong. Please try again later.",
+				tokenizeErrorMsg: $t("Something went wrong. Please try again later."),
                 paymentSessionData: undefined,
                 contextId: undefined,
 			},
@@ -32,7 +34,7 @@ define([
 			 */
 			initialize: function (config) {
 				if (config.tokenConfig === undefined) { 
-					throw new Error('Required parameter tokenConfig not found!');
+					throw new Error($t('Required parameter tokenConfig not found!'));
 				}
 				
 				this.tokenConfig = config.tokenConfig;
@@ -237,7 +239,7 @@ define([
 			},
 
 			iframeRunFailure: function() {
-				this.showError("Card capture failure. Please try again."); 
+				this.showError($t('Card capture failure. Please try again.'));
 				chIframe.resetIframe();
 				this.endAsyncFlow();
 			},
@@ -272,7 +274,7 @@ define([
 
 			beginTokenizationFlow: function() {
                 if (!this.paymentSessionData || !this.paymentSessionData["sessionId"]) {
-                    this.showError("Payment session not established. Please try again.");
+                    this.showError($t('Payment session not established. Please try again.'));
                     return;
                 }
 
