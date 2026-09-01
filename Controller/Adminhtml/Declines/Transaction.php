@@ -66,12 +66,12 @@ class Transaction extends Action implements HttpGetActionInterface
 		try {
 			$transactionId = $this->getRequest()->getParam('transaction_id');
 			if (!isset($transactionId) || empty($transactionId)) {
-				throw new \Exception("Transaction ID not found");	
+				throw new \Exception((string) __('Transaction ID not found'));	
 			}
 
 			$txn = $this->resourceModel->getByTxnId($transactionId);
 			if (!isset($txn) || empty($txn)) {
-				throw new \Exception("Transaction (" . $transactionId . ") not found.");
+				throw new \Exception((string) __('Transaction (%1) not found.', $transactionId));
 			}
 
 			$resultPage->getLayout()

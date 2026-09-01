@@ -15,8 +15,9 @@ define([
 	'Magento_Catalog/js/price-utils',
 	'Magento_Checkout/js/model/full-screen-loader',
 	'Magento_Checkout/js/model/error-processor',
+	'mage/translate',
 	'mage/validation'
-], function ($, ko, Component, setGiftCardAction, totals, messageList, sdcv2, quote, priceUtils, fullScreenLoader, errorProcessor) {
+], function ($, ko, Component, setGiftCardAction, totals, messageList, sdcv2, quote, priceUtils, fullScreenLoader, errorProcessor, $t) {
 	'use strict';
 
 	let config = structuredClone(window.checkoutConfig.payment.fiserv_commercehub);
@@ -27,7 +28,7 @@ define([
 	return Component.extend({
 		defaults: {
 			template: 'Fiserv_Payments/payment/commercehub/valuelink_form',
-			balanceInquiryGeneralErrorMessage: 'Invalid gift card. Please try again or use another form of payment.'
+			balanceInquiryGeneralErrorMessage: $t('Invalid gift card. Please try again or use another form of payment.')
 		},
 
 		valuelinkBalanceUrl: "fiserv/valuelink/getvaluelinkbalance",
@@ -108,7 +109,7 @@ define([
 				}
 
 				if (parseFloat(balance) === 0) {
-					this.showErrorMessage("Gift card has no balance.");
+					this.showErrorMessage($t('Gift card has no balance.'));
 					return;
 				}
 
@@ -122,7 +123,7 @@ define([
 				this.createGiftCardForm();
 			} catch (error) {
 				console.error("Error setting gift card:", error);
-				this.showErrorMessage("An error occurred while processing the gift card.");
+				this.showErrorMessage($t('An error occurred while processing the gift card.'));
 			}
 		},
 		captureCardFormAsync: function () {
@@ -131,7 +132,7 @@ define([
 					if (sessionId) {
 						resolve(sessionId);
 					} else {
-						reject(new Error("Failed to capture card form."));
+						reject(new Error($t('Failed to capture card form.')));
 					}
 				});
 			});
@@ -266,7 +267,7 @@ define([
 					response.valuelink_balance.responseMessage : this.balanceInquiryGeneralErrorMessage;
 
 			// Remove this line one day with a propper message mapper...
-			message = message === "Invalid SKU/EAN/SCV" ? "Invalid security code provided" : this.balanceInquiryGeneralErrorMessage;
+			message = message === "Invalid SKU/EAN/SCV" ? $t('Invalid security code provided') : this.balanceInquiryGeneralErrorMessage;
 
 			return { "isValid": valid, "message": message };
 		},
@@ -402,7 +403,7 @@ define([
 
 		iframeLoadFailure: function (err)
 		{
-			errorProcessor.process("Unable to load gift card form. Please try again later.", messageList);
+			errorProcessor.process($t('Unable to load gift card form. Please try again later.'), messageList);
 			this.endIframeFlow();
 		},
 

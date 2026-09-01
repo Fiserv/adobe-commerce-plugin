@@ -33,7 +33,7 @@ class Info extends ConfigurableInfo
         if (!empty($accountNumber)) {
             $this->setDataToTransfer(
                 $transport,
-                'Account Number',
+                (string) __('Account Number'),
                 $accountNumber
             );
         }
@@ -41,7 +41,7 @@ class Info extends ConfigurableInfo
         if (!empty($transactionId)) {
             $this->setDataToTransfer(
                 $transport,
-                'Transaction ID',
+                (string) __('Transaction ID'),
                 $transactionId
             );
         }
