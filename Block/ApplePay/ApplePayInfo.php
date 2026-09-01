@@ -43,16 +43,16 @@ class ApplePayInfo extends ConfigurableInfo
 		$paymentInfo = $this->getInfo();
 
 		$ccLast4 = $paymentInfo->getData('cc_last_4');
-		$this->setDataToTransfer($transport, "Card Number ", $ccLast4 ? "x" . $ccLast4 : __('N/A'));
+		$this->setDataToTransfer($transport, (string) __('Card Number'), $ccLast4 ? "x" . $ccLast4 : __('N/A'));
 
 		$ccType = $paymentInfo->getData('cc_type');
 		$cardsArray = array_flip($this->chConfig->getCcTypesMapper());
 
 		$cardType = isset($cardsArray[$ccType]) ? ucwords(strtolower($cardsArray[$ccType])) : __('Unknown');
-		$this->setDataToTransfer($transport, "Card Type", $cardType);
+		$this->setDataToTransfer($transport, (string) __('Card Type'), $cardType);
 
 		$transactionId = $paymentInfo->getData('last_trans_id');
-		$this->setDataToTransfer($transport, "Transaction ID ", $transactionId);
+		$this->setDataToTransfer($transport, (string) __('Transaction ID'), $transactionId);
 
 		return $transport;
 	}

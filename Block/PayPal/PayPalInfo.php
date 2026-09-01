@@ -41,7 +41,7 @@ class PayPalInfo extends ConfigurableInfo
 
         $this->setDataToTransfer(
             $transport,
-            "Transaction",
+            (string) __('Transaction'),
             $paymentInfo->getData('last_trans_id')
         );
 

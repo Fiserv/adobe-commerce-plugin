@@ -157,20 +157,20 @@ class AccountVerificationService
 
         if ($statusCode < 200 || $statusCode >= 300) {
             $this->logger->logError(2, 'Account verification – non-2xx HTTP status: ' . $statusCode);
-            return $this->failure('Account verification failed (HTTP ' . $statusCode . '). Please try a different payment method.');
+            return $this->failure((string) __('Account verification failed (HTTP %1). Please try a different payment method.', $statusCode));
         }
 
         $transactionState = strtoupper(trim($body['gatewayResponse']['transactionState']));
 
         if ($transactionState === self::STATE_VERIFIED) {
             $this->logger->logInfo(2, 'Account verification – VERIFIED');
-            return ['success' => true, 'message' => 'Account verified successfully.'];
+            return ['success' => true, 'message' => (string) __('Account verified successfully.')];
         }
 
         $declineMessage = $body['processorResponseDetails']['responseMessage'] ?? $body['gatewayResponse']['transactionState'];
 
         $this->logger->logError(2, 'Account verification – state: ' . $transactionState . ', reason: ' . $declineMessage);
-        return $this->failure('Account verification failed: ' . $declineMessage . '. Please use a different card or payment method.');
+        return $this->failure((string) __('Account verification failed: %1. Please use a different card or payment method.', $declineMessage));
     }
 
     private function failure(string $message): array

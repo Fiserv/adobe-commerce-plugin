@@ -84,7 +84,7 @@ define([
 
                 const creds = await chSession({ merchantName: config.storeName, paymentCode: this.getCode() });
                 if (!creds?.ch_credentials) {
-                    throw new Error('Error creating payment session');
+                    throw new Error($t('Error creating payment session'));
                 }
 
                 this.paymentPayload.sessionId = creds.ch_credentials.sessionId;
