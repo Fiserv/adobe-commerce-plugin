@@ -121,7 +121,7 @@ abstract class TransactionResponseValidator extends AbstractValidator
 
 		// Verify Status Code
 		if (!$this->isStatusSuccessful($chRawResponse[HttpClient::STATUS_CODE_KEY])) {
-			array_push($errorMessages, "Something went wrong while processing CommerceHub transaction.");
+			array_push($errorMessages, (string) __('Something went wrong while processing CommerceHub transaction.'));
 			array_push($errorCodes, $chRawResponse[HttpClient::STATUS_CODE_KEY]);
 			if (isset($validationSubject["amount"])) {
 				$chRawResponse[HttpClient::RESPONSE_KEY]["amount"] = $validationSubject["amount"];
@@ -139,7 +139,10 @@ abstract class TransactionResponseValidator extends AbstractValidator
 		$apiTraceId = $this->subjectReader->getValueSafely($chRawResponse, 'apiTraceId', $this->paths['apiTraceId']);
 		$transactionState = $this->subjectReader->getValueSafely($chRawResponse, 'transactionState', $this->paths['transactionState']);
 		if (!$this->isStateSuccessful($transactionState)) {
-			array_push($errorMessages, "Transaction state failure: " . ($transactionState ?? "Transaction state not found"));
+			array_push(
+				$errorMessages,
+				(string) __('Transaction state failure: %1', $transactionState ?? (string) __('Transaction state not found'))
+			);
 			array_push($errorCodes, $transactionState);
 			if (isset($validationSubject["amount"])) {
 				$chRawResponse[HttpClient::RESPONSE_KEY]["amount"] = $validationSubject["amount"];

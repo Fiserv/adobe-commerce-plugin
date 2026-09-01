@@ -3,9 +3,11 @@
 define([
 	'jquery',
 	'SDCv2Library',
+	'mage/translate',
 ], function (
 	$,
 	sdcv2,
+	$t,
 ) {
 	'use strict';
 
@@ -17,8 +19,8 @@ define([
 	//		b. Public Key generated during initial credentials request
 	//		c. Symmetric Encryption Algorithm generated during initial credentials request
 	return {
-		credentialsErrorMsg: "Oops! Something went wrong...",	
-           credentialsUrl: "fiserv/valuelink/getcredentials",
+		credentialsErrorMsg: "Oops! Something went wrong...",
+		credentialsUrl: "fiserv/valuelink/getcredentials",
 		clientScriptId: "commercehub",
 		configApiKeyKey: "apiKey",
 		configMerchantIdKey: "merchantId",
@@ -134,7 +136,6 @@ define([
 			return true;
 		},
 
-
 		parseChCredentialsResponse: function (response) {
 			return response[this.credentialsKey];
 		},
@@ -150,7 +151,7 @@ define([
 		instantiateIframe: function (
 			formKey,
 			paymentMethod,
-			loadSuccessCb, 
+			loadSuccessCb,
 			loadErrorCb
 		) {
 			let formData = undefined;
@@ -206,7 +207,7 @@ define([
 		submitCardForm: function (
 			formKey,
 			storeUrl,
-			runSuccessCb, 
+			runSuccessCb,
 			runErrorCb
 		) {
 			let formData = this.getSdcForm(formKey);
@@ -286,7 +287,7 @@ define([
 			let formData = this.forms[formId];
 			if (typeof(formData) === "undefined")
 			{
-				throw new Error("SDC Form not form with id: " + formId + " not found");
+				throw new Error($t('SDC Form not form with id: %1 not found').replace('%1', formId));
 			}
 
 			return formData;

@@ -88,7 +88,7 @@ class Transactions
 	{
 		try {
 			if (empty($filters['orderIncrementId'])) {
-				throw new \Exception('Order Increment ID is missing for transaction lookup.');
+				throw new \Exception((string) __('Order Increment ID is missing for transaction lookup.'));
 			}
 
 			return $this->failedTransactionHelper->getFailedTransactionsByOrderIncrementId(
@@ -127,7 +127,14 @@ class Transactions
 	{
 		$rows = [];
 		if (!empty($transactions)) {
-			$rows[] = ['Date/Time (UTC)', 'Transaction ID', 'Transaction State', 'Approval Status', 'Total Amount', 'IP Address'];
+			$rows[] = [
+				(string) __('Date/Time (UTC)'),
+				(string) __('Transaction ID'),
+				(string) __('Transaction State'),
+				(string) __('Approval Status'),
+				(string) __('Total Amount'),
+				(string) __('IP Address')
+			];
 			foreach ($transactions as $transaction) {
 				$rows[] = [
 					$transaction['date_time'] ?? '',
@@ -139,7 +146,7 @@ class Transactions
 				];
 			}
 		} else {
-			$rows[] = ['No data available'];
+			$rows[] = [(string) __('No data available')];
 		}
 		return $rows;
 	}

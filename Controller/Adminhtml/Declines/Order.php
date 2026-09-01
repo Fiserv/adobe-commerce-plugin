@@ -97,7 +97,7 @@ class Order extends Action implements HttpGetActionInterface
 			$orderIncrementId = $this->getRequest()->getParam('id');
 
 			if (!isset($orderIncrementId) || empty($orderIncrementId)) {
-				throw new \Exception("Order Increment ID not found");
+				throw new \Exception((string) __('Order Increment ID not found'));
 			}
 
 			$failedOrders = $this->orderResourceModel->getByOrderIncrementId($orderIncrementId);
@@ -108,14 +108,14 @@ class Order extends Action implements HttpGetActionInterface
 				$failedOrders = $this->getOrderByIncrementId($orderIncrementId);
 				if (!isset($failedOrders) || empty($failedOrders))
 				{
-					throw new \Exception("Failed order(s) for Order Increment ID (" . $orderIncrementId . ") not found.");
+					throw new \Exception((string) __('Failed order(s) for Order Increment ID (%1) not found.', $orderIncrementId));
 				}
 
 				// Successful orders must have failed transactions to be valid for this dashboard
 				$failedTxns = $this->txnResourceModel->getByOrderIncrementId($orderIncrementId);
 				if (!isset($failedTxns) || empty($failedTxns))
 				{
-					throw new \Exception("Failed transaction(s) for Order Increment ID (" . $orderIncrementId . ") not found.");
+					throw new \Exception((string) __('Failed transaction(s) for Order Increment ID (%1) not found.', $orderIncrementId));
 				}
 
 				// create FailedOrder object for dashboard

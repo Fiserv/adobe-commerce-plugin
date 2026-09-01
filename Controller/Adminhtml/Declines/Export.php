@@ -48,13 +48,13 @@ class Export extends Action implements HttpGetActionInterface
 			$type = $this->getRequest()->getParam('type', 'orders');
 
 			if (!$format) {
-				throw new \Exception('Export format not specified.');
+				throw new \Exception((string) __('Export format not specified.'));
 			}
 
 			$filters = $this->getFiltersByType($type);
 
 			if ($type === 'transactions' && empty($filters['orderIncrementId'])) {
-				throw new \Exception('Order Increment ID is missing for transaction lookup.');
+				throw new \Exception((string) __('Order Increment ID is missing for transaction lookup.'));
 			}
 
 			$fileType = $type === 'transactions' ? 'Unsuccessful_Order_Id-' : 'Unsuccessful_Orders';
@@ -135,7 +135,7 @@ class Export extends Action implements HttpGetActionInterface
 					? $this->transactionsExport->getExcelFile($fileName, $filters, $type)
 					: $this->ordersExport->getExcelFile($fileName, $filters, $type);
 			default:
-				throw new \Exception('Unsupported export format.');
+				throw new \Exception((string) __('Unsupported export format.'));
 		}
 	}
 
@@ -147,7 +147,7 @@ class Export extends Action implements HttpGetActionInterface
 			case 'xls':
 				return 'application/vnd.ms-excel';
 			default:
-				throw new \Exception('Unsupported export format.');
+				throw new \Exception((string) __('Unsupported export format.'));
 		}
 	}
 }

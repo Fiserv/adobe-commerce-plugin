@@ -70,8 +70,8 @@ class RemoveValuelinkCard extends \Magento\Checkout\Controller\Cart implements H
 			$data = $this->getRequest()->getPostValue();
 			if(!isset($data[ValuelinkQuoteRecord::SESSION_ID_KEY]))
 			{
-				throw new InvalidArgumentException("Required Session ID parameter not found.");
-			}			
+				throw new \InvalidArgumentException(__("Required Session ID parameter not found.")->render());
+			}
 			$data[ValuelinkQuoteRecord::BALANCE_KEY] = 0;
 			$data[ValuelinkQuoteRecord::TIMESTAMP_KEY] = time();
 
@@ -82,7 +82,7 @@ class RemoveValuelinkCard extends \Magento\Checkout\Controller\Cart implements H
 
 			$this->logger->logInfo(1, "Gift card has been removed from cart");
 			$this->messageManager->addSuccess(__('Gift card has been removed from cart.'));
-			$response->setData(['valuelink' => "Gift card has been removed from cart."]);
+			$response->setData(['valuelink' => __('Gift card has been removed from cart.')->render()]);
 		} catch(\Exception $e) {
 			$this->logger->logError(1, "Error occurred while removing a ValueLink card");
 			$this->logger->logCritical(2, $e);

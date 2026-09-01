@@ -78,8 +78,8 @@ $transaction = $block->getTransactionDetails();
                     <div class="failed-transaction-detail">
                         <div class="failed-transaction-detail-label">
                             <?= $block->escapeHtml(__('Response Code')); ?>
-                            <a href="https://developer.fiserv.com/product/CommerceHub/docs/?path=docs/Resources/Guides/Response-Codes/Response-Code.md&branch=main" target="_blank" title="Link to possible responseCode values" class="external-link">
-                                <img src="<?= $block->escapeUrl($block->getViewFileUrl('Fiserv_Payments::images/External_Link_Icon.png')) ?>" alt="link">
+                            <a href="https://developer.fiserv.com/product/CommerceHub/docs/?path=docs/Resources/Guides/Response-Codes/Response-Code.md&branch=main" target="_blank" title="<?= $block->escapeHtmlAttr(__('Link to possible responseCode values')); ?>" class="external-link">
+                                <img src="<?= $block->escapeUrl($block->getViewFileUrl('Fiserv_Payments::images/External_Link_Icon.png')) ?>" alt="<?= $block->escapeHtmlAttr(__('Link')); ?>">
                             </a>
                         </div>
                         <div class="failed-transaction-detail-value"><?= $block->escapeHtml(isset($transaction["responseCode"]) ? $transaction["responseCode"] : "N/A"); ?></div>
@@ -87,8 +87,8 @@ $transaction = $block->getTransactionDetails();
                     <div class="failed-transaction-detail">
                         <div class="failed-transaction-detail-label">
                             <?= $block->escapeHtml(__('Response Message')); ?>
-                            <a href="https://developer.fiserv.com/product/CommerceHub/docs/?path=docs/Resources/Guides/Response-Codes/Response-Code.md&branch=main" target="_blank" title="Link to possible responseMessage values" class="external-link">
-                                <img src="<?= $block->escapeUrl($block->getViewFileUrl('Fiserv_Payments::images/External_Link_Icon.png')) ?>" alt="link">
+                            <a href="https://developer.fiserv.com/product/CommerceHub/docs/?path=docs/Resources/Guides/Response-Codes/Response-Code.md&branch=main" target="_blank" title="<?= $block->escapeHtmlAttr(__('Link to possible responseMessage values')); ?>" class="external-link">
+                                <img src="<?= $block->escapeUrl($block->getViewFileUrl('Fiserv_Payments::images/External_Link_Icon.png')) ?>" alt="<?= $block->escapeHtmlAttr(__('Link')); ?>">
                             </a>
                         </div>
                         <div class="failed-transaction-detail-value"><?= $block->escapeHtml(isset($transaction["responseMessage"]) ? $transaction["responseMessage"] : "N/A"); ?></div>
@@ -96,8 +96,8 @@ $transaction = $block->getTransactionDetails();
                     <div class="failed-transaction-detail">
                         <div class="failed-transaction-detail-label">
                             <?= $block->escapeHtml(__('Merchant Advice Code')); ?>
-                            <a href="https://developer.fiserv.com/product/CommerceHub/docs/?path=docs/Resources/Master-Data/Network-Details.md&branch=main#merchant-advice-code" target="_blank" title="Link to possible merchantAdviceCode values" class="external-link">
-                                <img src="<?= $block->escapeUrl($block->getViewFileUrl('Fiserv_Payments::images/External_Link_Icon.png')) ?>" alt="link">
+                            <a href="https://developer.fiserv.com/product/CommerceHub/docs/?path=docs/Resources/Master-Data/Network-Details.md&branch=main#merchant-advice-code" target="_blank" title="<?= $block->escapeHtmlAttr(__('Link to possible merchantAdviceCode values')); ?>" class="external-link">
+                                <img src="<?= $block->escapeUrl($block->getViewFileUrl('Fiserv_Payments::images/External_Link_Icon.png')) ?>" alt="<?= $block->escapeHtmlAttr(__('Link')); ?>">
                             </a>
                         </div>
                         <div class="failed-transaction-detail-value"><?= $block->escapeHtml(isset($transaction["merchantAdviceCode"]) ? $transaction["merchantAdviceCode"] : "N/A"); ?></div>
@@ -105,8 +105,8 @@ $transaction = $block->getTransactionDetails();
                     <div class="failed-transaction-detail">
                         <div class="failed-transaction-detail-label">
 							<?php echo $block->escapeHtml(__('Bank Association Response Code')); ?>
-                            <a href="https://developer.fiserv.com/product/CommerceHub/docs/?path=docs/Resources/Guides/Response-Codes/Association-Response-Code.md&branch=main" target="_blank" title="Link to bankAssociationDetails fail codes" class="external-link">
-                                <img src="<?= $block->getViewFileUrl('Fiserv_Payments::images/External_Link_Icon.png') ?>" alt="link">
+                            <a href="https://developer.fiserv.com/product/CommerceHub/docs/?path=docs/Resources/Guides/Response-Codes/Association-Response-Code.md&branch=main" target="_blank" title="<?= $block->escapeHtmlAttr(__('Link to bankAssociationDetails fail codes')); ?>" class="external-link">
+                                <img src="<?= $block->getViewFileUrl('Fiserv_Payments::images/External_Link_Icon.png') ?>" alt="<?= $block->escapeHtmlAttr(__('Link')); ?>">
                             </a>
                         </div>
                         <div class="failed-transaction-detail-value"><?= $block->escapeHtml(isset($transaction["bank_association_details"]) ? $transaction["bank_association_details"] : "N/A"); ?></div>

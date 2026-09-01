@@ -68,7 +68,7 @@ class RemoveAllValuelinkCards extends \Magento\Checkout\Controller\Cart implemen
 			$this->quoteManager->RemoveAllValuelinkCardsFromQuote($this->cart->getQuote()->getId());
 		
 			$this->messageManager->addSuccess(__('Gift cards have been removed from cart.'));
-			$response->setData(['valuelink' => "Gift cards have been removed from cart."]);
+			$response->setData(['valuelink' => __('Gift cards have been removed from cart.')->render()]);
 		} catch(\Exception $e) {
 			$this->logger->logError(1, "Error occurred while removing ValueLink Cards");
 			$this->logger->logCritical(2, $e);

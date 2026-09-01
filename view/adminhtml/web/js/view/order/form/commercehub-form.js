@@ -7,6 +7,7 @@ define([
 		'Magento_Ui/js/modal/alert',
 		'Magento_Ui/js/lib/view/utils/dom-observer',
 		'jquery',
+		'mage/translate',
 		'domReady!'
 	], function(
 		ko,
@@ -16,7 +17,8 @@ define([
 		chIframe,
 		alert,
 		domObserver,
-		$
+		$,
+		$t
 	) {
 		'use strict';
 
@@ -33,7 +35,7 @@ define([
 			initialize: function (config) {
 
 				if (typeof(config.paymentConfig) === "undefined") {
-					throw new Error('Required parameter paymentConfig not found!');
+					throw new Error($t('Required parameter paymentConfig not found!'));
 				}
 				this.paymentConfig = config.paymentConfig;
 
@@ -53,7 +55,7 @@ define([
 				}
 				let config = this.paymentConfig;
 				if (typeof(config) === "undefined") {
-					throw new Error('Required parameter paymentConfig not found!');
+					throw new Error($t('Required parameter paymentConfig not found!'));
 				}
 
 				var self = this;
@@ -163,7 +165,7 @@ define([
 
 			iframeRunFailure: function() {
 				this.endAsyncFlow();
-				this.showError("Card capture failure. Please try again.");
+				this.showError($t('Card capture failure. Please try again.'));
 				chIframe.resetIframe();
 				this.hideSurchargeConfirmStep();
 			},
@@ -194,7 +196,7 @@ define([
 
 			placeOrder: function() {
                 if (!this.paymentSessionData || !this.paymentSessionData["sessionId"]) {
-                    this.showError("Payment session not established. Please try again.");
+                    this.showError($t('Payment session not established. Please try again.'));
                     return;
                 }
 				this.setPaymentSessionInput(this.paymentSessionData["sessionId"]);
@@ -578,7 +580,7 @@ define([
 				const surchargeDetails = await chIframe.getSurchargeEstimate(this.buildAdminBillingAddress());
 
 				if (surchargeDetails?.error?.length) {
-					this.showError('Unable to retrieve surcharge estimate: ' + surchargeDetails.error[0].message);
+					this.showError($t('Unable to retrieve surcharge estimate: ') + surchargeDetails.error[0].message);
 					return;
 				}
 
@@ -592,7 +594,7 @@ define([
 					this._captureCard();
 				}
 			} catch (e) {
-				this.showError('Unable to retrieve surcharge estimate. Please try again.');
+				this.showError($t('Unable to retrieve surcharge estimate. Please try again.'));
 			} finally {
 				this.surchargeLoading = false;
 			}
@@ -605,8 +607,8 @@ define([
 						id: 'fiserv-surcharge-confirm-btn',
 						type: 'button',
 						'class': $submitBtn.attr('class'),
-						title: 'Confirm & Place Order'
-					}).html('<span>Confirm & Place Order</span>');
+						title: $t('Confirm & Place Order')
+					}).html('<span>' + $t('Confirm & Place Order') + '</span>');
 
 				$confirmBtn.on('click', () => {
 					this.beginAsyncFlow();
@@ -647,7 +649,7 @@ define([
 
 			const $row = $(
 				'<tr id="fiserv-admin-surcharge-total-row" class="row-totals">' +
-					'<td class="admin__total-mark" colspan="1">Surcharge</td>' +
+					'<td class="admin__total-mark" colspan="1">' + $t('Surcharge') + '</td>' +
 					'<td class="admin__total-amount">' +
 						'<span class="price">' + formattedAmount + '</span>' +
 					'</td>' +

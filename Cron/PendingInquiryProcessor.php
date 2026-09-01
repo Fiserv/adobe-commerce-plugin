@@ -352,14 +352,14 @@ class PendingInquiryProcessor
         if (!$job) {
             return [
                 'success' => false,
-                'message' => 'No inquiry job found for order: ' . $orderIncrementId
+                'message' => (string) __('No inquiry job found for order: %1', $orderIncrementId)
             ];
         }
 
         if ($job->getStatus() === PendingInquiryJob::STATUS_COMPLETED) {
             return [
                 'success' => true,
-                'message' => 'Job already completed',
+                'message' => (string) __('Job already completed'),
                 'transactionState' => $job->getTransactionState(),
                 'approvalStatus' => $job->getApprovalStatus()
             ];

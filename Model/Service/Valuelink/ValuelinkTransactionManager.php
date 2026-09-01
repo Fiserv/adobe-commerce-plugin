@@ -393,6 +393,6 @@ class ValuelinkTransactionManager
 		return (isset($chResponse["paymentReceipt"]) &&
 				isset($chResponse["paymentReceipt"]["processorResponseDetails"]) &&
 				isset($chResponse["paymentReceipt"]["processorResponseDetails"]["responseMessage"])) ?
-			$chResponse["paymentReceipt"]["processorResponseDetails"]["responseMessage"] : "Response message unavailable";
+			$chResponse["paymentReceipt"]["processorResponseDetails"]["responseMessage"] : (string) __("Response message unavailable");
 	}
 }
