@@ -24,17 +24,17 @@ class GetCommerceHubToken extends Action implements HttpGetActionInterface
 	/**
 	 * @var MultiLevelLogger
 	 */
-	private $logger;
+	protected $logger;
 
 	/**
 	 * @var Session
 	 */
-	private $session;
+	protected $session;
 
 	/**
 	 * @var GetPaymentTokenCommand
 	 */
-	private $command;
+	protected $command;
 
 	/**
 	 * @param Context $context
@@ -63,10 +63,7 @@ class GetCommerceHubToken extends Action implements HttpGetActionInterface
 
 		try {
 			$publicHash = $this->getRequest()->getParam('public_hash');
-			$customerId = $this->getRequest()->getParam('customer_id');
-			if (!isset($customerId) || empty($customerId)) {
-				$customerId = $this->session->getCustomer()->getId();
-			}
+			$customerId = $this->getCustomerId();
 			$result = $this->command->execute(
 				['public_hash' => $publicHash, 'customer_id' => $customerId]
 			)
@@ -82,11 +79,21 @@ class GetCommerceHubToken extends Action implements HttpGetActionInterface
 	}
 
 	/**
+	 * Get the customer ID from the current session.
+	 * Frontend always uses the authenticated session — never trusts request params.
+	 * @return int|null
+	 */
+	protected function getCustomerId()
+	{
+		return $this->session->getCustomer()->getId();
+	}
+
+	/**
 	 * Return response for bad request
 	 * @param ResultInterface $response
 	 * @return ResultInterface
 	 */
-	private function processBadRequest(ResultInterface $response)
+	protected function processBadRequest(ResultInterface $response)
 	{
 		$response->setHttpResponseCode(Exception::HTTP_BAD_REQUEST);
 		$response->setData(['message' => __('Sorry, but something went wrong')]);
