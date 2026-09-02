@@ -22,6 +22,8 @@ use Magento\Vault\Api\PaymentTokenManagementInterface;
 use Magento\Framework\Webapi\Exception;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 use Magento\Framework\Encryption\EncryptorInterface;
+use Magento\Customer\Model\Session as CustomerSession;
+use Magento\Store\Model\StoreManagerInterface;
 
 /**
  * Class TokenizeSession
@@ -29,14 +31,12 @@ use Magento\Framework\Encryption\EncryptorInterface;
 class TokenizeSession extends Action implements CsrfAwareActionInterface, HttpPostActionInterface
 {
 	const SESSION_ID_KEY = "session_id";
-	const WEBSITE_ID_KEY = "website_id";
-	const CUSTOMER_ID_KEY = "customer_id";
-	const CARD_ALREADY_ADDED_IN_VAULT = 'Payment card already exists in vault';
 	const PIN_ONLY = "pin_only";
 	const PIN_ONLY_CARD_MESSAGE = "PIN-only debit cards are only allowed for card present purchases";
-	
+	const CARD_ALREADY_ADDED_IN_VAULT = 'Payment card already exists in vault';
+
 	protected $vaultPaymentTokenUtils;
-	
+
 	protected $messageManager;
 
 	/**
@@ -65,7 +65,11 @@ class TokenizeSession extends Action implements CsrfAwareActionInterface, HttpPo
 	private $paymentTokenManager;
 
 	private $encryptor;
-	
+
+	private $customerSession;
+
+	private $storeManager;
+
 	/**
 	* @param Context $context
 	* @param MultiLevelLogger $logger
@@ -80,7 +84,9 @@ class TokenizeSession extends Action implements CsrfAwareActionInterface, HttpPo
 		PaymentTokenManagementInterface $paymentTokenManager,
 		\Magento\Framework\Message\ManagerInterface $messageManager,
 		VaultPaymentTokenUtils $vaultPaymentTokenUtils,
-		EncryptorInterface $encryptor
+		EncryptorInterface $encryptor,
+		CustomerSession $customerSession,
+		StoreManagerInterface $storeManager
 	) {
 		parent::__construct($context);
 		$this->vaultPaymentTokenUtils = $vaultPaymentTokenUtils;
@@ -91,6 +97,8 @@ class TokenizeSession extends Action implements CsrfAwareActionInterface, HttpPo
 		$this->logger = $logger;
 		$this->paymentTokenManager = $paymentTokenManager;
 		$this->encryptor = $encryptor;
+		$this->customerSession = $customerSession;
+		$this->storeManager = $storeManager;
 	}
 
 	/**
@@ -102,11 +110,19 @@ class TokenizeSession extends Action implements CsrfAwareActionInterface, HttpPo
 
 	try {
 		$sessionId = $this->getRequest()->getParam(self::SESSION_ID_KEY);
-		$customerId = $this->getRequest()->getParam(self::CUSTOMER_ID_KEY);
-		$websiteId = $this->getRequest()->getParam(self::WEBSITE_ID_KEY);
-		
-		if ($sessionId == null || $customerId == null) {
-			return $this->processBadRequest($response); 
+
+		// only allow logged-in customers to tokenize cards.
+		if (!$this->customerSession->isLoggedIn()) {
+			$response->setHttpResponseCode(self::HTTP_UNAUTHORIZED);
+			$response->setData(['message' => __('You must be logged in to save a card.')]);
+			return $response;
+		}
+
+		$customerId = $this->customerSession->getCustomerId();
+		$websiteId  = $this->storeManager->getStore()->getWebsiteId();
+
+		if ($sessionId == null) {
+			return $this->processBadRequest($response);
 		}
 
 		$tokenResponse = $this->chAdapter->tokenizeSession($sessionId);
@@ -184,15 +200,5 @@ class TokenizeSession extends Action implements CsrfAwareActionInterface, HttpPo
 		$response->setData(['message' => __($message)]);
 
 		return $response;
-	}
-
-	public function createCsrfValidationException(RequestInterface $request): ? InvalidRequestException
-	{
-		return null;
-	}
-		
-	public function validateForCsrf(RequestInterface $request): ?bool
-	{
-		return true;
 	}
 }

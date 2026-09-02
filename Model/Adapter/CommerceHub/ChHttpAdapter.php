@@ -217,18 +217,19 @@ class ChHttpAdapter
 	{
 		$curl = curl_init();
 		curl_setopt_array($curl,
-						  [
-							  CURLOPT_URL => $url,
-							  CURLOPT_RETURNTRANSFER => true,
-							  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-							  CURLOPT_HTTPHEADER => $this->getHeaders($payload),
-							  CURLOPT_HEADER => true,
-							  CURLOPT_POSTFIELDS => $payload,
-							  CURLOPT_POST => true,
-							  CURLOPT_TIMEOUT => $timeout,
-							  CURLOPT_USERAGENT => $this->getUserAgent(),
-							  CURLOPT_SSL_VERIFYHOST => 0
-						  ]
+		    [
+		        CURLOPT_URL => $url,
+				CURLOPT_RETURNTRANSFER => true,
+				CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+				CURLOPT_HTTPHEADER => $this->getHeaders($payload),
+				CURLOPT_HEADER => true,
+				CURLOPT_POSTFIELDS => $payload,
+				CURLOPT_POST => true,
+				CURLOPT_TIMEOUT => $timeout,
+				CURLOPT_USERAGENT => $this->getUserAgent(),
+				CURLOPT_SSL_VERIFYHOST => 2, // Verify that the certificate's CN/SAN matches the hostname (CWE-295)
+				CURLOPT_SSL_VERIFYPEER => true, // Verify the peer's SSL certificate against trusted CAs
+			]
 		);
 		return $curl;
 	}
