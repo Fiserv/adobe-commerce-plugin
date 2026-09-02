@@ -10,4 +10,8 @@ namespace Fiserv\Payments\Controller\Adminhtml\Vault;
  */
 class GetCommerceHubToken extends \Fiserv\Payments\Controller\Vault\GetCommerceHubToken
 {
+	protected function getCustomerId()
+	{
+		return $this->getRequest()->getParam('customer_id');
+	}
 }
