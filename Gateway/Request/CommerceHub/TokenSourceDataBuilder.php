@@ -70,10 +70,14 @@ class TokenSourceDataBuilder implements BuilderInterface
 		$orderDO = $paymentDO->getOrder();
 		$orderIncrementId = $orderDO->getOrderIncrementId();
 
+		// load the gateway token from the server-side vault
+		$vaultPaymentToken = $payment->getExtensionAttributes()->getVaultPaymentToken();
+		if (!$vaultPaymentToken instanceof \Magento\Vault\Api\Data\PaymentTokenInterface) {
+			throw new \Exception
+			("Vault payment token not found. Cannot process token payment without a verified vault record.");
+		}
 
-
-
-		$tokenData = $payment->getAdditionalInformation(DataAssignObserver::PAYMENT_TOKEN_KEY);
+		$tokenData = $vaultPaymentToken->getGatewayToken();
 		$tokenSource = $payment->getAdditionalInformation(DataAssignObserver::TOKEN_SOURCE_KEY);
 		$expMonth = $payment->getAdditionalInformation(DataAssignObserver::EXP_MONTH_KEY);
 		$expYear = $payment->getAdditionalInformation(DataAssignObserver::EXP_YEAR_KEY);
@@ -85,14 +89,11 @@ class TokenSourceDataBuilder implements BuilderInterface
 		}
 
 		$nameOnCard = '';
-		$vaultPaymentToken = $payment->getExtensionAttributes()->getVaultPaymentToken();
-		if ($vaultPaymentToken instanceof \Magento\Vault\Api\Data\PaymentTokenInterface) {
-			$details = $vaultPaymentToken->getTokenDetails();
-			if (!empty($details)) {
-				$detailsArray = json_decode($details, true);
-				if (isset($detailsArray['nameOnCard'])) {
-					$nameOnCard = $detailsArray['nameOnCard'];
-				}
+		$details = $vaultPaymentToken->getTokenDetails();
+		if (!empty($details)) {
+			$detailsArray = json_decode($details, true);
+			if (isset($detailsArray['nameOnCard'])) {
+				$nameOnCard = $detailsArray['nameOnCard'];
 			}
 		}
 
