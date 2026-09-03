@@ -166,14 +166,14 @@ class VaultDetailsHandler implements HandlerInterface
 
 		$details = $this->convertDetailsToJSON([
 			"type" => !empty($rawScheme) ? $this->getCreditCardType($rawScheme) : "",
-			"maskedCC" => "************" . $cardArray["last4"],
-			"expirationDate" => $cardArray["expirationMonth"] . "/" . $this->normalizeExpirationYear($cardArray["expirationYear"]),
-			"tokenSource" => $tokenArray["tokenSource"],
-			"tokenResponseCode" => $tokenArray["tokenResponseCode"],
-			"tokenResponseDescription" => $tokenArray["tokenResponseDescription"],
+			"maskedCC" => "************" . ($cardArray["last4"] ?? ''),
+			"expirationDate" => ($cardArray["expirationMonth"] ?? '') . "/" . $this->normalizeExpirationYear($cardArray["expirationYear"] ?? ''),
+			"tokenSource" => $tokenArray["tokenSource"] ?? '',
+			"tokenResponseCode" => $tokenArray["tokenResponseCode"] ?? '',
+			"tokenResponseDescription" => $tokenArray["tokenResponseDescription"] ?? '',
 			"nameOnCard" => $cardArray["nameOnCard"] ?? ''
 		]);
-		$paymentToken->setGatewayToken(PaymentTokenUtil::formatTokenDataForPersistence($tokenArray["tokenData"]));
+		$paymentToken->setGatewayToken(PaymentTokenUtil::formatTokenDataForPersistence($tokenArray["tokenData"] ?? ''));
 		$paymentToken->setExpiresAt($this->getExpirationDate($cardArray));
 		$paymentToken->setTokenDetails($details);
 		$paymentToken->setIsVisible($visible);
@@ -196,8 +196,9 @@ class VaultDetailsHandler implements HandlerInterface
 	 * Ensure expiration year is always stored as 4 digits.
 	 * CommerceHub may return 2-digit years in some edge cases.
 	 */
-	private function normalizeExpirationYear(string $year): string
+	private function normalizeExpirationYear($year): string
 	{
+		$year = (string) $year;
 		if (strlen($year) === 2 && ctype_digit($year)) {
 			return '20' . $year;
 		}
@@ -211,9 +212,9 @@ class VaultDetailsHandler implements HandlerInterface
 	private function getExpirationDate($cardArray)
 	{
 		$expDate = new \DateTime(
-            $cardArray["expirationYear"]
+            ($cardArray["expirationYear"] ?? '1970')
             . '-'
-            . $cardArray["expirationMonth"]
+            . ($cardArray["expirationMonth"] ?? '01')
             . '-'
             . '01'
             . ' '
@@ -221,6 +222,7 @@ class VaultDetailsHandler implements HandlerInterface
             new \DateTimeZone('UTC')
         );
         $expDate->add(new \DateInterval('P1M'));
+
 
         return $expDate->format('Y-m-d 00:00:00');
 	}

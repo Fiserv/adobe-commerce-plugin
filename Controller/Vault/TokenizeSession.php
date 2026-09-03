@@ -120,12 +120,12 @@ class TokenizeSession extends Action implements CsrfAwareActionInterface, HttpPo
 		}
 
 		$existingToken = $this->vaultPaymentTokenUtils->doesTokenExist(
-			$tokenResponse["paymentTokens"][0]["tokenData"], 
-			ConfigProvider::CODE, 
-			$customerId, 
-			$tokenResponse["source"]["card"]["expirationMonth"],
-			$tokenResponse["source"]["card"]["expirationYear"]
-		); 
+			$tokenResponse["paymentTokens"][0]["tokenData"] ?? '',
+			ConfigProvider::CODE,
+			$customerId,
+			$tokenResponse["source"]["card"]["expirationMonth"] ?? '',
+			$tokenResponse["source"]["card"]["expirationYear"] ?? ''
+		);
 
 		if($existingToken !== false && isset($existingToken["is_visible"]) && $existingToken["is_visible"])
 		{
@@ -157,7 +157,8 @@ class TokenizeSession extends Action implements CsrfAwareActionInterface, HttpPo
 	} catch (\InvalidArgumentException $e) {
 		$this->logger->logWarning(2, $e);
 		return $this->processCardTokenizationError($response, $e->getMessage());
-	} catch (\Exception $e) {
+	} catch (\Throwable $e) {
+
 		$this->logger->logCritical(1, "Unknown error occurred in tokenization process");
 		$this->logger->logCritical(2, $e);
 		return $this->processBadRequest($response);

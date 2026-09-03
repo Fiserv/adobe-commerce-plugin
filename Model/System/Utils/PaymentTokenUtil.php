@@ -18,10 +18,10 @@ class PaymentTokenUtil
 	// Necessary because Magento persists SPAs using only the Gateway Token and the Pan as a primary key. 
 	// Transarmor returns the same token for cards that have been repeatedly toknenized.
 	// This creates non-unique constraint database violations
-	public static function formatTokenDataForPersistence(string $tokenData)
+	public static function formatTokenDataForPersistence(?string $tokenData)
 	{
 		$timestamp = floor(microtime(true) * 1000);
-		return $tokenData . self::DELIM . $timestamp;
+		return ($tokenData ?? '') . self::DELIM . $timestamp;
 	}
 
 	public static function getTokenDataFromPersistenceFormat(string $formattedTokenData)
