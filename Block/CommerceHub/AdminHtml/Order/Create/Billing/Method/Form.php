@@ -23,32 +23,32 @@ use Fiserv\Payments\Logger\MultiLevelLogger;
  */
 class Form extends Cc
 {
-	const KEY_CARD = 'payment-card';
-	const FORM_CONFIG_KEY = "formConfig";
-	const INVALID_FIELDS_KEY = "invalidFields";
-	const USE_VALUELINK_KEY = "useValuelink";
-	const GRAND_TOTAL_KEY = "grandTotal";
-	const CURRENCY_CODE_KEY = "currencyCode";
+    const KEY_CARD = "payment-card";
+    const FORM_CONFIG_KEY = "formConfig";
+    const INVALID_FIELDS_KEY = "invalidFields";
+    const USE_VALUELINK_KEY = "useValuelink";
+    const GRAND_TOTAL_KEY = "grandTotal";
+    const CURRENCY_CODE_KEY = "currencyCode";
 
-	/**
-	 * @var Quote
-	 */
-	protected $sessionQuote;
+    /**
+     * @var Quote
+     */
+    protected $sessionQuote;
 
-	/**
-	 * @var Config
-	 */
-	protected $gatewayConfig;
+    /**
+     * @var Config
+     */
+    protected $gatewayConfig;
 
-	/**
-	 * @var MultiLevelLogger
-	 */
-	private $logger;
+    /**
+     * @var MultiLevelLogger
+     */
+    private $logger;
 
-	/**
-	 * @var Config
-	 */
-	protected $valuelinkGatewayConfig;
+    /**
+     * @var Config
+     */
+    protected $valuelinkGatewayConfig;
 
     /**
      * @var ConfigProvider
@@ -60,163 +60,223 @@ class Form extends Cc
      */
     private $fiservConfigProvider;
 
-	/**
-	 * @var CcType
-	 */
-	protected $ccType;
+    /**
+     * @var CcType
+     */
+    protected $ccType;
 
-	/**
+    /**
      * @var Json
      */
     private $json;
-	
-	private $orderCreate;
-	
-	/**
-	 * @param Context $context
-	 * @param Config $paymentConfig
-	 * @param Quote $sessionQuote
-	 * @param GatewayConfig $gatewayConfig
-	 * @param CcType $ccType
-	 */
-	public function __construct(
-		Context $context,
-		Config $paymentConfig,
-		Quote $sessionQuote,
-		GatewayConfig $gatewayConfig,
-		ValuelinkGatewayConfig $valuelinkGatewayConfig,
-		ConfigProvider $configProvider,
-		FiservConfigProvider $fiservConfigProvider,
-		CcType $ccType,
-		Json $json,
-		\Magento\Sales\Model\AdminOrder\Create $orderCreate,
-		MultiLevelLogger $logger,
-		array $data = []
-	) {
-		parent::__construct($context, $paymentConfig, $data);
-		$this->sessionQuote = $sessionQuote;
-		$this->gatewayConfig = $gatewayConfig;
-		$this->valuelinkGatewayConfig = $valuelinkGatewayConfig;
-		$this->configProvider = $configProvider;
-		$this->fiservConfigProvider = $fiservConfigProvider;
-		$this->ccType = $ccType;
-		$this->json = $json;
-		$this->orderCreate = $orderCreate;
-		$this->logger = $logger;
-	}
 
-	/**
-	 * Get list of available card types of order billing address country
-	 * @return array
-	 */
-	public function getCcAvailableTypes()
-	{
-		return $this->getConfiguredCardTypes();
-	}
+    private $orderCreate;
 
-	/**
-	 * Check if cvv validation is available
-	 * @return boolean
-	 */
-	public function useCvv()
-	{
-		return $this->gatewayConfig->isCvvEnabled($this->sessionQuote->getStoreId());
-	}
+    /**
+     * @param Context $context
+     * @param Config $paymentConfig
+     * @param Quote $sessionQuote
+     * @param GatewayConfig $gatewayConfig
+     * @param CcType $ccType
+     */
+    public function __construct(
+        Context $context,
+        Config $paymentConfig,
+        Quote $sessionQuote,
+        GatewayConfig $gatewayConfig,
+        ValuelinkGatewayConfig $valuelinkGatewayConfig,
+        ConfigProvider $configProvider,
+        FiservConfigProvider $fiservConfigProvider,
+        CcType $ccType,
+        Json $json,
+        \Magento\Sales\Model\AdminOrder\Create $orderCreate,
+        MultiLevelLogger $logger,
+        array $data = []
+    ) {
+        parent::__construct($context, $paymentConfig, $data);
+        $this->sessionQuote = $sessionQuote;
+        $this->gatewayConfig = $gatewayConfig;
+        $this->valuelinkGatewayConfig = $valuelinkGatewayConfig;
+        $this->configProvider = $configProvider;
+        $this->fiservConfigProvider = $fiservConfigProvider;
+        $this->ccType = $ccType;
+        $this->json = $json;
+        $this->orderCreate = $orderCreate;
+        $this->logger = $logger;
+    }
 
-	/**
-	 * Check if Valuelink is enabled
-	 * @return
-	 */
-	public function useValuelink()
-	{
-		return $this->gatewayConfig->isActive($this->sessionQuote->getStoreId()) && $this->valuelinkGatewayConfig->isActive($this->sessionQuote->getStoreId());
-	}
+    /**
+     * Get list of available card types of order billing address country
+     * @return array
+     */
+    public function getCcAvailableTypes()
+    {
+        return $this->getConfiguredCardTypes();
+    }
 
-	/**
-	 * Get Valuelink Title
-	 * @return
-	 */
-	public function getValuelinkTitle()
-	{
-		return $this->valuelinkGatewayConfig->getValuelinkTitle($this->sessionQuote->getStoreId());
-	}
+    /**
+     * Check if cvv validation is available
+     * @return boolean
+     */
+    public function useCvv()
+    {
+        return $this->gatewayConfig->isCvvEnabled(
+            $this->sessionQuote->getStoreId()
+        );
+    }
 
-	/**
-	 * Get available card types
-	 * @return array
-	 */
-	private function getConfiguredCardTypes()
-	{
-		$types = $this->ccType->getAllowedTypes();
-		$configCardTypes = array_fill_keys(
-			$this->gatewayConfig->getAvailableCardTypes($this->sessionQuote->getStoreId()),
-			''
-		);
+    /**
+     * Check if Valuelink is enabled
+     * @return
+     */
+    public function useValuelink()
+    {
+        return $this->gatewayConfig->isActive(
+            $this->sessionQuote->getStoreId()
+        ) &&
+            $this->valuelinkGatewayConfig->isActive(
+                $this->sessionQuote->getStoreId()
+            );
+    }
 
-		return array_intersect_key($types, $configCardTypes);
-	}
+    /**
+     * Get Valuelink Title
+     * @return
+     */
+    public function getValuelinkTitle()
+    {
+        return $this->valuelinkGatewayConfig->getValuelinkTitle(
+            $this->sessionQuote->getStoreId()
+        );
+    }
 
-	/**
-	 * @return json object
-	 */
-	public function getConfig()
-	{
-		$config = array();
-		$chConfig = $this->configProvider->getConfig()["payment"][ConfigProvider::CODE];
-		$fconfig = $this->fiservConfigProvider->getConfig()["payment"][FiservConfigProvider::CODE];
+    /**
+     * Get available card types
+     * @return array
+     */
+    private function getConfiguredCardTypes()
+    {
+        $types = $this->ccType->getAllowedTypes();
+        $configCardTypes = array_fill_keys(
+            $this->gatewayConfig->getAvailableCardTypes(
+                $this->sessionQuote->getStoreId()
+            ),
+            ""
+        );
 
-		$config[ConfigProvider::ENV_KEY] = $chConfig[ConfigProvider::ENV_KEY];
-		$config[ConfigProvider::MERCHANT_ID_KEY] = $chConfig[ConfigProvider::MERCHANT_ID_KEY];
-		$config[ConfigProvider::API_KEY_KEY] = $chConfig[ConfigProvider::API_KEY_KEY];
-		$config[ConfigProvider::TERMINAL_ID_KEY] = $chConfig[ConfigProvider::TERMINAL_ID_KEY];
-		$config[FiservConfigProvider::STORE_URL_KEY] = $fconfig[FiservConfigProvider::STORE_URL_KEY];
-		$config[self::FORM_CONFIG_KEY] = $this->configProvider->buildFormConfig(GatewayConfig::KEY_SDC_ADMIN, $fconfig[FiservConfigProvider::STORE_ID_KEY]);
-		$config[self::INVALID_FIELDS_KEY] = $this->configProvider->getInvalidFieldMessages(GatewayConfig::KEY_SDC_ADMIN, $fconfig[FiservConfigProvider::STORE_ID_KEY]);
-		$config[ConfigProvider::SURCHARGE_ENABLED_KEY] = $chConfig[ConfigProvider::SURCHARGE_ENABLED_KEY];
+        return array_intersect_key($types, $configCardTypes);
+    }
 
-		$quote = $this->orderCreate->getQuote();
-		$config[self::GRAND_TOTAL_KEY] = (float)$quote->getGrandTotal();
-		$config[self::CURRENCY_CODE_KEY] = $quote->getQuoteCurrencyCode() ?: 'USD';
+    /**
+     * @return json object
+     */
+    public function getConfig()
+    {
+        $config = [];
+        $chConfig = $this->configProvider->getConfig()["payment"][
+            ConfigProvider::CODE
+        ];
+        $fconfig = $this->fiservConfigProvider->getConfig()["payment"][
+            FiservConfigProvider::CODE
+        ];
 
-		$config[self::USE_VALUELINK_KEY] = $fconfig[FiservConfigProvider::FISERV_VALUELINK_KEY][FiservConfigProvider::IS_ACTIVE_KEY];
-		if ( $chConfig[ConfigProvider::IS_ACTIVE_KEY] && $fconfig[FiservConfigProvider::FISERV_VALUELINK_KEY][FiservConfigProvider::IS_ACTIVE_KEY])
-		{
-			$config[FiservConfigProvider::VALUELINK_FORM_CONFIG_KEY] = $this->fiservConfigProvider->buildValuelinkFormConfig(GatewayConfig::KEY_SDC_ADMIN, $fconfig[FiservConfigProvider::STORE_ID_KEY]);
-		}
+        $config[ConfigProvider::ENV_KEY] = $chConfig[ConfigProvider::ENV_KEY];
+        $config[ConfigProvider::MERCHANT_ID_KEY] =
+            $chConfig[ConfigProvider::MERCHANT_ID_KEY];
+        $config[ConfigProvider::API_KEY_KEY] =
+            $chConfig[ConfigProvider::API_KEY_KEY];
+        $config[ConfigProvider::TERMINAL_ID_KEY] =
+            $chConfig[ConfigProvider::TERMINAL_ID_KEY];
+        $config[FiservConfigProvider::STORE_URL_KEY] =
+            $fconfig[FiservConfigProvider::STORE_URL_KEY];
 
-		return $this->json->serialize($config);
-	}
-	public function getValuelinkCards()
-	{
-		$result = [];
-		$quote = $this->orderCreate->getQuote();
-		$address = $quote->isVirtual() ? $quote->getBillingAddress() : $quote->getShippingAddress();
-		$rawCards = $address->getValuelinkCards();
-		$leftoverRawCards = $quote->getValuelinkCards();
+        $config[self::FORM_CONFIG_KEY] = $this->configProvider->buildFormConfig(
+            GatewayConfig::KEY_SDC_ADMIN,
+            $fconfig[FiservConfigProvider::STORE_ID_KEY]
+        );
 
-		if (!is_null($leftoverRawCards))
-		{
-			$cards = json_decode($rawCards, true);
-			$leftoverCards = json_decode($leftoverRawCards, true);
-			if (is_array($cards) && is_array($leftoverCards))
-			{
-				foreach ($leftoverCards as $card) 
-				{
-					$chargeAmount = 0;
-					foreach ($cards as $_c)
-					{
-						if ($card[ValuelinkQuoteRecord::SESSION_ID_KEY] === $_c[ValuelinkQuoteRecord::SESSION_ID_KEY])
-						{
-							$chargeAmount = $_c[ValuelinkQuoteRecord::CHARGE_AMOUNT_KEY];
-						}
-					}
-					array_push($result, array( 
-						ValuelinkQuoteRecord::SESSION_ID_KEY => $card[ValuelinkQuoteRecord::SESSION_ID_KEY],
-						ValuelinkQuoteRecord::CHARGE_AMOUNT_KEY => $chargeAmount
-					));
-				}
-			}
-		}
-		return $result;
-	}
+        $config[
+            self::INVALID_FIELDS_KEY
+        ] = $this->configProvider->getInvalidFieldMessages(
+            GatewayConfig::KEY_SDC_ADMIN,
+            $fconfig[FiservConfigProvider::STORE_ID_KEY]
+        );
+
+        $config[ConfigProvider::SURCHARGE_ENABLED_KEY] =
+            $chConfig[ConfigProvider::SURCHARGE_ENABLED_KEY];
+
+        $quote = $this->orderCreate->getQuote();
+
+        $config["baseCurrencyCode"] = $quote
+            ? (string) $quote->getBaseCurrencyCode()
+            : "";
+
+        $config["baseGrandTotal"] = $quote
+            ? (float) $quote->getBaseGrandTotal()
+            : 0.0;
+
+        $config[self::GRAND_TOTAL_KEY] = $quote
+            ? (float) $quote->getGrandTotal()
+            : 0.0;
+
+        $config[self::CURRENCY_CODE_KEY] = $quote
+            ? ($quote->getQuoteCurrencyCode() ?:
+            "USD")
+            : "USD";
+
+        $config[self::USE_VALUELINK_KEY] =
+            $fconfig[FiservConfigProvider::FISERV_VALUELINK_KEY][
+                FiservConfigProvider::IS_ACTIVE_KEY
+            ];
+        if (
+            $chConfig[ConfigProvider::IS_ACTIVE_KEY] &&
+            $fconfig[FiservConfigProvider::FISERV_VALUELINK_KEY][
+                FiservConfigProvider::IS_ACTIVE_KEY
+            ]
+        ) {
+            $config[
+                FiservConfigProvider::VALUELINK_FORM_CONFIG_KEY
+            ] = $this->fiservConfigProvider->buildValuelinkFormConfig(
+                GatewayConfig::KEY_SDC_ADMIN,
+                $fconfig[FiservConfigProvider::STORE_ID_KEY]
+            );
+        }
+
+        return $this->json->serialize($config);
+    }
+    public function getValuelinkCards()
+    {
+        $result = [];
+        $quote = $this->orderCreate->getQuote();
+        $address = $quote->isVirtual()
+            ? $quote->getBillingAddress()
+            : $quote->getShippingAddress();
+        $rawCards = $address->getValuelinkCards();
+        $leftoverRawCards = $quote->getValuelinkCards();
+
+        if (!is_null($leftoverRawCards)) {
+            $cards = json_decode($rawCards, true);
+            $leftoverCards = json_decode($leftoverRawCards, true);
+            if (is_array($cards) && is_array($leftoverCards)) {
+                foreach ($leftoverCards as $card) {
+                    $chargeAmount = 0;
+                    foreach ($cards as $_c) {
+                        if (
+                            $card[ValuelinkQuoteRecord::SESSION_ID_KEY] ===
+                            $_c[ValuelinkQuoteRecord::SESSION_ID_KEY]
+                        ) {
+                            $chargeAmount =
+                                $_c[ValuelinkQuoteRecord::CHARGE_AMOUNT_KEY];
+                        }
+                    }
+                    array_push($result, [
+                        ValuelinkQuoteRecord::SESSION_ID_KEY =>
+                            $card[ValuelinkQuoteRecord::SESSION_ID_KEY],
+                        ValuelinkQuoteRecord::CHARGE_AMOUNT_KEY => $chargeAmount,
+                    ]);
+                }
+            }
+        }
+        return $result;
+    }
 }
