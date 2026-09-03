@@ -1408,11 +1408,11 @@
 						<config_path>payment/fiserv_pay_by_link/payment_page_id</config_path>
 						<comment>Enter the default payment page ID for Pay By Link</comment>
 					</field>
-					<field id="optional_note" translate="label" type="select" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="0">
+					<!-- <field id="optional_note" translate="label" type="select" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Enable Optional Note</label>
 						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 						<config_path>payment/fiserv_pay_by_link/optional_note</config_path>
-					</field>
+					</field> -->
 				</group>
 		</group>
 		</section>

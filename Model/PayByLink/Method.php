@@ -133,9 +133,11 @@ class Method extends AbstractMethod
 				);
 			}
 
-			foreach (['pbl_payment_action', 'pbl_notes'] as $key) {
+			foreach (['pbl_payment_action', 'pbl_page_id', 'pbl_notes'] as $key) {
 				if (array_key_exists($key, $additionalData)) {
-					$additionalData[$key] = $this->normalizeStringValue($additionalData[$key]);
+					$additionalData[$key] = $key === 'pbl_page_id'
+						? $this->normalizePageIdValue($additionalData[$key])
+						: $this->normalizeStringValue($additionalData[$key]);
 				}
 			}
 
@@ -160,6 +162,7 @@ class Method extends AbstractMethod
 		];
 		$stringKeys = [
 			'pbl_payment_action',
+			'pbl_page_id',
 			'pbl_notes',
 		];
 
@@ -178,7 +181,10 @@ class Method extends AbstractMethod
 
 		foreach ($stringKeys as $key) {
 			if (array_key_exists($key, $additionalData)) {
-				$payment->setAdditionalInformation($key, $this->normalizeStringValue($additionalData[$key]));
+				$value = $key === 'pbl_page_id'
+					? $this->normalizePageIdValue($additionalData[$key])
+					: $this->normalizeStringValue($additionalData[$key]);
+				$payment->setAdditionalInformation($key, $value);
 			}
 		}
 
@@ -265,6 +271,13 @@ class Method extends AbstractMethod
 		return (string) $value;
 	}
 
+	private function normalizePageIdValue($value): string
+	{
+		$value = $this->extractLastScalar($value, '');
+
+		return (string) $value;
+	}
+
 	private function normalizeBooleanStringValue($value): string
 	{
 		$value = $this->extractScalar($value, 0);
@@ -281,6 +294,20 @@ class Method extends AbstractMethod
 	{
 		while (is_array($value) && !empty($value)) {
 			$value = reset($value);
+		}
+
+		return is_array($value) ? $default : $value;
+	}
+
+	/**
+	 * @param mixed $value
+	 * @param mixed $default
+	 * @return mixed
+	 */
+	private function extractLastScalar($value, $default)
+	{
+		while (is_array($value) && !empty($value)) {
+			$value = end($value);
 		}
 
 		return is_array($value) ? $default : $value;

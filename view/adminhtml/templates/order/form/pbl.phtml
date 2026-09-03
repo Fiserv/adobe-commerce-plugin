@@ -4,6 +4,7 @@
 	$dayOptions = $block->getDayOptions();
 	$hourOptions = $block->getHourOptions();
 	$minuteOptions = $block->getMinuteOptions();
+	$pageId = $block->getPaymentPageId();
 	$notes = $block->areNotesEnabled();
 ?>
 <link rel="stylesheet" type="text/css" href="<?= $block->escapeUrl($block->getViewFileUrl('Fiserv_Payments/css/ch-form-admin.css')); ?>">
@@ -48,10 +49,33 @@
 					</select>
 				</div>
 			</div>
+			<div class="admin__field field">
+				<label class="label" for="pbl_page_id">
+					<span><?= $block->escapeHtml(__('Payment Page ID')) ?></span>
+				</label>
+				<div class="control">
+					<input type="text"
+						   class="admin__control-text"
+						   id="pbl_page_id"
+						   name="payment[additional_data][pbl_page_id]"
+						   value="<?= $block->escapeHtmlAttr($pageId) ?>" />
+					<div class="admin__field-note">
+						<span><?= $block->escapeHtml(__('Leave blank to use the configured default Payment Page ID.')) ?></span>
+					</div>
+				</div>
+			</div>
 			<?php if($notes): ?>
-				<div>Notes</div>
-				<div id="notes_container">
-					<textarea id="pbl_notes_input" name="payment[additional_data][pbl_notes]" rows="4" cols="50"></textarea>
+				<div class="admin__field field">
+					<label class="label" for="pbl_notes_input">
+						<span><?= $block->escapeHtml(__('Optional Note')) ?></span>
+					</label>
+					<div class="control" id="notes_container">
+						<textarea class="admin__control-textarea"
+								  id="pbl_notes_input"
+								  name="payment[additional_data][pbl_notes]"
+								  rows="4"
+								  maxlength="1024"></textarea>
+					</div>
 				</div>
 			<?php endif; ?>
 		</div>
@@ -91,12 +115,12 @@
 			if (isActive) {
 				el.classList.remove('sdc-hidden');
 				updateExpiryInputsState();
-				el.querySelectorAll('textarea').forEach(function(input) {
+				el.querySelectorAll('textarea, input[type="text"]').forEach(function(input) {
 					input.removeAttribute('disabled');
 				});
 			} else {
 				el.classList.add('sdc-hidden');
-				el.querySelectorAll('select, textarea').forEach(function(input) {
+				el.querySelectorAll('select, textarea, input[type="text"]').forEach(function(input) {
 					input.setAttribute('disabled', 'disabled');
 				});
 			}

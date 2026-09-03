@@ -8,6 +8,13 @@ define(['jquery', 'Magento_Ui/js/modal/modal'], function($, modal) {
 
     var currentLink = '';
 
+    function clearStalePageLoader() {
+        $('[data-container="body"]')
+            .removeClass('ajax-loading')
+            .attr('aria-busy', 'false')
+            .trigger('processStop');
+    }
+
     // Toggle Filter Panel
     window.toggleFilterPanel = function() {
         var $panel = $('#filter-panel');
@@ -18,6 +25,8 @@ define(['jquery', 'Magento_Ui/js/modal/modal'], function($, modal) {
 
     // Check if any filters are active and show panel
     $(document).ready(function() {
+        clearStalePageLoader();
+
         var hasFilters = false;
         var filterParams = ['order_number', 'amount_from', 'amount_to', 'created_from', 'created_to', 'expires_from', 'expires_to', 'status'];
 
