@@ -59,7 +59,7 @@ class ValuelinkCredentialsRequest
 	{
 		$this->logger->logInfo(1, "Initiating Valuelink (VAS) Credentials Request");
 		$data = $this->getCredentialsPayload($this->chConfig->getMerchantId());
-		$this->logger->logDebug(3, "Valuelink Credentials Request Payload\n" . json_encode($data));
+		$this->logger->logDebug(3, "Valuelink Credentials Request Payload\n" . json_encode($data, JSON_PRETTY_PRINT));
 		$chResponse = $this->httpAdapter->sendRequest($data, self::CREDENTIALS_ENDPOINT);
 		return $this->parseResponse($chResponse);
 	}
