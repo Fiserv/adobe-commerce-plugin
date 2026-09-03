@@ -1,8 +1,8 @@
 <?php
 namespace Fiserv\Payments\Block\CommerceHub\Pbl;
 
-use Fiserv\Payments\Block\CommerceHub\Form as ChForm;
 use Fiserv\Payments\Gateway\Config\PayByLink\Config as PblConfig;
+use Magento\Backend\Model\Session\Quote;
 use Magento\Framework\View\Element\Template\Context;
 use Magento\Payment\Block\Form\Cc;
 use Magento\Payment\Model\Config;
@@ -13,6 +13,8 @@ use Magento\Payment\Model\MethodInterface;
  */
 class Form extends Cc 
 {
+	protected $sessionQuote;
+
 	protected $pblConfig;
 
 	protected $_template = 'Fiserv_Payments::order/form/pbl.phtml';
@@ -20,20 +22,27 @@ class Form extends Cc
 	/**
 	 * @param Context $context
 	 * @param Config $paymentConfig
+	 * @param Quote $sessionQuote
 	 * @param PblConfig $pblConfig
 	 */
 	public function __construct(
 		Context $context,
 		Config $paymentConfig,
+		Quote $sessionQuote,
 		PblConfig $pblConfig,
 		array $data = []
 	) {
 		parent::__construct($context, $paymentConfig, $data);
+		$this->sessionQuote = $sessionQuote;
 		$this->pblConfig = $pblConfig;
 	}
 
 	public function areNotesEnabled(): bool {
-		return $this->pblConfig->isOptionalNoteEnabled();	
+		return $this->pblConfig->isOptionalNoteEnabled($this->sessionQuote->getStoreId());
+	}
+
+	public function getPaymentPageId(): string {
+		return (string) $this->pblConfig->getPaymentPageId($this->sessionQuote->getStoreId());
 	}
 
 	public function getSelectOptions(int $start, int $end, int $default, bool $pad = false): array {

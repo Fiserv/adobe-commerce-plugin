@@ -63,7 +63,8 @@ class SessionDataBuilder implements BuilderInterface
             'total' => (float) $order->getGrandTotal(),
             'currency' => $order->getOrderCurrencyCode() ?: 'USD',
             'expiresInMinutes' => $expiresInMinutes,
-            'pageId' => $this->pblConfig->getPaymentPageId($storeId),
+            'pageId' => $this->resolvePageId($additionalInfo, $storeId),
+            'note' => $this->resolveNote($additionalInfo),
             'orderData' => $this->paymentLinkHandler->buildOrderData($order),
             'orderId' => $order->getIncrementId(),
             'paymentAction' => $paymentAction,
@@ -99,6 +100,40 @@ class SessionDataBuilder implements BuilderInterface
 
         // Fall back to config default
         return $this->pblConfig->getExpiryTime($storeId);
+    }
+
+    /**
+     * Resolve the payment page ID from form input or config default.
+     *
+     * @param array|null $additionalInfo
+     * @param int|null $storeId
+     * @return string
+     */
+    private function resolvePageId($additionalInfo, $storeId)
+    {
+        if (is_array($additionalInfo)) {
+            $pageId = trim((string) ($additionalInfo['pbl_page_id'] ?? ''));
+            if ($pageId !== '') {
+                return $pageId;
+            }
+        }
+
+        return trim((string) $this->pblConfig->getPaymentPageId($storeId));
+    }
+
+    /**
+     * Resolve the optional payment note from form input.
+     *
+     * @param array|null $additionalInfo
+     * @return string
+     */
+    private function resolveNote($additionalInfo)
+    {
+        if (!is_array($additionalInfo)) {
+            return '';
+        }
+
+        return trim((string) ($additionalInfo['pbl_notes'] ?? ''));
     }
 
     /**
