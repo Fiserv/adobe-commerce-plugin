@@ -5,6 +5,7 @@ define([
     'Magento_Checkout/js/model/full-screen-loader',
     'Fiserv_Payments/js/ch-adapter',
     'Fiserv_Payments/js/action/create-commercehub-applepay-session',
+    'Fiserv_Payments/js/model/commercehub-applepay-event-handler',
     'Magento_Checkout/js/model/quote',
     'ko',
     'mage/translate'
@@ -15,6 +16,7 @@ define([
     fullScreenLoader,
     chAdapter,
     chSession,
+    CommerceHubApplePayEventHandler,
     quote,
     ko,
     $t
@@ -40,7 +42,8 @@ define([
     	initialize: async function () {
     		this._super();
             this.observeBillingAddress();
-		
+            this.eventHandler = new CommerceHubApplePayEventHandler(this);
+
 		    return this;
         },
 
@@ -105,6 +108,8 @@ define([
             const buttonType = config.applepayButtonType ?? 'buy';
 			await window.fiserv.components.applePay({
 				data: {
+					includeShipping: true,
+					requiredShippingContactFields: ['postalAddress', 'name', 'phone', 'email'],
 					button: {
 						parentElementId: "applepay-button-container",
 						color: buttonStyle,
@@ -113,39 +118,19 @@ define([
 					}
 				},
 				hooks: {
-					onApprove: (data) => {
-						this.paymentPayload.publicKeyHash =
-							data?.publicKeyHash || data?.details?.publicKeyHash || null;
-
-						try {
-							this.onApplePaySuccess(data.details, data);
-							if (typeof data.completePayment === 'function') {
-								data.completePayment('SUCCESS');
-							}
-						} catch (e) {
-							if (typeof data.completePayment === 'function') {
-								data.completePayment('FAILURE');
-							}
-							throw e;
-						}
-					},
-					onCancel: (data) => {
-						if (typeof data?.completePayment === 'function') {
-							data.completePayment('FAILURE');
-						}
-					},
-					onError: (data) => {
-						if (typeof data?.completePayment === 'function') {
-							data.completePayment('FAILURE');
-						}
-						globalMessageList.addErrorMessage({
-							message: $t('Error during Apple Pay checkout')
-						});
-					}
+					getConfig: () => this.eventHandler.getAppleOrderConfig(),
+					onApprove: (data) => this.eventHandler.handleApproval(data),
+					onCancel: (data) => this.eventHandler.handleCancel(data),
+					onError: (data) => this.eventHandler.handleError(data),
+					onPaymentMethodChange: (response) => this.eventHandler.handlePaymentMethodChange(response),
+					onShippingAddressChange: (response) => this.eventHandler.handleShippingAddressChange(response),
+					onShippingOptionsChange: (response) => this.eventHandler.handleShippingOptionsChange(response),
+					onCouponCodeChange: (response) => this.eventHandler.handleCouponCodeChange(response)
 				}
 			});
 			this.initializedAmount = quote.totals()['grand_total'];
 			this.observeTotals();
+			this.eventHandler.initializedHook();
 
 		} catch (error) {
 			globalMessageList.addErrorMessage({

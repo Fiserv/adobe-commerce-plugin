@@ -119,7 +119,7 @@ class CredentialsRequest
 		unset($sessionData[self::KEY_PAYMENT_CODE], $sessionData[self::KEY_IS_TOKENIZATION]);
 		$sessionData[self::KEY_SESSION][self::KEY_INTENT] = $intent;
 		$data = $this->getCredentialsPayload($this->getMerchantId(), $sessionData);
-		$this->logger->logDebug(3, "Credentials Request Payload\n" . json_encode($data));
+		$this->logger->logDebug(3, "Credentials Request Payload\n" . json_encode($data, JSON_PRETTY_PRINT));
 		$chResponse = $this->httpAdapter->sendRequest($data, self::CREDENTIALS_ENDPOINT);
 		$result = $this->parseChCredentialsResponse($chResponse);
 		return $result;
