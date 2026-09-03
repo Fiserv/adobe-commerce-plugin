@@ -104,7 +104,11 @@ class PaymentLinkHandler
             if ($paymentAction !== MethodInterface::ACTION_AUTHORIZE_CAPTURE) {
                 $paymentAction = MethodInterface::ACTION_AUTHORIZE;
             }
-            $pageId = $this->pblConfig->getPaymentPageId($storeId);
+            $pageId = trim((string) $payment->getAdditionalInformation('pbl_page_id'));
+            if ($pageId === '') {
+                $pageId = trim((string) $this->pblConfig->getPaymentPageId($storeId));
+            }
+            $note = trim((string) $payment->getAdditionalInformation('pbl_notes'));
 
             $orderData = $this->buildOrderData($order);
 
@@ -116,15 +120,18 @@ class PaymentLinkHandler
                 $orderData,
                 $order->getIncrementId(),
                 $paymentAction,
-                $storeId
+                $storeId,
+                $note
             );
             $response = $result[PaymentLinkSessionRequest::KEY_RESPONSE];
 
             $payByLinkUrl = $response['checkoutInteractions']['url'] ?? '';
             $sessionId = $response['session']['sessionId'] ?? '';
             $transactionId = $response['gatewayResponse']['transactionProcessingDetails']['transactionId'] ?? '';
+            $responsePageId = $response['checkoutInteractions']['pageId'] ?? $pageId;
 
             $this->applySuccessState($payment, $payByLinkUrl, $sessionId, $transactionId, $paymentAction, (int) $expiresInMinutes);
+            $payment->setAdditionalInformation('pbl_page_id', $responsePageId);
 
             $payment->save();
 

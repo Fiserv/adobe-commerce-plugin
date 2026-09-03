@@ -18,6 +18,10 @@ class PaymentSanitizer
         'pbl_use_default_expiry',
     ];
 
+    private const LAST_SCALAR_FIELDS = [
+        'pbl_page_id',
+    ];
+
     /**
      * Normalize admin posted additional_data before quote payment import.
      *
@@ -112,7 +116,9 @@ class PaymentSanitizer
     private function sanitizeArray(array $values): array
     {
         foreach ($values as $key => $value) {
-            $scalar = $this->extractScalar($value);
+            $scalar = in_array($key, self::LAST_SCALAR_FIELDS, true)
+                ? $this->extractLastScalar($value)
+                : $this->extractScalar($value);
 
             if (in_array($key, self::INT_FIELDS, true)) {
                 $values[$key] = (int)$scalar;
@@ -145,6 +151,19 @@ class PaymentSanitizer
     {
         while (is_array($value) && !empty($value)) {
             $value = reset($value);
+        }
+
+        return $value;
+    }
+
+    /**
+     * @param mixed $value
+     * @return mixed
+     */
+    private function extractLastScalar($value)
+    {
+        while (is_array($value) && !empty($value)) {
+            $value = end($value);
         }
 
         return $value;

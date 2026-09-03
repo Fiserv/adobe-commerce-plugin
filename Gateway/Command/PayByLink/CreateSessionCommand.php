@@ -124,7 +124,8 @@ class CreateSessionCommand implements CommandInterface
                 $request['orderData'],
                 $request['orderId'],
                 $request['paymentAction'],
-                $request['storeId']
+                $request['storeId'],
+                $request['note']
             );
 
             $this->handler->handle(

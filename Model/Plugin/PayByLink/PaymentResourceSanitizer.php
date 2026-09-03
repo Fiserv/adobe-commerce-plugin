@@ -32,6 +32,7 @@ class PaymentResourceSanitizer
         'pbl_expr_hours',
         'pbl_expr_minutes',
         'pbl_use_default_expiry',
+        'pbl_page_id',
         'pbl_notes',
         'pbl_payment_action',
         'pbl_expires_in_minutes',
