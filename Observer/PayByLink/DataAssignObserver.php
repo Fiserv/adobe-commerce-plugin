@@ -12,6 +12,7 @@ class DataAssignObserver extends AbstractDataAssignObserver
     const PBL_EXPR_HOURS = 'pbl_expr_hours';
     const PBL_EXPR_MINUTES = 'pbl_expr_minutes';
     const PBL_USE_DEFAULT_EXPIRY = 'pbl_use_default_expiry';
+    const PBL_PAGE_ID = 'pbl_page_id';
     const PBL_NOTES = 'pbl_notes';
 
     protected $additionalInformationList = [
@@ -20,6 +21,7 @@ class DataAssignObserver extends AbstractDataAssignObserver
         self::PBL_EXPR_HOURS,
         self::PBL_EXPR_MINUTES,
         self::PBL_USE_DEFAULT_EXPIRY,
+        self::PBL_PAGE_ID,
         self::PBL_NOTES,
     ];
 
@@ -41,7 +43,7 @@ class DataAssignObserver extends AbstractDataAssignObserver
                 // Recursively extract scalar from nested arrays
                 // Form submissions can produce: pbl_expr_days = [0], ["0"], [[0]], etc.
                 while (is_array($value) && !empty($value)) {
-                    $value = reset($value);
+                    $value = $key === self::PBL_PAGE_ID ? end($value) : reset($value);
                 }
 
                 // If after extraction we still have an array (shouldn't happen), use default

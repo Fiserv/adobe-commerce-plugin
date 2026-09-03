@@ -79,14 +79,15 @@ class PaymentLinkSessionRequest
      * @param string|null $orderId Order increment ID for return URL identification
      * @param string $paymentAction
      * @param int|null $storeId Store the order belongs to (used to scope the return URLs)
+     * @param string $note Optional note shown as the payment description
      * @return array
      * @throws \Exception
      */
-    public function createSession($total, $currency, $expiresInMinutes, $pageId = null, $orderData = [], $orderId = null, $paymentAction = MethodInterface::ACTION_AUTHORIZE, $storeId = null)
+    public function createSession($total, $currency, $expiresInMinutes, $pageId = null, $orderData = [], $orderId = null, $paymentAction = MethodInterface::ACTION_AUTHORIZE, $storeId = null, $note = '')
     {
         $this->logger->logInfo(1, "Initiating Pay by Link session creation");
 
-        $payload = $this->buildSessionPayload($total, $currency, $expiresInMinutes, $pageId, $orderData, $orderId, $paymentAction, $storeId);
+        $payload = $this->buildSessionPayload($total, $currency, $expiresInMinutes, $pageId, $orderData, $orderId, $paymentAction, $storeId, $note);
 
         $this->logger->logDebug(
             3,
@@ -109,9 +110,10 @@ class PaymentLinkSessionRequest
      * @param string|null $orderId
      * @param string $paymentAction
      * @param int|null $storeId
+    * @param string $note
      * @return array
      */
-    private function buildSessionPayload($total, $currency, $expiresInMinutes, $pageId, $orderData = [], $orderId = null, $paymentAction = MethodInterface::ACTION_AUTHORIZE, $storeId = null)
+    private function buildSessionPayload($total, $currency, $expiresInMinutes, $pageId, $orderData = [], $orderId = null, $paymentAction = MethodInterface::ACTION_AUTHORIZE, $storeId = null, $note = '')
     {
         $urlParams = ['_secure' => true, '_nosid' => true];
         if ($orderId) {
@@ -126,6 +128,10 @@ class PaymentLinkSessionRequest
 
         $transactionDetails = new TransactionDetails();
         $transactionDetails->setCaptureFlag($paymentAction === MethodInterface::ACTION_AUTHORIZE_CAPTURE);
+        $note = trim((string) $note);
+        if ($note !== '') {
+            $transactionDetails->setPaymentDescription($note);
+        }
 
         $amount = new Amount();
         $amount->setTotal(round((float) $total, 2));
