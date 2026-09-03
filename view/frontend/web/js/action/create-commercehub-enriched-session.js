@@ -12,7 +12,15 @@ define(
 		$t
 	) {
 		'use strict';
-		
+
+		function getBaseCurrencyCode(totals)
+		{
+			return (totals && totals.base_currency_code)
+				|| window.checkoutConfig?.quoteData?.base_currency_code
+				|| window.checkoutConfig?.totalsData?.base_currency_code
+				|| '';
+		}
+
 		function getBillingAddress()
 		{
 			// billing address can be null and is not strictly required for all sessions
@@ -102,7 +110,7 @@ define(
 			// grand_total already reflects all applied discounts, store credit, rewards, and gift cards,
 			// so it represents the actual amount to be charged to the credit card.
 			let grandTotal = totals ? parseFloat(totals.grand_total) || 0 : 0;
-			const currency = totals ? (totals.quote_currency_code || 'USD') : 'USD';
+			const currency = getBaseCurrencyCode(totals);
 
 
 			grandTotal = Math.max(0, Math.round(grandTotal * 100) / 100);

@@ -708,7 +708,7 @@ define(
 						amount: surchargeAmount,
 						baseAmount: surchargeBaseAmount,
 						grandTotal: displayGrandTotal,
-						currency: (surchargeDetails.amount && surchargeDetails.amount.currency) || 'USD'
+						currency: (surchargeDetails.amount && surchargeDetails.amount.currency) || this.getBaseCurrencyCode()
 					});
 				} else {
 					surchargeModel.surchargeData(null);
@@ -953,7 +953,14 @@ define(
 			},
 			fieldValueChangeHandler: function(data) {
 				this.resetSurchargeEstimateState();
-			}
+			},
+			getBaseCurrencyCode: function() {
+				const totals = quote.totals();
+				return (totals && totals.base_currency_code)
+					|| window.checkoutConfig?.quoteData?.base_currency_code
+					|| window.checkoutConfig?.totalsData?.base_currency_code
+					|| '';
+			},
 		});
 	}
 );

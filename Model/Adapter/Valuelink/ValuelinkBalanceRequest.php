@@ -51,6 +51,11 @@ class ValuelinkBalanceRequest
 	private $logger;
 	
 	/**
+	 * @var StoreManagerInterface
+	 */
+	private $storeManager;
+
+	/**
 	 * Constructor
 	 *
 	 * @param Config $config
@@ -58,11 +63,13 @@ class ValuelinkBalanceRequest
 	public function __construct(
 		Config $config,
 		ChHttpAdapter $httpAdapter,
-		MultiLevelLogger $logger
+		MultiLevelLogger $logger,
+		StoreManagerInterface $storeManager
 	) {
 		$this->chConfig = $config;
 		$this->httpAdapter = $httpAdapter;
 		$this->logger = $logger;
+		$this->storeManager = $storeManager;
 	}
 
 	/**
@@ -113,13 +120,18 @@ class ValuelinkBalanceRequest
 			$balanceArray = $bodyArray[self::KEY_PAYMENT_RECEIPT][self::KEY_BALANCES];
 			$arrayLength = count($balanceArray);
 			$balanceData = [];
+			$baseCurrency = $this->getBaseCurrencyCode();
 			for($i = 0; $i < $arrayLength; $i++)
 			{
-				if ($balanceArray[$i]['currency'] === 'USD')
+				$entryCurrency = (string)($balanceArray[$i]['currency'] ?? '');
+				if ($baseCurrency !== '' && strcasecmp($entryCurrency, $baseCurrency) === 0)
 				{
 					$balanceData = $balanceArray[$i];
 					break;
 				}
+			}
+			if (empty($balanceData) && $arrayLength > 0) {
+				$balanceData = $balanceArray[0];
 			}
 
 			$endingBalance = $balanceData[self::KEY_AVAILABLE_BALANCE] ?? 0;
@@ -127,7 +139,7 @@ class ValuelinkBalanceRequest
 			$availableBalance = $endingBalance - $lockAmount;
 
 			$data[self::KEY_AVAILABLE_BALANCE] = $availableBalance;
-			$data[self::KEY_CURRENCY] = $balanceData[self::KEY_CURRENCY] ?? 'USD';
+			$data[self::KEY_CURRENCY] = $balanceData[self::KEY_CURRENCY] ?? $baseCurrency;
 			$data[self::KEY_RESPONSE_MESSAGE] = $bodyArray[self::KEY_PAYMENT_RECEIPT][self::KEY_PROCESSOR_RESPONSE_DETAILS][self::KEY_RESPONSE_MESSAGE] ?? '';
 		} else {
 			throw new \Exception('CommerceHub Gift Card BalanceInquiry request HTTP error code: ' . $statusCode, 1);
@@ -140,7 +152,7 @@ class ValuelinkBalanceRequest
 		$payload = new BalanceInquiryRequest();
 		$source = new PaymentSession();
 		$balance = new Balance();
-		$balance->setCurrency('USD');
+		$balance->setCurrency($this->getBaseCurrencyCode());
 		$payload->setBalance($balance);
 		$source->setSourceType(SessionSourceDataBuilder::PAYMENT_SESSION_SOURCE_TYPE);
 		$source->setSessionId($sessionId);
@@ -186,5 +198,15 @@ class ValuelinkBalanceRequest
 			return $chResponse["gatewayResponse"]["transactionProcessingDetails"]["transactionId"];
 		}
 		return null;
+	}
+
+	private function getBaseCurrencyCode(): string
+	{
+		try {
+			$code = (string)$this->storeManager->getStore()->getBaseCurrencyCode();
+			return $code !== '' ? $code : (string)$this->storeManager->getStore()->getCurrentCurrencyCode();
+		} catch (\Throwable $e) {
+			return '';
+		}
 	}
 }

@@ -126,11 +126,13 @@ define([
          * @returns {Object}
          */
         getAmount: function () {
-            let rawGrandTotal = quote.totals() ? quote.totals().grand_total : 0;
-            let grandTotal = Math.round(rawGrandTotal * 100) / 100;
+         view/frontend/web/js/view/payment/method-renderer/commercehub-paze.js
+            let totals = quote.totals();
+            let rawGrandTotal = totals ? totals.grand_total : 0;
             let grandTotalNum = Number(rawGrandTotal) || 0;
             let grandTotalStr = grandTotalNum.toFixed(2);
-            let currency = quote.totals() ? quote.totals().quote_currency_code : "USD";
+            let currency = this.getBaseCurrencyCode(totals);
+
             return {
                 total: grandTotalStr,
                 currency: currency
@@ -395,6 +397,13 @@ define([
             const active = this.getCode() === this.isChecked();
             this.active(active);
             return active;
-        }
+        },
+
+        getBaseCurrencyCode: function (totals) {
+            return (totals && totals.base_currency_code)
+                || window.checkoutConfig?.quoteData?.base_currency_code
+                || window.checkoutConfig?.totalsData?.base_currency_code
+                || '';
+        },
     });
 });

@@ -124,10 +124,15 @@ class ValuelinkTransactionManager
 
 		try
 		{
+			$currencyCode = (string)$order->getBaseCurrencyCode();
+			if ($currencyCode === '') {
+				$currencyCode = (string)$order->getOrderCurrencyCode();
+			}
+
 			$valuelinkTransaction = $this->valuelinkTransactionFactory->create();
 			$valuelinkTransaction->setOrderIncrementId($order->getIncrementId());
 			$valuelinkTransaction->setAmount($valuelinkRecord->getAmountToCharge());
-			$valuelinkTransaction->setCurrency('USD');
+			$valuelinkTransaction->setCurrency($currencyCode);
 			$valuelinkTransaction->setDateCreated(new \DateTime('now', new \DateTimeZone($this->_localeDate->getConfigTimezone())));
 
 			$paymentAction = $this->valuelinkConfig->getPaymentAction();
@@ -149,7 +154,7 @@ class ValuelinkTransactionManager
 			$payload = $this->valuelinkChargesAdapter->getValuelinkChargesPayload(
 				$valuelinkRecord->getSessionId(),
 				$valuelinkRecord->getAmountToCharge(),
-				'USD',
+				$currencyCode,
 				$merchantOrderId
 			);
 
@@ -396,3 +401,4 @@ class ValuelinkTransactionManager
 			$chResponse["paymentReceipt"]["processorResponseDetails"]["responseMessage"] : (string) __("Response message unavailable");
 	}
 }
+
