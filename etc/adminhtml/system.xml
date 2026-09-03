@@ -1251,6 +1251,42 @@
 						<config_path>payment/fiserv_paypal/paypal_button_label</config_path>
 					</field>
 				</group>
+				<group id="fiserv_cashapp" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="9">
+					<label>Cash App Pay</label>
+					<attribute type="expanded">0</attribute>
+					<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+					<field id="enabled" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Enable Cash App Pay</label>
+						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+						<config_path>payment/fiserv_cashapp/active</config_path>
+						<comment>Cash App must be enabled for this Commerce Hub merchant and checkout SDK environment.</comment>
+					</field>
+					<field id="payment_action" translate="label" type="select" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="1">
+						<label>Charge Type</label>
+						<source_model>Fiserv\Payments\Model\Source\CommerceHub\TransactionType</source_model>
+						<config_path>payment/fiserv_cashapp/payment_action</config_path>
+					</field>
+					<field id="button_theme" translate="label" type="select" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Button Theme</label>
+						<source_model>Fiserv\Payments\Model\Source\CashApp\ButtonTheme</source_model>
+						<config_path>payment/fiserv_cashapp/cashapp_button_theme</config_path>
+					</field>
+					<field id="button_shape" translate="label" type="select" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Button Shape</label>
+						<source_model>Fiserv\Payments\Model\Source\CashApp\ButtonShape</source_model>
+						<config_path>payment/fiserv_cashapp/cashapp_button_shape</config_path>
+					</field>
+					<field id="button_size" translate="label" type="select" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Button Size</label>
+						<source_model>Fiserv\Payments\Model\Source\CashApp\ButtonSize</source_model>
+						<config_path>payment/fiserv_cashapp/cashapp_button_size</config_path>
+					</field>
+					<field id="button_width" translate="label" type="select" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Button Width</label>
+						<source_model>Fiserv\Payments\Model\Source\CashApp\ButtonWidth</source_model>
+						<config_path>payment/fiserv_cashapp/cashapp_button_width</config_path>
+					</field>
+				</group>
                 <group id="fiserv_venmo" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="9">
                     <label>Venmo</label>
                     <attribute type="expanded">0</attribute>
