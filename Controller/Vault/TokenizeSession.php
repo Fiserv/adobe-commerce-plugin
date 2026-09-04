@@ -34,6 +34,7 @@ class TokenizeSession extends Action implements CsrfAwareActionInterface, HttpPo
 	const PIN_ONLY = "pin_only";
 	const PIN_ONLY_CARD_MESSAGE = "PIN-only debit cards are only allowed for card present purchases";
 	const CARD_ALREADY_ADDED_IN_VAULT = 'Payment card already exists in vault';
+	const HTTP_UNAUTHORIZED = 401;
 
 	protected $vaultPaymentTokenUtils;
 
@@ -101,9 +102,16 @@ class TokenizeSession extends Action implements CsrfAwareActionInterface, HttpPo
 		$this->storeManager = $storeManager;
 	}
 
-	/**
-	 * @inheritdoc
-	 */
+	public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
+	{
+		return null;
+	}
+
+	public function validateForCsrf(RequestInterface $request): ?bool
+	{
+		return true;
+	}
+
 	public function execute()
 	{
 		$response = $this->resultFactory->create(ResultFactory::TYPE_JSON);
