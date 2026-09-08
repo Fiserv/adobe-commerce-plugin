@@ -265,7 +265,7 @@ define([
 
 			this.sdcv2Form.submit(submitConfig)
 				.then((next) => {
-					runSuccessCb();
+					runSuccessCb(next);
 				})
 				.catch((data) => {
 					console.log(data);

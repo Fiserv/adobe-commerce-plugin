@@ -172,7 +172,7 @@ define([
 			submitIframe: function() {
 				this.beginAsyncFlow();
 				chIframe.submitIframeForm(
-					() => { this.beginTokenizationFlow(); },
+					(submitResult) => { this.beginTokenizationFlow(submitResult); },
 					() => { this.iframeRunFailure(); }
 				);
 			},
@@ -272,13 +272,18 @@ define([
 				});
 			},
 
-			beginTokenizationFlow: function() {
-                if (!this.paymentSessionData || !this.paymentSessionData["sessionId"]) {
-                    this.showError($t('Payment session not established. Please try again.'));
-                    return;
-                }
+																					beginTokenizationFlow: function(submitResult) {
+																						if (!this.paymentSessionData || !this.paymentSessionData["sessionId"]) {
+																							this.showError($t('Payment session not established. Please try again.'));
+																							return;
+																						}
 
-                const sessionId = this.paymentSessionData["sessionId"];
+																						let sessionId = this.paymentSessionData["sessionId"];
+																						if (submitResult && submitResult.session && submitResult.session.sessionId) {
+																							sessionId = submitResult.session.sessionId;
+																						} else if (submitResult && submitResult.sessionId) {
+																							sessionId = submitResult.sessionId;
+																						}
 
 				// Callbacks
 				const validateCb = (response) => { return this.validateTokenizeResponse(response); };
@@ -302,7 +307,10 @@ define([
 						"X-Requested-With": "XMLHttpRequest"
 					},
 					success: function(response) {
-						if (!validateCb(response)) errorCb(errorMsg);
+						if (!validateCb(response)) {
+							errorCb(errorMsg);
+							return;
+						}
 						successCb();
 					},
 					error: function(err) {
@@ -316,7 +324,10 @@ define([
 			},
 
 			validateTokenizeResponse: function(response) {
-				let responseObject = JSON.parse(response);
+				let responseObject = response;
+				if (typeof response === 'string') {
+					responseObject = JSON.parse(response);
+				}
 				let maskedCC = responseObject["maskedCC"];
 				let expirationDate = responseObject["expirationDate"];
 
