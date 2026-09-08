@@ -148,8 +148,7 @@ class TokenizeSession extends Action implements CsrfAwareActionInterface, HttpPo
 			ConfigProvider::CODE, 
 			$customerId, 
 			$tokenResponse["source"]["card"]["expirationMonth"],
-			$tokenResponse["source"]["card"]["expirationYear"],
-			$websiteId
+			$tokenResponse["source"]["card"]["expirationYear"]
 		);
 
 		if($existingToken !== false && isset($existingToken["is_visible"]) && $existingToken["is_visible"])

@@ -10,7 +10,7 @@ class VaultPaymentTokenUtils extends AbstractDb
 		$this->_init('vault_payment_token', 'entity_id');
 	}
 
-	public function getByGatewayToken($token, $paymentMethodCode, $customerId, $websiteId = null)
+	public function getByGatewayToken($token, $paymentMethodCode, $customerId)
 	{
 		$connection = $this->getConnection();
 		$select = $connection
@@ -21,16 +21,12 @@ class VaultPaymentTokenUtils extends AbstractDb
 			->where('is_active = ?', '1')
 			->where('customer_id = ?', $customerId);
 
-		if ($websiteId !== null) {
-			$select->where('website_id = ?', $websiteId);
-		}
-
 		return $connection->fetchAll($select);
 	}
 
-	public function doesTokenExist($tokenData, $paymentMethodCode, $customerId, $expMonth, $expYear, $websiteId = null)
+	public function doesTokenExist($tokenData, $paymentMethodCode, $customerId, $expMonth, $expYear)
 	{
-		$matchingTokenData = $this->getByGatewayToken($tokenData, $paymentMethodCode, $customerId, $websiteId);
+		$matchingTokenData = $this->getByGatewayToken($tokenData, $paymentMethodCode, $customerId);
 		if (count($matchingTokenData) < 1) {
 			return false;
 		}
