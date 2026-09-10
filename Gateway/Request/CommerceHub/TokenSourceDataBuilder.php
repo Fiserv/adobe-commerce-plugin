@@ -10,6 +10,7 @@ use Fiserv\Payments\Observer\CommerceHub\DataAssignObserver;
 use Fiserv\Payments\Gateway\Request\CommerceHub\SessionSourceDataBuilder;
 use Fiserv\Payments\Lib\CommerceHub\Model\PaymentToken;
 use Fiserv\Payments\Lib\CommerceHub\Model\Card;
+use Fiserv\Payments\Model\System\Utils\PaymentTokenUtil;
 use Fiserv\Payments\Gateway\Config\CommerceHub\Config;
 use Magento\Payment\Gateway\Request\BuilderInterface;
 use Magento\Payment\Helper\Formatter;
@@ -77,7 +78,9 @@ class TokenSourceDataBuilder implements BuilderInterface
 			("Vault payment token not found. Cannot process token payment without a verified vault record.");
 		}
 
-		$tokenData = $vaultPaymentToken->getGatewayToken();
+		$tokenData = PaymentTokenUtil::getTokenDataFromPersistenceFormat(
+			(string)$vaultPaymentToken->getGatewayToken()
+		);
 		$tokenSource = $payment->getAdditionalInformation(DataAssignObserver::TOKEN_SOURCE_KEY);
 		$expMonth = $payment->getAdditionalInformation(DataAssignObserver::EXP_MONTH_KEY);
 		$expYear = $payment->getAdditionalInformation(DataAssignObserver::EXP_YEAR_KEY);
