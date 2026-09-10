@@ -25,6 +25,7 @@ use Magento\Payment\Gateway\Data\PaymentDataObjectFactory;
 use Magento\Sales\Api\Data\OrderPaymentExtensionFactory;
 use Magento\Sales\Model\OrderFactory;
 use Magento\Sales\Model\Order\PaymentFactory;
+use Magento\Vault\Api\Data\PaymentTokenInterface;
 use Magento\Vault\Api\PaymentTokenManagementInterface;
 
 class OpenRefundService
@@ -260,8 +261,12 @@ class OpenRefundService
         }
 
         if ($sourceType === self::SOURCE_TYPE_TOKEN) {
-            // Resolve vault public_hash → actual gateway token value
-            $tokenData = $this->resolveVaultToken($data);
+            // Resolve and attach the full vault token object for TokenSourceDataBuilder.
+            $vaultPaymentToken = $this->resolveVaultPaymentToken($data);
+            $tokenData = (string)PaymentTokenUtil::getTokenDataFromPersistenceFormat(
+                (string)$vaultPaymentToken->getGatewayToken()
+            );
+            $this->setPaymentVaultToken($buildSubject, $vaultPaymentToken);
             $this->setPaymentAdditionalInfo($buildSubject, DataAssignObserver::PAYMENT_TOKEN_KEY, $tokenData);
             $sourcePayload = $this->tokenSourceDataBuilder->build($buildSubject);
         } elseif ($sourceType === self::SOURCE_TYPE_CARD_HOSTED_FIELDS && $tokenizedPaymentToken !== '') {
@@ -340,6 +345,23 @@ class OpenRefundService
         $paymentDO->getPayment()->setAdditionalInformation($key, $value);
     }
 
+    /**
+     * @param array<string, mixed> $buildSubject
+     */
+    private function setPaymentVaultToken(array &$buildSubject, PaymentTokenInterface $vaultPaymentToken): void
+    {
+        $paymentDO = $buildSubject['payment'];
+        $payment = $paymentDO->getPayment();
+
+        $extensionAttributes = $payment->getExtensionAttributes();
+        if ($extensionAttributes === null) {
+            $extensionAttributes = $this->orderPaymentExtensionFactory->create();
+        }
+
+        $extensionAttributes->setVaultPaymentToken($vaultPaymentToken);
+        $payment->setExtensionAttributes($extensionAttributes);
+    }
+
     private function resolveCurrencyCode(array $data): string
     {
 	    $accepted = $this->getAcceptedCurrencyCodes();
@@ -398,7 +420,7 @@ class OpenRefundService
      * @param array<string, mixed> $data
      * @throws LocalizedException
      */
-    private function resolveVaultToken(array $data): string
+    private function resolveVaultPaymentToken(array $data): PaymentTokenInterface
     {
         $publicHash = (string)($data['payment_token_hash'] ?? '');
         $customerId = (int)($data['customer_id'] ?? 0);
@@ -406,7 +428,7 @@ class OpenRefundService
         if ($publicHash !== '' && $customerId > 0) {
             $token = $this->tokenManagement->getByPublicHash($publicHash, $customerId);
             if ($token && $token->getGatewayToken()) {
-                return (string)PaymentTokenUtil::getTokenDataFromPersistenceFormat((string)$token->getGatewayToken());
+                return $token;
             }
             throw new LocalizedException(__('The selected payment card could not be found for this customer.'));
         }
