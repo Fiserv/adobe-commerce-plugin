@@ -186,6 +186,7 @@ define(
                 this.beginIframeFlow();
 			this.initializeChAdapter();
 
+                const billingAddress = this.getBillingAddress();
                 if (!billingAddress) throw new Error($t('Billing address not found.'));
 
                 await this.initCheckoutSdk(billingAddress);
@@ -539,8 +540,8 @@ define(
 
                 this.contextId = crypto.randomUUID();
                 await chAdapter.initSdk(
-                    this.getPaymentConfig(), 
-                    this.paymentSessionData, 
+                    this.getPaymentConfig(),
+                    this.paymentSessionData,
                     this.contextId
                 );
             },
@@ -939,3 +940,4 @@ define(
         });
     },
 );
+
