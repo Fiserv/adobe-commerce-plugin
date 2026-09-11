@@ -26,7 +26,7 @@ define([
 
     const SEARCH_DELAY_MS = 300;
 
-    /** Merchant-facing message shown when hosted fields cannot load (Jira: Hosted Fields Fallback AC) */
+    // Merchant-facing message shown when hosted fields cannot load.
     const FALLBACK_MSG =
         'The card entry form could not be loaded. This may be caused by a network issue or ' +
         'the Commerce Hub service being temporarily unavailable.<br><br>' +
@@ -47,6 +47,7 @@ define([
             iframeValid:      false,
             paymentInitiated: false,
             paymentSessionData: null,
+            sessionPayloadSignature: '',
 		submitInProgress: false,
 		allowNativeSubmit: false,
             customerSearchUrl:  '',
@@ -72,11 +73,10 @@ define([
 
             this._bindCustomerSearch();
             this._bindSourceToggle();
+            this._bindAmountCurrencyChange();
             this._bindFormSubmit();
 
-            if (this._isHostedFieldsSourceSelected()) {
-                this._initSdk();
-            }
+            this._initializeHostedFieldsSessionIfReady();
         },
 
         // ── Customer search ───────────────────────────────────────────────────
@@ -128,6 +128,66 @@ define([
                     this._hideCustomerResults();
                 }
             });
+        },
+
+        _bindAmountCurrencyChange: function () {
+            $('#amount, #currency_code').on('input change', () => {
+                this._initializeHostedFieldsSessionIfReady();
+            });
+        },
+
+        _getSessionAmountPayload: function () {
+            const total = parseFloat($('#amount').val());
+            const currency = String($('#currency_code').val() || '').trim().toUpperCase();
+
+            if (!Number.isFinite(total) || total <= 0 || !currency) {
+                return null;
+            }
+
+            return {
+                total: Math.round(total * 100) / 100,
+                currency: currency
+            };
+        },
+
+        _buildSessionPayload: function () {
+            const payload = {
+                storeUrl: (this.paymentConfig && this.paymentConfig.storeUrl) || '',
+                country: 'US'
+            };
+            const amountPayload = this._getSessionAmountPayload();
+            if (amountPayload) {
+                payload.amount = amountPayload;
+            }
+            return payload;
+        },
+
+        _initializeHostedFieldsSessionIfReady: function () {
+            if (!this._isHostedFieldsSourceSelected()) {
+                return;
+            }
+
+            const amountPayload = this._getSessionAmountPayload();
+            if (!amountPayload) {
+                this.sessionPayloadSignature = '';
+                if (this.paymentInitiated) {
+                    this._destroyIframe();
+                }
+                this._setSubmitEnabled(false);
+                return;
+            }
+
+            const payloadSignature = amountPayload.total + '|' + amountPayload.currency;
+            if (this.paymentInitiated && this.sessionPayloadSignature === payloadSignature) {
+                return;
+            }
+
+            if (this.paymentInitiated) {
+                this._destroyIframe();
+            }
+
+            this.sessionPayloadSignature = payloadSignature;
+            this._initSdk();
         },
 
         _searchCustomers: function (query) {
@@ -338,7 +398,7 @@ define([
                 $('#' + this.tokenizedTokenInputId).val('');
                 if (this._isHostedFieldsSourceSelected()) {
                     this._destroyIframe();
-                    this._initSdk();
+                    this._initializeHostedFieldsSessionIfReady();
                 } else {
                     this._destroyIframe();
                     this._setSubmitEnabled(true);
@@ -382,7 +442,8 @@ define([
             );
 
             try {
-                const credsResponse = await chSession({ storeUrl: activeConfig.storeUrl });
+                const sessionPayload = this._buildSessionPayload();
+                const credsResponse = await chSession(sessionPayload);
                 const paymentSessionData = credsResponse && credsResponse.ch_credentials ? credsResponse.ch_credentials : null;
 
                 if (!paymentSessionData) {
@@ -413,6 +474,7 @@ define([
             this.paymentInitiated = false;
             this.iframeValid      = false;
 		this.paymentSessionData = null;
+            this.sessionPayloadSignature = '';
 		this.submitInProgress = false;
 		this.allowNativeSubmit = false;
         },
