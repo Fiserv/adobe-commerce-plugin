@@ -102,8 +102,6 @@ class ValuelinkBalanceRequest
 		$this->logger->logDebug(3, "BALANCE INQUIRY RESPONSE INFO");
 		$this->logger->logDebug(3, "Response Headers:\n" . print_r($chResponse->getHeaders(), true));
 		$this->logger->logDebug(3, "Response Body:\n" . json_encode(json_decode($body), JSON_PRETTY_PRINT));
-		$this->logger->logInfo(1, "Balance Inquiry Success.");
-		$this->logger->logInfo(1, "Transaction ID: " . $transactionId);
 
 		$header = [];
 
@@ -117,6 +115,8 @@ class ValuelinkBalanceRequest
 
 		$data = [];
 		if ($statusCode === 201) {
+			$this->logger->logInfo(1, "Balance Inquiry Success.");
+			$this->logger->logInfo(1, "Transaction ID: " . $transactionId);
 			$balanceArray = $bodyArray[self::KEY_PAYMENT_RECEIPT][self::KEY_BALANCES];
 			$arrayLength = count($balanceArray);
 			$balanceData = [];
