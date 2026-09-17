@@ -20,10 +20,10 @@
 				</label>
 			</div>
 
-			<div class="pbl-expr-picker" id="pbl_custom_expiry_fields" role="group" aria-label="Pay-by-Link Expiration Picker">
-				<div class="section-heading">Link Expiration</div>
+			<div class="pbl-expr-picker" id="pbl_custom_expiry_fields" role="group" aria-label="<?= $block->escapeHtmlAttr(__('Pay-by-Link Expiration Picker')) ?>">
+				<div class="section-heading"><?= $block->escapeHtml(__('Link Expiration')) ?></div>
 				<div class="duration-field">
-					<label for="pbl-expr_days">Days</label>
+					<label for="pbl-expr_days"><?= $block->escapeHtml(__('Days')) ?></label>
 					<select name="payment[additional_data][pbl_expr_days]" id="pbl_expr_days">
 						<?php foreach ($dayOptions as $option): ?>
 							<?= /* @noEscape */ $option ?>
@@ -32,7 +32,7 @@
 				</div>
 
 				<div class="duration-field">
-					<label for="pbl-expr_hours">Hours</label>
+					<label for="pbl-expr_hours"><?= $block->escapeHtml(__('Hours')) ?></label>
 					<select name="payment[additional_data][pbl_expr_hours]" id="pbl_expr_hours">
 						<?php foreach ($hourOptions as $option): ?>
 							<?= /* @noEscape */ $option ?>
@@ -41,7 +41,7 @@
 				</div>
 
 				<div class="duration-field">
-					<label for="pbl-expr_minutes_">Minutes</label>
+					<label for="pbl-expr_minutes_"><?= $block->escapeHtml(__('Minutes')) ?></label>
 					<select name="payment[additional_data][pbl_expr_minutes]" id="pbl_expr_minutes">
 						<?php foreach ($minuteOptions as $option): ?>
 							<?= /* @noEscape */ $option ?>

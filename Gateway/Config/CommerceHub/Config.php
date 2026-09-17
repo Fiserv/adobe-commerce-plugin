@@ -8,12 +8,15 @@ namespace Fiserv\Payments\Gateway\Config\CommerceHub;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Framework\Serialize\Serializer\Json;
+use Fiserv\Payments\Gateway\Config\FormValueTranslatorTrait;
 
 /**
  * Class Config
  */
 class Config extends \Magento\Payment\Gateway\Config\Config
 {
+	use FormValueTranslatorTrait;
+
 	// Gets config values using field names
 	const KEY_ACTIVE = 'active';
 	const KEY_PAYMENT_ACTIVE = 'isPaymentActive';
@@ -435,14 +438,14 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 		
 		$formConfig = array();
 		$formConfig[self::KEY_SDC_PARENT_ELEMENT] = $this->getValue($config_path_base . self::KEY_SDC_PARENT_ELEMENT, $storeId);
-		$formConfig[self::KEY_SDC_PLACEHOLDER] = $this->getValue($config_path_base . self::KEY_SDC_PLACEHOLDER, $storeId);
+		$formConfig[self::KEY_SDC_PLACEHOLDER] = $this->translateFormValue($this->getValue($config_path_base . self::KEY_SDC_PLACEHOLDER, $storeId));
 		$formConfig[self::KEY_SDC_PLACEHOLDER_CHAR] = $this->getValue($config_path_base . self::KEY_SDC_PLACEHOLDER_CHAR, $storeId);
 		$formConfig[self::KEY_SDC_NUMBER_FORMAT] = $this->getValue($config_path_base . self::KEY_SDC_NUMBER_FORMAT, $storeId);
 		$formConfig[self::KEY_SDC_MASK] = $this->getValue($config_path_base . self::KEY_SDC_MASK, $storeId);
 		$formConfig[self::KEY_SDC_MASK_CHAR] = $this->getValue($config_path_base . self::KEY_SDC_MASK_CHAR, $storeId);
 		$formConfig[self::KEY_SDC_MASK_MODE] = $this->getValue($config_path_base . self::KEY_SDC_MASK_MODE, $storeId);
 		$formConfig[self::KEY_SDC_MASK_LENGTH] = $this->getValue($config_path_base . self::KEY_SDC_MASK_LENGTH, $storeId);
-		$formConfig[self::KEY_INVALID_MESSAGE] = $this->getValue($config_path_base . self::KEY_INVALID_MESSAGE, $storeId);
+		$formConfig[self::KEY_INVALID_MESSAGE] = $this->translateFormValue($this->getValue($config_path_base . self::KEY_INVALID_MESSAGE, $storeId));
 		
 		return $formConfig;
 	}
@@ -457,8 +460,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 		
 		$formConfig = array();
 		$formConfig[self::KEY_SDC_PARENT_ELEMENT] = $this->getValue($config_path_base . self::KEY_SDC_PARENT_ELEMENT, $storeId);
-		$formConfig[self::KEY_SDC_PLACEHOLDER] = $this->getValue($config_path_base . self::KEY_SDC_PLACEHOLDER, $storeId);
-		$formConfig[self::KEY_INVALID_MESSAGE] = $this->getValue($config_path_base . self::KEY_INVALID_MESSAGE, $storeId);
+		$formConfig[self::KEY_SDC_PLACEHOLDER] = $this->translateFormValue($this->getValue($config_path_base . self::KEY_SDC_PLACEHOLDER, $storeId));
+		$formConfig[self::KEY_INVALID_MESSAGE] = $this->translateFormValue($this->getValue($config_path_base . self::KEY_INVALID_MESSAGE, $storeId));
 		
 		return $formConfig;
 	}
@@ -468,12 +471,12 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 		
 		$formConfig = array();
 		$formConfig[self::KEY_SDC_PARENT_ELEMENT] = $this->getValue($config_path_base . self::KEY_SDC_PARENT_ELEMENT, $storeId);
-		$formConfig[self::KEY_SDC_PLACEHOLDER] = $this->getValue($config_path_base . self::KEY_SDC_PLACEHOLDER, $storeId);
+		$formConfig[self::KEY_SDC_PLACEHOLDER] = $this->translateFormValue($this->getValue($config_path_base . self::KEY_SDC_PLACEHOLDER, $storeId));
 		$formConfig[self::KEY_SDC_PLACEHOLDER_CHAR] = $this->getValue($config_path_base . self::KEY_SDC_PLACEHOLDER_CHAR, $storeId);
 		$formConfig[self::KEY_SDC_MASK] = $this->getValue($config_path_base . self::KEY_SDC_MASK, $storeId);
 		$formConfig[self::KEY_SDC_MASK_CHAR] = $this->getValue($config_path_base . self::KEY_SDC_MASK_CHAR, $storeId);
 		$formConfig[self::KEY_SDC_MASK_MODE] = $this->getValue($config_path_base . self::KEY_SDC_MASK_MODE, $storeId);
-		$formConfig[self::KEY_INVALID_MESSAGE] = $this->getValue($config_path_base . self::KEY_INVALID_MESSAGE, $storeId);
+		$formConfig[self::KEY_INVALID_MESSAGE] = $this->translateFormValue($this->getValue($config_path_base . self::KEY_INVALID_MESSAGE, $storeId));
 		
 		return $formConfig;
 	}
@@ -488,9 +491,9 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 		
 		$formConfig = array();
 		$formConfig[self::KEY_SDC_PARENT_ELEMENT] = $this->getValue($config_path_base . self::KEY_SDC_PARENT_ELEMENT, $storeId);
-		$formConfig[self::KEY_SDC_PLACEHOLDER] = $this->getValue($config_path_base . self::KEY_SDC_PLACEHOLDER, $storeId);
-		$formConfig[self::KEY_SDC_OPTION_LABELS] = $this->getValue($config_path_base . self::KEY_SDC_OPTION_LABELS, $storeId);
-		$formConfig[self::KEY_INVALID_MESSAGE] = $this->getValue($config_path_base . self::KEY_INVALID_MESSAGE, $storeId);
+		$formConfig[self::KEY_SDC_PLACEHOLDER] = $this->translateFormValue($this->getValue($config_path_base . self::KEY_SDC_PLACEHOLDER, $storeId));
+		$formConfig[self::KEY_SDC_OPTION_LABELS] = $this->translateOptionLabels($this->getValue($config_path_base . self::KEY_SDC_OPTION_LABELS, $storeId));
+		$formConfig[self::KEY_INVALID_MESSAGE] = $this->translateFormValue($this->getValue($config_path_base . self::KEY_INVALID_MESSAGE, $storeId));
 		
 		return $formConfig;
 	}
@@ -505,11 +508,12 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 		
 		$formConfig = array();
 		$formConfig[self::KEY_SDC_PARENT_ELEMENT] = $this->getValue($config_path_base . self::KEY_SDC_PARENT_ELEMENT, $storeId);
-		$formConfig[self::KEY_SDC_PLACEHOLDER] = $this->getValue($config_path_base . self::KEY_SDC_PLACEHOLDER, $storeId);
-		$formConfig[self::KEY_INVALID_MESSAGE] = $this->getValue($config_path_base . self::KEY_INVALID_MESSAGE, $storeId);
+		$formConfig[self::KEY_SDC_PLACEHOLDER] = $this->translateFormValue($this->getValue($config_path_base . self::KEY_SDC_PLACEHOLDER, $storeId));
+		$formConfig[self::KEY_INVALID_MESSAGE] = $this->translateFormValue($this->getValue($config_path_base . self::KEY_INVALID_MESSAGE, $storeId));
 		
 		return $formConfig;
 	}
+
 	public function cssFormConfig($formId, $storeId = null, $isValuelink = false)
 	{
 		if (!$this->validateFormId($formId))

@@ -2,14 +2,14 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
 	<system>
 		<section id="payment">
-			<group id="fiserv_payments" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
+			<group id="fiserv_payments" translate="label comment tooltip" type="text" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
 				<label>Fiserv Payments</label>
 				<fieldset_css>carat_img card_logos</fieldset_css>
 				<attribute type="expanded">1</attribute>
 				<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
 				<comment><![CDATA[<div>Fiserv Payments is a seamless, all-in-one payment solution engineered to elevate your Adobe Commerce experience. Built in-house by Fiserv engineers, ensures reliable maintenance and advancements for your business. Designed for companies ready to thrive in today’s digital landscape, Fiserv Payments provides comprehensive commerce services that offer a smooth, secure transaction process for you and your customers.<br><a href="https://developer.fiserv.com">Please follow this link to documentation for Fiserv's in-house built Adobe Commerce extension.</a></div><div id="fiserv-card-logos"></div>]]></comment>
 				<!-- CommerceHub Gateway Settings -->
-				<group id="fiserv_commercehub" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="5">
+				<group id="fiserv_commercehub" translate="label comment tooltip" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="5">
 					<label>Commerce Hub Gateway General Settings</label>
 					<attribute type="expanded">0</attribute>
 					<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
@@ -64,7 +64,7 @@
 						<source_model>Fiserv\Payments\Model\Source\CommerceHub\CcType</source_model>
 						<config_path>payment/fiserv_commercehub/cctypes</config_path>
 					</field> -->
-					<field id="currency" translate="label" type="select" sortOrder="14" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="currency" translate="label comment tooltip" type="select" sortOrder="14" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Accepted Currency</label>
 						<source_model>Magento\Config\Model\Config\Source\Locale\Currency</source_model>
 						<config_path>payment/fiserv_commercehub/currency</config_path>
@@ -87,7 +87,7 @@
 					<label>Credit/Debit Cards</label>
 					<attribute type="expanded">0</attribute>
 					<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
-					<field id="isPaymentActive" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="isPaymentActive" translate="label comment tooltip" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Enable Credit and Debit Cards</label>
 						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 						<config_path>payment/fiserv_commercehub/isPaymentActive</config_path>
@@ -124,26 +124,26 @@
 						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 						<config_path>payment/fiserv_commercehub/standalone_spa</config_path>
 					</field>
-					<field id="checkout_interactions_expires_in_minutes" translate="label" type="text" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="checkout_interactions_expires_in_minutes" translate="label comment tooltip" type="text" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Checkout Interaction Expiration (Minutes)</label>
 						<config_path>payment/fiserv_commercehub/checkout_interactions_expires_in_minutes</config_path>
 						<backend_model>Fiserv\Payments\Model\System\Config\Backend\CommerceHub\CheckoutInteractionsExpiresInMinutes</backend_model>
 						<validate>validate-number validate-greater-than-zero</validate>
 						<comment>Session validity: 30–240 minutes (default 30 minutes).</comment>
 					</field>
-					<field id="vault_use_cvv" translate="label" type="select" sortOrder="8" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="vault_use_cvv" translate="label comment tooltip" type="select" sortOrder="8" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Require CVV For Stored Cards</label>
 						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 						<config_path>payment/fiserv_commercehub/vault_use_cvv</config_path>
 						<comment>Choose Yes to require the customer to enter CVV when paying with a stored card.</comment>
 					</field>
-					<field id="surcharge_enabled" translate="label" type="select" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="surcharge_enabled" translate="label comment tooltip" type="select" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Enable Surcharge</label>
 						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 						<config_path>payment/fiserv_commercehub/surcharge_enabled</config_path>
 						<comment>Enable surcharge estimation for credit card payments. When enabled, surcharge details will be displayed in the checkout order summary.</comment>
 					</field>
-					<field id="account_verification_enabled" translate="label" type="select" sortOrder="9" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="account_verification_enabled" translate="label comment tooltip" type="select" sortOrder="9" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Enable Account Verification</label>
 						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 						<config_path>payment/fiserv_commercehub/account_verification_enabled</config_path>
@@ -154,7 +154,7 @@
 					<label>Gift Cards</label>
 					<attribute type="expanded">0</attribute>
 					<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
-					<field id="valuelink" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="valuelink" translate="label comment tooltip" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Enable Fiserv Gift Cards</label>
 						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 						<config_path>payment/fiserv_valuelink/active</config_path>
@@ -170,7 +170,7 @@
 						<config_path>payment/fiserv_valuelink/payment_action</config_path>
 						<frontend_model>Fiserv\Payments\Block\Adminhtml\System\Config\Form\Field\DisableValuelinkPaymentAction</frontend_model>
 					</field>
-					<field id="create_valuelink_invoice" translate="label" type="select" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="create_valuelink_invoice" translate="label comment tooltip" type="select" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Create Invoice on Sale</label>
 						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 						<config_path>payment/fiserv_valuelink/create_valuelink_invoice</config_path>
@@ -186,7 +186,7 @@
 						<config_path>payment/fiserv_valuelink/card_amount_limit</config_path>
 					</field>
 
-                    <field id="gift_card_tier" translate="label" type="select" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="gift_card_tier" translate="label comment tooltip" type="select" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="0">
                         <label>Gift Solutions Tier</label>
                         <depends>
                             <field id="valuelink">1</field>
@@ -201,13 +201,13 @@
 					<label>Open Refunds</label>
 					<attribute type="expanded">0</attribute>
 					<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
-					<field id="open_refund_enabled" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="open_refund_enabled" translate="label comment tooltip" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Enable Open Refunds</label>
 						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 						<config_path>payment/fiserv_commercehub/open_refund_enabled</config_path>
 						<comment>Allow admins to issue open refunds to customers directly through Commerce Hub without an associated order.</comment>
 					</field>
-					<field id="open_refund_max_amount" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="open_refund_max_amount" translate="label comment tooltip" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Maximum Refund Amount</label>
 						<config_path>payment/fiserv_commercehub/open_refund_max_amount</config_path>
 						<validate>validate-number validate-zero-or-greater</validate>
@@ -216,7 +216,7 @@
 							<field id="open_refund_enabled">1</field>
 						</depends>
 					</field>
-					<field id="open_refund_capture_flag" translate="label" type="select" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="open_refund_capture_flag" translate="label comment tooltip" type="select" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Capture Immediately</label>
 						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 						<config_path>payment/fiserv_commercehub/open_refund_capture_flag</config_path>
@@ -230,7 +230,7 @@
                     <label>Apple Pay</label>
                     <attribute type="expanded">0</attribute>
                     <frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
-                    <field id="active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="active" translate="label comment tooltip" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
                         <label>Enable Apple Pay</label>
                         <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 						<config_path>payment/fiserv_applepay/payment_active</config_path>
@@ -245,25 +245,25 @@
                         <source_model>Fiserv\Payments\Model\Source\CommerceHub\TransactionType</source_model>
                         <config_path>payment/fiserv_applepay/payment_action</config_path>
                     </field>
-                    <field id="applepay_button_style" translate="label" type="select" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="applepay_button_style" translate="label comment tooltip" type="select" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="0">
                         <label>Apple Pay Button Style</label>
                         <comment>Set the style for the Apple Pay button.</comment>
                         <source_model>Fiserv\Payments\Model\Source\ApplePay\ButtonStyle</source_model>
                         <config_path>payment/fiserv_applepay/applepay_button_style</config_path>
                     </field>
-                    <field id="applepay_button_type" translate="label" type="select" sortOrder="101" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="applepay_button_type" translate="label comment tooltip" type="select" sortOrder="101" showInDefault="1" showInWebsite="1" showInStore="0">
                         <label>Apple Pay Button Type</label>
                         <comment>Set the type for the Apple Pay button.</comment>
                         <source_model>Fiserv\Payments\Model\Source\ApplePay\ButtonType</source_model>
                         <config_path>payment/fiserv_applepay/applepay_button_type</config_path>
                     </field>
                 </group>
-				<group id="sdc_custom" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="7">
+				<group id="sdc_custom" translate="label comment tooltip" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="7">
 					<label>Payment Form Customization</label>
 					<comment><![CDATA[<a href="https://developer.fiserv.com/product/CommerceHub/docs/?path=docs/Online-Mobile-Digital/Checkout/Hosted-Fields/Hosted-Fields-Customization.md&branch=main">Payment Form Customization Documentation.</a>]]></comment>
 					<attribute type="expanded">0</attribute>
 					<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
-					<group id="customer_form_custom" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="1">
+					<group id="customer_form_custom" translate="label comment tooltip" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="1">
 						<label>Customer Checkout Payment Form</label>
 						<comment>Customer checkout payment form</comment>
 						<attribute type="expanded">0</attribute>
@@ -419,7 +419,7 @@
 							</field>
 						</group>
 
-						<group id="customer_font" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="8">
+						<group id="customer_font" translate="label comment tooltip" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="8">
 							<label>Custom Font</label>
 							<comment>All fields are required to apply a custom font to the payment form.</comment>
 							<attribute type="expanded">0</attribute>
@@ -443,7 +443,7 @@
 						</group>
 					</group>
 
-					<group id="customer_ach_form_custom" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="2">
+					<group id="customer_ach_form_custom" translate="label comment tooltip" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="2">
 						<label>Customer Checkout ACH Form</label>
 						<comment>Customer checkout ACH payment form</comment>
 						<attribute type="expanded">0</attribute>
@@ -578,7 +578,7 @@
 						</group>
 					</group>
 
-					<group id="customer_valuelink_form_custom" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="3">
+					<group id="customer_valuelink_form_custom" translate="label comment tooltip" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="3">
 						<label>Customer Checkout GiftCard Form</label>
 						<comment>Customer checkout giftcard form</comment>
 						<attribute type="expanded">0</attribute>
@@ -687,7 +687,7 @@
 							</field>
 						</group>
 
-						<group id="customer_valuelink_font" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="7">
+						<group id="customer_valuelink_font" translate="label comment tooltip" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="7">
 							<label>Custom Font</label>
 							<comment>All fields are required to apply a custom font to the payment form.</comment>
 							<attribute type="expanded">0</attribute>
@@ -711,7 +711,7 @@
 						</group>
 					</group>
 
-					<group id="admin_form_custom" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="3">
+					<group id="admin_form_custom" translate="label comment tooltip" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="3">
 						<label>Admin Order Payment Form</label>
 						<comment>Admin Panel order creation checkout payment form</comment>
 						<attribute type="expanded">0</attribute>
@@ -867,7 +867,7 @@
 							</field>
 						</group>
 
-						<group id="admin_font" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="7">
+						<group id="admin_font" translate="label comment tooltip" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="7">
 							<label>Custom Font</label>
 							<comment>All fields are required to apply a custom font to the payment form.</comment>
 							<attribute type="expanded">0</attribute>
@@ -891,7 +891,7 @@
 						</group>
 					</group>
 
-					<group id="admin_valuelink_form_custom" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="4">
+					<group id="admin_valuelink_form_custom" translate="label comment tooltip" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="4">
 						<label>Admin Order GiftCard Form</label>
 						<comment>Admin Panel order creation checkout giftcard form</comment>
 						<attribute type="expanded">0</attribute>
@@ -1000,7 +1000,7 @@
 							</field>
 						</group>
 
-						<group id="admin_valuelink_font" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="7">
+						<group id="admin_valuelink_font" translate="label comment tooltip" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="7">
 							<label>Custom Font</label>
 							<comment>All fields are required to apply a custom font to the payment form.</comment>
 							<attribute type="expanded">0</attribute>
@@ -1024,7 +1024,7 @@
 						</group>
 					</group>
 
-					<group id="token_form_custom" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="5">
+					<group id="token_form_custom" translate="label comment tooltip" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="5">
 						<label>Tokenization Form</label>
 						<comment>Stored payment account creation form</comment>
 						<attribute type="expanded">0</attribute>
@@ -1180,7 +1180,7 @@
 							</field>
 						</group>
 
-						<group id="token_font" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="7">
+						<group id="token_font" translate="label comment tooltip" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="7">
 							<label>Custom Font</label>
 							<comment>All fields are required to apply a custom font to the payment form.</comment>
 							<attribute type="expanded">0</attribute>
@@ -1213,13 +1213,13 @@
 						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 						<config_path>payment/fiserv_paypal/payment_active</config_path>
 					</field>
-					<field id="paypal_enable_vaulting" translate="label" type="select" sortOrder="99" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="paypal_enable_vaulting" translate="label comment tooltip" type="select" sortOrder="99" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Enable PayPal Vaulting</label>
 						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 						<config_path>payment/fiserv_paypal/paypal_enable_vaulting</config_path>
 						<comment>Allow customers to save PayPal payment method for future use.</comment>
 					</field>
-					<field id="paypal_enable_fastlane" translate="label" type="select" sortOrder="99" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="paypal_enable_fastlane" translate="label comment tooltip" type="select" sortOrder="99" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Enable PayPal Fastlane</label>
 						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 						<config_path>payment/fiserv_paypal/ch_paypal_fastlane</config_path>
@@ -1232,19 +1232,19 @@
 					</field>
 
 					<!-- PayPal Button Style Fields -->
-					<field id="paypal_button_color" translate="label" type="select" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="paypal_button_color" translate="label comment tooltip" type="select" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>PayPal Button Color</label>
 						<comment>Set the color for the PayPal button (e.g., gold, blue, silver, black).</comment>
 						<source_model>Fiserv\Payments\Model\Source\PayPal\ButtonColor</source_model>
 						<config_path>payment/fiserv_paypal/paypal_button_color</config_path>
 					</field>
-					<field id="paypal_button_shape" translate="label" type="select" sortOrder="101" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="paypal_button_shape" translate="label comment tooltip" type="select" sortOrder="101" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>PayPal Button Shape</label>
 						<comment>Set the shape for the PayPal button (e.g., rect, pill).</comment>
 						<source_model>Fiserv\Payments\Model\Source\PayPal\ButtonShape</source_model>
 						<config_path>payment/fiserv_paypal/paypal_button_shape</config_path>
 					</field>
-					<field id="paypal_button_label" translate="label" type="select" sortOrder="102" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="paypal_button_label" translate="label comment tooltip" type="select" sortOrder="102" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>PayPal Button Label</label>
 						<comment>Set the label for the PayPal button (e.g., paypal, checkout, pay, buynow).</comment>
 						<source_model>Fiserv\Payments\Model\Source\PayPal\ButtonLabel</source_model>
@@ -1260,7 +1260,7 @@
                         <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 						<config_path>payment/fiserv_venmo/payment_active</config_path>
                     </field>
-					<field id="venmo_button_color" translate="label" type="select" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="venmo_button_color" translate="label comment tooltip" type="select" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Venmo Button Color</label>
 						<comment>Set the color for the Venmo button (e.g., blue, white).</comment>
 						<source_model>Fiserv\Payments\Model\Source\PayPal\Venmo\ButtonColor</source_model>
@@ -1281,7 +1281,7 @@
 						<label>Affirm</label>
 						<attribute type="expanded">0</attribute>
 						<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
-						<field id="active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+						<field id="active" translate="label comment tooltip" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
 							<label>Enable Affirm Pay</label>
 							<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 							<config_path>payment/fiserv_affirm/payment_active</config_path>
@@ -1316,7 +1316,7 @@
 						<source_model>Fiserv\Payments\Model\Source\CommerceHub\TransactionType</source_model>
 						<config_path>payment/fiserv_samsung_pay/payment_action</config_path>
 					</field>
-					<field id="samsung_pay_button_color" translate="label" type="select" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="samsung_pay_button_color" translate="label comment tooltip" type="select" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Samsung Pay Button Color</label>
 						<comment>Set the color for the Samsung Pay button (e.g., black, white).</comment>
 						<source_model>Fiserv\Payments\Model\Source\SamsungPay\ButtonColor</source_model>
@@ -1356,7 +1356,7 @@
 				<label>Google Pay</label>
 				<attribute type="expanded">0</attribute>
 				<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
-				<field id="active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+				<field id="active" translate="label comment tooltip" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
 					<label>Enable Google Pay</label>
 					<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 					<config_path>payment/fiserv_googlepay/payment_active</config_path>
@@ -1391,7 +1391,7 @@
 						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 						<config_path>payment/fiserv_pay_by_link/active</config_path>
 					</field>
-					<field id="expiry_time" translate="label" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="expiry_time" translate="label comment tooltip" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Default Expiration Time</label>
 						<frontend_model>Fiserv\Payments\Block\Adminhtml\System\Config\Form\Field\ExpiryTime</frontend_model>
 						<backend_model>Fiserv\Payments\Model\System\Config\Backend\PayByLink\ExpiryTime</backend_model>
@@ -1403,7 +1403,7 @@
 						<source_model>Fiserv\Payments\Model\Source\CommerceHub\TransactionType</source_model>
 						<config_path>payment/fiserv_pay_by_link/payment_action</config_path>
 					</field>
-					<field id="payment_page_id" translate="label" type="text" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
+					<field id="payment_page_id" translate="label comment tooltip" type="text" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
 						<label>Default Payment Page ID</label>
 						<config_path>payment/fiserv_pay_by_link/payment_page_id</config_path>
 						<comment>Enter the default payment page ID for Pay By Link</comment>

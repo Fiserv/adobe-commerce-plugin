@@ -6,6 +6,7 @@
 namespace Fiserv\Payments\Gateway\Config\Ach;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Fiserv\Payments\Gateway\Config\FormValueTranslatorTrait;
 
 /**
  * Class Config
@@ -14,6 +15,8 @@ use Magento\Framework\App\Config\ScopeConfigInterface;
  */
 class Config extends \Magento\Payment\Gateway\Config\Config
 {
+	use FormValueTranslatorTrait;
+
 	const KEY_ACTIVE = 'payment_active';
 	const KEY_PAYMENT_ACTION = 'payment_action';
 
@@ -50,7 +53,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	{
 		return [
 			self::KEY_SDC_PARENT_ELEMENT => $this->getValue('sdc_custom_checkout_routing_number_' . self::KEY_SDC_PARENT_ELEMENT, $storeId),
-			self::KEY_SDC_PLACEHOLDER => $this->getValue('sdc_custom_checkout_routing_number_' . self::KEY_SDC_PLACEHOLDER, $storeId),
+			self::KEY_SDC_PLACEHOLDER => $this->translateFormValue($this->getValue('sdc_custom_checkout_routing_number_' . self::KEY_SDC_PLACEHOLDER, $storeId)),
 			self::KEY_SDC_MASK_CHAR => $this->getValue('sdc_custom_checkout_routing_number_' . self::KEY_SDC_MASK_CHAR, $storeId),
 			self::KEY_SDC_MASK_MODE => $this->getValue('sdc_custom_checkout_routing_number_' . self::KEY_SDC_MASK_MODE, $storeId),
 		];
@@ -66,7 +69,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	{
 		return [
 			self::KEY_SDC_PARENT_ELEMENT => $this->getValue('sdc_custom_checkout_account_number_' . self::KEY_SDC_PARENT_ELEMENT, $storeId),
-			self::KEY_SDC_PLACEHOLDER => $this->getValue('sdc_custom_checkout_account_number_' . self::KEY_SDC_PLACEHOLDER, $storeId),
+			self::KEY_SDC_PLACEHOLDER => $this->translateFormValue($this->getValue('sdc_custom_checkout_account_number_' . self::KEY_SDC_PLACEHOLDER, $storeId)),
 			self::KEY_SDC_MASK_CHAR => $this->getValue('sdc_custom_checkout_account_number_' . self::KEY_SDC_MASK_CHAR, $storeId),
 			self::KEY_SDC_MASK_MODE => $this->getValue('sdc_custom_checkout_account_number_' . self::KEY_SDC_MASK_MODE, $storeId),
 		];
@@ -95,7 +98,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	{
 		return [
 			self::KEY_SDC_PARENT_ELEMENT => $this->getValue('sdc_custom_checkout_id_value_' . self::KEY_SDC_PARENT_ELEMENT, $storeId),
-			self::KEY_SDC_PLACEHOLDER => $this->getValue('sdc_custom_checkout_id_value_' . self::KEY_SDC_PLACEHOLDER, $storeId),
+			self::KEY_SDC_PLACEHOLDER => $this->translateFormValue($this->getValue('sdc_custom_checkout_id_value_' . self::KEY_SDC_PLACEHOLDER, $storeId)),
 		];
 	}
 
@@ -109,7 +112,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	{
 		return [
 			self::KEY_SDC_PARENT_ELEMENT => $this->getValue('sdc_custom_checkout_driver_license_state_' . self::KEY_SDC_PARENT_ELEMENT, $storeId),
-			self::KEY_SDC_PLACEHOLDER => $this->getValue('sdc_custom_checkout_driver_license_state_' . self::KEY_SDC_PLACEHOLDER, $storeId),
+			self::KEY_SDC_PLACEHOLDER => $this->translateFormValue($this->getValue('sdc_custom_checkout_driver_license_state_' . self::KEY_SDC_PLACEHOLDER, $storeId)),
 		];
 	}
 
@@ -123,7 +126,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	{
 		return [
 			self::KEY_SDC_PARENT_ELEMENT => $this->getValue('sdc_custom_checkout_check_type_' . self::KEY_SDC_PARENT_ELEMENT, $storeId),
-			self::KEY_SDC_PLACEHOLDER => $this->getValue('sdc_custom_checkout_check_type_' . self::KEY_SDC_PLACEHOLDER, $storeId),
+			self::KEY_SDC_PLACEHOLDER => $this->translateFormValue($this->getValue('sdc_custom_checkout_check_type_' . self::KEY_SDC_PLACEHOLDER, $storeId)),
 		];
 	}
 
@@ -137,7 +140,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	{
 		return [
 			self::KEY_SDC_PARENT_ELEMENT => $this->getValue('sdc_custom_checkout_account_type_' . self::KEY_SDC_PARENT_ELEMENT, $storeId),
-			self::KEY_SDC_PLACEHOLDER => $this->getValue('sdc_custom_checkout_account_type_' . self::KEY_SDC_PLACEHOLDER, $storeId),
+			self::KEY_SDC_PLACEHOLDER => $this->translateFormValue($this->getValue('sdc_custom_checkout_account_type_' . self::KEY_SDC_PLACEHOLDER, $storeId)),
 		];
 	}
 
@@ -151,7 +154,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	{
 		return [
 			self::KEY_SDC_PARENT_ELEMENT => $this->getValue('sdc_custom_checkout_business_name_' . self::KEY_SDC_PARENT_ELEMENT, $storeId),
-			self::KEY_SDC_PLACEHOLDER => $this->getValue('sdc_custom_checkout_business_name_' . self::KEY_SDC_PLACEHOLDER, $storeId),
+			self::KEY_SDC_PLACEHOLDER => $this->translateFormValue($this->getValue('sdc_custom_checkout_business_name_' . self::KEY_SDC_PLACEHOLDER, $storeId)),
 		];
 	}
 }
