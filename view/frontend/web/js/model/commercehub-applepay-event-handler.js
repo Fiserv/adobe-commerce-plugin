@@ -9,7 +9,7 @@ define([
 	class CommerceHubApplePayEventHandler {
 		constructor(applepayBase) {
 			if (typeof applepayBase === 'undefined') {
-				throw new Error('applepayBase not found. Unable to initialize Apple Pay event handler.');
+				throw new Error($t('applepayBase not found. Unable to initialize Apple Pay event handler.'));
 			}
 
 			this.applepayBase = applepayBase;

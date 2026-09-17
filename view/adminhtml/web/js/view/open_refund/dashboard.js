@@ -1,10 +1,11 @@
 define([
-	'jquery'
-], function ($) {
+	'jquery',
+	'mage/translate',
+], function ($, $t) {
 	'use strict';
 
 	return function (config) {
-		const recordsFoundLabel = (config && config.recordsFoundLabel) || 'records found';
+		const recordsFoundLabel = (config && config.recordsFoundLabel) || $t('records found');
 		const ajaxUrl = (config && config.ajaxUrl) || '';
 
 		$(() => {
@@ -40,7 +41,7 @@ define([
 
 			const updatePaginationInfo = () => {
 				if (totalPages > 0) {
-					$paginationInfoTop.text(currentPage + ' of ' + totalPages).show();
+					$paginationInfoTop.text(currentPage + ' ' + $t('of') + ' ' + totalPages).show();
 				} else {
 					$paginationInfoTop.hide();
 				}
@@ -68,7 +69,7 @@ define([
 					});
 
 				const $pageInfo = $('<span>')
-					.text(currentPage + ' of ' + totalPages)
+					.text(currentPage + ' ' + $t('of') + ' ' + totalPages)
 					.addClass('or-pagination-info');
 
 				const $nextButton = $('<span>')
@@ -104,12 +105,12 @@ define([
 					const $badge = $('<span>')
 						.addClass('or-status-badge')
 						.addClass(row.status_class || '')
-						.text(row.status || '');
+						.text(row.status ? $t(row.status) : '');
 					tr.append($('<td>').append($badge));
 
 					const $actionLink = $('<a>')
 						.attr('href', row.view_url || '#')
-						.text('View');
+						.text($t('View'));
 					tr.append($('<td>').append($actionLink));
 
 					$tbody.append(tr);

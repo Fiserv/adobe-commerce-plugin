@@ -1,12 +1,14 @@
 define(
 	[
         'Fiserv_Payments/js/action/create-commercehub-session',
+		'Fiserv_Payments/js/model/locale',
 		'Magento_Customer/js/model/customer',
 		'Magento_Checkout/js/model/quote',
 		'mage/translate'
 	],
 	function (
 		session,
+		localeModel,
 		customer,
 		quote,
 		$t
@@ -41,7 +43,8 @@ define(
 		{
 			let amount = getAmount();
 			return {
-				"amount" : amount
+				"amount" : amount,
+				"locale" : localeModel.current()
 			};
 		}
 

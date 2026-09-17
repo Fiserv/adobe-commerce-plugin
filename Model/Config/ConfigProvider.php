@@ -10,6 +10,7 @@ use Fiserv\Payments\Gateway\Config\Valuelink\Config as ValuelinkConfig;
 use Magento\Checkout\Model\ConfigProviderInterface;
 use Magento\Framework\Session\SessionManagerInterface;
 use \Magento\Store\Model\StoreManagerInterface;
+use Magento\Framework\Locale\ResolverInterface as LocaleResolverInterface;
 use Fiserv\Payments\Model\Source\CommerceHub\MaskingMode;
 use Fiserv\Payments\Model\Source\CommerceHub\MaskingModeCvv;
 
@@ -25,6 +26,33 @@ class ConfigProvider implements ConfigProviderInterface
 	const STORE_URL_KEY = 'storeUrl';
 	const STORE_ID_KEY = 'storeId';
 	const WEBSITE_ID_KEY = "websiteId";
+	const LOCALE_KEY = "locale";
+	const DEFAULT_LOCALE = 'en-US';
+	const SUPPORTED_LOCALES = [
+		'da-dk' => 'da-DK',
+		'de-de' => 'de-DE',
+		'en-gb' => 'en-GB',
+		'en-us' => self::DEFAULT_LOCALE,
+		'es-es' => 'es-ES',
+		'fa-ir' => 'fa-IR',
+		'fr-fr' => 'fr-FR',
+		'fy-nl' => 'fy-NL',
+		'hi-in' => 'hi-IN',
+		'it-it' => 'it-IT',
+		'iw-il' => 'iw-IL',
+		'ja-jp' => 'ja-JP',
+		'ko-kr' => 'ko-KR',
+		'ms-my' => 'ms-MY',
+		'nl-nl' => 'nl-NL',
+		'no-no' => 'no-NO',
+		'pl-pl' => 'pl-PL',
+		'pt-pt' => 'pt-PT',
+		'sv-se' => 'sv-SE',
+		'uk-ua' => 'uk-UA',
+		'vi-vn' => 'vi-VN',
+		'zh-cn' => 'zh-CN',
+		'zh-tw' => 'zh-TW'
+	];
 	const FISERV_VALUELINK_KEY = "fiserv_valuelink";
 	const VALUELINK_TITLE_KEY = "valuelink_title";
 	const VALUELINK_FORM_CONFIG_KEY = "valuelinkConfig";
@@ -50,6 +78,11 @@ class ConfigProvider implements ConfigProviderInterface
 	private $storeManager;
 
 	/**
+	 * @var LocaleResolverInterface
+	 */
+	private $localeResolver;
+
+	/**
 	 * Constructor
 	 *
 	 * @param Config $config
@@ -59,12 +92,14 @@ class ConfigProvider implements ConfigProviderInterface
 		Config $config,
 		ValueLinkConfig $valuelinkConfig,
 		SessionManagerInterface $session,
-		StoreManagerInterface $storeManager
+		StoreManagerInterface $storeManager,
+		LocaleResolverInterface $localeResolver
 	) {
 		$this->config = $config;
 		$this->valuelinkConfig = $valuelinkConfig;
 		$this->session = $session;
 		$this->storeManager = $storeManager;
+		$this->localeResolver = $localeResolver;
 	}
 
 	/**
@@ -92,6 +127,7 @@ class ConfigProvider implements ConfigProviderInterface
 					self::STORE_URL_KEY => $this->getBaseUrl(),
 					self::STORE_ID_KEY => $this->storeManager->getStore()->getId(),
 					self::WEBSITE_ID_KEY => $this->storeManager->getWebsite()->getId(),
+					self::LOCALE_KEY => $this->getBcp47Locale(),
 					self::FISERV_VALUELINK_KEY => $valuelinkData
 				]
 			]
@@ -101,6 +137,17 @@ class ConfigProvider implements ConfigProviderInterface
 	private function getBaseUrl()
 	{
 		return $this->storeManager->getStore()->getBaseUrl();
+	}
+
+	/**
+	 * Resolve a supported active store locale.
+	 * Empty and unsupported locales fall back to en-US.
+	 */
+	private function getBcp47Locale()
+	{
+		$locale = str_replace('_', '-', trim((string) $this->localeResolver->getLocale()));
+
+		return self::SUPPORTED_LOCALES[strtolower($locale)] ?? self::DEFAULT_LOCALE;
 	}
 
 	public function buildValuelinkFormConfig($formId, $storeId)

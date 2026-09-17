@@ -72,17 +72,20 @@ class View extends Template
 			return $this->getCustomerDisplay((int)$value);
 		}
 
+		if ($field === OpenRefund::KEY_STATUS) {
+			return (string)__((string)$value);
+		}
 
 		if ($field === OpenRefund::KEY_REFUND_REASON) {
 			$map = [
-				'CUSTOMER_APPEASEMENT' => 'Customer Appeasement',
-				'TIME_SENSITIVE_REFUND' => 'Time-sensitive refund',
-				'FRAUD_CORRECTION' => 'Fraud correction',
-				'DUPLICATE_CHARGE' => 'Duplicate charge',
-				'OTHER' => 'Other'
+				'CUSTOMER_APPEASEMENT' => __('Customer Appeasement'),
+				'TIME_SENSITIVE_REFUND' => __('Time-sensitive refund'),
+				'FRAUD_CORRECTION' => __('Fraud correction'),
+				'DUPLICATE_CHARGE' => __('Duplicate charge'),
+				'OTHER' => __('Other')
 			];
 			$reason = strtoupper((string)$value);
-			return $map[$reason] ?? (string)$value;
+			return isset($map[$reason]) ? (string)$map[$reason] : (string)$value;
 		}
 
 		return (string)$value;
@@ -91,7 +94,7 @@ class View extends Template
 	private function getCustomerDisplay(int $customerId): string
 	{
 		if ($customerId <= 0) {
-			return 'Guest';
+			return (string)__('Guest');
 		}
 
 		try {
@@ -109,7 +112,7 @@ class View extends Template
 
 			return (string)$customerId;
 		} catch (NoSuchEntityException $e) {
-			return 'Customer not found (ID: ' . $customerId . ')';
+			return (string)__('Customer not found (ID: %1)', $customerId);
 		}
 	}
 }

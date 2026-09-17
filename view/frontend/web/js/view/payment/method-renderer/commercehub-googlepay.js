@@ -5,6 +5,7 @@ define([
     'Magento_Checkout/js/model/full-screen-loader',
     'Fiserv_Payments/js/ch-adapter',
     'Fiserv_Payments/js/action/create-commercehub-enriched-session',
+    'Fiserv_Payments/js/model/locale-observer',
     'Magento_Checkout/js/model/quote',
     'ko',
     'mage/translate'
@@ -15,6 +16,7 @@ define([
     fullScreenLoader,
     chAdapter,
     chSession,
+    localeObserver,
     quote,
     ko,
     $t
@@ -33,12 +35,14 @@ define([
             isPlaceOrderActionAllowed: ko.observable(false),
             initializedAmount: 0.00,
             googlepayComponent: null,
-            googlepayInitialized: false
+            googlepayInitialized: false,
+            localeSubscription: null
         },
 
         initialize: async function () {
             this._super();
             this.observeBillingAddress();
+            this.observeLocale();
             return this;
         },
 
@@ -70,6 +74,16 @@ define([
             });
         },
 
+
+        /**
+         * The vendor SDK decides button text/translation based on the locale from the payment session
+         */
+        observeLocale: function () {
+            localeObserver.observe(this, () => {
+                this.googlepayInitialized = false;
+                this.loadGooglePayForm();
+            });
+        },
 
         loadGooglePayForm: async function () {
             const config = this.getPaymentConfig();
