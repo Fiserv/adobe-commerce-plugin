@@ -3,6 +3,7 @@ define([
 		'uiComponent',
 		'Fiserv_Payments/js/ch-adapter',
         'Fiserv_Payments/js/action/create-commercehub-session',
+		'Fiserv_Payments/js/model/locale',
 		'Magento_Checkout/js/model/full-screen-loader',
 		'Magento_Ui/js/model/messageList',
 		'jquery',
@@ -13,6 +14,7 @@ define([
 		Component,
 		chIframe,
         chSession,
+		localeModel,
 		fullScreenLoader,
 		globalMessageList,
 		$,
@@ -131,7 +133,10 @@ define([
 
             initCheckoutSdk: async function()
             {
-                const credsResponse = await chSession({ isTokenization: true });
+				const credsResponse = await chSession({
+					isTokenization: true,
+					locale: localeModel.current()
+				});
                 this.paymentSessionData = credsResponse["ch_credentials"];
 
                 this.contextId = crypto.randomUUID();

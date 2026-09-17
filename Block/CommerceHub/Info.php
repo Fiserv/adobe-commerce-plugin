@@ -47,18 +47,18 @@ class Info extends ConfigurableInfo
 
 		$this->setDataToTransfer(
 			$transport,
-			"Card Number",
+			(string) __('Card Number'),
 			"x" . $paymentInfo->getData('cc_last_4')
 		);
 		$cardsArray = array_flip($this->chConfig->getCcTypesMapper());
 		$this->setDataToTransfer(
 			$transport,
-			"Card Type",
+			(string) __('Card Type'),
 			ucwords(strtolower($cardsArray[$paymentInfo->getData('cc_type')]))
 		);
 		$this->setDataToTransfer(
 			$transport,
-			"Transaction",
+			(string) __('Transaction'),
 			$paymentInfo->getData('last_trans_id')
 		);
 

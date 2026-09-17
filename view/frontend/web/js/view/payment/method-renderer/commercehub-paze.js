@@ -5,6 +5,7 @@ define([
     'Magento_Checkout/js/model/full-screen-loader',
     'Fiserv_Payments/js/ch-adapter',
     'Fiserv_Payments/js/action/create-commercehub-enriched-session',
+    'Fiserv_Payments/js/model/locale-observer',
     'Magento_Checkout/js/model/quote',
     'ko',
     'mage/translate',
@@ -16,6 +17,7 @@ define([
     fullScreenLoader,
     chAdapter,
     chSession,
+    localeObserver,
     quote,
     ko,
     $t
@@ -38,12 +40,14 @@ define([
             reloadOnRender: false,
             pazeInitialized: false,
             totalsSubscription: null,
-            paymentMethodsWatcherAttached: false
+            paymentMethodsWatcherAttached: false,
+            localeSubscription: null
         },
 
         initialize: async function () {
             this._super();
             this.observeBillingAddress();
+            this.observeLocale();
             return this;
         },
 
@@ -72,6 +76,15 @@ define([
         observeBillingAddress: function () {
             quote.billingAddress.subscribe((address) => {
                 this.isPlaceOrderActionAllowed(address !== null);
+            });
+        },
+
+        /**
+         * The vendor SDK decides button text/translation based on the locale from the payment session
+         */
+        observeLocale: function () {
+            localeObserver.observe(this, () => {
+                this.loadPazeForm();
             });
         },
 
@@ -126,7 +139,6 @@ define([
          * @returns {Object}
          */
         getAmount: function () {
-         view/frontend/web/js/view/payment/method-renderer/commercehub-paze.js
             let totals = quote.totals();
             let rawGrandTotal = totals ? totals.grand_total : 0;
             let grandTotalNum = Number(rawGrandTotal) || 0;
@@ -190,7 +202,7 @@ define([
 
                 // Enforce context-based render path only.
                 if (!this.renderPazeContext(config, transactionData)) {
-                    throw new Error('Unable to render Paze with SDK context path');
+                    throw new Error($t('Unable to render Paze with SDK context path'));
                 }
 
                 this.initializedAmount = quote.totals()['grand_total'];

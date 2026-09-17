@@ -63,7 +63,7 @@ class ValuelinkQuoteManager
 		if(sizeof($valuelinkRecords) >= $cardAmountLimit)
 		{
 			throw new LocalizedException(
-				__('Only up to ' . $cardAmountLimit . ' gift card' . ($cardAmountLimit === 1 ? '' : 's') .' can be applied to a single purchase.')
+				__('A maximum of %1 gift cards can be applied to a single purchase.', $cardAmountLimit)
 			);
 		}
 

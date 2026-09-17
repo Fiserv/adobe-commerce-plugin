@@ -115,7 +115,9 @@ class InvoiceRegister
 				}
 			}
 
-			throw new \Magento\Framework\Exception\LocalizedException(__("Invoice not created. An error during transaction processing: " . $e->getMessage())); // Ensure the original exception is re-thrown
+			throw new \Magento\Framework\Exception\LocalizedException(
+				__('Invoice not created. An error during transaction processing:')
+			); // Ensure the original exception is re-thrown
 		}
 
 	}

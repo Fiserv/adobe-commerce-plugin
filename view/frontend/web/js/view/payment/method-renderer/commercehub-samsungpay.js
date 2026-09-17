@@ -20,7 +20,6 @@ define([
 	$t
 ) {
 	'use strict';
-
 	return Component.extend({
 		defaults: {
 			template: 'Fiserv_Payments/payment/commercehub/samsungpay-form',

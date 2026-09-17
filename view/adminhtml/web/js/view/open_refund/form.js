@@ -13,27 +13,25 @@ define([
     'Fiserv_Payments/js/action/create-commercehub-session',
     'Fiserv_Payments/js/ch-adapter',
     'jquery',
+    'mage/translate',
     'Magento_Ui/js/modal/alert',
-    'domReady!'
+    'domReady!',
 ], function (
     Component,
     chSession,
     chIframe,
     $,
-    alert
+    $t,
+    alert,
 ) {
     'use strict';
 
     const SEARCH_DELAY_MS = 300;
 
     /** Merchant-facing message shown when hosted fields cannot load (Jira: Hosted Fields Fallback AC) */
-    const FALLBACK_MSG =
-        'The card entry form could not be loaded. This may be caused by a network issue or ' +
-        'the Commerce Hub service being temporarily unavailable.<br><br>' +
-        '<strong>Options:</strong><ul>' +
-        '<li>Refresh the page and try again.</li>' +
-        '<li>If the problem persists, process the refund manually in the Commerce Hub portal.</li>' +
-        '</ul>';
+    const FALLBACK_MSG = $t(
+        'The card entry form could not be loaded. This may be caused by a network issue or the Commerce Hub service being temporarily unavailable.<br><br><strong>Options:</strong><ul><li>Refresh the page and try again.</li><li>If the problem persists, process the refund manually in the Commerce Hub portal.</li></ul>',
+    );
 
     return Component.extend({
 
@@ -96,7 +94,7 @@ define([
                     this._hideCustomerResults();
                     return;
                 }
-		    this._showCustomerMessage('Searching customers...');
+        this._showCustomerMessage($t('Searching customers...'));
                 timer = setTimeout(() => {
                     this._searchCustomers(q);
                 }, SEARCH_DELAY_MS);
@@ -147,7 +145,7 @@ define([
 		},
     error:    (_xhr, textStatus) => {
 			if (textStatus !== 'abort') {
-        this._showCustomerMessage('Unable to search customers right now.');
+        this._showCustomerMessage($t('Unable to search customers right now.'));
 			}
 		},
     complete: () => {
@@ -164,7 +162,7 @@ define([
     this.highlightedCustomerIndex = this.customerResults.length ? 0 : -1;
 
     if (this.customerResults.length === 0) {
-      this._showCustomerMessage('No customers found.');
+      this._showCustomerMessage($t('No customers found.'));
                 return;
             }
 
@@ -198,7 +196,7 @@ define([
             $('#or-selected-customer').html(
                 '<span class="or-customer-badge">' +
                 this._esc(customer.name) + ' &lt;' + this._esc(customer.email) + '&gt;' +
-                ' <a href="#" id="or-clear-customer" title="Change customer">✕</a>' +
+                ' <a href="#" id="or-clear-customer" title="' + this._esc($t('Change customer')) + '">✕</a>' +
                 '</span>'
             ).show();
 
@@ -286,16 +284,16 @@ define([
 				return;
 			}
                     if (!Array.isArray(tokens) || tokens.length === 0) {
-                        noneMessage.text('No stored cards found for this customer.').show();
+                        noneMessage.text($t('No stored cards found for this customer.')).show();
                         return;
                     }
 			if (!hashSelect.length || !hashSelect.is('select')) {
-				noneMessage.text('Stored card field is unavailable in this form.').show();
+        noneMessage.text($t('Stored card field is unavailable in this form.')).show();
 				return;
 			}
-			hashSelect.append('<option value="">-- Select a stored card --</option>');
+      hashSelect.append($('<option>', { value: '', text: $t('-- Select a stored card --') }));
                     $.each(tokens, (_i, t) => {
-          const label = t.label || 'Stored card';
+          const label = t.label || $t('Stored card');
           const hash = t.public_hash || '';
 			    if (!hash) {
 				    return;
@@ -306,7 +304,7 @@ define([
 			    );
                     });
 			if (hashSelect.children().length <= 1) {
-				noneMessage.text('No valid stored cards available for this customer.').show();
+        noneMessage.text($t('No valid stored cards available for this customer.')).show();
 				hashSelect.hide().empty();
 				return;
 			}
@@ -319,7 +317,7 @@ define([
                 },
                 error: () => {
                     loadingIndicator.hide();
-          noneMessage.text('Failed to load stored cards. Please retry after selecting a customer.').show();
+          noneMessage.text($t('Failed to load stored cards. Please retry after selecting a customer.')).show();
                 }
             });
         },
@@ -365,7 +363,7 @@ define([
 
             const activeConfig = this._getActivePaymentConfig();
             if (!activeConfig) {
-                this._showError('Payment form configuration is unavailable for the selected source.');
+                this._showError($t('Payment form configuration is unavailable for the selected source.'));
                 return;
             }
 
@@ -386,7 +384,7 @@ define([
                 const paymentSessionData = credsResponse && credsResponse.ch_credentials ? credsResponse.ch_credentials : null;
 
                 if (!paymentSessionData) {
-                    throw new Error('Unable to start payment session.');
+                    throw new Error($t('Unable to start payment session.'));
                 }
 
                 const contextId = (window.crypto && typeof window.crypto.randomUUID === 'function')
@@ -499,7 +497,7 @@ define([
 		const customerId = $('#customer_id').val();
 		if (!customerId) {
 			e.preventDefault();
-			this._showError('Please select a customer before submitting.');
+      this._showError($t('Please select a customer before submitting.'));
 			return;
 		}
                 if (!this._isHostedFieldsSourceSelected()) {
@@ -507,7 +505,7 @@ define([
                     const hash = $('#payment_token_hash').val();
                     if (!hash) {
                         e.preventDefault();
-                        this._showError('Please select a stored payment card.');
+                        this._showError($t('Please select a stored payment card.'));
                     }
                     return;
                 }
@@ -517,7 +515,7 @@ define([
 			    return;
 		    }
                 if (!this.iframeValid) {
-                    this._showError('Please complete all card fields before submitting.');
+                    this._showError($t('Please complete all card fields before submitting.'));
                     return;
                 }
 		    this.submitInProgress = true;
@@ -536,7 +534,7 @@ define([
             sessionId = sessionId || (this.paymentSessionData && this.paymentSessionData.sessionId) || '';
             if (!sessionId) {
                 this._onSubmitFailure();
-                this._showError('Payment session not established. Please try again.');
+                this._showError($t('Payment session not established. Please try again.'));
                 return;
             }
             $('#' + this.sessionInputId).val(sessionId);
@@ -554,7 +552,7 @@ define([
             this._endAsyncFlow();
             this._setSubmitEnabled(true);
             chIframe.resetIframe();
-            this._showError('Card capture failed. Please check card details and try again.');
+            this._showError($t('Card capture failed. Please check card details and try again.'));
         },
 
     _tokenizeCardSessionAndSubmit: function (sessionId) {
@@ -562,7 +560,7 @@ define([
         .done((response) => {
           const tokenData = response && response.token_data ? String(response.token_data) : '';
           if (!tokenData) {
-            this._onTokenizeFailure('Tokenized card data was not returned. Please retry.');
+            this._onTokenizeFailure($t('Tokenized card data was not returned. Please retry.'));
             return;
           }
           $('#' + this.tokenizedTokenInputId).val(tokenData);
@@ -571,7 +569,7 @@ define([
           this._submitNativeForm();
         })
         .fail((xhr) => {
-          let message = 'Card tokenization failed. Please retry.';
+          let message = $t('Card tokenization failed. Please retry.');
           if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
             message = xhr.responseJSON.message;
           }
@@ -582,7 +580,7 @@ define([
     _tokenizeCardSession: function (sessionId) {
       if (!this.tokenizeSessionUrl) {
         return $.Deferred().reject({
-          responseJSON: { message: 'Card tokenization URL is not configured.' }
+          responseJSON: { message: $t('Card tokenization URL is not configured.') }
         }).promise();
       }
 
@@ -611,7 +609,7 @@ define([
         form.submit();
       } else {
         this.allowNativeSubmit = false;
-        this._showError('Unable to submit the form. Please try again.');
+        this._showError($t('Unable to submit the form. Please try again.'));
       }
     },
 

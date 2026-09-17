@@ -141,7 +141,7 @@ class Index extends Action implements HttpGetActionInterface
     private function getCustomerDisplayById(int $customerId): string
     {
         if ($customerId <= 0) {
-            return 'Guest';
+            return (string)__('Guest');
         }
 
         if (isset($this->customerDisplayCache[$customerId])) {
@@ -166,7 +166,7 @@ class Index extends Action implements HttpGetActionInterface
             $this->customerDisplayCache[$customerId] = (string)$customerId;
             return $this->customerDisplayCache[$customerId];
         } catch (NoSuchEntityException $e) {
-            $this->customerDisplayCache[$customerId] = 'Customer not found (ID: ' . $customerId . ')';
+            $this->customerDisplayCache[$customerId] = (string)__('Customer not found (ID: %1)', $customerId);
             return $this->customerDisplayCache[$customerId];
         }
     }
