@@ -6,6 +6,7 @@ define([
     'Fiserv_Payments/js/ch-adapter',
     'Fiserv_Payments/js/action/create-commercehub-applepay-session',
     'Fiserv_Payments/js/model/commercehub-applepay-event-handler',
+    'Fiserv_Payments/js/model/locale-observer',
     'Magento_Checkout/js/model/quote',
     'ko',
     'mage/translate'
@@ -17,6 +18,7 @@ define([
     chAdapter,
     chSession,
     CommerceHubApplePayEventHandler,
+    localeObserver,
     quote,
     ko,
     $t
@@ -36,12 +38,14 @@ define([
             },
             isPlaceOrderActionAllowed: ko.observable(false),
 		initializedAmount: 0.00,
-		reloadOnRender: false
+		reloadOnRender: false,
+		localeSubscription: null
         },
 
     	initialize: async function () {
     		this._super();
             this.observeBillingAddress();
+            this.observeLocale();
             this.eventHandler = new CommerceHubApplePayEventHandler(this);
 
 		    return this;
@@ -88,7 +92,17 @@ define([
 			}
 		});
 	},
-	    
+
+	/**
+	 * The vendor SDK decides button text/translation based on the locale from the payment session
+	 */
+	observeLocale: function()
+	{
+		localeObserver.observe(this, () => {
+			this.loadApplePayForm();
+		});
+	},
+
 	loadApplePayForm: async function () {
  		const config = window.checkoutConfig.payment[this.getCode()];
 		try {
@@ -113,8 +127,7 @@ define([
 					button: {
 						parentElementId: "applepay-button-container",
 						color: buttonStyle,
-						type: buttonType,
-						locale: "en-US"
+						type: buttonType
 					}
 				},
 				hooks: {

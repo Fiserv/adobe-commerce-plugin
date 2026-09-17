@@ -118,7 +118,7 @@ class Dashboard extends Template
     {
         $customerId = (int)$customerId;
         if ($customerId <= 0) {
-            return 'Guest';
+            return (string)__('Guest');
         }
 
         if (isset($this->customerDisplayCache[$customerId])) {
@@ -143,7 +143,7 @@ class Dashboard extends Template
             $this->customerDisplayCache[$customerId] = (string)$customerId;
             return $this->customerDisplayCache[$customerId];
         } catch (NoSuchEntityException $e) {
-            $this->customerDisplayCache[$customerId] = 'Customer not found (ID: ' . $customerId . ')';
+            $this->customerDisplayCache[$customerId] = (string)__('Customer not found (ID: %1)', $customerId);
             return $this->customerDisplayCache[$customerId];
         }
     }

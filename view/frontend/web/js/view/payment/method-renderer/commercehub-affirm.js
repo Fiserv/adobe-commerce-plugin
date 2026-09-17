@@ -5,6 +5,7 @@ define([
 	'Magento_Checkout/js/model/full-screen-loader',
 	'Fiserv_Payments/js/ch-adapter',
 	'Fiserv_Payments/js/action/create-commercehub-affirm-session',
+	'Fiserv_Payments/js/model/locale-observer',
 	'Magento_Checkout/js/model/quote',
 	'Magento_Checkout/js/checkout-data',
 	'ko',
@@ -16,6 +17,7 @@ define([
 	fullScreenLoader,
 	chAdapter,
 	chSession,
+	localeObserver,
 	quote,
 	checkoutData,
 	ko,
@@ -43,6 +45,7 @@ define([
 			lastBillingAddressKey: '',
 			lastShippingAddressKey: '',
 			hasTotalsObserver: false,
+			localeSubscription: null,
 		},
 
 		initialize() {
@@ -50,6 +53,7 @@ define([
 			this.observeBillingAddress();
 			this.observeShippingAddress();
 			this.observeTotals();
+			this.observeLocale();
 			this.updateAffirmAvailability();
 
 			return this;
@@ -151,6 +155,15 @@ define([
 				address.countryId,
 				address.telephone,
 			].filter(Boolean).join('|');
+		},
+
+		/**
+		 * The vendor SDK decides button text/translation based on the locale from the payment session
+		 */
+		observeLocale() {
+			localeObserver.observe(this, () => {
+				this.loadAffirmForm();
+			});
 		},
 
 		scheduleAffirmReload() {
