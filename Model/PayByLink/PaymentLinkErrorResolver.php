@@ -1,6 +1,7 @@
 <?php
 namespace Fiserv\Payments\Model\PayByLink;
 
+use Magento\Framework\Exception\InputException;
 use Magento\Payment\Gateway\Http\ClientException;
 
 class PaymentLinkErrorResolver
@@ -11,6 +12,17 @@ class PaymentLinkErrorResolver
      */
     public function resolve(\Throwable $exception)
     {
+        if ($exception instanceof InputException) {
+            return [
+                'http_status' => 0,
+                'failure_type' => 'invalid_input',
+                'error_code' => 'PBL_INVALID_INPUT',
+                'user_message' => $exception->getMessage(),
+                'guidance' => $this->getGuidance('invalid_input'),
+                'technical_message' => $this->trimMessage($exception->getMessage()),
+            ];
+        }
+
         $httpStatus = $this->extractHttpStatus($exception);
         $failureType = $this->extractFailureType($exception, $httpStatus);
         $errorCode = $this->extractErrorCode($exception, $httpStatus);

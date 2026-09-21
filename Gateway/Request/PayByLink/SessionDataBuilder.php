@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace Fiserv\Payments\Gateway\Request\PayByLink;
 
+use Magento\Framework\Exception\InputException;
 use Magento\Payment\Gateway\Request\BuilderInterface;
 use Magento\Payment\Model\MethodInterface;
 use Fiserv\Payments\Gateway\Config\PayByLink\Config as PblConfig;
@@ -118,7 +119,12 @@ class SessionDataBuilder implements BuilderInterface
             }
         }
 
-        return trim((string) $this->pblConfig->getPaymentPageId($storeId));
+        $pageId = trim((string) $this->pblConfig->getPaymentPageId($storeId));
+        if ($pageId === '') {
+            throw new InputException(__('Page ID is mandatory for payment link generation.'));
+        }
+
+        return $pageId;
     }
 
     /**

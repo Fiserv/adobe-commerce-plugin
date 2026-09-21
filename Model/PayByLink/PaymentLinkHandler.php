@@ -120,7 +120,10 @@ class PaymentLinkHandler
             if ($paymentAction !== MethodInterface::ACTION_AUTHORIZE_CAPTURE) {
                 $paymentAction = MethodInterface::ACTION_AUTHORIZE;
             }
-            $pageId = $this->pblConfig->getPaymentPageId($storeId);
+            $pageId = trim((string) $payment->getAdditionalInformation('pbl_page_id'));
+            if ($pageId === '') {
+                $pageId = trim((string) $this->pblConfig->getPaymentPageId($storeId));
+            }
 
             $orderData = $this->buildOrderData($order);
 
@@ -142,6 +145,7 @@ class PaymentLinkHandler
 
             $this->applySuccessState($payment, $payByLinkUrl, $sessionId, $transactionId, $paymentAction, (int) $expiresInMinutes, $result['returnTokenHash']);
 
+            $payment->setAdditionalInformation('pbl_page_id', $pageId);
             $payment->save();
 
             // Reset order state to pending if it was canceled/declined

@@ -12,6 +12,7 @@ use Fiserv\Payments\Lib\CommerceHub\Model\Amount;
 use Fiserv\Payments\Lib\CommerceHub\Model\Session;
 use Fiserv\Payments\Lib\CommerceHub\Model\CheckoutInteractions;
 use Fiserv\Payments\Lib\CommerceHub\Model\ReturnUrls;
+use Magento\Framework\Exception\InputException;
 use Magento\Framework\Url as FrontendUrl;
 use Magento\Payment\Model\MethodInterface;
 
@@ -85,6 +86,11 @@ class PaymentLinkSessionRequest
      */
     public function createSession($total, $currency, $expiresInMinutes, $pageId = null, $orderData = [], $orderId = null, $paymentAction = MethodInterface::ACTION_AUTHORIZE, $storeId = null, $note = '')
     {
+        $pageId = trim((string) $pageId);
+        if ($pageId === '') {
+            throw new InputException(__('Page ID is mandatory for payment link generation.'));
+        }
+
         $this->logger->logInfo(1, "Initiating Pay by Link session creation");
 
         $returnToken = bin2hex(random_bytes(32));
@@ -155,7 +161,7 @@ class PaymentLinkSessionRequest
 
         $checkoutInteractions = new CheckoutInteractions();
         $checkoutInteractions->setCheckoutType('URL');
-        $checkoutInteractions->setPageId(!empty($pageId) ? $pageId : '');
+        $checkoutInteractions->setPageId($pageId);
         $checkoutInteractions->setExpiresInMinutes((int) $expiresInMinutes);
         $checkoutInteractions->setReturnUrls($returnUrls);
 

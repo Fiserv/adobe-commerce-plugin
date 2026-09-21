@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace Fiserv\Payments\Gateway\Command\PayByLink;
 
+use Magento\Framework\Exception\InputException;
 use Magento\Payment\Gateway\CommandInterface;
 use Magento\Payment\Gateway\Request\BuilderInterface;
 use Magento\Payment\Gateway\Response\HandlerInterface;
@@ -144,6 +145,8 @@ class CreateSessionCommand implements CommandInterface
                 "Pay by Link session created and persisted successfully",
                 "Order: " . $order->getIncrementId()
             );
+        } catch (InputException $e) {
+            throw $e;
         } catch (\Throwable $e) {
             $resolvedError = $this->errorResolver->resolve($e);
 
