@@ -135,6 +135,7 @@ class CreateSessionCommand implements CommandInterface
                     'expiresInMinutes' => $request['expiresInMinutes'],
                     'pageId' => $request['pageId'],
                     'response' => $result[PaymentLinkSessionRequest::KEY_RESPONSE],
+                    'returnTokenHash' => $result['returnTokenHash'],
                 ]
             );
 

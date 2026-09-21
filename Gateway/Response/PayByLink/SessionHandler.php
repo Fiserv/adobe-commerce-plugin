@@ -64,7 +64,8 @@ class SessionHandler implements HandlerInterface
             $sessionId,
             $transactionId,
             $paymentAction,
-            (int) $responseExpiresInMinutes
+            (int) $responseExpiresInMinutes,
+            $response['returnTokenHash'] ?? ''
         );
 
         // Channel-specific fields captured during initial session create

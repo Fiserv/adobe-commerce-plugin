@@ -1,16 +1,11 @@
 <?php
 $isSuccessful = $this->getRequest()->getParam('isSuccessful');
-$paymentMethod = $this->getRequest()->getParam('paymentMethod');
 ?>
 <div class="pbl-completion-page">
-    <?php if ($isSuccessful === 'true'): ?>
-        <div class="pbl-success">
-            <h2><?= $block->escapeHtml(__('Payment Successful')) ?></h2>
-            <p><?= $block->escapeHtml(__('Your payment has been processed successfully.')) ?></p>
-            <?php if ($paymentMethod): ?>
-                <p><?= $block->escapeHtml(__('Payment Method: %1', $paymentMethod)) ?></p>
-            <?php endif; ?>
-            <p><?= $block->escapeHtml(__('You may close this window.')) ?></p>
+    <?php if ($isSuccessful === 'true' || $this->getRequest()->getParam('pbl_processing')): ?>
+        <div class="pbl-processing">
+            <h2><?= $block->escapeHtml(__('Payment Confirmation Pending')) ?></h2>
+            <p><?= $block->escapeHtml(__('We could not confirm your payment yet. Please contact the merchant before paying again.')) ?></p>
         </div>
     <?php else: ?>
         <div class="pbl-failure">

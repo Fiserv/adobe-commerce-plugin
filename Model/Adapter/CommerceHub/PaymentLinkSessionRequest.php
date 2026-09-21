@@ -87,16 +87,19 @@ class PaymentLinkSessionRequest
     {
         $this->logger->logInfo(1, "Initiating Pay by Link session creation");
 
-        $payload = $this->buildSessionPayload($total, $currency, $expiresInMinutes, $pageId, $orderData, $orderId, $paymentAction, $storeId, $note);
+        $returnToken = bin2hex(random_bytes(32));
+        $payload = $this->buildSessionPayload($total, $currency, $expiresInMinutes, $pageId, $orderData, $orderId, $paymentAction, $storeId, $note, $returnToken);
 
         $this->logger->logDebug(
             3,
-            "Pay by Link Session Create Payload:\n" . json_encode($payload, JSON_PRETTY_PRINT)
+            "Pay by Link session create for order " . (string) $orderId
         );
 
         $chResponse = $this->httpAdapter->sendRequest($payload, self::SESSION_CREATE_ENDPOINT);
 
-        return $this->parseSessionResponse($chResponse, $payload);
+        $result = $this->parseSessionResponse($chResponse, $payload);
+        $result['returnTokenHash'] = hash('sha256', $returnToken);
+        return $result;
     }
 
     /**
@@ -111,13 +114,15 @@ class PaymentLinkSessionRequest
      * @param string $paymentAction
      * @param int|null $storeId
     * @param string $note
+    * @param string $returnToken
      * @return array
      */
-    private function buildSessionPayload($total, $currency, $expiresInMinutes, $pageId, $orderData = [], $orderId = null, $paymentAction = MethodInterface::ACTION_AUTHORIZE, $storeId = null, $note = '')
+    private function buildSessionPayload($total, $currency, $expiresInMinutes, $pageId, $orderData = [], $orderId = null, $paymentAction = MethodInterface::ACTION_AUTHORIZE, $storeId = null, $note = '', $returnToken = '')
     {
         $urlParams = ['_secure' => true, '_nosid' => true];
         if ($orderId) {
             $urlParams['pbl_order_ref'] = $orderId;
+            $urlParams['pbl_return_token'] = $returnToken;
         }
         $completionUrl = $this->buildReturnUrl('fiserv/paybylink/complete', $urlParams, $storeId);
         $cancelUrl = $this->buildReturnUrl('fiserv/paybylink/cancel', $urlParams, $storeId);
@@ -128,6 +133,9 @@ class PaymentLinkSessionRequest
 
         $transactionDetails = new TransactionDetails();
         $transactionDetails->setCaptureFlag($paymentAction === MethodInterface::ACTION_AUTHORIZE_CAPTURE);
+        if ($orderId) {
+            $transactionDetails->setMerchantOrderId((string) $orderId);
+        }
         $note = trim((string) $note);
         if ($note !== '') {
             $transactionDetails->setPaymentDescription($note);
@@ -247,7 +255,6 @@ class PaymentLinkSessionRequest
             'error_code' => $errorCode,
             'failure_type' => $failureType,
             'http_status' => $statusCode,
-            'request_payload' => $requestPayload,
             'response_body' => is_array($responseArray) ? $responseArray : [],
             'raw_response' => is_string($body) ? substr($body, 0, 2000) : '',
         ];

@@ -7,6 +7,7 @@ use Magento\Framework\App\CsrfAwareActionInterface;
 use Magento\Framework\App\Request\InvalidRequestException;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\View\Result\PageFactory;
+use Magento\Checkout\Model\Session as CheckoutSession;
 use Fiserv\Payments\Model\PayByLink\PaymentLinkHandler;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 
@@ -27,16 +28,20 @@ class Complete extends Action implements CsrfAwareActionInterface
      */
     private $logger;
 
+    private $checkoutSession;
+
     public function __construct(
         Context $context,
         PageFactory $pageFactory,
         PaymentLinkHandler $paymentLinkHandler,
-        MultiLevelLogger $logger
+        MultiLevelLogger $logger,
+        CheckoutSession $checkoutSession
     ) {
         parent::__construct($context);
         $this->pageFactory = $pageFactory;
         $this->paymentLinkHandler = $paymentLinkHandler;
         $this->logger = $logger;
+        $this->checkoutSession = $checkoutSession;
     }
 
     public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
@@ -55,32 +60,40 @@ class Complete extends Action implements CsrfAwareActionInterface
             $isSuccessful = $this->getRequest()->getParam('isSuccessful');
             $paymentMethod = $this->getRequest()->getParam('paymentMethod');
             $orderId = $this->getRequest()->getParam('pbl_order_ref');
-            // The real charge transaction id CommerceHub creates when the shopper
-            // completes the hosted page. This (not the session-create id) is what
-            // capture/settle/refund/void must reference.
-            $transactionId = $this->getRequest()->getParam('transactionId');
 
-            // Update order status based on payment result
             if ($orderId) {
-                $this->paymentLinkHandler->updateOrderStatus(
+                $order = $this->paymentLinkHandler->updateOrderStatus(
                     $orderId,
                     $isSuccessful === 'true',
                     $paymentMethod,
-                    $transactionId
+                    $this->getRequest()->getParam('transactionId'),
+                    $this->getRequest()->getParam('pbl_return_token', ''),
+                    (string) $this->checkoutSession->getLastRealOrderId()
                 );
+                if ($order && $order->getQuoteId()) {
+                    $this->checkoutSession->setLastQuoteId($order->getQuoteId());
+                    $this->checkoutSession->setLastSuccessQuoteId($order->getQuoteId());
+                    $this->checkoutSession->setLastOrderId($order->getId());
+                    $this->checkoutSession->setLastRealOrderId($order->getIncrementId());
+                    $this->checkoutSession->setLastOrderStatus($order->getStatus());
+
+                    return $this->resultRedirectFactory->create()->setPath('checkout/onepage/success', ['_secure' => true]);
+                }
             }
 
             $page = $this->pageFactory->create();
 
             if ($isSuccessful === 'true') {
-                $page->getConfig()->getTitle()->set(__('Payment Successful'));
+                $page->getConfig()->getTitle()->set(__('Payment Processing'));
+                $this->getRequest()->setParam('pbl_processing', true);
             } else {
                 $page->getConfig()->getTitle()->set(__('Payment Failed'));
             }
 
             return $page;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->logger->logError(1, "PBL Complete: Unhandled exception in execute: " . $e->getMessage());
+            $this->getRequest()->setParam('pbl_processing', true);
             $page = $this->pageFactory->create();
             $page->getConfig()->getTitle()->set(__('Payment Processing'));
             return $page;

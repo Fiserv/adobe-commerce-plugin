@@ -8,6 +8,7 @@ namespace Fiserv\Payments\Gateway\Command\PayByLink;
 
 use Fiserv\Payments\Gateway\Subject\SubjectReader;
 use Fiserv\Payments\Logger\MultiLevelLogger;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Payment\Gateway\Command\CommandPoolInterface;
 use Magento\Payment\Gateway\CommandInterface;
 use Magento\Payment\Gateway\Data\PaymentDataObjectInterface;
@@ -43,11 +44,6 @@ class SecondaryTransactionRouter implements CommandInterface
     private $methodMap;
 
     /**
-     * @var string
-     */
-    private $defaultPoolKey;
-
-    /**
      * @var SubjectReader
      */
     private $subjectReader;
@@ -61,7 +57,6 @@ class SecondaryTransactionRouter implements CommandInterface
      * @param string $commandCode Command to run on the resolved pool (capture, settle, refund, void, cancel).
      * @param CommandPoolInterface[] $pools Routing key => command pool.
      * @param array<string, string> $methodMap Normalized method token => routing key.
-     * @param string $defaultPoolKey Routing key used when the paid method is unknown/unmapped.
      * @param SubjectReader $subjectReader
      * @param MultiLevelLogger $logger
      */
@@ -69,14 +64,12 @@ class SecondaryTransactionRouter implements CommandInterface
         string $commandCode,
         array $pools,
         array $methodMap,
-        string $defaultPoolKey,
         SubjectReader $subjectReader,
         MultiLevelLogger $logger
     ) {
         $this->commandCode = $commandCode;
         $this->pools = $pools;
         $this->methodMap = $methodMap;
-        $this->defaultPoolKey = $defaultPoolKey;
         $this->subjectReader = $subjectReader;
         $this->logger = $logger;
     }
@@ -91,11 +84,25 @@ class SecondaryTransactionRouter implements CommandInterface
         $paymentDO = $this->subjectReader->readPayment($commandSubject);
         $payment = $paymentDO->getPayment();
 
+        if ($payment->getMethod() !== 'fiserv_pay_by_link'
+            || $payment->getAdditionalInformation('pbl_status') !== 'paid'
+            || !$payment->getAdditionalInformation('pbl_payment_verified')
+            || !$payment->getAdditionalInformation('pbl_transaction_id')
+        ) {
+            throw new LocalizedException(__('A completed Pay by Link payment is required.'));
+        }
+
         $paidMethod = (string) $payment->getAdditionalInformation('pbl_paid_method');
         $poolKey = $this->resolvePoolKey($paidMethod);
 
+        if (in_array($this->commandCode, ['capture', 'settle'], true)
+            && $payment->getAdditionalInformation('pbl_transaction_state') === 'CAPTURED'
+        ) {
+            throw new LocalizedException(__('This Pay by Link payment has already been captured.'));
+        }
+
         if (!isset($this->pools[$poolKey])) {
-            throw new \Magento\Framework\Exception\LocalizedException(
+            throw new LocalizedException(
                 __('No Pay by Link command pool is configured for "%1".', $poolKey)
             );
         }
@@ -110,7 +117,8 @@ class SecondaryTransactionRouter implements CommandInterface
             )
         );
 
-        $this->pools[$poolKey]->get($this->commandCode)->execute($commandSubject);
+        $commandCode = $this->commandCode === 'capture' ? 'settle' : $this->commandCode;
+        $this->pools[$poolKey]->get($commandCode)->execute($commandSubject);
     }
 
     /**
@@ -127,7 +135,7 @@ class SecondaryTransactionRouter implements CommandInterface
             return $this->methodMap[$token];
         }
 
-        return $this->defaultPoolKey;
+        throw new LocalizedException(__('The Pay by Link payment method is missing or unsupported.'));
     }
 
     /**

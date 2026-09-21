@@ -54,11 +54,12 @@ class TransactionInquiryRequest
 	 *
 	 * @return array
 	 */
-	public function executeTransactionInquiry($refTxnId)
+	public function executeTransactionInquiry($refTxnId, $ordersApi = false)
 	{
 		$this->logger->logInfo(1, "Initiating Transaction Inquiry Request");
 		$data = $this->getTransactionInquiryPayload($refTxnId);
-		$response = $this->httpAdapter->sendRequest($data, self::TXN_INQUIRY_ENDPOINT);
+		$endpoint = $ordersApi ? ChHttpAdapter::INQUIRY_ENDPOINT_PAYPAL : self::TXN_INQUIRY_ENDPOINT;
+		$response = $this->httpAdapter->sendRequest($data, $endpoint);
 
 		return $this->parseTransactionInquiryResponse($response);
 	}

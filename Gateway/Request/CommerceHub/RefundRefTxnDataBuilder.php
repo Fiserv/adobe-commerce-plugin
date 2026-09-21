@@ -51,14 +51,10 @@ class RefundRefTxnDataBuilder implements BuilderInterface
 		$orderDO = $paymentDO->getOrder();
 		$orderIncrementId = $orderDO->getOrderIncrementId();
 
-		// Pay by Link: the primary charge happens externally when the shopper
-		// completes the hosted link, so the referenceable financial transaction
-		// id lives only in `pbl_transaction_id`. The parent/last transaction id
-		// is NOT a referenceable transaction and would fail with CommerceHub
-		// error 801. Mirror the capture/settle and cancel builders here.
 		$captureToRefund = '';
 		if ($payment->getMethod() === 'fiserv_pay_by_link') {
-			$captureToRefund = (string) $payment->getAdditionalInformation('pbl_transaction_id');
+			$captureToRefund = (string) ($payment->getRefundTransactionId()
+				?: $payment->getAdditionalInformation('pbl_transaction_id'));
 		}
 
 		if ($captureToRefund === '') {
@@ -74,6 +70,11 @@ class RefundRefTxnDataBuilder implements BuilderInterface
 		
 		$refTxn = new ReferenceTransactionDetails();
 		$refTxn->setReferenceTransactionId($captureToRefund);
+		if ($payment->getMethod() === 'fiserv_pay_by_link'
+			&& $payment->getAdditionalInformation('pbl_gateway_order_id')
+		) {
+			$refTxn->setReferenceOrderId($payment->getAdditionalInformation('pbl_gateway_order_id'));
+		}
 
 		$this->logger->logDebug(3, "Refund Reference Transaction Data Builder:\n" . $refTxn->__toString(), "Order ID: $orderIncrementId");
 

@@ -68,6 +68,11 @@ class ReferenceTransactionDataBuilder implements BuilderInterface
 		
 		$refTxn = new ReferenceTransactionDetails();
 		$refTxn->setReferenceTransactionId($referenceTxnId);
+		if ($payment->getMethod() === 'fiserv_pay_by_link'
+			&& $payment->getAdditionalInformation('pbl_gateway_order_id')
+		) {
+			$refTxn->setReferenceOrderId($payment->getAdditionalInformation('pbl_gateway_order_id'));
+		}
 
 		$this->logger->logDebug(3, "Reference Transaction Data Builder:\n" . $refTxn->__toString(), "Order ID: $orderIncrementId");
 
