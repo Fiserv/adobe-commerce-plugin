@@ -46,7 +46,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
         $methodCode = 'fiserv_paypal',
         $pathPattern = self::DEFAULT_PATH_PATTERN,
-        Json $serializer = null
+        ?Json $serializer = null
     ) {
         parent::__construct($scopeConfig, $methodCode, $pathPattern);
         $this->scopeConfig = $scopeConfig;
