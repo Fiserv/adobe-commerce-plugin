@@ -42,7 +42,7 @@ class CreateSession extends Action implements HttpPostActionInterface
         Context $context,
         CredentialsRequest $credentialsRequest,
         MultiLevelLogger $logger,
-        CustomerSession $customerSession = null
+        ?CustomerSession $customerSession = null
     ) {
         parent::__construct($context);
         $this->credentialsRequest = $credentialsRequest;
