@@ -35,7 +35,7 @@ class SaleResponseValidator extends TransactionResponseValidator
 			$logger, 
 			$failedTxnManager
 		);
-		array_push($this->successStates, self::STATE_CAPTURE);
+		array_push($this->successStates, self::STATE_CAPTURE, self::STATE_AUTHORIZED);
 	}
 
 	protected function getPaymentAction()
