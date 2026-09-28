@@ -329,7 +329,15 @@ define([
 			}
 
 			if (this.shouldRequireVaultCvv()) {
-				await this.setCredentials(this.paymentToken);
+				if (!this.paymentSessionData) {
+					try {
+						await this.initChSdk(this.paymentToken);
+					} catch (error) {
+						this.showError(error.message);
+						fullScreenLoader.stopLoader();
+						return;
+					}
+				}
 
 				try {
 					await this.submitSecurityCode(this.paymentSessionData);
