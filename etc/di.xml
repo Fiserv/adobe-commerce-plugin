@@ -130,7 +130,7 @@
 
 	<type name="Fiserv\Payments\Model\PayByLink\Method">
 		<arguments>
-			<argument name="commandPool" xsi:type="object">FiservCommerceHubCommandPool</argument>
+			<argument name="commandPool" xsi:type="object">FiservChargesCommandPool</argument>
 		</arguments>
 	</type>
 
@@ -208,8 +208,8 @@
 	<type name="Fiserv\Payments\Gateway\Command\PayByLink\SecondaryTransactionRouter">
 		<arguments>
 			<argument name="pools" xsi:type="array">
-				<item name="commercehub" xsi:type="object">FiservCommerceHubCommandPool</item>
-				<item name="orderapi" xsi:type="object">FiservOrderApiCommandPool</item>
+				<item name="commercehub" xsi:type="object">FiservChargesCommandPool</item>
+				<item name="orderapi" xsi:type="object">FiservOrdersCommandPool</item>
 			</argument>
 			<argument name="methodMap" xsi:type="array">
 				<item name="CARD" xsi:type="string">commercehub</item>
