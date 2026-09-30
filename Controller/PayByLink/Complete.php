@@ -41,12 +41,12 @@ class Complete extends Action implements CsrfAwareActionInterface
 
     public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
     {
-        return null;
+        return new InvalidRequestException(__('Invalid CSRF token'));
     }
 
     public function validateForCsrf(RequestInterface $request): ?bool
     {
-        return true;
+        return false;
     }
 
     public function execute()
@@ -55,19 +55,16 @@ class Complete extends Action implements CsrfAwareActionInterface
             $isSuccessful = $this->getRequest()->getParam('isSuccessful');
             $paymentMethod = $this->getRequest()->getParam('paymentMethod');
             $orderId = $this->getRequest()->getParam('pbl_order_ref');
-            // The real charge transaction id CommerceHub creates when the shopper
-            // completes the hosted page. This (not the session-create id) is what
-            // capture/settle/refund/void must reference.
-            $transactionId = $this->getRequest()->getParam('transactionId');
 
             // Update order status based on payment result
             if ($orderId) {
                 $this->paymentLinkHandler->updateOrderStatus(
                     $orderId,
                     $isSuccessful === 'true',
-                    $paymentMethod,
-                    $transactionId
+                    $paymentMethod
                 );
+            } else {
+                $this->logger->logError(1, "PBL Complete: Cannot make an order - missing order ID");
             }
 
             $page = $this->pageFactory->create();
