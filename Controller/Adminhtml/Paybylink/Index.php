@@ -123,7 +123,6 @@ class Index extends Action implements HttpGetActionInterface
             'status' => $order->getStatus(),
             'status_code' => $order->getStatus(),
             'entity_id' => $order->getId(),
-            'retry_url' => $this->getUrl('fiserv/paybylink/retry', ['order_id' => $order->getId()]),
             'paybylink_url' => $payByLinkUrl,
             'order_object' => $order
         ];

@@ -89,10 +89,7 @@ class PaymentLinkSessionRequest
 
         $payload = $this->buildSessionPayload($total, $currency, $expiresInMinutes, $pageId, $orderData, $orderId, $paymentAction, $storeId, $note);
 
-        $this->logger->logDebug(
-            3,
-            "Pay by Link Session Create Payload:\n" . json_encode($payload, JSON_PRETTY_PRINT)
-        );
+        $this->logger->logDebug(3,"Pay by Link Session Create Payload:\n" . json_encode($payload, JSON_PRETTY_PRINT));
 
         $chResponse = $this->httpAdapter->sendRequest($payload, self::SESSION_CREATE_ENDPOINT);
 
@@ -138,7 +135,7 @@ class PaymentLinkSessionRequest
         $amount->setCurrency($currency);
 
         $session = new Session();
-        $session->setIntent('AUTHORIZE');
+        $session->setIntent($paymentAction === MethodInterface::ACTION_AUTHORIZE_CAPTURE ? 'CAPTURE' : 'AUTHORIZE');
         $session->setIntentInitiator('GATEWAY');
 
         $returnUrls = new ReturnUrls();

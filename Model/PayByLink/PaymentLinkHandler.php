@@ -6,6 +6,7 @@ use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Sales\Model\Order;
 use Fiserv\Payments\Model\Adapter\CommerceHub\PaymentLinkSessionRequest;
+use Fiserv\Payments\Model\Adapter\CommerceHub\TransactionInquiryRequest;
 use Fiserv\Payments\Gateway\Config\PayByLink\Config as PblConfig;
 use Fiserv\Payments\Gateway\Config\CommerceHub\Config as ChConfig;
 use Fiserv\Payments\Logger\MultiLevelLogger;
@@ -60,6 +61,11 @@ class PaymentLinkHandler
      */
     private $searchCriteriaBuilder;
 
+    /**
+     * @var TransactionInquiryRequest
+     */
+    private $transactionInquiry;
+
     public function __construct(
         OrderRepositoryInterface $orderRepository,
         PaymentLinkSessionRequest $sessionRequest,
@@ -67,7 +73,8 @@ class PaymentLinkHandler
         MultiLevelLogger $logger,
         PaymentLinkErrorResolver $errorResolver,
         ChConfig $chConfig,
-        SearchCriteriaBuilder $searchCriteriaBuilder
+        SearchCriteriaBuilder $searchCriteriaBuilder,
+        TransactionInquiryRequest $transactionInquiry
     ) {
         $this->orderRepository = $orderRepository;
         $this->sessionRequest = $sessionRequest;
@@ -76,6 +83,7 @@ class PaymentLinkHandler
         $this->errorResolver = $errorResolver;
         $this->chConfig = $chConfig;
         $this->searchCriteriaBuilder = $searchCriteriaBuilder;
+        $this->transactionInquiry = $transactionInquiry;
     }
 
     /**
@@ -359,25 +367,20 @@ class PaymentLinkHandler
         return $orderData;
     }
 
+
+    /**
+     * Tolerance (in major currency units) for float rounding noise when
+     * comparing the gateway-confirmed approved amount against the expected total.
+     */
+    private const AMOUNT_TOLERANCE = 0.01;
+
     /**
      * Update the order status based on the payment outcome reported by the return URL.
-     *
-     * @param string $incrementId
-     * @param bool $isSuccessful
-     * @param string|null $paymentMethod Method the shopper used to pay the link (from the return URL).
-     * @param string|null $chargeTransactionId Real charge transaction id from the return URL.
-     * @return void
      */
-    public function updateOrderStatus($incrementId, $isSuccessful, $paymentMethod = null, $chargeTransactionId = null)
+    public function updateOrderStatus($incrementId, $isSuccessful, $paymentMethod = null)
     {
         try {
-            $searchCriteria = $this->searchCriteriaBuilder
-                ->addFilter('increment_id', $incrementId)
-                ->create();
-
-            $orders = $this->orderRepository->getList($searchCriteria)->getItems();
-            $order = reset($orders);
-
+            $order = $this->findOrderByIncrementId($incrementId);
             if (!$order) {
                 $this->logger->logError(1, "PBL Complete: Could not find order " . $incrementId);
                 return;
@@ -385,60 +388,295 @@ class PaymentLinkHandler
 
             $payment = $order->getPayment();
 
-            if ($isSuccessful) {
-                $payment->setAdditionalInformation('pbl_status', 'paid');
-
-                // Persist the method the shopper actually used so that secondary
-                // transactions (capture/settle, refund, void/cancel) route to the
-                // matching payment method command pool.
-                if ($paymentMethod !== null && $paymentMethod !== '') {
-                    $payment->setAdditionalInformation('pbl_paid_method', (string) $paymentMethod);
-                }
-
-                // Prefer the real charge transaction id reported on the return URL.
-                // The id captured at session-create time is NOT a referenceable
-                // financial transaction, so referencing it for capture/refund/void
-                // fails with CommerceHub error 801. Persist the charge id so all
-                // secondary transactions resolve the primary charge correctly.
-                if ($chargeTransactionId !== null && $chargeTransactionId !== '') {
-                    $payment->setAdditionalInformation('pbl_transaction_id', (string) $chargeTransactionId);
-                }
-
-                $pblTxnId = (string) $payment->getAdditionalInformation('pbl_transaction_id');
-                if ($pblTxnId !== '') {
-                    $payment->setTransactionId($pblTxnId);
-                    $payment->setParentTransactionId(null);
-                    $payment->setShouldCloseParentTransaction(false);
-                    $payment->setIsTransactionClosed(false);
-                }
-
-                // Resolve the intent the payment link was created with (sale vs auth).
-                $paymentAction = (string) $payment->getAdditionalInformation('pbl_payment_action')
-                    ?: (string) $this->pblConfig->getPaymentAction($order->getStoreId());
-
-                if ($paymentAction === MethodInterface::ACTION_AUTHORIZE_CAPTURE) {
-                    // Sale: register the settlement so Magento creates the invoice
-                    // and moves the order to processing the same way an online
-                    // capture would.
-                    $payment->registerCaptureNotification($order->getGrandTotal(), true);
-                } else {
-                    // Authorize only: register the authorization. The invoice is
-                    // created later when the merchant captures from the admin.
-                    $payment->registerAuthorizationNotification($order->getGrandTotal());
-                }
-
-                $order->addCommentToStatusHistory(__('Payment received via Pay by Link.'));
-            } else {
-                $payment->setAdditionalInformation('pbl_status', 'declined');
-                $order->setState(Order::STATE_CANCELED);
-                $order->setStatus('canceled');
-                $order->addCommentToStatusHistory(__('Payment declined via Pay by Link.'));
+            // Redirect explicitly reported failure/cancellation — nothing to verify.
+            if (!$isSuccessful) {
+                $this->applyDeclinedState($order, $payment, __('Payment declined via Pay by Link.'));
+                $this->logger->logInfo(1, "PBL Complete: Order " . $incrementId . " status updated to " . $order->getStatus());
+                return;
             }
 
-            $this->orderRepository->save($order);
-            $this->logger->logInfo(1, "PBL Complete: Order " . $incrementId . " status updated to " . $order->getStatus());
+            if ($paymentMethod !== null && $paymentMethod !== '') {
+                $payment->setAdditionalInformation('pbl_paid_method', (string) $paymentMethod);
+            }
+            $paymentAction = (string) $payment->getAdditionalInformation('pbl_payment_action')
+                ?: (string) $this->pblConfig->getPaymentAction($order->getStoreId());
+
+            $verification = $this->verifySessionCharge($order, $payment, $incrementId);
+            if ($verification === null) {
+                return;
+            }
+
+            $details = $this->extractInquiryDetails($verification['record']);
+
+            $isApproved = $details['approvalStatus'] === 'APPROVED' && $details['realTransactionId'] !== '';
+            if (!$isApproved) {
+                $this->declineUnapprovedCharge($order, $payment, $incrementId, $details, $verification['sessionStatus']);
+                return;
+            }
+
+            $amountCheck = $this->verifyApprovedAmount($order, $verification['record']);
+            if (!$amountCheck['isValid']) {
+                $this->cancelApprovedChargeDueToAmountMismatch($order, $payment, $incrementId, $details, $amountCheck);
+                return;
+            }
+
+            $this->finalizeApprovedPayment($order, $payment, $incrementId, $details, $paymentAction);
         } catch (\Exception $e) {
             $this->logger->logError(1, "PBL Complete: Error updating order status: " . $e->getMessage());
         }
+    }
+
+    private function findOrderByIncrementId($incrementId)
+    {
+        $searchCriteria = $this->searchCriteriaBuilder
+            ->addFilter('increment_id', $incrementId)
+            ->create();
+
+        $orders = $this->orderRepository->getList($searchCriteria)->getItems();
+        $order = reset($orders);
+
+        return $order ?: null;
+    }
+
+
+    /**
+     * Independently confirm the charge via `v1/inquiries`, keyed by the sessionId
+     * persisted at session-create time.
+     */
+    private function verifySessionCharge(Order $order, $payment, $incrementId)
+    {
+        $sessionId = (string) $payment->getAdditionalInformation('pbl_session_id');
+        if ($sessionId === '') {
+            $this->logger->logError(1, "PBL Complete: Missing session id for order " . $incrementId);
+            $this->markVerificationFailed($order, $payment, __('Payment could not be verified: missing session id.'));
+            return null;
+        }
+
+        $record = null;
+        $sessionStatus = null;
+        try {
+            $inquiryResponse = $this->transactionInquiry->executeSessionInquiry($sessionId);
+            $sessionStatus = $inquiryResponse['session']['sessionStatus'] ?? null;
+            $linkedTransactions = $inquiryResponse['linkedTransactions'] ?? [];
+            if (is_array($linkedTransactions) && isset($linkedTransactions[0]) && is_array($linkedTransactions[0])) {
+                $record = $linkedTransactions[0];
+            }
+        } catch (\Throwable $e) {
+            $this->logger->logError(1, "PBL Complete: Session inquiry failed for order " . $incrementId . ": " . $e->getMessage());
+        }
+
+        if ($record === null) {
+            $this->logger->logError(1, "PBL Complete: Could not confirm charge via session inquiry for order " . $incrementId);
+            $this->markVerificationFailed($order, $payment, __('Payment could not be verified via session inquiry.'));
+            return null;
+        }
+
+        return ['record' => $record, 'sessionStatus' => $sessionStatus];
+    }
+
+    private function markVerificationFailed(Order $order, $payment, $comment)
+    {
+        $payment->setAdditionalInformation('pbl_status', 'failed');
+        $order->addCommentToStatusHistory($comment);
+        $this->orderRepository->save($order);
+    }
+
+    /**
+     * Pull the fields we care about out of a `linkedTransactions[]` record
+     */
+    private function extractInquiryDetails(array $record)
+    {
+        $gatewayResponse = $record['gatewayResponse'] ?? [];
+        $processorResponseDetails = $record['processorResponseDetails']
+            ?? $record['paymentReceipt']['processorResponseDetails']
+            ?? [];
+
+        return [
+            'transactionState' => $gatewayResponse['transactionState'] ?? null,
+            'approvalStatus' => $gatewayResponse['approvalStatus'] ?? $processorResponseDetails['approvalStatus'] ?? null,
+            'realTransactionId' => (string) ($gatewayResponse['transactionProcessingDetails']['transactionId'] ?? ''),
+            'processorResponseDetails' => $processorResponseDetails,
+        ];
+    }
+
+
+    /**
+     * Commerce Hub explicitly did not confirm approval — nothing was charged,
+     * so a plain decline + order cancellation is accurate here.
+     */
+    private function declineUnapprovedCharge(Order $order, $payment, $incrementId, array $details, $sessionStatus)
+    {
+        $this->applyDeclinedState($order, $payment, __('Payment declined: Commerce Hub did not confirm approval.'));
+        $this->logger->logError(1,"PBL Complete: Session inquiry did not confirm approval for order " . $incrementId
+        . " (sessionStatus: " . ($sessionStatus ?? 'null') . ", transactionState: " . ($details['transactionState'] ?? 'null')
+        . ", approvalStatus: " . ($details['approvalStatus'] ?? 'null') . ")"
+        );
+    }
+
+    /**
+     * Shared "mark declined + cancel order" state mutation, used only where the
+     * charge was genuinely never approved (nothing to void at the gateway).
+     */
+    private function applyDeclinedState(Order $order, $payment, $comment)
+    {
+        $payment->setAdditionalInformation('pbl_status', 'declined');
+        $order->setState(Order::STATE_CANCELED);
+        $order->setStatus('canceled');
+        $order->addCommentToStatusHistory($comment);
+        $this->orderRepository->save($order);
+    }
+
+    /**
+     * Defense in depth: the gateway-confirmed approved amount must match what we
+     * expect to have been charged.
+     *
+     * Commerce Hub (or the processor) can legitimately add fee components on top
+     * of what we submitted at session-create time — e.g. a card-network
+     * surcharge or convenience-fee program applied at charge time — so the
+     * expected total folds those in rather than doing a strict equality check
+     * against the raw Magento grand total, which would otherwise falsely flag
+     * every surcharged transaction as tampered.
+     *
+     * @param Order $order
+     * @param array $record
+     * @return array{isValid: bool, approvedTotal: float|null, expectedTotal: float}
+     */
+    private function verifyApprovedAmount(Order $order, array $record)
+    {
+        $orderTotal = round((float) $order->getGrandTotal(), 2);
+        $amountComponents = $record['paymentReceipt']['amountComponents'] ?? [];
+        $additionalFees = (float) ($amountComponents['surcharge'] ?? 0) + (float) ($amountComponents['convenienceFee'] ?? 0);
+        $expectedTotal = round($orderTotal + $additionalFees, 2);
+
+        $approvedTotal = $record['paymentReceipt']['approvedAmount']['total'] ?? null;
+
+        if ($approvedTotal === null) {
+            return ['isValid' => true, 'approvedTotal' => null, 'expectedTotal' => $expectedTotal];
+        }
+
+        $approvedTotal = round((float) $approvedTotal, 2);
+        $isValid = abs($approvedTotal - $expectedTotal) < self::AMOUNT_TOLERANCE;
+
+        return ['isValid' => $isValid, 'approvedTotal' => $approvedTotal, 'expectedTotal' => $expectedTotal];
+    }
+
+
+    /**
+     * The charge WAS approved by Commerce Hub — money may already be on the
+     * shopper's card — so this must not be reported as merely "declined" (which
+     * implies nothing was ever charged). Actually void/cancel the approved
+     * transaction at the gateway, then cancel the order either way so it isn't
+     * left in limbo.
+     *
+     * @param Order $order
+     * @param \Magento\Sales\Model\Order\Payment $payment
+     * @param string $incrementId
+     * @param array $details
+     * @param array $amountCheck From {@see verifyApprovedAmount()}.
+     * @return void
+     */
+    private function cancelApprovedChargeDueToAmountMismatch(Order $order, $payment, $incrementId, array $details, array $amountCheck)
+    {
+        $realTransactionId = $details['realTransactionId'];
+
+        $this->logger->logError(1,"PBL Complete: confirmed amount ({$amountCheck['approvedTotal']}) does not match expected total "
+            . "({$amountCheck['expectedTotal']}) for order " . $incrementId . " — voiding the approved charge."
+        );
+
+        $voided = $this->voidApprovedCharge($payment, $realTransactionId, $incrementId);
+
+        $payment->setAdditionalInformation('pbl_status', 'canceled');
+        $payment->setAdditionalInformation('pbl_transaction_id', $realTransactionId);
+
+        $order->setState(Order::STATE_CANCELED);
+        $order->setStatus('canceled');
+        $order->addCommentToStatusHistory(
+            $voided
+                ? __('Payment canceled: confirmed amount did not match order total. The approved charge was voided.')
+                : __('Payment canceled: confirmed amount did not match order total. WARNING: the approved charge could NOT be voided automatically — manual gateway reconciliation required.')
+        );
+
+        $this->orderRepository->save($order);
+    }
+
+    /**
+     * Attempt to void the real, gateway-approved charge.
+     *
+     * @param \Magento\Sales\Model\Order\Payment $payment
+     * @param string $realTransactionId
+     * @param string $incrementId
+     * @return bool True if the void call completed without throwing.
+     */
+    private function voidApprovedCharge($payment, $realTransactionId, $incrementId)
+    {
+        if ($realTransactionId === '') {
+            $this->logger->logCritical(
+                1,
+                "PBL Complete: No real transaction id available — cannot void approved charge for order " . $incrementId
+                    . ". Manual gateway reconciliation required."
+            );
+            return false;
+        }
+
+        try {
+            // pbl_transaction_id is what CancelRefTxnDataBuilder reads to build the
+            // referenceTransactionId sent to Commerce Hub's cancels endpoint.
+            $payment->setAdditionalInformation('pbl_transaction_id', $realTransactionId);
+            $payment->setTransactionId($realTransactionId);
+            $payment->setShouldCloseParentTransaction(false);
+            $payment->setIsTransactionClosed(false);
+
+            $payment->void();
+
+            $this->logger->logInfo(1, "PBL Complete: Voided approved charge {$realTransactionId} for order " . $incrementId);
+            return true;
+        } catch (\Throwable $e) {
+            $this->logger->logCritical(
+                1,
+                "PBL Complete: FAILED to void approved charge {$realTransactionId} for order " . $incrementId
+                    . " — manual gateway cancellation required: " . $e->getMessage()
+            );
+            return false;
+        }
+    }
+
+    /**
+     * Everything checked out — persist the real, confirmed transaction id
+     * (required for capture/refund/void) and register the payment with Magento.
+     *
+     * @param Order $order
+     * @param \Magento\Sales\Model\Order\Payment $payment
+     * @param string $incrementId
+     * @param array $details
+     * @param string $paymentAction
+     * @return void
+     */
+    private function finalizeApprovedPayment(Order $order, $payment, $incrementId, array $details, $paymentAction)
+    {
+        $realTransactionId = $details['realTransactionId'];
+        $processorResponseDetails = $details['processorResponseDetails'];
+
+        $payment->setAdditionalInformation('pbl_status', 'paid');
+        $payment->setAdditionalInformation('pbl_transaction_id', $realTransactionId);
+        $payment->setAdditionalInformation('pbl_verified', true);
+
+        if (!empty($processorResponseDetails['approvalCode'])) {
+            $payment->setAdditionalInformation('pbl_approval_code', (string) $processorResponseDetails['approvalCode']);
+        }
+
+        $payment->setTransactionId($realTransactionId);
+        $payment->setShouldCloseParentTransaction(false);
+        $payment->setIsTransactionClosed(false);
+
+        if ($paymentAction === MethodInterface::ACTION_AUTHORIZE_CAPTURE) {
+            $payment->registerCaptureNotification($order->getGrandTotal(), true);
+        } else {
+            $payment->registerAuthorizationNotification($order->getGrandTotal());
+        }
+
+        $order->addCommentToStatusHistory(__('Payment received via Pay by Link.'));
+
+        $this->orderRepository->save($order);
+        $this->logger->logInfo(1, "PBL Complete: Order " . $incrementId . " status updated to " . $order->getStatus());
     }
 }
