@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Fiserv\Payments\Controller\Adminhtml\OpenRefund;
 
-use Fiserv\Payments\Model\Service\OpenRefundService;
+use Fiserv\Payments\Model\Service\CommerceHub\OpenRefundService;
 use Magento\Backend\App\Action;
 use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\Controller\Result\Redirect;
