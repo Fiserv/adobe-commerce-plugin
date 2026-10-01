@@ -1,7 +1,8 @@
 <?xml version="1.0"?>
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <head>
-        <css src="Fiserv_Payments::css/manage-payment-links-min.css" />
+        <css src="Fiserv_Payments::css/adminhtml.css" />
+        <css src="Fiserv_Payments::css/paybylink-dashboard.css" />
     </head>
     <body>
         <referenceContainer name="content">

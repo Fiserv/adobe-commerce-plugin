@@ -1,124 +1,72 @@
 <?php
 /**
  * @var $block \Fiserv\Payments\Block\Adminhtml\Paybylink\Manage
+ *
+ * Interaction UX driven by AJAX requests back to Controller/Adminhtml/Paybylink/Index.php instead of full page reloads.
  */
+$filters = $block->getFilterParams();
+$totalPages = $block->getTotalPages();
 ?>
-<link rel="stylesheet" type="text/css" href="<?= $block->getViewFileUrl('Fiserv_Payments::css/paybylink-dashboard.css') ?>" />
 <div class="block">
     <div class="block-title"><strong><?= $block->escapeHtml(__('Manage Payment Links')) ?></strong></div>
-    <?php $filters = $block->getFilterParams(); ?>
     <div class="block-content">
         <div class="message message-notice">
             <div><?= $block->escapeHtml(__('Link status is not updated in real time. Reload the page to refresh.')) ?></div>
         </div>
-        <div class="admin__data-grid-toolbar">
-            <div class="admin__data-grid-filter-wrap">
-                <form method="get" action="<?= $block->getUrl('*/*/*', ['_current' => true]) ?>" class="admin__toolbar">
-                    <div class="admin__toolbar-item admin__toolbar-item--search">
-                        <div class="data-grid-search-control-wrap">
-                            <label class="data-grid-search-label" title="<?= $block->escapeHtmlAttr(__('Search')) ?>" for="paybylink_fulltext">
-                                <span><?= $block->escapeHtml(__('Search')) ?></span>
-                            </label>
-                            <input class="admin__control-text data-grid-search-control" type="text"
-                                   name="search"
-                                   id="paybylink_fulltext"
-                                   value="<?= $block->escapeHtml($filters['search']) ?>"
-                                   placeholder="<?= $block->escapeHtmlAttr(__('Search by keyword')) ?>"
-                                   aria-label="<?= $block->escapeHtmlAttr(__('Search by keyword')) ?>" />
-                            <button class="action-submit" type="submit" aria-label="<?= $block->escapeHtmlAttr(__('Search')) ?>">
-                                <span><?= $block->escapeHtml(__('Search')) ?></span>
-                            </button>
-                        </div>
-                    </div>
 
-                    <div class="admin__toolbar-item admin__toolbar-item--filters">
-                        <div class="data-grid-filters-actions-wrap">
-                            <div class="data-grid-filters-action-wrap">
-                                <button class="action-default" type="button" data-action="grid-filter-expand" onclick="toggleFilterPanel()"><?= $block->escapeHtml(__('Filters')) ?></button>
-                            </div>
-                        </div>
+        <div class="search-pagination-container">
+            <div class="filter-wrapper">
+                <div class="filter-item">
+                    <input type="text" id="searchInput" placeholder="<?= $block->escapeHtmlAttr(__('Search via Order Number')) ?>" value="<?= $block->escapeHtmlAttr($filters['search']) ?>">
+                </div>
+                <div class="actionContainer">
+                    <button type="button" id="toggleFilterBtn"><?= $block->escapeHtml(__('Filter')) ?></button>
+
+                    <div class="paginationContainerTop" style="margin-left: auto; display: flex; align-items: center;">
+                        <label for="rowsPerPage"><?= $block->escapeHtml(__('Limit:')) ?></label>
+                        <select id="rowsPerPage" style="margin: 0 0.5rem;">
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="15">15</option>
+                            <option value="20" selected="">20</option>
+                        </select>
+                        <span id="paginationInfoTop" class="pagination-info">1 <?= $block->escapeHtml(__('of')) ?> <?= $block->escapeHtml($totalPages) ?></span>
                     </div>
-                </form>
+                </div>
+            </div>
+
+            <!-- Animated Filter Section (same #filterSection.open pattern as Declines/Preview) -->
+            <div id="filterSection">
+                <div class="filter-item">
+                    <label for="filter_status"><?= $block->escapeHtml(__('Status:')) ?></label>
+                    <select id="filter_status">
+                        <option value=""><?= $block->escapeHtml(__('All')) ?></option>
+                        <option value="unpaid" <?= $filters['status'] === 'unpaid' ? 'selected' : '' ?>><?= $block->escapeHtml(__('Unpaid')) ?></option>
+                        <option value="paid" <?= $filters['status'] === 'paid' ? 'selected' : '' ?>><?= $block->escapeHtml(__('Paid')) ?></option>
+                        <option value="expired" <?= $filters['status'] === 'expired' ? 'selected' : '' ?>><?= $block->escapeHtml(__('Expired')) ?></option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label for="filter_amount_from"><?= $block->escapeHtml(__('Amount:')) ?></label>
+                    <input type="number" step="0.01" id="filter_amount_from" value="<?= $block->escapeHtmlAttr($filters['amount_from']) ?>" placeholder="<?= $block->escapeHtmlAttr(__('From')) ?>">
+                    <input type="number" step="0.01" id="filter_amount_to" value="<?= $block->escapeHtmlAttr($filters['amount_to']) ?>" placeholder="<?= $block->escapeHtmlAttr(__('To')) ?>">
+                </div>
+                <div class="filter-item">
+                    <label for="filter_created_from"><?= $block->escapeHtml(__('Created:')) ?></label>
+                    <input type="date" id="filter_created_from" value="<?= $block->escapeHtmlAttr($filters['created_from']) ?>">
+                    <input type="date" id="filter_created_to" value="<?= $block->escapeHtmlAttr($filters['created_to']) ?>">
+                </div>
+                <div class="filter-item">
+                    <label for="filter_expires_from"><?= $block->escapeHtml(__('Expires:')) ?></label>
+                    <input type="date" id="filter_expires_from" value="<?= $block->escapeHtmlAttr($filters['expires_from']) ?>">
+                    <input type="date" id="filter_expires_to" value="<?= $block->escapeHtmlAttr($filters['expires_to']) ?>">
+                </div>
+                <button id="resetFilter" type="button" style="font-size: 1rem; background-color: #f1f1f1; padding: 5px 15px; display: none;"><?= $block->escapeHtml(__('RESET')) ?></button>
             </div>
         </div>
-        
-        <!-- Filter Panel -->
-        <div id="filter-panel" class="admin__filter-panel" style="display: none;">
-            <form method="get" action="<?= $block->getUrl('*/*/*', ['_current' => true]) ?>" class="admin__filter-form" id="filter-form">
-                <div class="admin__filter-panel-content">
-                    <div class="filter-row">
-                        <div class="filter-field">
-                            <label for="filter_order_number"><?= $block->escapeHtml(__('Order Number')) ?></label>
-                            <input type="text" name="order_number" id="filter_order_number" 
-                                   value="<?= $block->escapeHtml($filters['order_number']) ?>" 
-                                   class="admin__control-text" placeholder="<?= $block->escapeHtmlAttr(__('Enter order number')) ?>" />
-                        </div>
-                        <div class="filter-field">
-                            <label for="filter_status"><?= $block->escapeHtml(__('Status')) ?></label>
-                            <select name="status" id="filter_status" class="admin__control-select">
-                                <option value=""><?= $block->escapeHtml(__('All')) ?></option>
-                                <option value="unpaid" <?= $filters['status'] === 'unpaid' ? 'selected' : '' ?>><?= $block->escapeHtml(__('Unpaid')) ?></option>
-                                <option value="paid" <?= $filters['status'] === 'paid' ? 'selected' : '' ?>><?= $block->escapeHtml(__('Paid')) ?></option>
-                                <option value="expired" <?= $filters['status'] === 'expired' ? 'selected' : '' ?>><?= $block->escapeHtml(__('Expired')) ?></option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="filter-row">
-                        <div class="filter-field filter-field-inline">
-                            <label><?= $block->escapeHtml(__('Payment Amount')) ?></label>
-                            <div class="filter-range">
-                                <input type="number" step="0.01" name="amount_from" id="filter_amount_from" 
-                                       value="<?= $block->escapeHtml($filters['amount_from']) ?>" 
-                                       class="admin__control-text" placeholder="<?= $block->escapeHtmlAttr(__('From')) ?>" />
-                                <span class="range-separator">-</span>
-                                <input type="number" step="0.01" name="amount_to" id="filter_amount_to" 
-                                       value="<?= $block->escapeHtml($filters['amount_to']) ?>" 
-                                       class="admin__control-text" placeholder="<?= $block->escapeHtmlAttr(__('To')) ?>" />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="filter-row">
-                        <div class="filter-field filter-field-inline">
-                            <label><?= $block->escapeHtml(__('Link Creation Date')) ?></label>
-                            <div class="filter-range">
-                                <input type="text" name="created_from" id="filter_created_from" 
-                                       value="<?= $block->escapeHtml($filters['created_from']) ?>" 
-                                       class="admin__control-text admin__datepicker" placeholder="<?= $block->escapeHtmlAttr(__('From')) ?>" />
-                                <span class="range-separator">-</span>
-                                <input type="text" name="created_to" id="filter_created_to" 
-                                       value="<?= $block->escapeHtml($filters['created_to']) ?>" 
-                                       class="admin__control-text admin__datepicker" placeholder="<?= $block->escapeHtmlAttr(__('To')) ?>" />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="filter-row">
-                        <div class="filter-field filter-field-inline">
-                            <label><?= $block->escapeHtml(__('Link Expiration')) ?></label>
-                            <div class="filter-range">
-                                <input type="text" name="expires_from" id="filter_expires_from" 
-                                       value="<?= $block->escapeHtml($filters['expires_from']) ?>" 
-                                       class="admin__control-text admin__datepicker" placeholder="<?= $block->escapeHtmlAttr(__('From')) ?>" />
-                                <span class="range-separator">-</span>
-                                <input type="text" name="expires_to" id="filter_expires_to" 
-                                       value="<?= $block->escapeHtml($filters['expires_to']) ?>" 
-                                       class="admin__control-text admin__datepicker" placeholder="<?= $block->escapeHtmlAttr(__('To')) ?>" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="filter-actions">
-                    <button type="submit" class="action-primary">
-                        <span><?= $block->escapeHtml(__('Apply Filters')) ?></span>
-                    </button>
-                    <a href="<?= $block->getUrl('*/*/*', ['_current' => true]) ?>" class="action-secondary">
-                        <span><?= $block->escapeHtml(__('Reset')) ?></span>
-                    </a>
-                </div>
-            </form>
-        </div>
-        
+
         <div class="admin__table-wrapper">
-            <table class="data-table admin__table-primary">
+            <table id="transactionsTable" class="data-table admin__table-primary">
                 <thead>
                     <tr>
                         <th class="data-grid-th"><span><?= $block->escapeHtml(__('Order Number')) ?></span></th>
@@ -129,7 +77,7 @@
                         <th class="data-grid-th"><span><?= $block->escapeHtml(__('Actions')) ?></span></th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="tableBody">
             <?php $rows = $block->getRows(); ?>
                 <?php if ($rows): ?>
                     <?php foreach ($rows as $row): ?>
@@ -204,14 +152,9 @@
                                     $copyText = $paybylinkUrl ?: $orderLabel;
                                     $entityId = $row['entity_id'] ?? '';
                                     $viewOrderUrl = $block->getUrl('sales/order/view', ['order_id' => $entityId]);
-                                    $inquiryUrl = $block->getUrl('fiserv/pbl/transactionInquiry', ['order_id' => $entityId]);
                                 ?>
                                 <div class="action-icons" style="display:flex;gap:8px;align-items:center;">
                                     <?php if ($statusCode === 'unpaid'): ?>
-                                        <!-- Inquire Status -->
-                                        <a href="<?= $block->escapeHtmlAttr($inquiryUrl) ?>" title="<?= $block->escapeHtmlAttr(__('Inquire Status')) ?>" class="action-inquiry" style="display:inline-flex;align-items:center;">
-                                            <img src="<?= $block->escapeHtmlAttr($block->getViewFileUrl('Fiserv_Payments::images/icon-retry.svg')) ?>" alt="<?= $block->escapeHtmlAttr(__('Inquire Status')) ?>" width="16" height="16" />
-                                        </a>
 
                                         <!-- Copy Link Button -->
                                         <button type="button" class="copy-link-btn" data-link="<?= $block->escapeHtmlAttr($copyText) ?>" onclick="openCopyModal(this)" title="<?= $block->escapeHtmlAttr(__('Copy Link')) ?>">
@@ -253,18 +196,14 @@
                             </td>
                         </tr>
                     <?php endforeach; ?>
-                <?php else: ?>
-                    <tr class="no-records">
-                        <td colspan="6">
-                            <div class="message message-info info">
-                                <span><?= $block->escapeHtml(__('No records found.')) ?></span>
-                            </div>
-                        </td>
-                    </tr>
                 <?php endif; ?>
                 </tbody>
             </table>
         </div>
+
+        <div id="noRecordsMessage" style="<?= $rows ? 'display: none;' : '' ?>margin-bottom: 20%;"><?= $block->escapeHtml(__('No records found.')) ?></div>
+
+        <div id="paginationControls" data-totalPage="<?= $block->escapeHtmlAttr($totalPages) ?>"></div>
     </div>
 </div>
 
@@ -283,7 +222,23 @@
     </div>
 </div>
 
-<script>
-require(['Fiserv_Payments/js/paybylink-dashboard'], function() {});
+<script type="text/x-magento-init">
+{
+    "*": {
+        "Magento_Ui/js/core/app": {
+            "components": {
+                "paybylink-dashboard": {
+                    "component": "Fiserv_Payments/js/paybylink-dashboard",
+                    "ajaxUrl": "<?= $block->escapeUrl($block->getAjaxUrl()) ?>",
+                    "formKey": "<?= $block->escapeHtml($block->getFormKey()) ?>",
+                    "icons": {
+                        "retry": "<?= $block->escapeUrl($block->getViewFileUrl('Fiserv_Payments::images/icon-retry.svg')) ?>",
+                        "copy": "<?= $block->escapeUrl($block->getViewFileUrl('Fiserv_Payments::images/icon-copy.svg')) ?>"
+                    }
+                }
+            }
+        }
+    }
+}
 </script>
 
