@@ -41,12 +41,12 @@ class Complete extends Action implements CsrfAwareActionInterface
 
     public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
     {
-        return new InvalidRequestException(__('Invalid CSRF token'));
+        return null;
     }
 
     public function validateForCsrf(RequestInterface $request): ?bool
     {
-        return false;
+        return true;
     }
 
     public function execute()
