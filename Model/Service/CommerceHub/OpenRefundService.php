@@ -2,14 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Fiserv\Payments\Model\Service;
+namespace Fiserv\Payments\Model\Service\CommerceHub;
 
 use Fiserv\Payments\Gateway\Config\CommerceHub\Config;
 use Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\AuthDetailsDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\SaleDetailsDataBuilder;
-use Fiserv\Payments\Gateway\Request\CommerceHub\SessionSourceDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\TokenSourceDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\TransactionInteractionDataBuilder;
 use Fiserv\Payments\Logger\MultiLevelLogger;
@@ -67,9 +66,6 @@ class OpenRefundService
     /** @var TokenSourceDataBuilder */
     private $tokenSourceDataBuilder;
 
-    /** @var SessionSourceDataBuilder */
-    private $sessionSourceDataBuilder;
-
     /** @var AuthDetailsDataBuilder */
     private $authDetailsDataBuilder;
 
@@ -104,7 +100,6 @@ class OpenRefundService
         PaymentTokenManagementInterface $tokenManagement,
         AmountDataBuilder $amountDataBuilder,
         TokenSourceDataBuilder $tokenSourceDataBuilder,
-        SessionSourceDataBuilder $sessionSourceDataBuilder,
         AuthDetailsDataBuilder $authDetailsDataBuilder,
         SaleDetailsDataBuilder $saleDetailsDataBuilder,
         TransactionInteractionDataBuilder $transactionInteractionDataBuilder,
@@ -123,7 +118,6 @@ class OpenRefundService
         $this->tokenManagement    = $tokenManagement;
         $this->amountDataBuilder = $amountDataBuilder;
         $this->tokenSourceDataBuilder = $tokenSourceDataBuilder;
-        $this->sessionSourceDataBuilder = $sessionSourceDataBuilder;
         $this->authDetailsDataBuilder = $authDetailsDataBuilder;
         $this->saleDetailsDataBuilder = $saleDetailsDataBuilder;
         $this->transactionInteractionDataBuilder = $transactionInteractionDataBuilder;
@@ -157,9 +151,9 @@ class OpenRefundService
             throw new LocalizedException(
                 __('Refund amount of %1 exceeds the configured maximum of %2.', $amount, $maxAmount)
             );
-	}
+        }
 
-	$currencyCode = $this->resolveCurrencyCode($data);
+        $currencyCode = $this->resolveCurrencyCode($data);
 
         /** @var OpenRefund $openRefund */
         $openRefund    = $this->openRefundFactory->create();
@@ -181,22 +175,11 @@ class OpenRefundService
 
         try {
             $payload  = $this->buildPayload($data, $amount, $currencyCode);
-	    $response = $this->openRefundRequest->request($payload);
+            $this->logger->logInfo(1, 'Open refund request sending. OpenRefundId: ' . $openRefundId);
+            $response = $this->openRefundRequest->request($payload);
+            $this->logger->logInfo(1, 'Open refund response received. OpenRefundId: ' . $openRefundId);
 
-	    $this->logger->logInfo(
-		    1,
-		    'Open refund request sending. OpenRefundId: ' . $openRefundId
-		    . ', Body: ' . $this->encodeForLog($payload)
-	    );
-
-	    $this->logger->logInfo(
-		    1,
-		    'Open refund response received. OpenRefundId: ' . $openRefundId
-		    . ', HttpStatus: ' . (int)($response['_http_status'] ?? 0)
-		    . ', Body: ' . $this->encodeForLog($response)
-	    );
-
-            $status     = $this->resolveStatus($response);
+            $status = $this->resolveStatus($response);
             $openRefund->setData(OpenRefund::KEY_STATUS, $status);
             $openRefund->setData(
                 OpenRefund::KEY_CH_REFUND_ID,
@@ -220,20 +203,11 @@ class OpenRefundService
             } catch (\Throwable $saveEx) {
                 $this->logger->logError(1, 'Failed to persist error state: ' . $saveEx->getMessage());
             }
-            $this->logger->logError(1, 'Open refund create failed: ' . get_class($e) . ': ' . $e->getMessage());
+            $this->logger->logError(1,'Open refund create failed: ' . get_class($e) . ': ' . $e->getMessage());
             throw new LocalizedException(__('Unable to create open refund: %1', $e->getMessage()));
         }
 
         return $openRefund;
-    }
-
-    private function encodeForLog(array $data): string
-    {
-	    try {
-		    return (string)json_encode($data, JSON_UNESCAPED_SLASHES);
-	    } catch (\Throwable $e) {
-		    return '[unencodable_response]';
-	    }
     }
 
     /**
@@ -246,12 +220,6 @@ class OpenRefundService
         $openRefundId = strtoupper(uniqid('ORFSUB', false));
 
         $sourceType = strtoupper(trim((string)($data['source_type'] ?? self::SOURCE_TYPE_CARD_HOSTED_FIELDS)));
-        $paymentSession = (string)($data['payment_session'] ?? '');
-        $tokenizedPaymentToken = trim((string)($data['tokenized_payment_token'] ?? ''));
-
-        $buildSubject = $this->createOpenRefundBuildSubject($amount, $currencyCode, $openRefundId, $data);
-        $amountPayload = $this->amountDataBuilder->build($buildSubject);
-        $sourcePayload = [];
 
         if (!in_array($sourceType, [
             self::SOURCE_TYPE_TOKEN,
@@ -260,27 +228,37 @@ class OpenRefundService
             throw new LocalizedException(__('Unsupported payment source selected.'));
         }
 
-        if ($sourceType === self::SOURCE_TYPE_TOKEN) {
-            // Resolve and attach the full vault token object for TokenSourceDataBuilder.
-            $vaultPaymentToken = $this->resolveVaultPaymentToken($data);
-            $tokenData = (string)PaymentTokenUtil::getTokenDataFromPersistenceFormat(
-                (string)$vaultPaymentToken->getGatewayToken()
-            );
-            $this->setPaymentVaultToken($buildSubject, $vaultPaymentToken);
-            $this->setPaymentAdditionalInfo($buildSubject, DataAssignObserver::PAYMENT_TOKEN_KEY, $tokenData);
-            $sourcePayload = $this->tokenSourceDataBuilder->build($buildSubject);
-        } elseif ($sourceType === self::SOURCE_TYPE_CARD_HOSTED_FIELDS && $tokenizedPaymentToken !== '') {
-            $this->setPaymentAdditionalInfo($buildSubject, DataAssignObserver::PAYMENT_TOKEN_KEY, $tokenizedPaymentToken);
-            $sourcePayload = $this->tokenSourceDataBuilder->build($buildSubject);
-        } elseif ($paymentSession !== '') {
-            // Hosted-fields path: SDK encrypted the card and returned a session id
-            $this->setPaymentAdditionalInfo($buildSubject, DataAssignObserver::SESSION_ID_KEY, $paymentSession);
-            $sourcePayload = $this->sessionSourceDataBuilder->build($buildSubject);
-        } else {
-            throw new LocalizedException(
-                __('No payment source provided. Please complete the hosted fields form and retry.')
-            );
+        $buildSubject = $this->createOpenRefundBuildSubject($amount, $currencyCode, $openRefundId, $data);
+        $amountPayload = $this->amountDataBuilder->build($buildSubject);
+
+        // Both stored cards and newly tokenized Hosted Fields cards are resolved
+        // from Magento Vault before the server-to-server Open Refund request.
+        $vaultPaymentToken = $this->resolveVaultPaymentToken($data);
+        $tokenData = (string)PaymentTokenUtil::getTokenDataFromPersistenceFormat(
+            (string)$vaultPaymentToken->getGatewayToken()
+        );
+
+        if ($tokenData === '') {
+            throw new LocalizedException(__('The selected payment card is missing its gateway token.'));
         }
+
+        $this->setPaymentVaultToken($buildSubject, $vaultPaymentToken);
+        $this->setPaymentAdditionalInfo(
+            $buildSubject,
+            DataAssignObserver::PAYMENT_TOKEN_KEY,
+            $tokenData
+        );
+        $this->setPaymentAdditionalInfo(
+            $buildSubject,
+            DataAssignObserver::TOKEN_SOURCE_KEY,
+            $this->resolveVaultTokenSource($vaultPaymentToken)
+        );
+        $this->applyVaultTokenExpirationToPayment(
+            $buildSubject,
+            $vaultPaymentToken
+        );
+
+        $sourcePayload = $this->tokenSourceDataBuilder->build($buildSubject);
 
         $transactionDetailsPayload = $captureFlag
             ? $this->saleDetailsDataBuilder->build($buildSubject)
@@ -323,9 +301,6 @@ class OpenRefundService
 
         $payment = $this->orderPaymentFactory->create();
         $payment->setOrder($order);
-        $payment->setAdditionalInformation(DataAssignObserver::TOKEN_SOURCE_KEY, 'OPEN_REFUND');
-        $payment->setAdditionalInformation(DataAssignObserver::EXP_MONTH_KEY, (string)($data['expiration_month'] ?? '01'));
-        $payment->setAdditionalInformation(DataAssignObserver::EXP_YEAR_KEY, (string)($data['expiration_year'] ?? '2099'));
         $payment->setExtensionAttributes($this->orderPaymentExtensionFactory->create());
 
         return [
@@ -360,6 +335,69 @@ class OpenRefundService
 
         $extensionAttributes->setVaultPaymentToken($vaultPaymentToken);
         $payment->setExtensionAttributes($extensionAttributes);
+    }
+
+    /**
+     * Apply the expiration month and year from the vault token details.
+     *
+     * @param array<string, mixed> $buildSubject
+     * @throws LocalizedException
+     */
+    private function applyVaultTokenExpirationToPayment(
+        array &$buildSubject,
+        PaymentTokenInterface $vaultPaymentToken
+    ): void {
+        $details = $vaultPaymentToken->getTokenDetails();
+        $detailsArray = !empty($details) ? json_decode($details, true) : null;
+
+        if (!is_array($detailsArray)) {
+            throw new LocalizedException(__('The selected payment card details are invalid.'));
+        }
+
+        $expirationDate = trim((string)($detailsArray['expirationDate'] ?? ''));
+
+        if ($expirationDate === '' || strpos($expirationDate, '/') === false) {
+            throw new LocalizedException(__('The selected payment card is missing its expiration date.'));
+        }
+
+        [$expirationMonth, $expirationYear] = array_pad(
+            explode('/', $expirationDate, 2),
+            2,
+            ''
+        );
+
+        $expirationMonth = trim($expirationMonth);
+        $expirationYear = trim($expirationYear);
+
+        if ($expirationMonth === '' || $expirationYear === '') {
+            throw new LocalizedException(__('The selected payment card expiration date is invalid.'));
+        }
+
+        $this->setPaymentAdditionalInfo(
+            $buildSubject,
+            DataAssignObserver::EXP_MONTH_KEY,
+            $expirationMonth
+        );
+        $this->setPaymentAdditionalInfo(
+            $buildSubject,
+            DataAssignObserver::EXP_YEAR_KEY,
+            $expirationYear
+        );
+    }
+
+    /**
+     * Extract the `tokenSource` that CommerceHub returned when the vault token was created.
+     */
+    private function resolveVaultTokenSource(PaymentTokenInterface $vaultPaymentToken): string
+    {
+        $details = $vaultPaymentToken->getTokenDetails();
+        $detailsArray = !empty($details) ? json_decode($details, true) : null;
+
+        if (is_array($detailsArray) && !empty($detailsArray['tokenSource'])) {
+            return (string)$detailsArray['tokenSource'];
+        }
+
+        throw new LocalizedException(__('The selected payment card is missing its token source.'));
     }
 
     private function resolveCurrencyCode(array $data): string
@@ -422,15 +460,27 @@ class OpenRefundService
      */
     private function resolveVaultPaymentToken(array $data): PaymentTokenInterface
     {
-        $publicHash = (string)($data['payment_token_hash'] ?? '');
+        $sourceType = strtoupper(trim((string)($data['source_type'] ?? self::SOURCE_TYPE_CARD_HOSTED_FIELDS)));
         $customerId = (int)($data['customer_id'] ?? 0);
+
+        if ($sourceType === self::SOURCE_TYPE_CARD_HOSTED_FIELDS) {
+            $publicHash = trim((string)($data['resolved_payment_token_hash'] ?? ''));
+        } else {
+            $publicHash = trim((string)($data['payment_token_hash'] ?? ''));
+        }
 
         if ($publicHash !== '' && $customerId > 0) {
             $token = $this->tokenManagement->getByPublicHash($publicHash, $customerId);
+
             if ($token && $token->getGatewayToken()) {
                 return $token;
             }
+
             throw new LocalizedException(__('The selected payment card could not be found for this customer.'));
+        }
+
+        if ($sourceType === self::SOURCE_TYPE_CARD_HOSTED_FIELDS) {
+            throw new LocalizedException(__('The newly tokenized payment card could not be resolved.'));
         }
 
         throw new LocalizedException(__('Please select a stored payment card.'));
@@ -444,16 +494,17 @@ class OpenRefundService
     private function resolveStatus(array $response): string
     {
         $transactionState = strtoupper((string)($response['gatewayResponse']['transactionState'] ?? ''));
-        $approvalStatus   = strtoupper((string)(
-            $response['paymentReceipt']['processorResponseDetails']['approvalStatus'] ?? ''
+        $approvalStatus = strtoupper((string)(
+            $response['gatewayResponse']['approvalStatus']
+            ?? $response['paymentReceipt']['processorResponseDetails']['approvalStatus']
+            ?? $response['processorResponseDetails']['approvalStatus']
+            ?? ''
         ));
 
-        // Approved only when gateway transaction is captured and processor approves.
         if ($transactionState === 'CAPTURED' && in_array($approvalStatus, ['APPROVED', 'SUCCESS'], true)) {
             return OpenRefund::STATUS_APPROVED;
         }
 
-        // Any other shape is treated as declined in the 2-status model.
         return OpenRefund::STATUS_DECLINED;
     }
 
@@ -465,7 +516,6 @@ class OpenRefundService
     private function resolveDeclineMessage(array $response): string
     {
         $message = (string)(
-            // Commerce Hub API error shape
             $response['error']['message']
             ?? $response['error'][0]['message']
             ?? ''

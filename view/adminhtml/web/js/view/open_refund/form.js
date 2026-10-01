@@ -39,7 +39,7 @@ define([
             formId:           'open-refund-form',
             sourceSelectId:   'source_type',
             sessionInputId:   'or_payment_session',
-            tokenizedTokenInputId: 'or_tokenized_payment_token',
+            resolvedTokenHashInputId: 'or_resolved_payment_token_hash',
             submitBtnId:      'or-submit-btn',
             cardSectionId:    'or-card-section',
             iframeValid:      false,
@@ -191,6 +191,7 @@ define([
         _selectCustomer: function (customer) {
             // Set the hidden customer_id
             $('#customer_id').val(customer.id);
+            $('#' + this.resolvedTokenHashInputId).val('');
             // Show the selection badge
             $('#or-customer-search').val('');
             $('#or-selected-customer').html(
@@ -211,6 +212,7 @@ define([
 
         _clearCustomer: function () {
             $('#customer_id').val('');
+            $('#' + this.resolvedTokenHashInputId).val('');
             $('#or-selected-customer').hide().empty();
             this._clearTokenDropdown();
         },
@@ -333,7 +335,7 @@ define([
         _bindSourceToggle: function () {
             $('#' + this.sourceSelectId).on('change', () => {
                 $('#' + this.sessionInputId).val('');
-                $('#' + this.tokenizedTokenInputId).val('');
+                $('#' + this.resolvedTokenHashInputId).val('');
                 if (this._isHostedFieldsSourceSelected()) {
                     this._destroyIframe();
                     this._initSdk();
@@ -380,7 +382,7 @@ define([
             );
 
             try {
-                const credsResponse = await chSession({ storeUrl: activeConfig.storeUrl });
+                const credsResponse = await chSession({ storeUrl: activeConfig.storeUrl, isTokenization: true });
                 const paymentSessionData = credsResponse && credsResponse.ch_credentials ? credsResponse.ch_credentials : null;
 
                 if (!paymentSessionData) {
@@ -518,9 +520,9 @@ define([
                     this._showError($t('Please complete all card fields before submitting.'));
                     return;
                 }
-		    this.submitInProgress = true;
-		    $('#' + this.sessionInputId).val('');
-		    $('#' + this.tokenizedTokenInputId).val('');
+                this.submitInProgress = true;
+                $('#' + this.sessionInputId).val('');
+                $('#' + this.resolvedTokenHashInputId).val('');
                 this._setSubmitEnabled(false);
                 this._beginAsyncFlow();
                 chIframe.submitIframeForm(
@@ -555,27 +557,27 @@ define([
             this._showError($t('Card capture failed. Please check card details and try again.'));
         },
 
-    _tokenizeCardSessionAndSubmit: function (sessionId) {
-      this._tokenizeCardSession(sessionId)
-        .done((response) => {
-          const tokenData = response && response.token_data ? String(response.token_data) : '';
-          if (!tokenData) {
-            this._onTokenizeFailure($t('Tokenized card data was not returned. Please retry.'));
-            return;
-          }
-          $('#' + this.tokenizedTokenInputId).val(tokenData);
-          this.submitInProgress = false;
-          this._endAsyncFlow();
-          this._submitNativeForm();
-        })
-        .fail((xhr) => {
-          let message = $t('Card tokenization failed. Please retry.');
-          if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
-            message = xhr.responseJSON.message;
-          }
-          this._onTokenizeFailure(message);
-        });
-    },
+        _tokenizeCardSessionAndSubmit: function (sessionId) {
+            this._tokenizeCardSession(sessionId)
+                .done((response) => {
+                    const publicHash = response && response.public_hash ? String(response.public_hash) : '';
+                    if (!publicHash) {
+                        this._onTokenizeFailure($t('Stored payment token was not returned. Please retry.'));
+                        return;
+                    }
+                    $('#' + this.resolvedTokenHashInputId).val(publicHash);
+                    this.submitInProgress = false;
+                    this._endAsyncFlow();
+                    this._submitNativeForm();
+                })
+                .fail((xhr) => {
+                    let message = $t('Card tokenization failed. Please retry.');
+                    if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    this._onTokenizeFailure(message);
+                });
+        },
 
     _tokenizeCardSession: function (sessionId) {
       if (!this.tokenizeSessionUrl) {
@@ -590,7 +592,8 @@ define([
         dataType: 'json',
         data: {
           session_id: sessionId,
-          form_key: $('input[name="form_key"]').val() || ''
+            customer_id: $('#customer_id').val() || '',
+            form_key: $('input[name="form_key"]').val() || ''
         }
       });
     },

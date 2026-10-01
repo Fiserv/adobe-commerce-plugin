@@ -32,7 +32,7 @@ class OpenRefundRequest
      */
     public function request(array $payload): array
     {
-        $this->logger->logDebug(3, 'Open refund request payload: ' . json_encode($payload));
+        $this->logger->logDebug(3, 'Open refund request payload: ' . json_encode($payload, JSON_PRETTY_PRINT));
 
         $response = $this->httpAdapter->sendRequest($payload, self::REFUNDS_ENDPOINT);
         $body     = json_decode($response->getBody(), true);
@@ -43,7 +43,7 @@ class OpenRefundRequest
 
         $body['_http_status'] = $response->getStatusCode();
 
-        $this->logger->logDebug(3, 'Open refund response: ' . json_encode($body));
+        $this->logger->logDebug(3, 'Open refund response: ' . json_encode($body, JSON_PRETTY_PRINT));
 
         return $body;
     }
