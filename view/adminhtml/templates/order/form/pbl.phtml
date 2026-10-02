@@ -9,7 +9,7 @@
 ?>
 <link rel="stylesheet" type="text/css" href="<?= $block->escapeUrl($block->getViewFileUrl('Fiserv_Payments/css/ch-form-admin.css')); ?>">
 
-<fieldset class="admin__fieldset payment-method" id="payment_form_<?= /* @noEscape */ $code ?>_pbl"
+<fieldset class="admin__fieldset payment-method" id="payment_form_<?= /* @noEscape */ $code ?>"
 		style="display:none">
 	<div>
 		<div>
@@ -85,7 +85,7 @@
 <script type="application/javascript">
 	(function () {
 		var METHOD_CODE = 'fiserv_pay_by_link';
-		var PAY_BY_LINK_SECTION = '#payment_form_fiserv_pay_by_link_pbl';
+		var PAY_BY_LINK_SECTION = '#payment_form_fiserv_pay_by_link';
 		var PAYMENT_RADIO_SELECTOR = '[name="payment[method]"]';
 		var DEFAULT_EXPIRY_SELECTOR = '#pbl_use_default_expiry';
 		var CUSTOM_EXPIRY_SELECTOR = '#pbl_custom_expiry_fields';
