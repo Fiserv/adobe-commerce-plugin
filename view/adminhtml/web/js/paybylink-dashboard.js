@@ -8,14 +8,14 @@
 define(['jquery', 'mage/translate', 'Magento_Ui/js/modal/modal'], function ($, $t, modal) {
     'use strict';
 
-    var currentPage = 1;
-    var rowsPerPage = 20;
-    var ajaxUrl = '';
-    var formKey = '';
-    var icons = { retry: '', copy: '' };
-    var currentLink = '';
+    let currentPage = 1;
+    let rowsPerPage = 20;
+    let ajaxUrl = '';
+    let formKey = '';
+    let icons = { retry: '', copy: '' };
+    let currentLink = '';
 
-    var filters = {
+    let filters = {
         search: '',
         order_number: '',
         status: '',
@@ -79,17 +79,17 @@ define(['jquery', 'mage/translate', 'Magento_Ui/js/modal/modal'], function ($, $
         if (!unixTs) {
             return { date: rawFallback || '', time: '' };
         }
-        var d = new Date(unixTs * 1000);
-        var dateStr = (d.getMonth() + 1) + '/' + d.getDate() + '/' + pad(d.getFullYear() % 100);
-        var hours = d.getHours();
-        var hr12 = hours % 12 || 12;
-        var timeStr = hr12 + ':' + pad(d.getMinutes()) + (hours >= 12 ? 'pm' : 'am');
+        let d = new Date(unixTs * 1000);
+        let dateStr = (d.getMonth() + 1) + '/' + d.getDate() + '/' + pad(d.getFullYear() % 100);
+        let hours = d.getHours();
+        let hr12 = hours % 12 || 12;
+        let timeStr = hr12 + ':' + pad(d.getMinutes()) + (hours >= 12 ? 'pm' : 'am');
         return { date: dateStr, time: timeStr };
     }
 
     function dateWrapHtml(unixTs, rawFallback) {
-        var parts = formatDateParts(unixTs, rawFallback);
-        var html = '<div class="date-wrap"><div class="date-main">' + escapeHtml(parts.date) + '</div>';
+        let parts = formatDateParts(unixTs, rawFallback);
+        let html = '<div class="date-wrap"><div class="date-main">' + escapeHtml(parts.date) + '</div>';
         if (parts.time) {
             html += '<div class="date-time">' + escapeHtml(parts.time) + '</div>';
         }
@@ -104,11 +104,11 @@ define(['jquery', 'mage/translate', 'Magento_Ui/js/modal/modal'], function ($, $
     }
 
     function actionsHtml(row) {
-        var statusCode = ((row.status_code || row.status || '') + '').toLowerCase();
-        var html = '<div class="action-icons" style="display:flex;gap:8px;align-items:center;">';
+        let statusCode = ((row.status_code || row.status || '') + '').toLowerCase();
+        let html = '<div class="action-icons" style="display:flex;gap:8px;align-items:center;">';
 
         if (statusCode === 'unpaid') {
-            var copyText = row.paybylink_url || row.order || '';
+            let copyText = row.paybylink_url || row.order || '';
             html += '<button type="button" class="copy-link-btn" data-link="' + escapeHtml(copyText) + '" onclick="openCopyModal(this)" title="' + escapeHtml($t('Copy Link')) + '">' +
                 '<img src="' + escapeHtml(icons.copy) + '" alt="' + escapeHtml($t('Copy Link')) + '" width="16" height="16" /></button>';
             html += viewOrderLinkHtml(row);
@@ -132,11 +132,11 @@ define(['jquery', 'mage/translate', 'Magento_Ui/js/modal/modal'], function ($, $
     }
 
     function renderRows(rows) {
-        var $tbody = $('#tableBody');
-        var $table = $('#transactionsTable');
-        var $noRecords = $('#noRecordsMessage');
-        var $paginationInfoTop = $('#paginationInfoTop');
-        var $paginationControls = $('#paginationControls');
+        let $tbody = $('#tableBody');
+        let $table = $('#transactionsTable');
+        let $noRecords = $('#noRecordsMessage');
+        let $paginationInfoTop = $('#paginationInfoTop');
+        let $paginationControls = $('#paginationControls');
 
         $tbody.empty();
 
@@ -154,14 +154,14 @@ define(['jquery', 'mage/translate', 'Magento_Ui/js/modal/modal'], function ($, $
         $paginationControls.show();
 
         rows.forEach(function (row) {
-            var statusCode = ((row.status_code || row.status || '') + '').toLowerCase();
-            var statusLabel = escapeHtml(capitalize(statusCode));
-            var statusHtml = statusCode === 'expired' ? '<span class="status-expired">' + statusLabel + '</span>' : statusLabel;
-            var orderCell = row.entity_id
+            let statusCode = ((row.status_code || row.status || '') + '').toLowerCase();
+            let statusLabel = escapeHtml(capitalize(statusCode));
+            let statusHtml = statusCode === 'expired' ? '<span class="status-expired">' + statusLabel + '</span>' : statusLabel;
+            let orderCell = row.entity_id
                 ? '<a href="' + escapeHtml(row.view_order_url) + '">' + escapeHtml(row.order) + '</a>'
                 : escapeHtml(row.order);
 
-            var tr = '<tr>' +
+            let tr = '<tr>' +
                 '<td>' + orderCell + '</td>' +
                 '<td>' + escapeHtml(row.amount_formatted || row.amount) + '</td>' +
                 '<td>' + dateWrapHtml(row.created_ts, row.created) + '</td>' +
@@ -175,10 +175,10 @@ define(['jquery', 'mage/translate', 'Magento_Ui/js/modal/modal'], function ($, $
     }
 
     function setupPagination(totalPages) {
-        var $paginationControls = $('#paginationControls');
+        let $paginationControls = $('#paginationControls');
         $paginationControls.empty();
 
-        var $prevButton = $('<span>').text('<').addClass('pagination-button').on('click', function () {
+        let $prevButton = $('<span>').text('<').addClass('pagination-button').on('click', function () {
             if (currentPage > 1) {
                 fetchData(currentPage - 1);
             }
@@ -188,10 +188,10 @@ define(['jquery', 'mage/translate', 'Magento_Ui/js/modal/modal'], function ($, $
         }
         $paginationControls.append($prevButton);
 
-        var $pageInfo = $('<span>').text(currentPage + ' of ' + totalPages).addClass('pagination-info');
+        let $pageInfo = $('<span>').text(currentPage + ' of ' + totalPages).addClass('pagination-info');
         $paginationControls.append($pageInfo);
 
-        var $nextButton = $('<span>').text('>').addClass('pagination-button').on('click', function () {
+        let $nextButton = $('<span>').text('>').addClass('pagination-button').on('click', function () {
             if (currentPage < totalPages) {
                 fetchData(currentPage + 1);
             }
@@ -274,7 +274,7 @@ define(['jquery', 'mage/translate', 'Magento_Ui/js/modal/modal'], function ($, $
         });
     }
 
-    var modalOptions = {
+    let modalOptions = {
         type: 'popup',
         modalClass: 'copy-link-modal',
         title: '',
@@ -300,7 +300,7 @@ define(['jquery', 'mage/translate', 'Magento_Ui/js/modal/modal'], function ($, $
     }
 
     function fallbackCopy(text, callback) {
-        var textArea = document.createElement('textarea');
+        let textArea = document.createElement('textarea');
         textArea.value = text;
         textArea.style.position = 'fixed';
         textArea.style.left = '-999999px';
@@ -308,7 +308,7 @@ define(['jquery', 'mage/translate', 'Magento_Ui/js/modal/modal'], function ($, $
         document.body.appendChild(textArea);
         textArea.focus();
 
-        var successful = false;
+        let successful = false;
         try {
             successful = document.execCommand('copy');
         } catch (err) {
