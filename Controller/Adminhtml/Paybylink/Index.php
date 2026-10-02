@@ -150,8 +150,13 @@ class Index extends Action implements HttpGetActionInterface
     private function buildRowData(Order $order)
     {
         $payByLinkUrl = $this->extractPayByLinkUrl($order);
-        $createdTs = $order->getCreatedAt() ? strtotime($order->getCreatedAt()) : false;
-        $expiresTs = $this->calculateExpiration($createdTs);
+        $payment = $order->getPayment();
+        $createdAt = $payment->getAdditionalInformation('pbl_created_at') ?: $order->getCreatedAt();
+        $createdTs = $createdAt ? strtotime($createdAt) : false;
+        $expiresInMinutes = (int) $payment->getAdditionalInformation('pbl_expires_in_minutes');
+        $expiresTs = $createdTs !== false && $expiresInMinutes > 0
+            ? $createdTs + ($expiresInMinutes * 60)
+            : $this->calculateExpiration($createdTs);
 
         if (empty($payByLinkUrl)) {
             $payByLinkUrl = $this->generatePayByLinkUrl($order);
