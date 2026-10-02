@@ -24,7 +24,7 @@
 				<qa_api_service><![CDATA[https://connect-qa.fiservapis.com/ch/]]></qa_api_service>
 				<prod_client_url><![CDATA[https://prod.api.fiservapps.com/ch/sdk/v1/commercehub-client-sdk.js]]></prod_client_url>
 				<cert_client_url><![CDATA[https://cert.api.fiservapps.com/ch/sdk/v1/commercehub-client-sdk.js]]></cert_client_url>
-				<qa_client_url><![CDATA[https://qa.api.fiservapis.com/ch/sdk/v1/commercehub-client-sdk.js]]></qa_client_url>
+				<qa_client_url><![CDATA[https://qa.api.fiservapps.com/ch/sdk/v1/commercehub-client-sdk.js]]></qa_client_url>
 				<api_environment>QA</api_environment>
 				<payment_action>AUTH</payment_action>
 				<cc_types>AE,VI,MC,DI,JCB,DN</cc_types>
