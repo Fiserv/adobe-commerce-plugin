@@ -5,7 +5,6 @@ namespace Fiserv\Payments\Gateway\Request\CommerceHub;
 
 use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use Fiserv\Payments\Lib\CommerceHub\Model\StoredCredentials;
-use Fiserv\Payments\Observer\CommerceHub\DataAssignObserver;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 use Magento\Payment\Gateway\Request\BuilderInterface;
 use Magento\Vault\Model\Ui\VaultConfigProvider;
@@ -19,7 +18,6 @@ class StoredCredentialsDataBuilder implements BuilderInterface
 	const STORED_CREDENTIALS_KEY = 'storedCredentials';
 
 	const TOKEN_USE_TYPE_MULTI = 'MULTI_USE';
-	const TOKEN_USE_TYPE_SINGLE = 'SINGLE_USE';
 
 	const SEQUENCE_FIRST = 'FIRST';
 	const SEQUENCE_SUBSEQUENT = 'SUBSEQUENT';
@@ -74,11 +72,10 @@ class StoredCredentialsDataBuilder implements BuilderInterface
 			return [ self::STORED_CREDENTIALS_KEY => $storedCredentials ];
 		}
 
-		// Case 2: first-time tokenization (new card, "save for later" checked).
+		// Case 2: first-time tokenization. Magento persists this standard vault flag
+		// before the gateway request is built.
 		$isSavingToken = !empty($payment->getAdditionalInformation(VaultConfigProvider::IS_ACTIVE_CODE));
-		$tokenUseType = $payment->getAdditionalInformation(DataAssignObserver::TOKEN_USE_TYPE_KEY);
-
-		if ($isSavingToken && $tokenUseType === self::TOKEN_USE_TYPE_MULTI) {
+		if ($isSavingToken) {
 			$storedCredentials = new StoredCredentials();
 			$storedCredentials->setInitiator(self::INITIATOR_CARD_HOLDER);
 			$storedCredentials->setSequence(self::SEQUENCE_FIRST);

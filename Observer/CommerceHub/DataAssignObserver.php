@@ -29,7 +29,6 @@ class DataAssignObserver extends AbstractDataAssignObserver
 	const ACH_ROUTING_NUMBER_SNAKE_KEY = 'routing_number';
 	const SURCHARGE_ESTIMATE_KEY = 'surcharge_estimate';
 	const SURCHARGE_BASE_AMOUNT_KEY = 'surcharge_base_amount';
-	const TOKEN_USE_TYPE_KEY = 'token_use_type';
 
 	/**
 	 * @var array
@@ -49,7 +48,6 @@ class DataAssignObserver extends AbstractDataAssignObserver
 		self::ACH_ROUTING_NUMBER_SNAKE_KEY,
 		self::SURCHARGE_ESTIMATE_KEY,
 		self::SURCHARGE_BASE_AMOUNT_KEY,
-		self::TOKEN_USE_TYPE_KEY,
 	];
 
 	/**

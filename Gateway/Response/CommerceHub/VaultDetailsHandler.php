@@ -11,7 +11,6 @@ use Fiserv\Payments\Model\System\Utils\VaultPaymentTokenUtils;
 use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use Fiserv\Payments\Gateway\Request\CommerceHub\TransactionDetailsDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\StoredCredentialsDataBuilder;
-use Fiserv\Payments\Observer\CommerceHub\DataAssignObserver;
 use Fiserv\Payments\Model\Source\CommerceHub\TokenizationStrategy;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Serialize\Serializer\Json;
@@ -132,14 +131,8 @@ class VaultDetailsHandler implements HandlerInterface
 				) ? "" : $chResponse["cardDetails"][0]["detailedCardProduct"]
 			);
 
-		// Explicit single-use vs multi-use token, driven by the checkout
+		// Tokens persisted by Commerce Hub are reusable stored-account tokens.
 		$tokenUseType = StoredCredentialsDataBuilder::TOKEN_USE_TYPE_MULTI;
-		if ($payment !== null) {
-			$selected = $payment->getAdditionalInformation(DataAssignObserver::TOKEN_USE_TYPE_KEY);
-			if ($selected === StoredCredentialsDataBuilder::TOKEN_USE_TYPE_SINGLE) {
-				$tokenUseType = StoredCredentialsDataBuilder::TOKEN_USE_TYPE_SINGLE;
-			}
-		}
 
 		// CommerceHub "stored account reference" for replaying this stored credential on a subsequent transaction.
 		$storedAccountReference = $chResponse["storedCredentials"]["schemeReferenceTransactionId"] ?? null;
