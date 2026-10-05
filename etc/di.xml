@@ -342,6 +342,7 @@
 				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
 				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
 				<item name="3ds_data" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\ThreeDSecureDataBuilder</item>
+				<item name="stored_credentials" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\StoredCredentialsDataBuilder</item>
 			</argument>
 		</arguments>
 	</virtualType>
@@ -357,6 +358,8 @@
 				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
 				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
 				<item name="3ds_data" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\ThreeDSecureDataBuilder</item>
+				<item name="stored_credentials" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\StoredCredentialsDataBuilder</item>
+				<item name="additional_data_common" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AdditionalDataCommonDataBuilder</item>
 			</argument>
 		</arguments>
 	</virtualType>
@@ -372,10 +375,10 @@
 				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
 				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
 				<item name="3ds_data" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\ThreeDSecureDataBuilder</item>
+				<item name="stored_credentials" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\StoredCredentialsDataBuilder</item>
 			</argument>
 		</arguments>
 	</virtualType>
-
 	<virtualType name="FiservChargesVaultSaleRequest" type="Fiserv\Payments\Gateway\Request\CommerceHub\Composite\TokenSaleComposite">
 		<arguments>
 			<argument name="builders" xsi:type="array">
@@ -387,6 +390,8 @@
 				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
 				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
 				<item name="3ds_data" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\ThreeDSecureDataBuilder</item>
+				<item name="stored_credentials" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\StoredCredentialsDataBuilder</item>
+				<item name="additional_data_common" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AdditionalDataCommonDataBuilder</item>
 			</argument>
 		</arguments>
 	</virtualType>

@@ -1,8 +1,4 @@
 <?php
-/**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
- */
 namespace Fiserv\Payments\Gateway\Request\CommerceHub\Composite;
 
 use Fiserv\Payments\Gateway\Request\CommerceHub\Composite\ChCompositeBase;
@@ -18,26 +14,16 @@ use Magento\Framework\ObjectManager\TMapFactory;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 use Fiserv\Payments\Gateway\Config\CommerceHub\Config;
 use Fiserv\Payments\Gateway\Request\CommerceHub\ThreeDSecureDataBuilder;
+use Fiserv\Payments\Gateway\Request\CommerceHub\StoredCredentialsDataBuilder;
+use Fiserv\Payments\Gateway\Request\CommerceHub\AdditionalDataCommonDataBuilder;
 
-/**
- * Class TokenSaleComposite
- */
 class TokenSaleComposite extends ChCompositeBase
 {
 	const ENDPOINT = "payments/v1/charges";
 
-	/**
-	 * @var MultiLevelLogger
-	 */
 	private $logger;
-
 	private $chConfig;
 
-	/**
-	 * @param MultiLevelLogger $logger
-	 * @param TMapFactory $tmapFactory
-	 * @param array $builders
-	 */
 	public function __construct(
 		MultiLevelLogger $logger, 
 		TMapFactory $tmapFactory, 
@@ -49,9 +35,6 @@ class TokenSaleComposite extends ChCompositeBase
 		$this->chConfig = $chConfig;
 	}
 
-	/**
-	 * @inheritdoc
-	 */
 	public function build(array $buildSubject)
 	{
 
@@ -68,6 +51,16 @@ class TokenSaleComposite extends ChCompositeBase
 		$req->setMerchantDetails($result[MerchantDetailsDataBuilder::MERCHANT_DETAILS_KEY]);
 		$req->setBillingAddress($result[BillingAddressDataBuilder::BILLING_ADDRESS_KEY]);
 		$req->setCustomer($result[CustomerDataBuilder::CUSTOMER_KEY]);
+
+		// Stored Credentials required for CIT multi-use token reuse (see StoredCredentialsDataBuilder)
+		if (isset($result[StoredCredentialsDataBuilder::STORED_CREDENTIALS_KEY])) {
+			$req->setStoredCredentials($result[StoredCredentialsDataBuilder::STORED_CREDENTIALS_KEY]);
+		}
+
+		// billPaymentType required on subsequent stored-credential transactions (see AdditionalDataCommonDataBuilder)
+		if (isset($result[AdditionalDataCommonDataBuilder::ADDITIONAL_DATA_COMMON_KEY])) {
+			$req->setAdditionalDataCommon($result[AdditionalDataCommonDataBuilder::ADDITIONAL_DATA_COMMON_KEY]);
+		}
 
 		// 3D Secure can be enabled but not run (e.g. admin panel order creation)
 		if ($this->chConfig->isThreeDSEnabled() && isset($result[ThreeDSecureDataBuilder::KEY_3DS_DATA]))
