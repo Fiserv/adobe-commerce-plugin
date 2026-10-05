@@ -462,6 +462,8 @@ define(
 			}
 
 			data['additional_data'] = _.extend(data['additional_data'], this.additionalData);
+
+
 			this.vaultEnabler.visitAdditionalData(data);
 			return data;
 		},
