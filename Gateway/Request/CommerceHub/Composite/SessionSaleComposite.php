@@ -14,6 +14,7 @@ use Fiserv\Payments\Gateway\Request\CommerceHub\TransactionInteractionDataBuilde
 use Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder;
+use Fiserv\Payments\Gateway\Request\CommerceHub\StoredCredentialsDataBuilder;
 use Magento\Framework\ObjectManager\TMapFactory;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 use Fiserv\Payments\Gateway\Config\CommerceHub\Config;
@@ -66,6 +67,10 @@ class SessionSaleComposite extends ChCompositeBase
 			'billingAddress' => $result[BillingAddressDataBuilder::BILLING_ADDRESS_KEY],
 			'customer' => $result[CustomerDataBuilder::CUSTOMER_KEY],
 		];
+
+		if (isset($result[StoredCredentialsDataBuilder::STORED_CREDENTIALS_KEY])) {
+			$payload['storedCredentials'] = $result[StoredCredentialsDataBuilder::STORED_CREDENTIALS_KEY];
+		}
 
 		// 3D Secure can be enabled but not run (e.g. admin panel order creation)
 		if ($this->chConfig->isThreeDSEnabled() && isset($result[ThreeDSecureDataBuilder::KEY_3DS_DATA]))

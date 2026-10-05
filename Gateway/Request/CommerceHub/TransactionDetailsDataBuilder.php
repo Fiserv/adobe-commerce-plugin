@@ -1,8 +1,4 @@
 <?php
-/**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
- */
 namespace Fiserv\Payments\Gateway\Request\CommerceHub;
 
 use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
@@ -23,23 +19,10 @@ abstract class TransactionDetailsDataBuilder implements BuilderInterface
 	const CAPTURE = true;
 	const AUTHORIZE = false;
 
-	/**
-	 * @var MultiLevelLogger
-	 */
 	private $logger;
-	
-	/**
-	 * @var SubjectReader
-	 */
 	protected $subjectReader;
-
 	private $chConfig;
 
-	/**
-	 * @param MultiLevelLogger $logger
-	 * @param SubjectReader $subjectReader
-	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-	 */
 	public function __construct(
 		SubjectReader $subjectReader,
 		Config $chConfig,
@@ -50,9 +33,6 @@ abstract class TransactionDetailsDataBuilder implements BuilderInterface
 		$this->logger = $logger;
 	}
 
-	/**
-	 * @inheritdoc
-	 */
 	public function build(array $buildSubject)
 	{
 		$paymentDO = $this->subjectReader->readPayment($buildSubject);
