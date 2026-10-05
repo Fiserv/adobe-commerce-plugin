@@ -150,10 +150,24 @@ class Index extends Action implements HttpGetActionInterface
     private function buildRowData(Order $order)
     {
         $payByLinkUrl = $this->extractPayByLinkUrl($order);
-       $payment = $order->getPayment();
-       $createdTs = $createdAt ? strtotime($createdAt) : false;
-       $expiresInMinutes = (int) $payment->getAdditionalInformation('pbl_expires_in_minutes');
-       $expiresTs = $createdTs !== false && $expiresInMinutes > 0 ? $createdTs + ($expiresInMinutes * 60) : $this->calculateExpiration($createdTs);
+        $createdAt = $order->getCreatedAt();
+        $createdTs = $createdAt ? strtotime($createdAt) : false;
+        $pblExpiresInMinutes = 0;
+
+        $payment = $order->getPayment();
+        if ($payment) {
+            $pblCreatedAt = $payment->getAdditionalInformation('pbl_created_at');
+            $pblCreatedTs = $pblCreatedAt ? strtotime($pblCreatedAt) : false;
+            if ($pblCreatedTs !== false) {
+                $createdAt = $pblCreatedAt;
+                $createdTs = $pblCreatedTs;
+            }
+            $pblExpiresInMinutes = (int)$payment->getAdditionalInformation('pbl_expires_in_minutes');
+        }
+
+        $expiresTs = $pblExpiresInMinutes > 0 && $createdTs !== false
+            ? $createdTs + ($pblExpiresInMinutes * 60)
+            : $this->calculateExpiration($createdTs);
 
         if (empty($payByLinkUrl)) {
             $payByLinkUrl = $this->generatePayByLinkUrl($order);
@@ -163,9 +177,9 @@ class Index extends Action implements HttpGetActionInterface
             'order' => $order->getIncrementId(),
             'amount' => $order->getGrandTotal(),
             'amount_formatted' => $this->formatPrice($order->getGrandTotal()),
-            'created' => $order->getCreatedAt(),
+            'created' => $createdAt,
             'created_ts' => $createdTs !== false ? (int)$createdTs : null,
-            'created_formatted' => $createdTs ? date('Y-m-d H:i:s', $createdTs) : $order->getCreatedAt(),
+            'created_formatted' => $createdTs ? date('Y-m-d H:i:s', $createdTs) : $createdAt,
             'expires' => $expiresTs ? date('Y-m-d H:i:s', $expiresTs) : '',
             'expires_raw' => $expiresTs ? date('Y-m-d H:i:s', $expiresTs) : '',
             'expires_ts' => $expiresTs ? (int)$expiresTs : null,
