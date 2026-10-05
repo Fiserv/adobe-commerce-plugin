@@ -162,7 +162,8 @@ class OpenRefundVaultTokenService
             )
         );
         $vaultPaymentToken->setIsActive(true);
-        $vaultPaymentToken->setIsVisible(true);
+        // Open Refund tokenization is performed by an administrator, not opted into by the customer.
+        $vaultPaymentToken->setIsVisible(false);
         $vaultPaymentToken->setPublicHash(
             $this->generatePublicHash($vaultPaymentToken)
         );

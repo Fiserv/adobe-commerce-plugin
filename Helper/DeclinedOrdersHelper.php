@@ -258,6 +258,7 @@ class DeclinedOrdersHelper
 		return $this->convertFailedOrderToArray($failedOrder);
 	}
 
+
 	public function formatPrice($amount)
 	{
 		return $this->pricingHelper->currency($amount, true, false);

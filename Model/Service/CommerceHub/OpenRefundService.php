@@ -90,6 +90,9 @@ class OpenRefundService
     /** @var OrderPaymentExtensionFactory */
     private $orderPaymentExtensionFactory;
 
+    /** @var OpenRefundDeclineReporter */
+    private $openRefundDeclineReporter;
+
     public function __construct(
         Config $config,
         OpenRefundRequest $openRefundRequest,
@@ -107,7 +110,8 @@ class OpenRefundService
         PaymentDataObjectFactory $paymentDataObjectFactory,
         PaymentFactory $orderPaymentFactory,
         OrderFactory $orderFactory,
-        OrderPaymentExtensionFactory $orderPaymentExtensionFactory
+        OrderPaymentExtensionFactory $orderPaymentExtensionFactory,
+        OpenRefundDeclineReporter $openRefundDeclineReporter
     ) {
         $this->config             = $config;
         $this->openRefundRequest  = $openRefundRequest;
@@ -126,6 +130,7 @@ class OpenRefundService
         $this->orderPaymentFactory = $orderPaymentFactory;
         $this->orderFactory = $orderFactory;
         $this->orderPaymentExtensionFactory = $orderPaymentExtensionFactory;
+        $this->openRefundDeclineReporter = $openRefundDeclineReporter;
     }
 
     /**
@@ -190,6 +195,7 @@ class OpenRefundService
                 $errorMsg = $this->resolveDeclineMessage($response);
                 $openRefund->setData(OpenRefund::KEY_ERROR_MESSAGE, $errorMsg);
                 $this->logger->logError(1, 'Open refund declined. OpenRefundId: ' . $openRefundId);
+                $this->openRefundDeclineReporter->reportGatewayDecline($openRefund, $response);
             }
 
             $this->openRefundResource->save($openRefund);
@@ -198,6 +204,7 @@ class OpenRefundService
         } catch (\Throwable $e) {
             $openRefund->setData(OpenRefund::KEY_STATUS,        OpenRefund::STATUS_DECLINED);
             $openRefund->setData(OpenRefund::KEY_ERROR_MESSAGE, $e->getMessage());
+            $this->openRefundDeclineReporter->reportException($openRefund, $e);
             try {
                 $this->openRefundResource->save($openRefund);
             } catch (\Throwable $saveEx) {
@@ -501,7 +508,10 @@ class OpenRefundService
             ?? ''
         ));
 
-        if ($transactionState === 'CAPTURED' && in_array($approvalStatus, ['APPROVED', 'SUCCESS'], true)) {
+        if (
+            in_array($transactionState, ['AUTHORIZED', 'CAPTURED'], true)
+            && in_array($approvalStatus, ['APPROVED', 'SUCCESS'], true)
+        ) {
             return OpenRefund::STATUS_APPROVED;
         }
 
