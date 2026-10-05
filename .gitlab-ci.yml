@@ -1,11 +1,12 @@
 # Default SCM CI Template for All commerceHub Applications
 include:
   - project: 'na/gbs/carat-digital-ecommerce/commercehub/SRE/gitlab-ci'
-    ref: MCH-24518
+    ref: Plugins
     file: '/template-php.yml'
 variables:
   ARTIFACT_TYPE : "JavaScript"
   APM_ID: "0011801"
+  
 
 # js.lint:
 #   variables:
@@ -52,3 +53,6 @@ magento_phpcs:
     - composer global require --dev --ignore-platform-req=php squizlabs/php_codesniffer:^3.10 magento/magento-coding-standard:^37
   script:
     - composer global exec -- phpcs --standard=Magento2 --extensions=php  --ignore='*/generated/*,*/vendor/*,*/node_modules/*,.gitlab/*' --error-severity=10 --warning-severity=0 .
+
+
+
