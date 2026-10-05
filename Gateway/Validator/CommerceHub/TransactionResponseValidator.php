@@ -42,7 +42,7 @@ abstract class TransactionResponseValidator extends AbstractValidator
 		self::STATE_TIMEOUT,
 	];
 
-	protected $paths = [
+	const RESPONSE_PATHS = [
 		'transactionId' => [HttpClient::RESPONSE_KEY, 'gatewayResponse', 'transactionProcessingDetails'],
 		'apiTraceId' => [HttpClient::RESPONSE_KEY, 'gatewayResponse', 'transactionProcessingDetails'],
 		'responseMessage' => [HttpClient::RESPONSE_KEY, 'paymentReceipt', 'processorResponseDetails'],
@@ -73,6 +73,8 @@ abstract class TransactionResponseValidator extends AbstractValidator
 		'amount' => [HttpClient::RESPONSE_KEY],
 		HttpClient::STATUS_CODE_KEY => []
 	];
+
+	protected $paths = self::RESPONSE_PATHS;
 
 	/**
 	 * @var SubjectReader

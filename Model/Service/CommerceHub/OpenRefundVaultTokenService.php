@@ -162,7 +162,8 @@ class OpenRefundVaultTokenService
             )
         );
         $vaultPaymentToken->setIsActive(true);
-        $vaultPaymentToken->setIsVisible(true);
+        // Admin refund tokenization is not customer consent to save a visible card.
+        $vaultPaymentToken->setIsVisible(false);
         $vaultPaymentToken->setPublicHash(
             $this->generatePublicHash($vaultPaymentToken)
         );

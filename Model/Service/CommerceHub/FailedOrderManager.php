@@ -12,6 +12,7 @@ use Fiserv\Payments\Api\FailedOrder\FailedOrderRepositoryInterface;
 use Fiserv\Payments\Model\FailedOrderFactory;
 use Fiserv\Payments\Model\ResourceModel\FailedOrder;
 use Fiserv\Payments\Model\FailedOrder as FailedOrderObj;
+use Fiserv\Payments\Model\OpenRefund;
 
 class FailedOrderManager
 {
@@ -95,6 +96,41 @@ class FailedOrderManager
 		$quote = $this->quoteRepo->get($quoteId);
 		$quote->setReservedOrderId(null);
 		$this->quoteRepo->save($quote);
+	}
+
+	public function saveOpenRefundFailure(OpenRefund $refund, string $message)
+	{
+		$customerId = (int)$refund->getData(OpenRefund::KEY_CUSTOMER_ID);
+		$name = $customerId > 0 ? (string)__('Customer #%1', $customerId) : (string)__('N/A');
+		$email = '';
+		if ($customerId > 0) {
+			try {
+				$customer = $this->customerRepo->getById($customerId);
+				$name = trim($customer->getFirstname() . ' ' . $customer->getLastname()) ?: $name;
+				$email = (string)$customer->getEmail();
+			} catch (\Throwable $exception) {
+				// An unavailable customer must not suppress failure reporting.
+			}
+		}
+		$amount = (float)$refund->getData(OpenRefund::KEY_AMOUNT);
+		$failedOrder = $this->failedOrderFactory->create();
+		$failedOrder->setData([
+			'order_increment_id' => (string)$refund->getData(OpenRefund::KEY_OPEN_REFUND_ID),
+			'date_time' => gmdate('Y-m-d H:i:s'),
+			'order_state' => 'DECLINED',
+			'billing_address' => '',
+			'shipping_address' => '',
+			'customer_name' => mb_substr($name, 0, 255),
+			'customer_email' => mb_substr($email, 0, 255),
+			'subtotal' => $amount,
+			'shipping_handling' => 0,
+			'grandTotal' => $amount,
+			'notes' => mb_substr('Open Refund: ' . $message, 0, 1000),
+			'items' => '[]',
+			'storeCredit' => 0,
+			'discountAmount' => 0
+		]);
+		return $this->failedOrderRepo->save($failedOrder);
 	}
 
 	public function getAddressByType(Array $addresses, string $addrType)
