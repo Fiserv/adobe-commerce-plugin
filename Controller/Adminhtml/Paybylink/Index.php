@@ -4,6 +4,7 @@ namespace Fiserv\Payments\Controller\Adminhtml\Paybylink;
 use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
 use Magento\Framework\View\Result\PageFactory;
+use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Framework\App\Action\HttpGetActionInterface;
 use Magento\Sales\Model\ResourceModel\Order\CollectionFactory as OrderCollectionFactory;
 use Magento\Framework\App\Config\ScopeConfigInterface;
@@ -16,6 +17,7 @@ use Fiserv\Payments\Helper\PayByLink\ExpiryTimeConverter;
 class Index extends Action implements HttpGetActionInterface
 {
     private $resultPageFactory;
+    private $jsonFactory;
     private $orderCollectionFactory;
     private $scopeConfig;
     private $serializer;
@@ -29,9 +31,16 @@ class Index extends Action implements HttpGetActionInterface
     private const STATUS_UNPAID = 'unpaid';
     private const STATUS_EXPIRED = 'expired';
 
+    /**
+     * Default/fallback pagination values (AJAX-driven search/filter/paginate, full page reloads) as the rest of the admin.
+     */
+    private const DEFAULT_PAGE = 1;
+    private const DEFAULT_PAGE_SIZE = 20;
+
     public function __construct(
         Context $context,
         PageFactory $resultPageFactory,
+        JsonFactory $jsonFactory,
         OrderCollectionFactory $orderCollectionFactory,
         ScopeConfigInterface $scopeConfig,
         SerializerJson $serializer,
@@ -40,6 +49,7 @@ class Index extends Action implements HttpGetActionInterface
     ) {
         parent::__construct($context);
         $this->resultPageFactory = $resultPageFactory;
+        $this->jsonFactory = $jsonFactory;
         $this->orderCollectionFactory = $orderCollectionFactory;
         $this->scopeConfig = $scopeConfig;
         $this->serializer = $serializer;
@@ -48,27 +58,64 @@ class Index extends Action implements HttpGetActionInterface
     }
 
     /**
-     * Main execute method - orchestrates the PayByLink management page rendering
+     * Main execute method - orchestrates the PayByLink management page rendering.
      */
     public function execute()
     {
-        $resultPage = $this->resultPageFactory->create();
-        $resultPage->getConfig()->getTitle()->prepend(__('Manage Payment Links'));
+        $page = max(1, (int) $this->getRequest()->getParam('page', self::DEFAULT_PAGE));
+        $pageSize = (int) $this->getRequest()->getParam('pageSize', self::DEFAULT_PAGE_SIZE);
+        if ($pageSize < 1) {
+            $pageSize = self::DEFAULT_PAGE_SIZE;
+        }
 
         $collection = $this->initializeCollection();
         $this->applyFiltersToCollection($collection);
         $collection->setOrder('created_at', 'DESC');
 
+        $totalCount = (int) $collection->getSize();
+        $collection->setPageSize($pageSize);
+        $collection->setCurPage($page);
+        $totalPages = (int) max(1, ceil($totalCount / $pageSize));
+
         $rows = $this->buildRowsData($collection);
         $this->updateRowStatuses($rows);
+        $rows = $this->stripInternalRowData($rows);
+
+        if ($this->getRequest()->isAjax()) {
+            $result = $this->jsonFactory->create();
+            return $result->setData([
+                'rows' => $rows,
+                'totalPages' => $totalPages,
+                'totalCount' => $totalCount,
+                'page' => $page,
+            ]);
+        }
+
+        $resultPage = $this->resultPageFactory->create();
+        $resultPage->getConfig()->getTitle()->prepend(__('Manage Payment Links'));
 
         $block = $resultPage->getLayout()->getBlock('fiserv_paybylink_manage');
         if ($block) {
             $block->setData('rows', $rows);
+            $block->setData('total_pages', $totalPages);
         }
 
         return $resultPage;
     }
+
+    /**
+     * Remove data that only exists to support server-side row building
+     * (not JSON-serializable / not meant to leave the controller).
+     */
+    private function stripInternalRowData(array $rows)
+    {
+        foreach ($rows as &$row) {
+            unset($row['order_object']);
+        }
+        unset($row);
+        return $rows;
+    }
+
 
     /**
      * Initialize order collection with payment table join
@@ -139,6 +186,8 @@ class Index extends Action implements HttpGetActionInterface
             'status' => $order->getStatus(),
             'status_code' => $order->getStatus(),
             'entity_id' => $order->getId(),
+            'retry_url' => $this->getUrl('fiserv/paybylink/retry', ['order_id' => $order->getId()]),
+            'view_order_url' => $this->getUrl('sales/order/view', ['order_id' => $order->getId()]),
             'paybylink_url' => $payByLinkUrl,
             'order_object' => $order
         ];
@@ -423,11 +472,11 @@ class Index extends Action implements HttpGetActionInterface
     {
         $search = trim((string)$request->getParam('search', ''));
         if ($search !== '') {
-            $collection->addFieldToFilter([
-                ['attribute' => 'main_table.increment_id', ['like' => '%' . $search . '%']],
-                ['attribute' => 'main_table.grand_total', ['like' => '%' . $search . '%']],
-                ['attribute' => 'main_table.status', ['like' => '%' . $search . '%']]
-            ]);
+            $likeCondition = ['like' => '%' . $search . '%'];
+            $collection->addFieldToFilter(
+                ['main_table.increment_id', 'main_table.grand_total', 'main_table.status'],
+                [$likeCondition, $likeCondition, $likeCondition]
+            );
         }
     }
 
