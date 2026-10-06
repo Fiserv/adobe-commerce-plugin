@@ -115,9 +115,30 @@ class ValuelinkBalanceRequest
 
 		$data = [];
 		if ($statusCode === 201) {
-			$this->logger->logInfo(1, "Balance Inquiry Success.");
 			$this->logger->logInfo(1, "Transaction ID: " . $transactionId);
-			$balanceArray = $bodyArray[self::KEY_PAYMENT_RECEIPT][self::KEY_BALANCES];
+
+			$processorDetails = $bodyArray[self::KEY_PAYMENT_RECEIPT][self::KEY_PROCESSOR_RESPONSE_DETAILS] ?? [];
+			$gatewayStatus = $bodyArray['gatewayResponse'][self::KEY_APPROVAL_STATUS] ?? null;
+			$processorStatus = $processorDetails[self::KEY_APPROVAL_STATUS] ?? null;
+
+			if (
+				($gatewayStatus === null && $processorStatus === null) ||
+				($gatewayStatus !== null && $gatewayStatus !== 'APPROVED') ||
+				($processorStatus !== null && $processorStatus !== 'APPROVED')
+			) {
+				$responseMessage = $processorDetails[self::KEY_RESPONSE_MESSAGE] ?? 'Inquiry not approved';
+				throw new \Exception(
+					'CommerceHub Gift Card BalanceInquiry failed: ' . $responseMessage
+				);
+			}
+
+			$balanceArray = $bodyArray[self::KEY_PAYMENT_RECEIPT][self::KEY_BALANCES] ?? null;
+			if (!is_array($balanceArray) || empty($balanceArray)) {
+				throw new \Exception(
+					'CommerceHub Gift Card BalanceInquiry approved response is missing valid balances.'
+				);
+			}
+
 			$arrayLength = count($balanceArray);
 			$balanceData = [];
 			$baseCurrency = $this->getBaseCurrencyCode();
@@ -141,6 +162,7 @@ class ValuelinkBalanceRequest
 			$data[self::KEY_AVAILABLE_BALANCE] = $availableBalance;
 			$data[self::KEY_CURRENCY] = $balanceData[self::KEY_CURRENCY] ?? $baseCurrency;
 			$data[self::KEY_RESPONSE_MESSAGE] = $bodyArray[self::KEY_PAYMENT_RECEIPT][self::KEY_PROCESSOR_RESPONSE_DETAILS][self::KEY_RESPONSE_MESSAGE] ?? '';
+			$this->logger->logInfo(1, "Balance Inquiry Success.");
 		} else {
 			throw new \Exception('CommerceHub Gift Card BalanceInquiry request HTTP error code: ' . $statusCode, 1);
 		};
