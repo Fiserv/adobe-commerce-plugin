@@ -11,6 +11,7 @@ use Magento\Framework\App\Action\HttpGetActionInterface;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Webapi\Exception;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 
@@ -62,6 +63,10 @@ class GetValuelinkBalance extends Action implements HttpGetActionInterface
 			}
 
 			$response->setData(['valuelink_balance' => $this->chAdapter->requestBalance($sessionId)]);
+        } catch (LocalizedException $e) {
+      $response->setHttpResponseCode(Exception::HTTP_BAD_REQUEST);
+      $response->setData(['message' => $e->getMessage()]);
+      return $response;
         } catch (\Exception $e) {
 			$this->logger->logError(1, "An error occurred while retrieving the gift card balance");
 			$this->logger->logCritical(2, $e);

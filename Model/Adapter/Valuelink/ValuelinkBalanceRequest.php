@@ -9,6 +9,7 @@ use Magento\Store\Model\StoreManagerInterface;
 use Fiserv\Payments\Gateway\Request\CommerceHub\SessionSourceDataBuilder;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 use Fiserv\Payments\Helper\MerchantPartnerHelper;
+use Magento\Framework\Exception\LocalizedException;
 
 use Fiserv\Payments\Lib\CommerceHub\Model\BalanceInquiryRequest;
 use Fiserv\Payments\Lib\CommerceHub\Model\GiftCardRequest;
@@ -120,6 +121,20 @@ class ValuelinkBalanceRequest
 			$processorDetails = $bodyArray[self::KEY_PAYMENT_RECEIPT][self::KEY_PROCESSOR_RESPONSE_DETAILS] ?? [];
 			$gatewayStatus = $bodyArray['gatewayResponse'][self::KEY_APPROVAL_STATUS] ?? null;
 			$processorStatus = $processorDetails[self::KEY_APPROVAL_STATUS] ?? null;
+
+			if ($gatewayStatus === 'DECLINED' || $processorStatus === 'DECLINED') {
+				$responseCode = (string)($processorDetails['responseCode'] ?? '');
+				$this->logger->logInfo(1, 'Balance Inquiry declined: ' . json_encode([
+					'responseCode' => $responseCode,
+					'responseMessage' => $processorDetails[self::KEY_RESPONSE_MESSAGE] ?? '',
+					'transactionId' => $transactionId
+				]));
+
+				$message = $responseCode === '325'
+					? __('This gift card has not been activated.')
+					: __('Unable to retrieve the gift card balance. Please check your card details or contact the card issuer.');
+				throw new LocalizedException($message);
+			}
 
 			if (
 				($gatewayStatus === null && $processorStatus === null) ||
