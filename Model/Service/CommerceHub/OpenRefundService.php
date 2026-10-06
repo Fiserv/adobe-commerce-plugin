@@ -184,15 +184,21 @@ class OpenRefundService
         $openRefund->setData(OpenRefund::KEY_STATUS,            OpenRefund::STATUS_DECLINED);
 
         $requestStarted = false;
-        $response = null;
+        $responseReceived = false;
+        $response = [];
+        $status = OpenRefund::STATUS_DECLINED;
+        $message = '';
         try {
             $payload  = $this->buildPayload($data, $amount, $currencyCode);
             $this->logger->logInfo(1, 'Open refund request sending. OpenRefundId: ' . $openRefundId);
             $requestStarted = true;
             $response = $this->openRefundRequest->request($payload);
-            $this->logger->logInfo(1, 'Open refund response received. OpenRefundId: ' . $openRefundId);
-
+            $responseReceived = true;
             $status = $this->resolveStatus($response);
+            if ($status === OpenRefund::STATUS_DECLINED) {
+                $message = $this->resolveDeclineMessage($response);
+            }
+            $this->logger->logInfo(1, 'Open refund response received. OpenRefundId: ' . $openRefundId);
             $openRefund->setData(OpenRefund::KEY_STATUS, $status);
             $openRefund->setData(
                 OpenRefund::KEY_CH_REFUND_ID,
@@ -200,15 +206,15 @@ class OpenRefundService
             );
 
             if ($status === OpenRefund::STATUS_DECLINED) {
-                $errorMsg = $this->resolveDeclineMessage($response);
-                $openRefund->setData(OpenRefund::KEY_ERROR_MESSAGE, $errorMsg);
+                $openRefund->setData(OpenRefund::KEY_ERROR_MESSAGE, $message);
                 $this->logger->logError(1, 'Open refund declined. OpenRefundId: ' . $openRefundId);
             }
 
             $this->openRefundResource->save($openRefund);
         } catch (LocalizedException $e) {
-            if ($requestStarted && $response === null) {
-                $openRefund->setData(OpenRefund::KEY_ERROR_MESSAGE, $e->getMessage());
+            if ($requestStarted && !$responseReceived) {
+                $message = $e->getMessage();
+                $openRefund->setData(OpenRefund::KEY_ERROR_MESSAGE, $message);
                 try {
                     $this->openRefundResource->save($openRefund);
                 } catch (\Throwable $saveEx) {
@@ -217,10 +223,10 @@ class OpenRefundService
             }
             throw $e;
         } catch (\Throwable $e) {
-            $openRefund->setData(
-                OpenRefund::KEY_STATUS,
-                $response === null ? OpenRefund::STATUS_DECLINED : $this->resolveStatus($response)
-            );
+            if (!$responseReceived) {
+                $message = $e->getMessage();
+            }
+            $openRefund->setData(OpenRefund::KEY_STATUS, $status);
             $openRefund->setData(OpenRefund::KEY_ERROR_MESSAGE, $e->getMessage());
             try {
                 $this->openRefundResource->save($openRefund);
@@ -231,11 +237,8 @@ class OpenRefundService
             throw new LocalizedException(__('Unable to create open refund: %1', $e->getMessage()));
         } finally {
             // Do not report validation failures or a local save error after gateway approval.
-            if ($requestStarted && ($response === null || $this->resolveStatus($response) === OpenRefund::STATUS_DECLINED)) {
-                $message = $response === null
-                    ? (string)$openRefund->getData(OpenRefund::KEY_ERROR_MESSAGE)
-                    : $this->resolveDeclineMessage($response);
-                $this->recordDecline($openRefund, $response ?? [], $message);
+            if ($requestStarted && $status === OpenRefund::STATUS_DECLINED) {
+                $this->recordDecline($openRefund, $response, $message);
             }
         }
 
@@ -543,12 +546,7 @@ class OpenRefundService
     private function resolveStatus(array $response): string
     {
         $transactionState = strtoupper((string)($response['gatewayResponse']['transactionState'] ?? ''));
-        $approvalStatus = strtoupper((string)(
-            $response['gatewayResponse']['approvalStatus']
-            ?? $response['paymentReceipt']['processorResponseDetails']['approvalStatus']
-            ?? $response['processorResponseDetails']['approvalStatus']
-            ?? ''
-        ));
+        $approvalStatus = strtoupper((string)($response['gatewayResponse']['approvalStatus'] ?? ''));
 
         if (
             in_array($transactionState, ['AUTHORIZED', 'CAPTURED'], true)
@@ -571,7 +569,6 @@ class OpenRefundService
             $response['error']['message']
             ?? $response['error'][0]['message']
             ?? $response['paymentReceipt']['processorResponseDetails']['responseMessage']
-            ?? $response['processorResponseDetails']['responseMessage']
             ?? ''
         );
 

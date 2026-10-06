@@ -44,13 +44,12 @@ class FailedTransactionManager
 	{
 		$identifier = (string)$refund->getData(OpenRefund::KEY_OPEN_REFUND_ID);
 		$gateway = $response['gatewayResponse'] ?? [];
-		$processor = $response['paymentReceipt']['processorResponseDetails'] ?? $response['processorResponseDetails'] ?? [];
+		$processor = $response['paymentReceipt']['processorResponseDetails'] ?? [];
 		$error = $response['error']['message'] ?? $response['error'][0]['message'] ?? '';
-		$approval = $gateway['approvalStatus'] ?? $processor['approvalStatus'] ?? 'DECLINED';
+		$approval = $gateway['approvalStatus'] ?? 'DECLINED';
 		if ($response === []) {
 			$approval = $message;
 		}
-		$response['paymentReceipt']['processorResponseDetails'] = $processor;
 		$response['countryCode'] = $response['cardDetails']['countryCode'] ?? $response['countryCode'] ?? null;
 		// Use the same envelope and mapping as checkout transaction responses.
 		$wrappedResponse = [
