@@ -236,7 +236,6 @@ class OpenRefundService
             $this->logger->logError(1,'Open refund create failed: ' . get_class($e) . ': ' . $e->getMessage());
             throw new LocalizedException(__('Unable to create open refund: %1', $e->getMessage()));
         } finally {
-            // Do not report validation failures or a local save error after gateway approval.
             if ($requestStarted && $status === OpenRefund::STATUS_DECLINED) {
                 $this->recordDecline($openRefund, $response, $message);
             }

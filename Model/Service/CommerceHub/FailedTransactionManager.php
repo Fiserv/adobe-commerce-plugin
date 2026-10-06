@@ -51,7 +51,6 @@ class FailedTransactionManager
 			$approval = $message;
 		}
 		$response['countryCode'] = $response['cardDetails']['countryCode'] ?? $response['countryCode'] ?? null;
-		// Use the same envelope and mapping as checkout transaction responses.
 		$wrappedResponse = [
 			HttpClient::RESPONSE_KEY => $response,
 			HttpClient::STATUS_CODE_KEY => $response['_http_status'] ?? 0
