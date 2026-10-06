@@ -100,17 +100,16 @@ class FailedOrderManager
 
 	public function saveOpenRefundFailure(OpenRefund $refund, string $message)
 	{
+		// Submitted Open Refunds already have a validated customer ID.
 		$customerId = (int)$refund->getData(OpenRefund::KEY_CUSTOMER_ID);
-		$name = $customerId > 0 ? (string)__('Customer #%1', $customerId) : (string)__('N/A');
+		$name = (string)__('Customer #%1', $customerId);
 		$email = '';
-		if ($customerId > 0) {
-			try {
-				$customer = $this->customerRepo->getById($customerId);
-				$name = trim($customer->getFirstname() . ' ' . $customer->getLastname()) ?: $name;
-				$email = (string)$customer->getEmail();
-			} catch (\Throwable $exception) {
-				// An unavailable customer must not suppress failure reporting.
-			}
+		try {
+			$customer = $this->customerRepo->getById($customerId);
+			$name = trim($customer->getFirstname() . ' ' . $customer->getLastname()) ?: $name;
+			$email = (string)$customer->getEmail();
+		} catch (\Throwable $exception) {
+			// An unavailable customer must not suppress failure reporting.
 		}
 		$amount = (float)$refund->getData(OpenRefund::KEY_AMOUNT);
 		$failedOrder = $this->failedOrderFactory->create();

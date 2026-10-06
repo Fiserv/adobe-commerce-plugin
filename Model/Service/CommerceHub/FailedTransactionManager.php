@@ -45,7 +45,7 @@ class FailedTransactionManager
 		$identifier = (string)$refund->getData(OpenRefund::KEY_OPEN_REFUND_ID);
 		$gateway = $response['gatewayResponse'] ?? [];
 		$processor = $response['paymentReceipt']['processorResponseDetails'] ?? [];
-		$error = $response['error']['message'] ?? $response['error'][0]['message'] ?? '';
+		$error = $response['error'][0] ?? $response['error'] ?? [];
 		$approval = $gateway['approvalStatus'] ?? 'DECLINED';
 		if ($response === []) {
 			$approval = $message;
@@ -61,12 +61,12 @@ class FailedTransactionManager
 			'remote_ip' => 'Admin',
 			'transaction_id' => ($gateway['transactionProcessingDetails']['transactionId'] ?? '') ?: 'OPEN_REFUND_' . $identifier,
 			'transaction_state' => mb_substr((string)($gateway['transactionState'] ?? 'ERROR'), 0, 50),
-			'approval_status' => mb_substr((string)($error ?: $approval), 0, 50),
+			'approval_status' => mb_substr((string)(($error['message'] ?? '') ?: $approval), 0, 50),
 			'total_amount' => (float)$refund->getData(OpenRefund::KEY_AMOUNT),
 			'currency' => (string)$refund->getData(OpenRefund::KEY_CURRENCY_CODE),
 			'responseMessage' => mb_substr($message, 0, 255),
 			'host_response_message' => mb_substr((string)($processor['hostResponseMessage'] ?? ''), 0, 32),
-			'network_response_code' => mb_substr((string)($response['error']['code'] ?? $response['error'][0]['code'] ?? $response['networkDetails']['networkResponseCode'] ?? ''), 0, 32)
+			'network_response_code' => mb_substr((string)($error['code'] ?? $response['networkDetails']['networkResponseCode'] ?? ''), 0, 32)
 		]);
 	}
 
