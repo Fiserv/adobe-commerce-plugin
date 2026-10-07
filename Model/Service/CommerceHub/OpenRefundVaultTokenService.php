@@ -162,7 +162,8 @@ class OpenRefundVaultTokenService
             )
         );
         $vaultPaymentToken->setIsActive(true);
-        $vaultPaymentToken->setIsVisible(true);
+        // Open refund should not have the refund token be visible to the customer in their account
+        $vaultPaymentToken->setIsVisible(false);
         $vaultPaymentToken->setPublicHash(
             $this->generatePublicHash($vaultPaymentToken)
         );
