@@ -113,17 +113,8 @@ define([
 					return;
 				}
 
-						// The sessionId above has already been used for the balance
-				// inquiry (or is the freshly captured one, if balance was
-				// entered manually). VAS PaymentSession IDs are single-reference:
-				// reusing it again for the charge performed later at order
-				// placement would be rejected by CommerceHub with
-				// "source.sessionId: Invalid or Missing Field Data". Rebind the
-				// SAME already-mounted hosted-fields form to a brand new,
-				// still-unused session (via contextId) and resubmit into it -
-				// this does not require the shopper to re-enter their card.
-				const chargeSessionId = await this.rebindChargeSessionAsync();
-				setGiftCardAction(chargeSessionId, balance);
+				// Reuse the captured session for balance inquiry and the later charge.
+				setGiftCardAction(sessionId, balance);
 
 				sdcv2.destroyIframe(this.formKey);
 				this.endIframeFlow();
@@ -146,23 +137,6 @@ define([
 			});
 		},
 
-		/**
-		 * Rebinds the already-mounted hosted-fields form to a fresh,
-		 * still-unused CommerceHub session (same contextId, new sessionId)
-		 * and resubmits into it, returning a sessionId that has not yet
-		 * been referenced by any CommerceHub call - safe to hand off for
-		 * the charge performed at order placement.
-		 */
-		rebindChargeSessionAsync: function () {
-			return new Promise((resolve, reject) => {
-				sdcv2.rebindSessionAndSubmit(
-					this.formKey,
-					window.checkoutConfig.payment.fiserv_payments['storeUrl'],
-					(sessionId) => resolve(sessionId),
-					(err) => reject(err instanceof Error ? err : new Error($t('Failed to prepare gift card for checkout.')))
-				);
-			});
-		},
 
 		showErrorMessage: function(message)
 		{

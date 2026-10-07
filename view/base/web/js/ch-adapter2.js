@@ -267,56 +267,6 @@ define([
 			return formConfig;
 		},
 
-		/**
-		 * VAS PaymentSession IDs are single-reference: once a sessionId has
-		 * been used for ANY CommerceHub call (card-capture, balance-inquiry,
-		 * or a charge), it cannot be referenced again - a follow-up call
-		 * against the same sessionId is rejected with
-		 * "source.sessionId: Invalid or Missing Field Data".
-		 *
-		 * A mounted hosted-fields form is bound to whichever session was
-		 * active on its contextId at init() time; simply passing a
-		 * different session's credentials into submit() does NOT change
-		 * that - the form keeps submitting against its original session.
-		 *
-		 * This method re-initializes the SAME contextId with a brand new
-		 * (still-unused) session BEFORE resubmitting, which rebinds the
-		 * already-mounted iframe to the new session in place - without
-		 * destroying/remounting the hosted fields, so the shopper does not
-		 * have to re-enter their card details.
-		 */
-		rebindSessionAndSubmit: function (formKey, storeUrl, runSuccessCb, runErrorCb) {
-			let formData;
-			try {
-				formData = this.getSdcForm(formKey);
-			} catch (err) {
-				runErrorCb(err);
-				return;
-			}
-
-			if (typeof(formData.sdcv2Form) === "undefined") {
-				runErrorCb();
-				return;
-			}
-
-			this.getChCredentials(
-				storeUrl,
-				async (creds) => {
-					try {
-						formData.fiservContext = await this.initSdk(formData.config, creds, formData.contextId);
-						formData.credentials = creds;
-
-						let submitConfig = this.buildFormSubmitPayload(formData.config, creds);
-						formData.sdcv2Form.submit(submitConfig)
-							.then(() => { runSuccessCb(creds[this.sessionIdKey]); })
-							.catch((data) => { console.log(data); runErrorCb(data); });
-					} catch (err) {
-						runErrorCb(err);
-					}
-				},
-				(err) => { runErrorCb(err); }
-			);
-		},
 
 		destroyIframe: function (formKey) {
 			let formData = this.getSdcForm(formKey);

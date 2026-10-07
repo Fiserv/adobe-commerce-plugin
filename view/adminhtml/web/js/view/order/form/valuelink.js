@@ -225,23 +225,8 @@ define([
 					return;
 				}
 
-				// The sessionId above has already been used for the balance
-				// inquiry. VAS PaymentSession IDs are single-reference - a
-				// second reference (or resubmit) against the SAME session is
-				// rejected with "source.sessionId: Invalid or Missing Field
-				// Data". Rebind the SAME already-mounted hosted-fields form to
-				// a brand new, still-unused session (via contextId) and
-				// resubmit into it - no need for the merchant to re-enter the
-				// card.
-				sdcv2.rebindSessionAndSubmit(
-					window.valuelinkFormKey,
-					this.paymentConfig['storeUrl'],
-					(freshSessionId) => {
-						this.cardCaptureSuccess(freshSessionId);
-						this.setValuelinkCardAction(freshSessionId, balance);
-					},
-					() => { this.showErrorMessage(this.addErrorMessage); }
-				);
+				// Reuse the captured session for balance inquiry and the later charge.
+				this.setValuelinkCardAction(sessionId, balance);
 			},
 
 			setValuelinkCardAction: function (sessionId, balance)
