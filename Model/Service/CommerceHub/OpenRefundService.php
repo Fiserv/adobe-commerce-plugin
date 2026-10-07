@@ -501,7 +501,10 @@ class OpenRefundService
             ?? ''
         ));
 
-        if ($transactionState === 'CAPTURED' && in_array($approvalStatus, ['APPROVED', 'SUCCESS'], true)) {
+        if (
+            in_array($transactionState, ['AUTHORIZED', 'CAPTURED'], true)
+            && in_array($approvalStatus, ['APPROVED', 'SUCCESS'], true)
+        ) {
             return OpenRefund::STATUS_APPROVED;
         }
 
