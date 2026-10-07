@@ -124,12 +124,6 @@ class ValuelinkBalanceRequest
 
 			if ($gatewayStatus === 'DECLINED' || $processorStatus === 'DECLINED') {
 				$responseCode = (string)($processorDetails['responseCode'] ?? '');
-				$this->logger->logInfo(1, 'Balance Inquiry declined: ' . json_encode([
-					'responseCode' => $responseCode,
-					'responseMessage' => $processorDetails[self::KEY_RESPONSE_MESSAGE] ?? '',
-					'transactionId' => $transactionId
-				]));
-
 				$message = $responseCode === '325'
 					? __('This gift card has not been activated.')
 					: __('Unable to retrieve the gift card balance. Please check your card details or contact the card issuer.');
