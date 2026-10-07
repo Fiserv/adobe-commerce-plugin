@@ -88,20 +88,28 @@ class Index extends Action implements HttpGetActionInterface
         }
 
         if ($searchFilter !== '') {
+            $collection->getSelect()->joinLeft(
+                ['refund_customer' => $collection->getTable('customer_entity')],
+                'main_table.customer_id = refund_customer.entity_id',
+                []
+            );
+            $connection = $collection->getConnection();
+            $like = '%' . addcslashes($searchFilter, '\\%_') . '%';
+            $customerDisplay = "CONCAT(TRIM(CONCAT(COALESCE(refund_customer.firstname, ''), ' ', "
+                . "COALESCE(refund_customer.lastname, ''))), ' <', COALESCE(refund_customer.email, ''), '>')";
             $conditions = [
-                ['like' => '%' . $searchFilter . '%']
+                $connection->quoteInto('LOWER(main_table.open_refund_id) LIKE LOWER(?)', $like),
+                $connection->quoteInto("LOWER($customerDisplay) LIKE LOWER(?)", $like)
             ];
-            $fields = ['open_refund_id'];
 
             if (ctype_digit($searchFilter)) {
-                $fields[] = 'customer_id';
-                $conditions[] = ['eq' => (int)$searchFilter];
+                $conditions[] = $connection->quoteInto('main_table.customer_id = ?', (int)$searchFilter);
             }
 
-            $collection->addFieldToFilter($fields, $conditions);
+            $collection->getSelect()->where('(' . implode(' OR ', $conditions) . ')');
         }
 
-        $collection->setOrder($sortCol, $sortDir);
+        $collection->setOrder('main_table.' . $sortCol, $sortDir);
         $collection->setCurPage($page);
         $collection->setPageSize($pageSize);
 
