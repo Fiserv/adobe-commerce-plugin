@@ -85,7 +85,7 @@ class ValuelinkBalanceRequest
 
 		$this->logger->logInfo(1, "Sending balance inquiry...");
 		$this->logger->logDebug(3, "BALANCE INQUIRY REQUEST INFO");
-		$this->logger->logDebug(3, "Payload:\n" . print_r($data, true));
+		$this->logger->logDebug(3,"Payload:\n" . json_encode($data, JSON_PRETTY_PRINT));
 		$chResponse = $this->httpAdapter->sendRequest($data, self::BALANCE_INQUIRY_ENDPOINT);
 
 		return $this->parseChBalanceInquiryResponse($chResponse);
