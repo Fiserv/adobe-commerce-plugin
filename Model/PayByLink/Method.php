@@ -207,7 +207,12 @@ class Method extends AbstractMethod
 	 */
 	public function refund(InfoInterface $payment, $amount)
 	{
-		$this->ensureReferenceTransactions($payment);
+		// Magento selects the invoice's capture for refunds, not the PBL authorization.
+		$creditmemo = $payment->getCreditmemo();
+		$invoice = $creditmemo ? $creditmemo->getInvoice() : null;
+		if ($invoice && $invoice->getTransactionId()) {
+			$payment->setParentTransactionId($invoice->getTransactionId());
+		}
 		$this->executeCommerceHubCommand('refund', $payment, $amount);
 
 		return $this;
@@ -235,11 +240,13 @@ class Method extends AbstractMethod
 			$payment->setLastTransId($pblTxnId);
 		}
 
-		if (!$payment->getParentTransactionId()) {
-			$payment->setParentTransactionId($pblTxnId);
-		}
+		// Each capture (and authorization void) references the original PBL charge,
+		// even after another capture or refund has changed the payment's parent.
+		$payment->setParentTransactionId($pblTxnId);
 
-		$payment->setTransactionId($pblTxnId);
+		if (!$payment->getTransactionId()) {
+			$payment->setTransactionId($pblTxnId);
+		}
 		$payment->setShouldCloseParentTransaction(false);
 		$payment->setIsTransactionClosed(false);
 	}
