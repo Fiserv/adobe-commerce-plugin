@@ -1,12 +1,18 @@
 <?php
 $isSuccessful = $this->getRequest()->getParam('isSuccessful');
 $paymentMethod = $this->getRequest()->getParam('paymentMethod');
+$orderNumber = $this->getRequest()->getParam('pbl_order_ref');
 ?>
 <div class="pbl-completion-page">
     <?php if ($isSuccessful === 'true'): ?>
         <div class="pbl-success">
             <h2><?= $block->escapeHtml(__('Payment Successful')) ?></h2>
             <p><?= $block->escapeHtml(__('Your payment has been processed successfully.')) ?></p>
+            <p><?= $block->escapeHtml(__('Your order number is: %1.', sprintf(
+                '<a href="%s">%s</a>',
+                $block->escapeUrl($block->getOrderSummaryUrl($orderNumber)),
+                $block->escapeHtml($orderNumber)
+            )), ['a']) ?></p>
             <?php if ($paymentMethod): ?>
                 <p><?= $block->escapeHtml(__('Payment Method: %1', $paymentMethod)) ?></p>
             <?php endif; ?>
