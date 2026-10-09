@@ -2,6 +2,8 @@
 namespace Fiserv\Payments\Block\Info;
 
 use Magento\Payment\Block\Info;
+use Magento\Sales\Model\Order;
+use Magento\Sales\Model\Order\Payment;
 
 class PayByLink extends Info
 {
@@ -9,6 +11,9 @@ class PayByLink extends Info
 
     public function getPayByLinkUrl()
     {
+        if ($this->isOrderCanceled()) {
+            return '';
+        }
         return $this->getInfo()->getAdditionalInformation('pbl_url') ?: '';
     }
 
@@ -29,7 +34,17 @@ class PayByLink extends Info
 
     public function getPblStatus()
     {
+        if ($this->isOrderCanceled()) {
+            return 'canceled';
+        }
         return $this->getInfo()->getAdditionalInformation('pbl_status') ?: 'unknown';
+    }
+
+    public function isOrderCanceled(): bool
+    {
+        $payment = $this->getInfo();
+        return $payment instanceof Payment && $payment->getOrder()
+            && $payment->getOrder()->getState() === Order::STATE_CANCELED;
     }
 
     public function getPblError()

@@ -55,10 +55,11 @@ class Complete extends Action implements CsrfAwareActionInterface
             $isSuccessful = $this->getRequest()->getParam('isSuccessful');
             $paymentMethod = $this->getRequest()->getParam('paymentMethod');
             $orderId = $this->getRequest()->getParam('pbl_order_ref');
+            $paymentAccepted = false;
 
             // Update order status based on payment result
             if ($orderId) {
-                $this->paymentLinkHandler->updateOrderStatus(
+                $paymentAccepted = $this->paymentLinkHandler->updateOrderStatus(
                     $orderId,
                     $isSuccessful === 'true',
                     $paymentMethod
@@ -68,8 +69,12 @@ class Complete extends Action implements CsrfAwareActionInterface
             }
 
             $page = $this->pageFactory->create();
+            $completionBlock = $page->getLayout()->getBlock('pbl.complete');
+            if ($completionBlock) {
+                $completionBlock->setData('payment_accepted', (bool) $paymentAccepted);
+            }
 
-            if ($isSuccessful === 'true') {
+            if ($paymentAccepted) {
                 $page->getConfig()->getTitle()->set(__('Payment Successful'));
             } else {
                 $page->getConfig()->getTitle()->set(__('Payment Failed'));

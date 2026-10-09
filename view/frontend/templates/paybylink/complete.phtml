@@ -1,9 +1,9 @@
 <?php
-$isSuccessful = $this->getRequest()->getParam('isSuccessful');
+$isSuccessful = (bool) $block->getData('payment_accepted');
 $paymentMethod = $this->getRequest()->getParam('paymentMethod');
 ?>
 <div class="pbl-completion-page">
-    <?php if ($isSuccessful === 'true'): ?>
+    <?php if ($isSuccessful): ?>
         <div class="pbl-success">
             <h2><?= $block->escapeHtml(__('Payment Successful')) ?></h2>
             <p><?= $block->escapeHtml(__('Your payment has been processed successfully.')) ?></p>

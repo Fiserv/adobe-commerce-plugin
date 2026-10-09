@@ -100,6 +100,13 @@ class PaymentLinkHandler
 
         try {
             $order = $this->orderRepository->get($orderId);
+            if ($order->getState() === Order::STATE_CANCELED) {
+                return [
+                    'success' => false,
+                    'message' => (string) __('Order has been canceled. Payment links cannot be regenerated.'),
+                    'increment_id' => (string) $order->getIncrementId(),
+                ];
+            }
             $payment = $order->getPayment();
 
             $total = (float) $order->getGrandTotal();
@@ -142,13 +149,6 @@ class PaymentLinkHandler
             $payment->setAdditionalInformation('pbl_page_id', $responsePageId);
 
             $payment->save();
-
-            // Reset order state to pending if it was canceled/declined
-            if ($order->getState() === Order::STATE_CANCELED) {
-                $order->setState(Order::STATE_NEW);
-                $order->setStatus('pending');
-                $order->addCommentToStatusHistory(__('Payment link regenerated. Order reopened.'));
-            }
 
             $this->orderRepository->save($order);
 
@@ -383,7 +383,11 @@ class PaymentLinkHandler
             $order = $this->findOrderByIncrementId($incrementId);
             if (!$order) {
                 $this->logger->logError(1, "PBL Complete: Could not find order " . $incrementId);
-                return;
+                return false;
+            }
+            if ($order->getState() === Order::STATE_CANCELED) {
+                $this->logger->logInfo(1, 'PBL Complete: Ignored callback for canceled order ' . $incrementId);
+                return false;
             }
 
             $payment = $order->getPayment();
@@ -392,7 +396,7 @@ class PaymentLinkHandler
             if (!$isSuccessful) {
                 $this->applyDeclinedState($order, $payment, __('Payment declined via Pay by Link.'));
                 $this->logger->logInfo(1, "PBL Complete: Order " . $incrementId . " status updated to " . $order->getStatus());
-                return;
+                return false;
             }
 
             if ($paymentMethod !== null && $paymentMethod !== '') {
@@ -403,7 +407,7 @@ class PaymentLinkHandler
 
             $verification = $this->verifySessionCharge($order, $payment, $incrementId);
             if ($verification === null) {
-                return;
+                return false;
             }
 
             $details = $this->extractInquiryDetails($verification['record']);
@@ -411,18 +415,20 @@ class PaymentLinkHandler
             $isApproved = $details['approvalStatus'] === 'APPROVED' && $details['realTransactionId'] !== '';
             if (!$isApproved) {
                 $this->declineUnapprovedCharge($order, $payment, $incrementId, $details, $verification['sessionStatus']);
-                return;
+                return false;
             }
 
             $amountCheck = $this->verifyApprovedAmount($order, $verification['record']);
             if (!$amountCheck['isValid']) {
                 $this->cancelApprovedChargeDueToAmountMismatch($order, $payment, $incrementId, $details, $amountCheck);
-                return;
+                return false;
             }
 
             $this->finalizeApprovedPayment($order, $payment, $incrementId, $details, $paymentAction);
+            return true;
         } catch (\Exception $e) {
             $this->logger->logError(1, "PBL Complete: Error updating order status: " . $e->getMessage());
+            return false;
         }
     }
 

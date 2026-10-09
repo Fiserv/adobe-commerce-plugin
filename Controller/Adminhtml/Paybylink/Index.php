@@ -301,6 +301,15 @@ class Index extends Action implements HttpGetActionInterface
         foreach ($rows as &$row) {
             $row['status_code'] = strtolower($row['status_code'] ?? $row['status'] ?? '');
 
+            $order = $row['order_object'] ?? null;
+            if ($order instanceof Order && $order->getState() === Order::STATE_CANCELED) {
+                $row['status'] = 'canceled';
+                $row['status_code'] = 'canceled';
+                $row['paybylink_url'] = '';
+                $row['retry_url'] = '';
+                continue;
+            }
+
             // Check pbl_status from payment additional_information
             $pblStatus = $this->extractPblStatusFromOrder($row);
 

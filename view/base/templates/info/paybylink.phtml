@@ -21,7 +21,12 @@ if ($isExpired && $status === 'unpaid') {
             <th><?= $block->escapeHtml(__('Payment Method')) ?></th>
             <td><?= $block->escapeHtml(__('Pay by Link')) ?></td>
         </tr>
-        <?php if ($url): ?>
+        <?php if ($block->isOrderCanceled()): ?>
+        <tr>
+            <th><?= $block->escapeHtml(__('Payment Link')) ?></th>
+            <td><?= $block->escapeHtml(__('Order has been canceled.')) ?></td>
+        </tr>
+        <?php elseif ($url): ?>
         <tr>
             <th><?= $block->escapeHtml(__('Payment Link')) ?></th>
             <td>
