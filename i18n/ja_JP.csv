@@ -627,7 +627,6 @@
 "View Open Refund %1","オープン返金を見る %1"
 "View Open Refunds","未処理の払い戻しを表示する"
 "View Order","注文を見る"
-"When enabled, open refunds are captured immediately upon creation. When disabled, they are authorized only.","有効にすると、未払いの払い戻しは作成直後にキャプチャされます。無効にすると、権限のみが付与されます。"
 "You may close this window.","このウィンドウは閉じても構いません。"
 "You must be logged in to save a card.","カードを保存するにはログインする必要があります。"
 "Your payment has been processed successfully.","お支払いは正常に処理されました。"
