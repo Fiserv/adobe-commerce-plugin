@@ -6,7 +6,6 @@ namespace Fiserv\Payments\Model\Service\CommerceHub;
 
 use Fiserv\Payments\Gateway\Config\CommerceHub\Config;
 use Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder;
-use Fiserv\Payments\Gateway\Request\CommerceHub\AuthDetailsDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\SaleDetailsDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\TokenSourceDataBuilder;
@@ -66,9 +65,6 @@ class OpenRefundService
     /** @var TokenSourceDataBuilder */
     private $tokenSourceDataBuilder;
 
-    /** @var AuthDetailsDataBuilder */
-    private $authDetailsDataBuilder;
-
     /** @var SaleDetailsDataBuilder */
     private $saleDetailsDataBuilder;
 
@@ -106,7 +102,6 @@ class OpenRefundService
         PaymentTokenManagementInterface $tokenManagement,
         AmountDataBuilder $amountDataBuilder,
         TokenSourceDataBuilder $tokenSourceDataBuilder,
-        AuthDetailsDataBuilder $authDetailsDataBuilder,
         SaleDetailsDataBuilder $saleDetailsDataBuilder,
         TransactionInteractionDataBuilder $transactionInteractionDataBuilder,
         MerchantDetailsDataBuilder $merchantDetailsDataBuilder,
@@ -126,7 +121,6 @@ class OpenRefundService
         $this->tokenManagement    = $tokenManagement;
         $this->amountDataBuilder = $amountDataBuilder;
         $this->tokenSourceDataBuilder = $tokenSourceDataBuilder;
-        $this->authDetailsDataBuilder = $authDetailsDataBuilder;
         $this->saleDetailsDataBuilder = $saleDetailsDataBuilder;
         $this->transactionInteractionDataBuilder = $transactionInteractionDataBuilder;
         $this->merchantDetailsDataBuilder = $merchantDetailsDataBuilder;
@@ -183,7 +177,6 @@ class OpenRefundService
         $openRefund->setData(OpenRefund::KEY_LINKED_IDENTIFIER, (string)($data['linked_identifier'] ?? ''));
         $openRefund->setData(OpenRefund::KEY_STATUS,            OpenRefund::STATUS_DECLINED);
 
-        $requestStarted = false;
         $responseReceived = false;
         $response = [];
         $status = OpenRefund::STATUS_DECLINED;
@@ -191,7 +184,6 @@ class OpenRefundService
         try {
             $payload  = $this->buildPayload($data, $amount, $currencyCode);
             $this->logger->logInfo(1, 'Open refund request sending. OpenRefundId: ' . $openRefundId);
-            $requestStarted = true;
             $response = $this->openRefundRequest->request($payload);
             $responseReceived = true;
             $status = $this->resolveStatus($response);
@@ -212,7 +204,7 @@ class OpenRefundService
 
             $this->openRefundResource->save($openRefund);
         } catch (LocalizedException $e) {
-            if ($requestStarted && !$responseReceived) {
+            if (!$responseReceived) {
                 $message = $e->getMessage();
                 $openRefund->setData(OpenRefund::KEY_ERROR_MESSAGE, $message);
                 try {
@@ -227,7 +219,7 @@ class OpenRefundService
                 $message = $e->getMessage();
             }
             $openRefund->setData(OpenRefund::KEY_STATUS, $status);
-            $openRefund->setData(OpenRefund::KEY_ERROR_MESSAGE, $e->getMessage());
+            $openRefund->setData(OpenRefund::KEY_ERROR_MESSAGE, $status === OpenRefund::STATUS_DECLINED ? $message : $e->getMessage());
             try {
                 $this->openRefundResource->save($openRefund);
             } catch (\Throwable $saveEx) {
@@ -236,7 +228,7 @@ class OpenRefundService
             $this->logger->logError(1,'Open refund create failed: ' . get_class($e) . ': ' . $e->getMessage());
             throw new LocalizedException(__('Unable to create open refund: %1', $e->getMessage()));
         } finally {
-            if ($requestStarted && $status === OpenRefund::STATUS_DECLINED) {
+            if ($status === OpenRefund::STATUS_DECLINED) {
                 $this->recordDecline($openRefund, $response, $message);
             }
         }
@@ -267,7 +259,6 @@ class OpenRefundService
      */
     private function buildPayload(array $data, float $amount, string $currencyCode): array
     {
-        $captureFlag  = (bool)$this->config->getOpenRefundCaptureFlag();
         $openRefundId = strtoupper(uniqid('ORFSUB', false));
 
         $sourceType = strtoupper(trim((string)($data['source_type'] ?? self::SOURCE_TYPE_CARD_HOSTED_FIELDS)));
@@ -311,10 +302,8 @@ class OpenRefundService
 
         $sourcePayload = $this->tokenSourceDataBuilder->build($buildSubject);
 
-        // These shared builders select captureFlag only; OpenRefundRequest always uses the refunds endpoint.
-        $transactionDetailsPayload = $captureFlag
-            ? $this->saleDetailsDataBuilder->build($buildSubject)
-            : $this->authDetailsDataBuilder->build($buildSubject);
+        // Open refunds always capture immediately on the refunds endpoint, never authorize.
+        $transactionDetailsPayload = $this->saleDetailsDataBuilder->build($buildSubject);
 
         $transactionInteractionPayload = $this->transactionInteractionDataBuilder->build($buildSubject);
 
@@ -545,11 +534,13 @@ class OpenRefundService
      */
     private function resolveStatus(array $response): string
     {
+        $httpStatus = (int)($response['_http_status'] ?? 0);
         $transactionState = strtoupper((string)($response['gatewayResponse']['transactionState'] ?? ''));
         $approvalStatus = strtoupper((string)($response['paymentReceipt']['processorResponseDetails']['approvalStatus'] ?? ''));
 
         if (
-            in_array($transactionState, ['AUTHORIZED', 'CAPTURED'], true)
+            $httpStatus >= 200 && $httpStatus < 300
+            && $transactionState === 'CAPTURED'
             && in_array($approvalStatus, ['APPROVED', 'SUCCESS'], true)
         ) {
             return OpenRefund::STATUS_APPROVED;
@@ -577,6 +568,15 @@ class OpenRefundService
             if ($message !== '') {
                 return $message;
             }
+        }
+
+        $httpStatus = (int)($response['_http_status'] ?? 0);
+        if ($httpStatus < 200 || $httpStatus >= 300) {
+            return (string)__('Refund request failed (HTTP status: %1).', $httpStatus);
+        }
+
+        if (strtoupper((string)($response['gatewayResponse']['transactionState'] ?? '')) === 'AUTHORIZED') {
+            return (string)__('Refund was authorized but not captured. Open refunds require immediate capture.');
         }
 
         return (string)__('Refund request failed.');
