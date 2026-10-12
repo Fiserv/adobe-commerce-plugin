@@ -311,6 +311,7 @@ class OpenRefundService
 
         $sourcePayload = $this->tokenSourceDataBuilder->build($buildSubject);
 
+        // These shared builders select captureFlag only; OpenRefundRequest always uses the refunds endpoint.
         $transactionDetailsPayload = $captureFlag
             ? $this->saleDetailsDataBuilder->build($buildSubject)
             : $this->authDetailsDataBuilder->build($buildSubject);
@@ -545,7 +546,7 @@ class OpenRefundService
     private function resolveStatus(array $response): string
     {
         $transactionState = strtoupper((string)($response['gatewayResponse']['transactionState'] ?? ''));
-        $approvalStatus = strtoupper((string)($response['gatewayResponse']['approvalStatus'] ?? ''));
+        $approvalStatus = strtoupper((string)($response['paymentReceipt']['processorResponseDetails']['approvalStatus'] ?? ''));
 
         if (
             in_array($transactionState, ['AUTHORIZED', 'CAPTURED'], true)
@@ -564,14 +565,21 @@ class OpenRefundService
      */
     private function resolveDeclineMessage(array $response): string
     {
-        $message = (string)(
-            $response['error']['message']
-            ?? $response['error'][0]['message']
-            ?? $response['paymentReceipt']['processorResponseDetails']['responseMessage']
-            ?? ''
-        );
+        $processor = $response['paymentReceipt']['processorResponseDetails'] ?? [];
+        $messages = [
+            $processor['hostResponseMessage'] ?? '',
+            $processor['responseMessage'] ?? '',
+            $response['error'][0]['message'] ?? ''
+        ];
 
-        return $message !== '' ? $message : (string)__('Refund request failed.');
+        foreach ($messages as $candidate) {
+            $message = trim((string)$candidate);
+            if ($message !== '') {
+                return $message;
+            }
+        }
+
+        return (string)__('Refund request failed.');
     }
 }
 

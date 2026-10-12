@@ -45,11 +45,12 @@ class FailedTransactionManager
 		$identifier = (string)$refund->getData(OpenRefund::KEY_OPEN_REFUND_ID);
 		$gateway = $response['gatewayResponse'] ?? [];
 		$processor = $response['paymentReceipt']['processorResponseDetails'] ?? [];
-		$error = $response['error'][0] ?? $response['error'] ?? [];
-		$approval = $gateway['approvalStatus'] ?? 'DECLINED';
+		$error = $response['error'][0] ?? [];
+		$approval = trim((string)($processor['approvalStatus'] ?? '')) ?: 'DECLINED';
 		if ($response === []) {
 			$approval = $message;
 		}
+		$approval = trim((string)($error['message'] ?? '')) ?: $approval;
 		$response['countryCode'] = $response['cardDetails']['countryCode'] ?? $response['countryCode'] ?? null;
 		$wrappedResponse = [
 			HttpClient::RESPONSE_KEY => $response,
@@ -60,7 +61,7 @@ class FailedTransactionManager
 			'remote_ip' => 'Admin',
 			'transaction_id' => ($gateway['transactionProcessingDetails']['transactionId'] ?? '') ?: 'OPEN_REFUND_' . $identifier,
 			'transaction_state' => $gateway['transactionState'] ?? 'ERROR',
-			'approval_status' => ($error['message'] ?? '') ?: $approval,
+			'approval_status' => $approval,
 			'total_amount' => $refund->getData(OpenRefund::KEY_AMOUNT),
 			'currency' => $refund->getData(OpenRefund::KEY_CURRENCY_CODE),
 			'responseMessage' => $message,
