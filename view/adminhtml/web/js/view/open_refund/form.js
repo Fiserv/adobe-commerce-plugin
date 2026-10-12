@@ -526,7 +526,7 @@ define([
                 this._setSubmitEnabled(false);
                 this._beginAsyncFlow();
                 chIframe.submitIframeForm(
-                    () => { this._onSubmitSuccess(); },
+                    (sessionId) => { this._onSubmitSuccess(sessionId); },
                     () => { this._onSubmitFailure(); }
                 );
             });
