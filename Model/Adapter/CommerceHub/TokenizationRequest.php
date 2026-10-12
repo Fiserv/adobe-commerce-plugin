@@ -70,7 +70,7 @@ class TokenizationRequest
 		$this->logger->logError(1, "Tokenization request failure");
 		$this->logger->logError(2, 'CommerceHub tokenization request HTTP error code: ' . $statusCode);
 		foreach ($bodyArray['error'] ?? [] as $error) {
-			$this->logger->logError(2, 'CommerceHub tokenization error: ' . ($error['code'] ?? '') . ' - ' . ($error['message'] ?? ''));
+			$this->logger->logError(2, 'CommerceHub tokenization error: ' . ($error['code'] ?? '') . ' - ' . ($error['message'] ?? '') . ' - Field: ' . ($error['field'] ?? ''));
 		}
 		throw new \Exception('CommerceHub tokenization request HTTP error code: ' . $statusCode, 1);
 	}
