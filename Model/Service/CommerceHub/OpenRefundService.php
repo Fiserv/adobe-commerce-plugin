@@ -554,18 +554,7 @@ class OpenRefundService
             ?? ''
         );
 
-        if ($message !== '') {
-            return $message;
-        }
-        $httpStatus = (int)($response['_http_status'] ?? 0);
-        if ($httpStatus < 200 || $httpStatus >= 300) {
-            return (string)__('Refund request failed (HTTP status: %1).', $httpStatus);
-        }
-        if (strtoupper((string)($response['gatewayResponse']['transactionState'] ?? '')) === 'AUTHORIZED') {
-            return (string)__('Refund was authorized but not captured. Open refunds require immediate capture.');
-        }
-
-        return (string)__('Refund request failed.');
+        return $message !== '' ? $message : (string)__('Refund request failed.');
     }
 }
 
