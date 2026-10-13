@@ -180,17 +180,15 @@ class OpenRefundService
         $responseReceived = false;
         $response = [];
         $status = OpenRefund::STATUS_DECLINED;
-        $message = '';
+        $errorMsg = '';
         try {
             $payload  = $this->buildPayload($data, $amount, $currencyCode);
             $this->logger->logInfo(1, 'Open refund request sending. OpenRefundId: ' . $openRefundId);
             $response = $this->openRefundRequest->request($payload);
             $responseReceived = true;
-            $status = $this->resolveStatus($response);
-            if ($status === OpenRefund::STATUS_DECLINED) {
-                $message = $this->resolveDeclineMessage($response);
-            }
             $this->logger->logInfo(1, 'Open refund response received. OpenRefundId: ' . $openRefundId);
+
+            $status = $this->resolveStatus($response);
             $openRefund->setData(OpenRefund::KEY_STATUS, $status);
             $openRefund->setData(
                 OpenRefund::KEY_CH_REFUND_ID,
@@ -198,58 +196,48 @@ class OpenRefundService
             );
 
             if ($status === OpenRefund::STATUS_DECLINED) {
-                $openRefund->setData(OpenRefund::KEY_ERROR_MESSAGE, $message);
+                $errorMsg = $this->resolveDeclineMessage($response);
+                $openRefund->setData(OpenRefund::KEY_ERROR_MESSAGE, $errorMsg);
                 $this->logger->logError(1, 'Open refund declined. OpenRefundId: ' . $openRefundId);
             }
 
             $this->openRefundResource->save($openRefund);
-        } catch (LocalizedException $e) {
-            if (!$responseReceived) {
-                $message = $e->getMessage();
-                $openRefund->setData(OpenRefund::KEY_ERROR_MESSAGE, $message);
-                try {
-                    $this->openRefundResource->save($openRefund);
-                } catch (\Throwable $saveEx) {
-                    $this->logger->logError(1, 'Failed to persist error state: ' . $saveEx->getMessage());
-                }
-            }
-            throw $e;
         } catch (\Throwable $e) {
             if (!$responseReceived) {
-                $message = $e->getMessage();
+                $errorMsg = $e->getMessage();
             }
-            $openRefund->setData(OpenRefund::KEY_STATUS, $status);
-            $openRefund->setData(OpenRefund::KEY_ERROR_MESSAGE, $status === OpenRefund::STATUS_DECLINED ? $message : $e->getMessage());
+            $openRefund->setData(OpenRefund::KEY_STATUS,        $status);
+            $openRefund->setData(OpenRefund::KEY_ERROR_MESSAGE, $status === OpenRefund::STATUS_DECLINED ? $errorMsg : $e->getMessage());
             try {
                 $this->openRefundResource->save($openRefund);
             } catch (\Throwable $saveEx) {
                 $this->logger->logError(1, 'Failed to persist error state: ' . $saveEx->getMessage());
             }
             $this->logger->logError(1,'Open refund create failed: ' . get_class($e) . ': ' . $e->getMessage());
+            if ($e instanceof LocalizedException) {
+                throw $e;
+            }
             throw new LocalizedException(__('Unable to create open refund: %1', $e->getMessage()));
         } finally {
             if ($status === OpenRefund::STATUS_DECLINED) {
-                $this->recordDecline($openRefund, $response, $message);
+                $this->recordDecline($openRefund, $response, $errorMsg);
             }
         }
 
         return $openRefund;
     }
 
-    private function recordDecline(OpenRefund $refund, array $response, string $message): void
+    private function recordDecline(OpenRefund $openRefund, array $response, string $message): void
     {
-        $identifier = (string)$refund->getData(OpenRefund::KEY_OPEN_REFUND_ID);
         try {
-            $this->failedOrderManager->saveOpenRefundFailure($refund, $message);
-        } catch (\Throwable $exception) {
-            $this->logger->logError(1, 'Unable to record Open Refund failed order. OpenRefundId: '
-                . $identifier . '. ' . $exception->getMessage());
+            $this->failedOrderManager->saveOpenRefundFailure($openRefund, $message);
+        } catch (\Throwable $e) {
+            $this->logger->logError(1, 'Failed to record open refund decline order: ' . $e->getMessage());
         }
         try {
-            $this->failedTransactionManager->createOpenRefundFailedTransaction($refund, $response, $message);
-        } catch (\Throwable $exception) {
-            $this->logger->logError(1, 'Unable to record Open Refund failed transaction. OpenRefundId: '
-                . $identifier . '. ' . $exception->getMessage());
+            $this->failedTransactionManager->createOpenRefundFailedTransaction($openRefund, $response, $message);
+        } catch (\Throwable $e) {
+            $this->logger->logError(1, 'Failed to record open refund decline transaction: ' . $e->getMessage());
         }
     }
 
@@ -302,7 +290,6 @@ class OpenRefundService
 
         $sourcePayload = $this->tokenSourceDataBuilder->build($buildSubject);
 
-        // Open refunds always capture immediately on the refunds endpoint, never authorize.
         $transactionDetailsPayload = $this->saleDetailsDataBuilder->build($buildSubject);
 
         $transactionInteractionPayload = $this->transactionInteractionDataBuilder->build($buildSubject);
@@ -536,7 +523,12 @@ class OpenRefundService
     {
         $httpStatus = (int)($response['_http_status'] ?? 0);
         $transactionState = strtoupper((string)($response['gatewayResponse']['transactionState'] ?? ''));
-        $approvalStatus = strtoupper((string)($response['paymentReceipt']['processorResponseDetails']['approvalStatus'] ?? ''));
+        $approvalStatus = strtoupper((string)(
+            $response['gatewayResponse']['approvalStatus']
+            ?? $response['paymentReceipt']['processorResponseDetails']['approvalStatus']
+            ?? $response['processorResponseDetails']['approvalStatus']
+            ?? ''
+        ));
 
         if (
             $httpStatus >= 200 && $httpStatus < 300
@@ -556,25 +548,19 @@ class OpenRefundService
      */
     private function resolveDeclineMessage(array $response): string
     {
-        $processor = $response['paymentReceipt']['processorResponseDetails'] ?? [];
-        $messages = [
-            $processor['hostResponseMessage'] ?? '',
-            $processor['responseMessage'] ?? '',
-            $response['error'][0]['message'] ?? ''
-        ];
+        $message = (string)(
+            $response['error']['message']
+            ?? $response['error'][0]['message']
+            ?? ''
+        );
 
-        foreach ($messages as $candidate) {
-            $message = trim((string)$candidate);
-            if ($message !== '') {
-                return $message;
-            }
+        if ($message !== '') {
+            return $message;
         }
-
         $httpStatus = (int)($response['_http_status'] ?? 0);
         if ($httpStatus < 200 || $httpStatus >= 300) {
             return (string)__('Refund request failed (HTTP status: %1).', $httpStatus);
         }
-
         if (strtoupper((string)($response['gatewayResponse']['transactionState'] ?? '')) === 'AUTHORIZED') {
             return (string)__('Refund was authorized but not captured. Open refunds require immediate capture.');
         }
