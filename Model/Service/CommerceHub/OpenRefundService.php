@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Fiserv\Payments\Model\Service\CommerceHub;
 
 use Fiserv\Payments\Gateway\Config\CommerceHub\Config;
+use Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient;
 use Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\SaleDetailsDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\TokenSourceDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\TransactionInteractionDataBuilder;
+use Fiserv\Payments\Gateway\Validator\CommerceHub\TransactionResponseValidator;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 use Fiserv\Payments\Model\Adapter\CommerceHub\OpenRefundRequest;
 use Fiserv\Payments\Model\OpenRefund;
@@ -235,7 +237,27 @@ class OpenRefundService
             $this->logger->logError(1, 'Failed to record open refund decline order: ' . $e->getMessage());
         }
         try {
-            $this->failedTransactionManager->createOpenRefundFailedTransaction($openRefund, $response, $message);
+            $identifier = (string)$openRefund->getData(OpenRefund::KEY_OPEN_REFUND_ID);
+            $approval = trim((string)($response['paymentReceipt']['processorResponseDetails']['approvalStatus'] ?? '')) ?: 'DECLINED';
+            if ($response === []) {
+                $approval = $message;
+            }
+            $approval = trim((string)($response['error'][0]['message'] ?? '')) ?: $approval;
+            $response['countryCode'] = $response['cardDetails']['countryCode'] ?? $response['countryCode'] ?? null;
+            $wrappedResponse = [
+                HttpClient::RESPONSE_KEY => $response,
+                HttpClient::STATUS_CODE_KEY => $response['_http_status'] ?? 0
+            ];
+            $this->failedTransactionManager->createFailedTransaction($identifier, $wrappedResponse, TransactionResponseValidator::RESPONSE_PATHS, 'OPEN_REFUND', null, [
+                'date_time' => gmdate('Y-m-d H:i:s'),
+                'remote_ip' => 'Admin',
+                'transaction_id' => ($response['gatewayResponse']['transactionProcessingDetails']['transactionId'] ?? '') ?: 'OPEN_REFUND_' . $identifier,
+                'transaction_state' => $response['gatewayResponse']['transactionState'] ?? 'ERROR',
+                'approval_status' => $approval,
+                'total_amount' => $openRefund->getData(OpenRefund::KEY_AMOUNT),
+                'currency' => $openRefund->getData(OpenRefund::KEY_CURRENCY_CODE),
+                'responseMessage' => $message
+            ]);
         } catch (\Throwable $e) {
             $this->logger->logError(1, 'Failed to record open refund decline transaction: ' . $e->getMessage());
         }

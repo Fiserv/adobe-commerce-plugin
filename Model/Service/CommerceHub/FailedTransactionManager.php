@@ -8,9 +8,6 @@ use Fiserv\Payments\Api\FailedTransaction\FailedTransactionRepositoryInterface;
 use Fiserv\Payments\Model\FailedTransactionFactory;
 use Fiserv\Payments\Model\ResourceModel\FailedTransaction;
 use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
-use Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient;
-use Fiserv\Payments\Gateway\Validator\CommerceHub\TransactionResponseValidator;
-use Fiserv\Payments\Model\OpenRefund;
 
 class FailedTransactionManager
 {
@@ -40,35 +37,6 @@ class FailedTransactionManager
 		return $failedTxn;
 	}
 
-	public function createOpenRefundFailedTransaction(OpenRefund $refund, array $response, string $message)
-	{
-		$identifier = (string)$refund->getData(OpenRefund::KEY_OPEN_REFUND_ID);
-		$gateway = $response['gatewayResponse'] ?? [];
-		$processor = $response['paymentReceipt']['processorResponseDetails'] ?? [];
-		$error = $response['error'][0] ?? [];
-		$approval = trim((string)($processor['approvalStatus'] ?? '')) ?: 'DECLINED';
-		if ($response === []) {
-			$approval = $message;
-		}
-		$approval = trim((string)($error['message'] ?? '')) ?: $approval;
-		$response['countryCode'] = $response['cardDetails']['countryCode'] ?? $response['countryCode'] ?? null;
-		$wrappedResponse = [
-			HttpClient::RESPONSE_KEY => $response,
-			HttpClient::STATUS_CODE_KEY => $response['_http_status'] ?? 0
-		];
-		return $this->createFailedTransaction($identifier, $wrappedResponse, TransactionResponseValidator::RESPONSE_PATHS, 'OPEN_REFUND', null, [
-			'date_time' => gmdate('Y-m-d H:i:s'),
-			'remote_ip' => 'Admin',
-			'transaction_id' => ($gateway['transactionProcessingDetails']['transactionId'] ?? '') ?: 'OPEN_REFUND_' . $identifier,
-			'transaction_state' => $gateway['transactionState'] ?? 'ERROR',
-			'approval_status' => $approval,
-			'total_amount' => $refund->getData(OpenRefund::KEY_AMOUNT),
-			'currency' => $refund->getData(OpenRefund::KEY_CURRENCY_CODE),
-			'responseMessage' => $message,
-			'host_response_message' => $processor['hostResponseMessage'] ?? '',
-			'network_response_code' => $error['code'] ?? $response['networkDetails']['networkResponseCode'] ?? ''
-		]);
-	}
 
 	public function populateFailedTxn($failedTxn, $txnResponse, $paths, $paymentAction)
 	{
