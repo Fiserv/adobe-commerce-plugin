@@ -238,26 +238,25 @@ class OpenRefundService
         }
         try {
             $identifier = (string)$openRefund->getData(OpenRefund::KEY_OPEN_REFUND_ID);
-            $approval = trim((string)($response['paymentReceipt']['processorResponseDetails']['approvalStatus'] ?? '')) ?: 'DECLINED';
-            if ($response === []) {
-                $approval = $message;
+            $additionalData = [
+                'date_time' => gmdate('Y-m-d H:i:s'),
+                'remote_ip' => 'Admin',
+                'transaction_id' => ($response['gatewayResponse']['transactionProcessingDetails']['transactionId'] ?? '') ?: 'OPEN_REFUND_' . $identifier,
+                'transaction_state' => $response['gatewayResponse']['transactionState'] ?? 'ERROR',
+                'total_amount' => $openRefund->getData(OpenRefund::KEY_AMOUNT),
+                'currency' => $openRefund->getData(OpenRefund::KEY_CURRENCY_CODE),
+                'responseMessage' => $message
+            ];
+            if (!isset($response['paymentReceipt']['processorResponseDetails']['approvalStatus'])
+                && !isset($response['error'][0]['message'])) {
+                $additionalData['approval_status'] = $response === [] ? $message : 'DECLINED';
             }
-            $approval = trim((string)($response['error'][0]['message'] ?? '')) ?: $approval;
             $response['countryCode'] = $response['cardDetails']['countryCode'] ?? $response['countryCode'] ?? null;
             $wrappedResponse = [
                 HttpClient::RESPONSE_KEY => $response,
                 HttpClient::STATUS_CODE_KEY => $response['_http_status'] ?? 0
             ];
-            $this->failedTransactionManager->createFailedTransaction($identifier, $wrappedResponse, TransactionResponseValidator::RESPONSE_PATHS, 'OPEN_REFUND', null, [
-                'date_time' => gmdate('Y-m-d H:i:s'),
-                'remote_ip' => 'Admin',
-                'transaction_id' => ($response['gatewayResponse']['transactionProcessingDetails']['transactionId'] ?? '') ?: 'OPEN_REFUND_' . $identifier,
-                'transaction_state' => $response['gatewayResponse']['transactionState'] ?? 'ERROR',
-                'approval_status' => $approval,
-                'total_amount' => $openRefund->getData(OpenRefund::KEY_AMOUNT),
-                'currency' => $openRefund->getData(OpenRefund::KEY_CURRENCY_CODE),
-                'responseMessage' => $message
-            ]);
+            $this->failedTransactionManager->createFailedTransaction($identifier, $wrappedResponse, TransactionResponseValidator::RESPONSE_PATHS, 'OPEN_REFUND', null, $additionalData);
         } catch (\Throwable $e) {
             $this->logger->logError(1, 'Failed to record open refund decline transaction: ' . $e->getMessage());
         }
@@ -294,20 +293,18 @@ class OpenRefundService
             throw new LocalizedException(__('The selected payment card is missing its gateway token.'));
         }
 
+        $details = $vaultPaymentToken->getTokenDetails();
+        $detailsArray = !empty($details) ? json_decode($details, true) : null;
+
         $this->setPaymentVaultToken($buildSubject, $vaultPaymentToken);
         $this->setPaymentAdditionalInfo(
             $buildSubject,
-            DataAssignObserver::PAYMENT_TOKEN_KEY,
-            $tokenData
-        );
-        $this->setPaymentAdditionalInfo(
-            $buildSubject,
             DataAssignObserver::TOKEN_SOURCE_KEY,
-            $this->resolveVaultTokenSource($vaultPaymentToken)
+            $this->resolveVaultTokenSource($detailsArray)
         );
         $this->applyVaultTokenExpirationToPayment(
             $buildSubject,
-            $vaultPaymentToken
+            $detailsArray
         );
 
         $sourcePayload = $this->tokenSourceDataBuilder->build($buildSubject);
@@ -379,10 +376,6 @@ class OpenRefundService
         $payment = $paymentDO->getPayment();
 
         $extensionAttributes = $payment->getExtensionAttributes();
-        if ($extensionAttributes === null) {
-            $extensionAttributes = $this->orderPaymentExtensionFactory->create();
-        }
-
         $extensionAttributes->setVaultPaymentToken($vaultPaymentToken);
         $payment->setExtensionAttributes($extensionAttributes);
     }
@@ -391,19 +384,13 @@ class OpenRefundService
      * Apply the expiration month and year from the vault token details.
      *
      * @param array<string, mixed> $buildSubject
+     * @param array<string, mixed> $detailsArray
      * @throws LocalizedException
      */
     private function applyVaultTokenExpirationToPayment(
         array &$buildSubject,
-        PaymentTokenInterface $vaultPaymentToken
+        array $detailsArray
     ): void {
-        $details = $vaultPaymentToken->getTokenDetails();
-        $detailsArray = !empty($details) ? json_decode($details, true) : null;
-
-        if (!is_array($detailsArray)) {
-            throw new LocalizedException(__('The selected payment card details are invalid.'));
-        }
-
         $expirationDate = trim((string)($detailsArray['expirationDate'] ?? ''));
 
         if ($expirationDate === '' || strpos($expirationDate, '/') === false) {
@@ -437,12 +424,11 @@ class OpenRefundService
 
     /**
      * Extract the `tokenSource` that CommerceHub returned when the vault token was created.
+     *
+     * @param mixed $detailsArray
      */
-    private function resolveVaultTokenSource(PaymentTokenInterface $vaultPaymentToken): string
+    private function resolveVaultTokenSource($detailsArray): string
     {
-        $details = $vaultPaymentToken->getTokenDetails();
-        $detailsArray = !empty($details) ? json_decode($details, true) : null;
-
         if (is_array($detailsArray) && !empty($detailsArray['tokenSource'])) {
             return (string)$detailsArray['tokenSource'];
         }
@@ -573,6 +559,7 @@ class OpenRefundService
         $message = (string)(
             $response['error']['message']
             ?? $response['error'][0]['message']
+            ?? $response['paymentReceipt']['processorResponseDetails']['responseMessage']
             ?? ''
         );
 
