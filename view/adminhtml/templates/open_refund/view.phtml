@@ -115,6 +115,12 @@ $auditFields = [
                 <section class="or-details-card or-details-card-wide or-details-card-error">
                     <h3><?= $block->escapeHtml(__('Error Message')) ?></h3>
                     <div class="or-long-text"><?= $block->escapeHtml($errorValue) ?></div>
+                    <?php $declineUrl = $block->getDeclineUrl($openRefund); ?>
+                    <?php if ($declineUrl !== ''): ?>
+                        <p>
+                            <a href="<?= $block->escapeUrl($declineUrl) ?>"><?= $block->escapeHtml(__('View Declined Transaction')) ?></a>
+                        </p>
+                    <?php endif; ?>
                 </section>
             <?php endif; ?>
         </div>

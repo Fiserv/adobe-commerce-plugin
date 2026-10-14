@@ -627,7 +627,6 @@
 "View Open Refund %1","공개 환불 보기 %1"
 "View Open Refunds","미결 환불 보기"
 "View Order","주문 보기"
-"When enabled, open refunds are captured immediately upon creation. When disabled, they are authorized only.","활성화되면 미결 환불이 생성 즉시 캡처됩니다. 비활성화되면 권한만 부여됩니다."
 "You may close this window.","이 창을 닫아도 됩니다."
 "You must be logged in to save a card.","카드를 저장하려면 로그인이 필요합니다."
 "Your payment has been processed successfully.","귀하의 결제가 성공적으로 처리되었습니다."

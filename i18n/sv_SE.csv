@@ -627,7 +627,6 @@
 "View Open Refund %1","Visa öppen återbetalning %1"
 "View Open Refunds","Visa öppna återbetalningar"
 "View Order","Visa beställning"
-"When enabled, open refunds are captured immediately upon creation. When disabled, they are authorized only.","När det är aktiverat fångas öppna återbetalningar omedelbart efter skapandet. När de är inaktiverade är de endast auktoriserade."
 "You may close this window.","Du kan stänga det här fönstret."
 "You must be logged in to save a card.","Du måste vara inloggad för att spara ett kort."
 "Your payment has been processed successfully.","Din betalning har behandlats framgångsrikt."

@@ -627,7 +627,6 @@
 "View Open Refund %1","Afficher le remboursement ouvert %1"
 "View Open Refunds","Afficher les remboursements ouverts"
 "View Order","Voir la commande"
-"When enabled, open refunds are captured immediately upon creation. When disabled, they are authorized only.","Lorsqu'ils sont activés, les remboursements ouverts sont capturés immédiatement après leur création. Lorsqu'ils sont désactivés, ils sont autorisés uniquement."
 "You may close this window.","Vous pouvez fermer cette fenêtre."
 "You must be logged in to save a card.","Vous devez être connecté pour enregistrer une carte."
 "Your payment has been processed successfully.","Votre paiement a été traité avec succès."

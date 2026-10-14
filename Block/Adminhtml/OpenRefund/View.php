@@ -3,6 +3,7 @@
 namespace Fiserv\Payments\Block\Adminhtml\OpenRefund;
 
 use Fiserv\Payments\Model\OpenRefund;
+use Fiserv\Payments\Model\FailedTransactionRepository;
 use Magento\Backend\Block\Template;
 use Magento\Customer\Api\CustomerRepositoryInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
@@ -14,15 +15,19 @@ class View extends Template
 
 	private $customerRepository;
 
+	private $failedTransactionRepository;
+
 	public function __construct(
 		Template\Context $context,
 		Registry $registry,
 		CustomerRepositoryInterface $customerRepository,
+		FailedTransactionRepository $failedTransactionRepository,
 		array $data = []
 	) {
 		parent::__construct($context, $data);
 		$this->registry = $registry;
 		$this->customerRepository = $customerRepository;
+		$this->failedTransactionRepository = $failedTransactionRepository;
 	}
 
 	public function getBackUrl(): string
@@ -34,6 +39,23 @@ class View extends Template
 	{
 		$openRefund = $this->registry->registry('fiserv_open_refund_current');
 		return $openRefund instanceof OpenRefund ? $openRefund : null;
+	}
+
+	public function getDeclineUrl(OpenRefund $openRefund): string
+	{
+		$transactions = $this->failedTransactionRepository->getListByOrderIncrementId(
+			$openRefund->getData(OpenRefund::KEY_OPEN_REFUND_ID)
+		);
+		foreach ($transactions as $transaction) {
+			return $this->getUrl('fiserv/declines/transaction', ['transaction_id' => $transaction->getTransactionId()]);
+		}
+
+		return '';
+	}
+
+	public function getDeclinesDashboardUrl(): string
+	{
+		return $this->getUrl('fiserv/declines/preview');
 	}
 
 	public function getFieldLabels(): array

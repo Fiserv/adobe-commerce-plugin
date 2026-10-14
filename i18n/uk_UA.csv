@@ -627,7 +627,6 @@
 "View Open Refund %1","Переглянути Відкрити відшкодування %1"
 "View Open Refunds","Переглянути відкриті відшкодування"
 "View Order","Переглянути замовлення"
-"When enabled, open refunds are captured immediately upon creation. When disabled, they are authorized only.","Якщо ввімкнено, відкриті відшкодування фіксуються одразу після створення. Якщо вимкнено, вони лише авторизовані."
 "You may close this window.","Ви можете закрити це вікно."
 "You must be logged in to save a card.","Ви повинні увійти, щоб зберегти картку."
 "Your payment has been processed successfully.","Ваш платіж успішно оброблено."
