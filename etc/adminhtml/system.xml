@@ -216,15 +216,6 @@
 							<field id="open_refund_enabled">1</field>
 						</depends>
 					</field>
-					<field id="open_refund_capture_flag" translate="label comment tooltip" type="select" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="0">
-						<label>Capture Immediately</label>
-						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-						<config_path>payment/fiserv_commercehub/open_refund_capture_flag</config_path>
-						<comment>When enabled, open refunds are captured immediately upon creation. When disabled, they are authorized only.</comment>
-						<depends>
-							<field id="open_refund_enabled">1</field>
-						</depends>
-					</field>
 				</group>
                 <group id="fiserv_applepay" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="8">
                     <label>Apple Pay</label>

@@ -3,6 +3,10 @@
  * @var \Fiserv\Payments\Block\Adminhtml\Declines\Transaction $block
  */
 $transaction = $block->getTransactionDetails();
+$isOpenRefund = $transaction['paymentAction'] === \Fiserv\Payments\Model\Service\CommerceHub\OpenRefundService::PAYMENT_ACTION;
+$backUrl = $isOpenRefund
+    ? $block->getUrl('fiserv/declines/preview')
+    : $block->getUrl('fiserv/declines/order', ['id' => $transaction['order_increment_id']]);
 ?>
 
 <div class="admin__data-grid-wrap">
@@ -10,7 +14,7 @@ $transaction = $block->getTransactionDetails();
     <div class="black-banner">
         <div class="banner-left">
             <button class="back-button">
-                <a href="<?= $block->escapeUrl($block->getUrl('fiserv/declines/order', ['id' => $transaction['order_increment_id']])); ?>">
+                <a href="<?= $block->escapeUrl($backUrl); ?>">
                     <?= $block->escapeHtml(__('<')); ?>
                 </a>
             </button>
@@ -58,7 +62,7 @@ $transaction = $block->getTransactionDetails();
                         <div class="failed-transaction-detail-value"><?= $block->escapeHtml(isset($transaction["api_trace_id"]) ? $transaction["api_trace_id"] : "N/A"); ?></div>
                     </div>
                     <div class="failed-transaction-detail">
-                        <div class="failed-transaction-detail-label"><?= $block->escapeHtml(__('Order ID')); ?></div>
+                        <div class="failed-transaction-detail-label"><?= $block->escapeHtml($isOpenRefund ? __('Open Refund ID') : __('Order ID')); ?></div>
                         <div class="failed-transaction-detail-value"><?= $block->escapeHtml(isset($transaction["order_increment_id"]) ? $transaction["order_increment_id"] : "N/A"); ?></div>
                     </div>
                     <div class="failed-transaction-detail">

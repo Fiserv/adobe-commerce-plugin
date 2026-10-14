@@ -627,7 +627,6 @@
 "View Open Refund %1","查看開放退款 %1"
 "View Open Refunds","查看開放退款"
 "View Order","查看訂單"
-"When enabled, open refunds are captured immediately upon creation. When disabled, they are authorized only.","啟用後，未結退款將在建立後立即捕獲。當禁用時，它們僅被授權。"
 "You may close this window.","您可以關閉此視窗。"
 "You must be logged in to save a card.","您必須登入才能儲存卡片。"
 "Your payment has been processed successfully.","您的付款已成功處理。"

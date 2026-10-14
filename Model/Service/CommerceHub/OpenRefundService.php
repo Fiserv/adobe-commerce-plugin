@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace Fiserv\Payments\Model\Service\CommerceHub;
 
 use Fiserv\Payments\Gateway\Config\CommerceHub\Config;
+use Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient;
 use Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder;
-use Fiserv\Payments\Gateway\Request\CommerceHub\AuthDetailsDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\SaleDetailsDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\TokenSourceDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\TransactionInteractionDataBuilder;
+use Fiserv\Payments\Gateway\Validator\CommerceHub\TransactionResponseValidator;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 use Fiserv\Payments\Model\Adapter\CommerceHub\OpenRefundRequest;
 use Fiserv\Payments\Model\OpenRefund;
@@ -29,6 +30,8 @@ use Magento\Vault\Api\PaymentTokenManagementInterface;
 
 class OpenRefundService
 {
+    public const PAYMENT_ACTION = 'OPEN_REFUND';
+
     private const SOURCE_TYPE_TOKEN = 'TOKEN';
     private const SOURCE_TYPE_CARD_HOSTED_FIELDS = 'HOSTED_FIELDS';
     private const ALLOWED_REFUND_REASONS = [
@@ -66,9 +69,6 @@ class OpenRefundService
     /** @var TokenSourceDataBuilder */
     private $tokenSourceDataBuilder;
 
-    /** @var AuthDetailsDataBuilder */
-    private $authDetailsDataBuilder;
-
     /** @var SaleDetailsDataBuilder */
     private $saleDetailsDataBuilder;
 
@@ -90,6 +90,9 @@ class OpenRefundService
     /** @var OrderPaymentExtensionFactory */
     private $orderPaymentExtensionFactory;
 
+    /** @var FailedTransactionManager */
+    private $failedTransactionManager;
+
     public function __construct(
         Config $config,
         OpenRefundRequest $openRefundRequest,
@@ -100,14 +103,14 @@ class OpenRefundService
         PaymentTokenManagementInterface $tokenManagement,
         AmountDataBuilder $amountDataBuilder,
         TokenSourceDataBuilder $tokenSourceDataBuilder,
-        AuthDetailsDataBuilder $authDetailsDataBuilder,
         SaleDetailsDataBuilder $saleDetailsDataBuilder,
         TransactionInteractionDataBuilder $transactionInteractionDataBuilder,
         MerchantDetailsDataBuilder $merchantDetailsDataBuilder,
         PaymentDataObjectFactory $paymentDataObjectFactory,
         PaymentFactory $orderPaymentFactory,
         OrderFactory $orderFactory,
-        OrderPaymentExtensionFactory $orderPaymentExtensionFactory
+        OrderPaymentExtensionFactory $orderPaymentExtensionFactory,
+        FailedTransactionManager $failedTransactionManager
     ) {
         $this->config             = $config;
         $this->openRefundRequest  = $openRefundRequest;
@@ -118,7 +121,6 @@ class OpenRefundService
         $this->tokenManagement    = $tokenManagement;
         $this->amountDataBuilder = $amountDataBuilder;
         $this->tokenSourceDataBuilder = $tokenSourceDataBuilder;
-        $this->authDetailsDataBuilder = $authDetailsDataBuilder;
         $this->saleDetailsDataBuilder = $saleDetailsDataBuilder;
         $this->transactionInteractionDataBuilder = $transactionInteractionDataBuilder;
         $this->merchantDetailsDataBuilder = $merchantDetailsDataBuilder;
@@ -126,6 +128,7 @@ class OpenRefundService
         $this->orderPaymentFactory = $orderPaymentFactory;
         $this->orderFactory = $orderFactory;
         $this->orderPaymentExtensionFactory = $orderPaymentExtensionFactory;
+        $this->failedTransactionManager = $failedTransactionManager;
     }
 
     /**
@@ -207,6 +210,39 @@ class OpenRefundService
             throw new LocalizedException(__('Unable to create open refund: %1', $e->getMessage()));
         }
 
+        if ($status === OpenRefund::STATUS_DECLINED) {
+            try {
+                $response['countryCode'] = $response['cardDetails']['countryCode'] ?? null;
+                $identifier = (string)$openRefund->getData(OpenRefund::KEY_OPEN_REFUND_ID);
+                $additionalData = [
+                    'date_time' => gmdate('Y-m-d H:i:s'),
+                    'remote_ip' => 'Admin',
+                    'total_amount' => $openRefund->getData(OpenRefund::KEY_AMOUNT),
+                    'currency' => $openRefund->getData(OpenRefund::KEY_CURRENCY_CODE)
+                ];
+                // API errors can omit the gateway transaction details.
+                if (!isset($response['gatewayResponse']['transactionProcessingDetails']['transactionId'])) {
+                    $additionalData['transaction_id'] = 'OPEN_REFUND_' . $identifier;
+                    $additionalData['transaction_state'] = $response['gatewayResponse']['transactionState'] ?? 'DECLINED';
+                    $additionalData['approval_status'] = $response['gatewayResponse']['approvalStatus'] ?? 'DECLINED';
+                }
+                $this->failedTransactionManager->createFailedTransaction(
+                    $identifier,
+                    [
+                        HttpClient::RESPONSE_KEY => $response,
+                        HttpClient::STATUS_CODE_KEY => $response['_http_status']
+                    ],
+                    TransactionResponseValidator::RESPONSE_PATHS,
+                    self::PAYMENT_ACTION,
+                    null,
+                    $additionalData
+                );
+            } catch (\Throwable $e) {
+                $this->logger->logError(1, 'Failed to record open refund decline. OpenRefundId: '
+                    . $openRefund->getData(OpenRefund::KEY_OPEN_REFUND_ID) . ': ' . $e->getMessage());
+            }
+        }
+
         return $openRefund;
     }
 
@@ -216,7 +252,6 @@ class OpenRefundService
      */
     private function buildPayload(array $data, float $amount, string $currencyCode): array
     {
-        $captureFlag  = (bool)$this->config->getOpenRefundCaptureFlag();
         $openRefundId = strtoupper(uniqid('ORFSUB', false));
 
         $sourceType = strtoupper(trim((string)($data['source_type'] ?? self::SOURCE_TYPE_CARD_HOSTED_FIELDS)));
@@ -260,9 +295,7 @@ class OpenRefundService
 
         $sourcePayload = $this->tokenSourceDataBuilder->build($buildSubject);
 
-        $transactionDetailsPayload = $captureFlag
-            ? $this->saleDetailsDataBuilder->build($buildSubject)
-            : $this->authDetailsDataBuilder->build($buildSubject);
+        $transactionDetailsPayload = $this->saleDetailsDataBuilder->build($buildSubject);
 
         $transactionInteractionPayload = $this->transactionInteractionDataBuilder->build($buildSubject);
 
@@ -494,15 +527,11 @@ class OpenRefundService
     private function resolveStatus(array $response): string
     {
         $transactionState = strtoupper((string)($response['gatewayResponse']['transactionState'] ?? ''));
-        $approvalStatus = strtoupper((string)(
-            $response['gatewayResponse']['approvalStatus']
-            ?? $response['paymentReceipt']['processorResponseDetails']['approvalStatus']
-            ?? $response['processorResponseDetails']['approvalStatus']
-            ?? ''
-        ));
+        $approvalStatus = strtoupper((string)($response['gatewayResponse']['approvalStatus'] ?? ''));
 
         if (
-            in_array($transactionState, ['AUTHORIZED', 'CAPTURED'], true)
+            in_array($response['_http_status'], [200, 201], true)
+            && $transactionState === TransactionResponseValidator::STATE_CAPTURE
             && in_array($approvalStatus, ['APPROVED', 'SUCCESS'], true)
         ) {
             return OpenRefund::STATUS_APPROVED;
@@ -518,13 +547,19 @@ class OpenRefundService
      */
     private function resolveDeclineMessage(array $response): string
     {
-        $message = (string)(
-            $response['error']['message']
-            ?? $response['error'][0]['message']
-            ?? ''
-        );
+        $processorDetails = $response['paymentReceipt']['processorResponseDetails'] ?? [];
+        foreach ([
+            $response['error']['message'] ?? '',
+            $response['error'][0]['message'] ?? '',
+            $processorDetails['responseMessage'] ?? '',
+            $processorDetails['hostResponseMessage'] ?? ''
+        ] as $message) {
+            if ($message !== '') {
+                return (string)$message;
+            }
+        }
 
-        return $message !== '' ? $message : (string)__('Refund request failed.');
+        return (string)__('Refund request failed.');
     }
 }
 
