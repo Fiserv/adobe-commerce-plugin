@@ -571,14 +571,14 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	}
 
 	/**
-	 * Returns whether open refunds should be captured immediately.
+	 * Open refunds always capture immediately; legacy configuration is ignored.
 	 *
 	 * @param int|null $storeId
 	 * @return bool
 	 */
 	public function getOpenRefundCaptureFlag($storeId = null): bool
 	{
-		return (bool) $this->getValue(self::KEY_OPEN_REFUND_CAPTURE_FLAG, $storeId);
+		return true;
 	}
 
 	private function validateFormId($formId)

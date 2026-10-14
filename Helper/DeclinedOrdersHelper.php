@@ -9,6 +9,7 @@ use Fiserv\Payments\Helper\DeclinedRealOrdersHelper;
 use Fiserv\Payments\Model\FailedTransactionRepository;
 use Fiserv\Payments\Model\FailedOrderRepository;
 use Fiserv\Payments\Model\FailedOrder as OrderModel;
+use Fiserv\Payments\Model\OpenRefund;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\Pricing\Helper\Data as PricingHelper;
 
@@ -51,6 +52,7 @@ class DeclinedOrdersHelper
 
 		$allApprovalStatus = $this->failedTransactionRepo->getAllAprovalStatus();
 		$allOrderState = $this->failedOrderRepo->getAllOrderState();
+		$allOrderState[] = OpenRefund::STATUS_DECLINED;
 
 		$failedTransactionDataArray = [];
 		$orderTransactionDates = [];
@@ -108,6 +110,32 @@ class DeclinedOrdersHelper
 				}
 				$orderTransactionDates[$incrementId] = $latestTransactionDate;
 			}
+
+			$openRefunds = [];
+			if ($orderIncrementIds !== []) {
+				$connection = $this->resourceConnection->getConnection();
+				$select = $connection->select()
+					->from(['orf' => $this->resourceConnection->getTableName('fiserv_open_refund')])
+					->joinLeft(['orc' => $this->resourceConnection->getTableName('customer_entity')], 'orf.customer_id = orc.entity_id', ['firstname', 'lastname'])
+					->where('orf.open_refund_id IN (?)', $orderIncrementIds)
+					->where('orf.status = ?', OpenRefund::STATUS_DECLINED);
+				$openRefunds = $connection->fetchAll($select);
+			}
+
+			foreach ($openRefunds as $refund) {
+				$identifier = $refund['open_refund_id'];
+				$orderList[] = [
+					OrderModel::KEY_DATE_TIME => $refund['created_at'],
+					OrderModel::KEY_ORDER_INCREMENT_ID => $identifier,
+					OrderModel::KEY_CUSTOMER_NAME => trim($refund['firstname'] . ' ' . $refund['lastname']),
+					OrderModel::KEY_ORDER_STATE => $refund['status'],
+					OrderModel::KEY_GRAND_TOTAL => $this->formatPrice($refund['amount']),
+					'approval_status' => $failedTransactionDataArray[$identifier]['approval_status'],
+					'remote_ip' => 'Admin',
+					self::ORDER_URL => $this->urlBuilder->getUrl('fiserv/openrefund/view', ['id' => $refund['entity_id']])
+				];
+				$orderTransactionDates[$identifier] = $refund['created_at'];
+			}
 		}
 
 		if ($type === 'transactions' || $type === 'all') {
@@ -153,6 +181,8 @@ class DeclinedOrdersHelper
 			->from(['ft' => 'failed_transaction'], ['order_increment_id'])
 			->joinLeft(['so' => 'sales_order'], 'ft.order_increment_id = so.increment_id', [])
 			->joinLeft(['fo' => 'failed_order'], 'ft.order_increment_id = fo.order_increment_id', [])
+			->joinLeft(['orf' => $this->resourceConnection->getTableName('fiserv_open_refund')], 'ft.order_increment_id = orf.open_refund_id', [])
+			->joinLeft(['orc' => $this->resourceConnection->getTableName('customer_entity')], 'orf.customer_id = orc.entity_id', [])
 			->where('ft.order_increment_id IS NOT NULL')
 			->order('ft.order_increment_id DESC')
 			->limit($pageSize, $offset);
@@ -169,6 +199,15 @@ class DeclinedOrdersHelper
 				'fo.customer_name',
 				'fo.order_state',
 				'fo.grandTotal',
+				'orf.open_refund_id',
+				'orf.order_id',
+				'orf.case_number',
+				'orf.linked_identifier',
+				'orf.status',
+				'orf.amount',
+				'orc.firstname',
+				'orc.lastname',
+				'orc.email',
 				'ft.remote_ip',
 				'ft.approval_status'
 			];
@@ -187,7 +226,7 @@ class DeclinedOrdersHelper
 
 		if ($orderState !== null && $orderState !== '') {
 			$select->where(
-				new \Zend_Db_Expr('COALESCE(fo.order_state, so.status) = ' . $connection->quote($orderState))
+				new \Zend_Db_Expr('COALESCE(orf.status, fo.order_state, so.status) = ' . $connection->quote($orderState))
 			);
 		}
 
@@ -205,6 +244,8 @@ class DeclinedOrdersHelper
 			->from(['ft' => 'failed_transaction'], ['total' => new \Zend_Db_Expr('COUNT(DISTINCT ft.order_increment_id)')])
 			->joinLeft(['so' => 'sales_order'], 'ft.order_increment_id = so.increment_id', [])
 			->joinLeft(['fo' => 'failed_order'], 'ft.order_increment_id = fo.order_increment_id', [])
+			->joinLeft(['orf' => $this->resourceConnection->getTableName('fiserv_open_refund')], 'ft.order_increment_id = orf.open_refund_id', [])
+			->joinLeft(['orc' => $this->resourceConnection->getTableName('customer_entity')], 'orf.customer_id = orc.entity_id', [])
 			->where('ft.order_increment_id IS NOT NULL');
 
 		if ($search) {
@@ -222,7 +263,7 @@ class DeclinedOrdersHelper
 
 		if ($orderState !== null && $orderState !== '') {
 			$countSelect->where(
-				new \Zend_Db_Expr('COALESCE(fo.order_state, so.status) = ' . $connection->quote($orderState))
+				new \Zend_Db_Expr('COALESCE(orf.status, fo.order_state, so.status) = ' . $connection->quote($orderState))
 			);
 		}
 
@@ -238,6 +279,7 @@ class DeclinedOrdersHelper
 
 		return ['ids' => $orderIncrementIds, 'count' => $totalCount];
 	}
+
 
 	private function convertFailedOrderToArray($failedOrder)
 	{
