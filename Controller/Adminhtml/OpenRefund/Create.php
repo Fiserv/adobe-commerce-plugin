@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Fiserv\Payments\Controller\Adminhtml\OpenRefund;
 
+use Fiserv\Payments\Model\OpenRefund;
 use Fiserv\Payments\Model\Service\CommerceHub\OpenRefundService;
 use Magento\Backend\App\Action;
 use Magento\Framework\App\Action\HttpPostActionInterface;
@@ -32,6 +33,14 @@ class Create extends Action implements HttpPostActionInterface
 
             $data = $this->getRequest()->getPostValue();
             $openRefund = $this->openRefundService->create(is_array($data) ? $data : []);
+            if ($openRefund->getData(OpenRefund::KEY_STATUS) === OpenRefund::STATUS_DECLINED) {
+                $this->messageManager->addErrorMessage(
+                    __('Open refund %1 declined: %2',
+                        $openRefund->getData(OpenRefund::KEY_OPEN_REFUND_ID),
+                        $openRefund->getData(OpenRefund::KEY_ERROR_MESSAGE))
+                );
+                return $resultRedirect->setPath('fiserv/openrefund/view', ['id' => $openRefund->getId()]);
+            }
             $this->messageManager->addSuccessMessage(
                 __('Open refund %1 created successfully.', $openRefund->getData('open_refund_id'))
             );
