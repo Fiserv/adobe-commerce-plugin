@@ -295,6 +295,7 @@
 				<cashapp_button_width>STATIC</cashapp_button_width>
 				<order_status>pending</order_status>
 				<group>fiserv_group</group>
+				<tokenization>0</tokenization>
 			</fiserv_cashapp>
             <fiserv_venmo>
 				<active>1</active>

@@ -67,14 +67,14 @@ class HttpClient implements ClientInterface
 		$endpoint = $requestBody[ChCompositeBase::ENDPOINT_KEY];
 	
 	    $log = [
-			'request' => $requestBody,
+			'request' => json_decode(json_encode($requestBody), true),
 		];
 		
 		$orderIncrementId = $requestBody[ChCompositeBase::ORDER_INCREMENT_ID_KEY] ?? "";
 
 		$this->logger->logInfo(1, "Sending request to Commerce Hub", "Order ID: $orderIncrementId");
 		$this->logger->logDebug(3, "TXN REQUEST INFO", "Order ID: $orderIncrementId");
-		$this->logger->logDebug(3, "Payload:\n" . json_encode($payload, JSON_PRETTY_PRINT), "Order ID: $orderIncrementId");
+		$this->logger->logDebug(3, "Payload:\n" . json_encode($log['request'][ChCompositeBase::REQUEST_KEY] ?? [], JSON_PRETTY_PRINT), "Order ID: $orderIncrementId");
 
 		try {
 			$chResponse = $this->httpAdapter->sendRequest($payload, $endpoint);
@@ -83,16 +83,16 @@ class HttpClient implements ClientInterface
 			$this->logger->logInfo(1, "Response received from Commerce Hub", "Order ID: $orderIncrementId");
 			$this->logger->logDebug(3, "TXN RESPONSE INFO", "Order ID: $orderIncrementId");
 			$this->logger->logDebug(3, "Response Headers:\n" . json_encode($chResponse->getHeaders()), "Order ID: $orderIncrementId");
-			$this->logger->logDebug(3, "Response Body:\n" . json_encode(json_decode($chResponse->getBody()), JSON_PRETTY_PRINT), "Order ID: $orderIncrementId");
+			$this->logger->logDebug(3, "Response Body:\n" . json_encode($responseArray, JSON_PRETTY_PRINT), "Order ID: $orderIncrementId");
 
-			$log['response'] = $chResponse->getResponse();
+			$log['response'] = $responseArray;
 			return [
 				self::STATUS_CODE_KEY => $chResponse->getStatusCode(),
 				self::RESPONSE_KEY => json_decode($chResponse->getBody(), true)
 			];
 		} catch (\Exception $e) {
 			$this->logger->logCritical(1, "An error has occurred while sending the payload to Commerce Hub", "Order ID: $orderIncrementId");
-			$this->logger->logCritical(2, $e, "Order ID: $orderIncrementId");
+			$this->logger->logCritical(2, get_class($e), "Order ID: $orderIncrementId");
 			throw new ClientException(
 				__('An error occurred in the payment gateway.')
 			);

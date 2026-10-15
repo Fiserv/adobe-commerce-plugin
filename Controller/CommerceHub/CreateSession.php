@@ -14,6 +14,7 @@ use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Webapi\Exception;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 use Magento\Customer\Model\Session as CustomerSession;
+use Fiserv\Payments\Model\CashApp\SessionPolicy;
 
 /**
  * Creates a CommerceHub payment session via the v1/sessions/create API.
@@ -32,6 +33,8 @@ class CreateSession extends Action implements HttpPostActionInterface
     /** @var CustomerSession */
     private $customerSession;
 
+    private $cashAppPolicy;
+
     /**
      * @param Context $context
      * @param CredentialsRequest $credentialsRequest
@@ -42,12 +45,14 @@ class CreateSession extends Action implements HttpPostActionInterface
         Context $context,
         CredentialsRequest $credentialsRequest,
         MultiLevelLogger $logger,
+        SessionPolicy $cashAppPolicy,
         CustomerSession $customerSession = null
     ) {
         parent::__construct($context);
         $this->credentialsRequest = $credentialsRequest;
         $this->logger = $logger;
         $this->customerSession = $customerSession;
+        $this->cashAppPolicy = $cashAppPolicy;
     }
 
     /**
@@ -60,6 +65,8 @@ class CreateSession extends Action implements HttpPostActionInterface
         try {
             $data = $this->getRequest()->getContent();
             $sessionData = json_decode($data, true) ?? [];
+            $this->cashAppPolicy->prepare($sessionData);
+            unset($sessionData['cashappSave'], $sessionData['form_key']);
 
             // Add customer id if logged in
             if ($this->customerSession !== null && $this->customerSession->isLoggedIn()) {
@@ -68,14 +75,18 @@ class CreateSession extends Action implements HttpPostActionInterface
 
             // Intent determination (tokenization vs. primary transaction Authorize/Capture)
             $credentials = $this->credentialsRequest->requestCredentials($sessionData);
+            $this->cashAppPolicy->record($credentials);
 
             $response->setData([
                 'ch_credentials' => $credentials,
+                'cashapp_can_save' => $this->cashAppPolicy->canSave(),
             ]);
         } catch (\Exception $e) {
 			$this->logger->logCritical(1, "An error occured in the retrieval of credentials");
             $this->logger->logCritical(2, $e);
             return $this->processBadRequest($response);
+        } finally {
+            $this->cashAppPolicy->clear();
         }
 
         return $response;

@@ -11,6 +11,7 @@ class Config extends GatewayConfig
 	public const CODE = 'fiserv_cashapp';
 	public const KEY_ACTIVE = 'active';
 	public const KEY_PAYMENT_ACTION = 'payment_action';
+	public const KEY_TOKENIZATION = 'tokenization';
 	public const KEY_BUTTON_THEME = 'cashapp_button_theme';
 	public const KEY_BUTTON_SHAPE = 'cashapp_button_shape';
 	public const KEY_BUTTON_SIZE = 'cashapp_button_size';
@@ -30,6 +31,11 @@ class Config extends GatewayConfig
 	public function getPaymentAction($storeId = null): string
 	{
 		return (string) $this->getValue(self::KEY_PAYMENT_ACTION, $storeId);
+	}
+
+	public function isTokenizationEnabled($storeId = null): bool
+	{
+		return (bool) $this->getValue(self::KEY_TOKENIZATION, $storeId);
 	}
 
 	public function getButtonTheme($storeId = null): string

@@ -82,8 +82,9 @@ class ChHttpAdapter
 		$this->timestamp = $this->getTimestamp();
 		$this->nonce = $this->getnonce($this->timestamp);
 
-		$url = $this->getServiceUrl() . '/' . $endpoint;
+		$url = rtrim($this->getServiceUrl(), '/') . '/' . ltrim($endpoint, '/');
 		$payload = json_encode($data);
+		$this->logger->logDebug(3, 'Commerce Hub request URL: ' . $url);
 
 		return $this->execHttpRequest($payload, $url, $endpoint);
 	}
@@ -97,7 +98,7 @@ class ChHttpAdapter
 			$this->logger->logError(2, "Curl error: ErrNo - " . curl_errno($curl) . "      Message - " . curl_error($curl));
 			// Error code 28 is the timeout error code
 			$data = json_decode($payload, true);
-			if(array_key_exists("transactionDetails", $data) && curl_errno($curl) === 28) {
+			if(isset($data["transactionDetails"]["merchantTransactionId"]) && curl_errno($curl) === 28) {
 				$this->logger->logCritical(1, "Timeout detected. Attempting recovery...");
 				curl_close($curl);
 				// Step 1: Idempotency attempt
@@ -125,6 +126,16 @@ class ChHttpAdapter
 	 */
 	private function handleTimeout($data, $endpoint)
 	{
+		if (in_array($endpoint, ['v1/payments/authorizations', 'v1/payments/captures'], true)) {
+			// The same-request retry already failed. Legacy inquiry/reversal contracts are not established for these APIs.
+			$this->logger->logCritical(1,
+				'Cash App payment outcome unknown after timeout. Reconcile before retrying. Endpoint: ' . $endpoint
+				. '; referenceMerchantTransactionId: ' . ($data['transactionDetails']['merchantTransactionId'] ?? ''),
+				'Order ID: ' . ($data['transactionDetails']['merchantOrderId'] ?? '')
+			);
+			throw new ClientException(__('The payment outcome could not be confirmed. Please contact the merchant before trying again.'));
+		}
+
 		// Step 2: Transaction Inquiry
 		$this->timestamp = $this->getTimestamp();
 		$this->nonce = $this->getnonce($this->timestamp);

@@ -1,5 +1,19 @@
 <?xml version="1.0"?>
 <schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+	<table name="fiserv_cashapp_token" resource="default" engine="innodb" comment="Private Cash App First Saved Token Collection">
+		<column xsi:type="int" name="entity_id" unsigned="true" nullable="false" identity="true"/>
+		<column xsi:type="int" name="customer_id" unsigned="true" nullable="false"/>
+		<column xsi:type="smallint" name="website_id" unsigned="true" nullable="false"/>
+		<column xsi:type="varchar" name="merchant_id" length="255" nullable="false"/>
+		<column xsi:type="varchar" name="terminal_id" length="255" nullable="false"/>
+		<column xsi:type="varchar" name="environment" length="32" nullable="false"/>
+		<column xsi:type="varchar" name="token_source" length="64" nullable="true" comment="Preferred Saved Token Source; Full Pairs Remain Encrypted"/>
+		<column xsi:type="text" name="token_data" nullable="false" comment="Encrypted JSON Token Source and Data Collection"/>
+		<column xsi:type="timestamp" name="created_at" nullable="false" default="CURRENT_TIMESTAMP" on_update="false"/>
+		<constraint xsi:type="primary" referenceId="PRIMARY"><column name="entity_id"/></constraint>
+		<constraint xsi:type="unique" referenceId="FISERV_CASHAPP_TOKEN_CUSTOMER_UNIQUE"><column name="customer_id"/></constraint>
+		<constraint xsi:type="foreign" referenceId="FISERV_CASHAPP_TOKEN_CUSTOMER_FK" table="fiserv_cashapp_token" column="customer_id" referenceTable="customer_entity" referenceColumn="entity_id" onDelete="CASCADE"/>
+	</table>
 	<table name="valuelink_transaction" resource="default" engine="innodb" comment="Transcation Processed through Valuelink">
 		<column xsi:type="int" name="entity_id" unsigned="true" nullable="false" identity="true" />
 		<constraint xsi:type="primary" referenceId="PRIMARY">

@@ -1286,6 +1286,12 @@
 						<source_model>Fiserv\Payments\Model\Source\CashApp\ButtonWidth</source_model>
 						<config_path>payment/fiserv_cashapp/cashapp_button_width</config_path>
 					</field>
+					<field id="tokenization" translate="label" type="select" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Enable Cash App Pay Tokenization</label>
+						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+						<config_path>payment/fiserv_cashapp/tokenization</config_path>
+						<comment>Allow signed-in customers without a saved Cash App record to opt in to saving. Existing records are never replaced. Paying with saved tokens requires separate integration.</comment>
+					</field>
 				</group>
                 <group id="fiserv_venmo" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="9">
                     <label>Venmo</label>

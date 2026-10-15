@@ -5,6 +5,7 @@
  */
 namespace Fiserv\Payments\Observer\CommerceHub;
 
+use Fiserv\Payments\Model\CashApp\SavedPayment;
 use Magento\Framework\Event\Observer;
 use Magento\Payment\Observer\AbstractDataAssignObserver;
 use Magento\Quote\Api\Data\PaymentInterface;
@@ -60,11 +61,23 @@ class DataAssignObserver extends AbstractDataAssignObserver
 
 		$additionalData = $data->getData(PaymentInterface::KEY_ADDITIONAL_DATA);
 
+		$paymentInfo = $this->readPaymentModelArgument($observer);
+		if ($paymentInfo->getMethod() === 'fiserv_cashapp') {
+			// Magento's payment additional_data transport can stringify boolean values.
+			$saveChoice = is_array($additionalData) ? ($additionalData['cashapp_save_payment_method'] ?? false) : false;
+			$useSaved = is_array($additionalData)
+				&& in_array($additionalData[SavedPayment::CHOICE] ?? false, [true, 1, '1', 'true'], true);
+			$paymentInfo->setAdditionalInformation(SavedPayment::CHOICE, $useSaved);
+			$paymentInfo->setAdditionalInformation(
+				'cashapp_save_payment_method',
+				!$useSaved && in_array($saveChoice, [true, 1, '1', 'true'], true)
+			);
+		}
+
 		if (!is_array($additionalData)) {
 			return;
 		}
 
-		$paymentInfo = $this->readPaymentModelArgument($observer);
 
 		foreach ($this->additionalInformationList as $additionalInformationKey) {
 			if (isset($additionalData[$additionalInformationKey])) {

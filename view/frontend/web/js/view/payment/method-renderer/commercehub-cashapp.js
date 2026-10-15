@@ -1,12 +1,13 @@
 /* eslint-disable max-params, max-lines-per-function, prefer-arrow-callback, unicorn/prefer-module */
 /* eslint-disable unicorn/prefer-global-this */
-/* eslint-disable no-invalid-this, object-shorthand, complexity, unicorn/no-null, eqeqeq */
+/* eslint-disable object-shorthand, complexity, unicorn/no-null, eqeqeq */
 /* eslint-disable unicorn/explicit-length-check, @stylistic/no-mixed-operators */
 define([
-	'Magento_Payment/js/view/payment/cc-form',
+	'Magento_Checkout/js/view/payment/default',
 	'Fiserv_Payments/js/ch-adapter',
 	'Fiserv_Payments/js/action/create-commercehub-enriched-session',
 	'Magento_Checkout/js/model/quote',
+	'Magento_Customer/js/model/customer',
 	'Magento_Ui/js/model/messageList',
 	'Magento_Checkout/js/model/full-screen-loader',
 	'ko',
@@ -17,6 +18,7 @@ define([
 	chAdapter,
 	commerceHubSession,
 	quote,
+	customer,
 	globalMessageList,
 	fullScreenLoader,
 	ko,
@@ -39,20 +41,29 @@ define([
 			pendingInitialization: false,
 			initializedAmount: null,
 			reinitializeTimer: null,
+			saveCashApp: false,
+			useSavedCashApp: false,
+			serverCanSave: true,
 		},
 
 		initialize: function () {
 			this._super();
 			this.isPlaceOrderActionAllowed(Boolean(quote.billingAddress()));
+			this.useSavedCashApp(this.canUseSavedCashApp());
+			this.useSavedCashApp.subscribe(() => {
+				this.saveCashApp(false);
+				this.destroyCashApp();
+				this.initializeCashApp();
+			});
 
-			quote.billingAddress.subscribe(function (address) {
+			quote.billingAddress.subscribe((address) => {
 				this.isPlaceOrderActionAllowed(Boolean(address));
 				if (address && this.isChecked() === this.getCode()) {
 					this.initializeCashApp();
 				}
-			}, this);
+			});
 
-			quote.totals.subscribe(function (totals) {
+			quote.totals.subscribe((totals) => {
 				const amount = totals && Number(totals.grand_total);
 
 				if (
@@ -61,20 +72,28 @@ define([
 					amount !== this.initializedAmount
 				) {
 					clearTimeout(this.reinitializeTimer);
-					this.reinitializeTimer = setTimeout(function () {
+					this.reinitializeTimer = setTimeout(() => {
 						this.destroyCashApp();
 						this.initializeCashApp();
-					}.bind(this), 250);
+					}, 250);
 				}
-			}, this);
+			});
 
-			this.isChecked.subscribe(function (method) {
+			this.isChecked.subscribe((method) => {
 				if (method === this.getCode()) {
 					this.initializeCashApp();
 				} else {
 					this.destroyCashApp();
+					this.saveCashApp(false);
 				}
-			}, this);
+			});
+
+			customer.isLoggedIn.subscribe((loggedIn) => {
+				if (!loggedIn) {
+					this.saveCashApp(false);
+					this.useSavedCashApp(false);
+				}
+			});
 
 			return this;
 		},
@@ -86,6 +105,10 @@ define([
 		},
 
 		initializeCashApp: function () {
+			if (this.isChecked() !== this.getCode() || this.isUsingSavedCashApp()) {
+				return Promise.resolve(null);
+			}
+
 			if (this.initializationPromise) {
 				this.pendingInitialization = true;
 
@@ -102,20 +125,22 @@ define([
 		},
 
 		createCashAppButton: async function () {
-			const config = window.checkoutConfig && window.checkoutConfig.payment &&
-				window.checkoutConfig.payment[this.getCode()] || {};
+			const config = this.getPaymentConfig();
 			const generation = this.initializationGeneration;
 			let sdkMode;
 			let handle;
 
 			fullScreenLoader.startLoader();
 			try {
-				sdkMode = await this.initializeCashAppSdk(config);
+				sdkMode = await this.initializeCashAppSdk(config, generation);
+				if (!this.isCurrentCashAppGeneration(generation)) {
+					return null;
+				}
 				this.clearContainer();
 				handle = sdkMode === 'component' ?
-					await window.fiserv.components.cashApp(this.getCashAppOptions(config)) :
-					await this.createCashAppElements(config);
-				if (generation !== this.initializationGeneration || this.isChecked() !== this.getCode()) {
+					await window.fiserv.components.cashApp(this.getCashAppOptions(config, generation)) :
+					await this.createCashAppElements(config, generation);
+				if (!this.isCurrentCashAppGeneration(generation)) {
 					if (handle && typeof handle.destroy === 'function') {
 						handle.destroy();
 					}
@@ -126,20 +151,49 @@ define([
 				this.cashAppHandle = handle;
 				this.initializedAmount = this.getGrandTotal();
 			} catch (error) {
-				this.handleError(error);
+				if (this.isCurrentCashAppGeneration(generation)) {
+					this.handleError(error);
+				}
 			} finally {
 				this.initializationPromise = null;
 				fullScreenLoader.stopLoader();
-				if (this.pendingInitialization && this.isChecked() === this.getCode()) {
-					this.pendingInitialization = false;
-					setTimeout(this.initializeCashApp.bind(this), 0);
+				const { pendingInitialization } = this;
+
+				this.pendingInitialization = false;
+				if (pendingInitialization && this.isChecked() === this.getCode()) {
+					setTimeout(() => this.initializeCashApp(), 0);
 				}
 			}
 
 			return this.cashAppHandle;
 		},
 
-		initializeCashAppSdk: async function (config) {
+		getPaymentConfig: function () {
+			return window.checkoutConfig && window.checkoutConfig.payment &&
+				window.checkoutConfig.payment[this.getCode()] || {};
+		},
+
+		canSaveCashApp: function () {
+			const config = this.getPaymentConfig();
+
+			return customer.isLoggedIn() && config.tokenizationEnabled === true &&
+				!config.hasSavedCashApp && this.serverCanSave() && !this.isUsingSavedCashApp();
+		},
+
+		canUseSavedCashApp: function () {
+			return customer.isLoggedIn() && this.getPaymentConfig().canUseSavedCashApp === true;
+		},
+
+		isUsingSavedCashApp: function () {
+			return this.canUseSavedCashApp() && this.useSavedCashApp() === true;
+		},
+
+		isCurrentCashAppGeneration: function (generation) {
+			return generation === this.initializationGeneration && this.isChecked() === this.getCode() &&
+				!this.isUsingSavedCashApp();
+		},
+
+		initializeCashAppSdk: async function (config, generation) {
 			const hasComponentApi = window.fiserv && window.fiserv.components &&
 				typeof window.fiserv.components.cashApp === 'function';
 			const hasElementApi = window.customElements &&
@@ -151,13 +205,25 @@ define([
 			}
 
 			chAdapter.initialize(config);
-			const credentialsResponse = await commerceHubSession({ paymentCode: this.getCode() });
+			const credentialsResponse = await commerceHubSession({
+				paymentCode: this.getCode(),
+				form_key: window.FORM_KEY,
+			});
+
+			// An obsolete response must never replace the active session or SDK context.
+			if (!this.isCurrentCashAppGeneration(generation)) {
+				return null;
+			}
 			const credentials = credentialsResponse && credentialsResponse[chAdapter.credentialsKey];
 
 			if (!credentials) {
 				throw new Error($t('No credentials returned for the Cash App session.'));
 			}
 
+			if (typeof credentialsResponse.cashapp_can_save === 'boolean') {
+				// Eligibility is session-bound; the save choice is submitted with the order.
+				this.serverCanSave(credentialsResponse.cashapp_can_save);
+			}
 			this.additionalData.payment_session = credentials[chAdapter.sessionIdKey];
 			this.cashAppCredentials = credentials;
 
@@ -174,19 +240,29 @@ define([
 			return 'elements';
 		},
 
-		createCashAppElements: async function (config) {
+		createCashAppElements: async function (config, generation) {
 			const container = document.querySelector('#cashapp-button-container');
 			const credentials = this.cashAppCredentials || {};
 			const buttonConfig = config.buttonConfig || {};
 			const contextElement = document.createElement('fiserv-context');
 			const buttonElement = document.createElement('fiserv-cashapp-button');
 			const readyHandler = () => {
-				this.initializedAmount = this.getGrandTotal();
+				if (this.isCurrentCashAppGeneration(generation)) {
+					this.initializedAmount = this.getGrandTotal();
+				}
 			};
-			const approveHandler = (event) => this.handleApprove(event && event.detail);
-			const cancelHandler = (event) => this.handleCancel(event && event.detail);
-			const errorHandler = (event) => this.handleError(event && event.detail || event);
-			const contextErrorHandler = (event) => this.handleError(event && event.detail || event);
+			const approveHandler = () => this.handleApprove(generation);
+			const cancelHandler = (event) => {
+				if (this.isCurrentCashAppGeneration(generation)) {
+					this.handleCancel(event && event.detail);
+				}
+			};
+			const errorHandler = (event) => {
+				if (this.isCurrentCashAppGeneration(generation)) {
+					this.handleError(event && event.detail || event);
+				}
+			};
+			const contextErrorHandler = errorHandler;
 
 			if (!container) {
 				throw new Error($t('Cash App button container was not found.'));
@@ -212,7 +288,7 @@ define([
 			}
 
 			return {
-				destroy: function () {
+				destroy: () => {
 					buttonElement.removeEventListener('fiserv-cashapp-ready', readyHandler);
 					buttonElement.removeEventListener('fiserv-cashapp-success', approveHandler);
 					buttonElement.removeEventListener('fiserv-cashapp-cancel', cancelHandler);
@@ -238,9 +314,7 @@ define([
 				'access-token': credentials[chAdapter.accessTokenKey],
 				'merchant-id': config.merchantId,
 			};
-			const missingParameters = Object.keys(legacyParameters).filter(function (name) {
-				return !legacyParameters[name];
-			});
+			const missingParameters = Object.keys(legacyParameters).filter((name) => !legacyParameters[name]);
 
 			if (missingParameters.length > 0) {
 				throw new Error($t('The Cash App session did not return valid SDK initialization data.'));
@@ -258,7 +332,7 @@ define([
 			}
 		},
 
-		getCashAppOptions: function (config) {
+		getCashAppOptions: function (config, generation) {
 			const buttonConfig = config.buttonConfig || {};
 
 			return {
@@ -272,15 +346,24 @@ define([
 					},
 				},
 				hooks: {
-					onApprove: this.handleApprove.bind(this),
-					onCancel: this.handleCancel.bind(this),
-					onError: this.handleError.bind(this),
+					onApprove: () => this.handleApprove(generation),
+					onCancel: (data) => {
+						if (this.isCurrentCashAppGeneration(generation)) {
+							this.handleCancel(data);
+						}
+					},
+					onError: (error) => {
+						if (this.isCurrentCashAppGeneration(generation)) {
+							this.handleError(error);
+						}
+					},
 				},
 			};
 		},
 
-		handleApprove: function () {
-			if (!this.isPlaceOrderActionAllowed()) {
+		handleApprove: function (generation) {
+			if (!this.isCurrentCashAppGeneration(generation) ||
+				!this.isPlaceOrderActionAllowed() || !this.additionalData.payment_session) {
 				return;
 			}
 
@@ -293,16 +376,19 @@ define([
 			});
 		},
 
-		handleError: function (error) {
-			const message = error && (error.message || error.errorCode) || $t('Unable to initialize Cash App Pay.');
-
-			console.error('[Cash App]', error);
-			globalMessageList.addErrorMessage({ message: message });
+		handleError: function () {
+			globalMessageList.addErrorMessage({
+				message: $t('Unable to complete Cash App Pay. Please try again or select another payment method.'),
+			});
 		},
 
 		destroyCashApp: function () {
 			clearTimeout(this.reinitializeTimer);
 			this.initializationGeneration += 1;
+			this.pendingInitialization = false;
+			this.cashAppCredentials = null;
+			delete this.additionalData.payment_session;
+
 			if (this.cashAppHandle && typeof this.cashAppHandle.destroy === 'function') {
 				this.cashAppHandle.destroy();
 			}
@@ -327,9 +413,23 @@ define([
 		},
 
 		getData: function () {
+			if (this.isUsingSavedCashApp()) {
+				return {
+					method: this.getCode(),
+					additional_data: {
+						cashapp_use_saved: true,
+						cashapp_save_payment_method: false,
+					},
+				};
+			}
+
 			return {
 				method: this.getCode(),
-				additional_data: this.additionalData,
+				additional_data: {
+					...this.additionalData,
+					cashapp_use_saved: false,
+					cashapp_save_payment_method: this.canSaveCashApp() && this.saveCashApp() === true,
+				},
 			};
 		},
 
@@ -345,7 +445,7 @@ define([
 		},
 
 		initObservable: function () {
-			this._super().observe(['active']);
+			this._super().observe(['active', 'saveCashApp', 'serverCanSave', 'useSavedCashApp']);
 
 			return this;
 		},
