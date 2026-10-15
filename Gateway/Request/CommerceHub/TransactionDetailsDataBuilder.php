@@ -44,8 +44,9 @@ abstract class TransactionDetailsDataBuilder implements BuilderInterface
 
 		$data = $payment->getAdditionalInformation();
 		
+		$isVirtualCard = $payment->getMethod() === \Fiserv\Payments\Gateway\Config\AffirmVirtualCard\Config::CODE;
 		$tokenStrat = $this->chConfig->getTokenStrategy();
-		$createToken = !empty($data[VaultConfigProvider::IS_ACTIVE_CODE]) || $tokenStrat === TokenizationStrategy::ALWAYS;
+		$createToken = !$isVirtualCard && (!empty($data[VaultConfigProvider::IS_ACTIVE_CODE]) || $tokenStrat === TokenizationStrategy::ALWAYS);
 		$txnDetails->setCreateToken($createToken);
 		if ($createToken == true) 
 		{ 
@@ -56,7 +57,7 @@ abstract class TransactionDetailsDataBuilder implements BuilderInterface
 		
 		$txnDetails->setCaptureFlag($captureFlag);
 		$txnDetails->setMerchantOrderId($orderDO->getOrderIncrementId());
-		$txnDetails->setMerchantTransactionId(uniqid());
+		$txnDetails->setMerchantTransactionId($isVirtualCard ? 'avc-' . $orderIncrementId : uniqid());
 		$txnDetails->setAccountVerification(false);
 
 		$this->logger->logDebug(3, "Transaction Details Data Builder:\n" . $txnDetails->__toString(), "Order ID: $orderIncrementId");

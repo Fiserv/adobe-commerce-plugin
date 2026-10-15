@@ -18,6 +18,9 @@
 	<event name="payment_method_assign_data_fiserv_affirm">
 		<observer name="fiserv_affirm_data_assign" instance="Fiserv\Payments\Observer\PayPal\DataAssignObserver" />
 	</event>
+	<event name="payment_method_assign_data_fiserv_affirm_virutal_card">
+		<observer name="fiserv_affirm_virutal_card_data_assign" instance="Fiserv\Payments\Observer\CommerceHub\DataAssignObserver" />
+	</event>
 	<event name="controller_action_predispatch">
         <observer name="fiserv_process_pending_inquiries" instance="Fiserv\Payments\Observer\CommerceHub\ProcessPendingInquiriesObserver"/>
     </event>

@@ -1,0 +1,46 @@
+<!-- Use visible, not if: the radio afterRender must run before SDK availability is known. -->
+<div class="payment-method fiserv-affirmvirtualcard" data-bind="css: {'_active': (getCode() == isChecked())}, visible: canDisplayAffirmVirtualCard">
+	<div class="payment-method-title field choice">
+		<input type="radio"
+			name="payment[method]"
+			class="radio"
+			data-bind="attr: {'id': getCode()}, value: getCode(), checked: isChecked, click: selectPaymentMethod, visible: isRadioButtonVisible(), afterRender: initializeAffirmVirtualCard"/>
+		<label class="label" data-bind="attr: {'for': getCode()}"><span data-bind="text: getTitle()"></span></label>
+	</div>
+
+	<div class="payment-method-content">
+		<!-- ko foreach: getRegion('messages') -->
+		<!-- ko template: getTemplate() --><!-- /ko -->
+		<!-- /ko -->
+
+		<div class="payment-method-billing-address">
+			<!-- ko foreach: $parent.getRegion(getBillingAddressFormName()) -->
+			<!-- ko template: getTemplate() --><!-- /ko -->
+			<!-- /ko -->
+		</div>
+
+		<div class="checkout-agreements-block">
+			<!-- ko foreach: $parent.getRegion('before-place-order') -->
+			<!-- ko template: getTemplate() --><!-- /ko -->
+			<!-- /ko -->
+		</div>
+
+		<!-- Validate billing and agreements before rendering the SDK's inline modal button. -->
+		<div class="actions-toolbar" data-bind="visible: !isAffirmVirtualCardReady()">
+			<div class="primary">
+				<button type="button"
+					class="action primary checkout"
+					disabled="disabled"
+					data-bind="click: loadAffirmVirtualCardForm, enable: getCode() === isChecked() && canDisplayAffirmVirtualCard() && dependenciesAvailable() && !isPreparingAffirmVirtualCard() && !isAffirmVirtualCardReady() && !isPlaceOrderActionAllowed() && !_orderPending && !_orderComplete">
+					<span><!-- ko i18n: 'Continue / Retry' --><!-- /ko --></span>
+				</button>
+			</div>
+		</div>
+
+		<div id="affirmvirtualcard-button-container" data-bind="visible: getCode() === isChecked() && (isPreparingAffirmVirtualCard() || isAffirmVirtualCardReady())"></div>
+
+		<div class="privacyPolicy">
+			<span class="privacy-icon"></span><span><!-- ko i18n: 'Payments Powered by Fiserv.'--><!-- /ko --></span>&nbsp; <a target="_blank" href="https://www.fiserv.com/privacy"><!-- ko i18n: 'Privacy Notice'--><!-- /ko --></a>.
+		</div>
+	</div>
+</div>

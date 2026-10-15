@@ -483,6 +483,27 @@
 				<can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
 				<can_void>1</can_void>
 			</fiserv_pay_by_link>
+			<fiserv_affirm_virutal_card>
+				<active>1</active>
+				<payment_active>0</payment_active>
+				<title>Affirm Virtual Card</title>
+				<!-- Runtime payment action is inherited from payment/fiserv_affirm/payment_action. -->
+				<payment_action>AUTH</payment_action>
+				<model>FiservAffirmVirtualCardFacade</model>
+				<is_gateway>1</is_gateway>
+				<can_use_internal>0</can_use_internal>
+				<can_use_checkout>1</can_use_checkout>
+				<can_authorize>1</can_authorize>
+				<can_capture>1</can_capture>
+				<can_capture_partial>0</can_capture_partial>
+				<can_refund>0</can_refund>
+				<can_refund_partial_per_invoice>0</can_refund_partial_per_invoice>
+				<can_void>0</can_void>
+				<can_authorize_vault>0</can_authorize_vault>
+				<can_capture_vault>0</can_capture_vault>
+				<order_status>pending</order_status>
+				<group>fiserv_group</group>
+			</fiserv_affirm_virutal_card>
 		</payment>
 	</default>
 </config>

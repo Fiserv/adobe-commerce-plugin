@@ -38,6 +38,9 @@ class StoredCredentialsDataBuilder implements BuilderInterface
 	{
 		$paymentDO = $this->subjectReader->readPayment($buildSubject);
 		$payment = $paymentDO->getPayment();
+		if ($payment->getMethod() === \Fiserv\Payments\Gateway\Config\AffirmVirtualCard\Config::CODE) {
+			return [];
+		}
 		$orderDO = $paymentDO->getOrder();
 		$orderIncrementId = $orderDO->getOrderIncrementId();
 
@@ -104,4 +107,3 @@ class StoredCredentialsDataBuilder implements BuilderInterface
 		return is_array($decoded) ? $decoded : [];
 	}
 }
-

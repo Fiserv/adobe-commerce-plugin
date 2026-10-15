@@ -79,6 +79,9 @@ class VaultDetailsHandler implements HandlerInterface
 		$paymentDO = $this->subjectReader->readPayment($handlingSubject);
 		$chResponse = $this->subjectReader->readChResponse($response)[\Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient::RESPONSE_KEY];
 		$payment = $paymentDO->getPayment();
+		if ($payment->getMethod() === \Fiserv\Payments\Gateway\Config\AffirmVirtualCard\Config::CODE) {
+			return;
+		}
 		
 		$tokenStrat = $this->config->getTokenStrategy();
 		$storeToken = $payment->getStoreVault() === TransactionDetailsDataBuilder::KEY_CREATE_TOKEN || 

@@ -11,6 +11,8 @@ use Fiserv\Payments\Lib\CommerceHub\Model\PaymentSession;
 use Magento\Payment\Gateway\Request\BuilderInterface;
 use Magento\Payment\Helper\Formatter;
 use Fiserv\Payments\Logger\MultiLevelLogger;
+use Fiserv\Payments\Model\AffirmVirtualCard\SessionRegistry;
+use Fiserv\Payments\Gateway\Config\AffirmVirtualCard\Config as VirtualCardConfig;
 
 /**
  * Payment Data Builder
@@ -33,16 +35,24 @@ class SessionSourceDataBuilder implements BuilderInterface
 	private $subjectReader;
 
 	/**
-	 * @param MultiLevelLogger $logger
+	 * @var SessionRegistry
+	 */
+	private SessionRegistry $virtualCardSessions;
+
+	/**
 	 * @param SubjectReader $subjectReader
+	 * @param MultiLevelLogger $logger
+	 * @param SessionRegistry $virtualCardSessions
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */
 	public function __construct(
 		SubjectReader $subjectReader,
-		MultiLevelLogger $logger
+		MultiLevelLogger $logger,
+		SessionRegistry $virtualCardSessions
 	) {
 		$this->subjectReader = $subjectReader;
 		$this->logger = $logger;
+		$this->virtualCardSessions = $virtualCardSessions;
 	}
 
 	/**
@@ -56,7 +66,17 @@ class SessionSourceDataBuilder implements BuilderInterface
 		$orderIncrementId = $orderDO->getOrderIncrementId();
 		
 		$sessionId = $payment->getAdditionalInformation(DataAssignObserver::SESSION_ID_KEY);
-		
+		if ($payment->getMethod() === VirtualCardConfig::CODE) {
+			$order = $payment->getOrder();
+			$this->virtualCardSessions->consume(
+				is_string($sessionId) ? $sessionId : '',
+				(int) $order->getQuoteId(),
+				(int) $orderDO->getStoreId(),
+				(float) $this->subjectReader->readAmount($buildSubject),
+				(string) $orderDO->getCurrencyCode()
+			);
+		}
+
 		$source = new PaymentSession();
 		$source->setSourceType(self::PAYMENT_SESSION_SOURCE_TYPE);
 		$source->setSessionId($sessionId);

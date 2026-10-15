@@ -174,4 +174,17 @@
 			<column name="created_at"/>
 		</index>
 	</table>
+	<table name="fiserv_affirm_virtual_card_session" resource="default" engine="innodb" comment="Single-use Affirm Virtual Card Checkout Sessions">
+		<column xsi:type="varchar" name="session_hash" length="64" nullable="false" comment="SHA256 of Session Reference"/>
+		<column xsi:type="int" name="quote_id" unsigned="true" nullable="false" comment="Quote ID"/>
+		<column xsi:type="int" name="store_id" unsigned="true" nullable="false" comment="Store ID"/>
+		<column xsi:type="decimal" name="amount" precision="20" scale="4" nullable="false" comment="Session Amount"/>
+		<column xsi:type="varchar" name="currency" length="3" nullable="false" comment="Currency"/>
+		<column xsi:type="varchar" name="payment_action" length="32" nullable="false" comment="Configured Intent"/>
+		<column xsi:type="varchar" name="status" length="16" nullable="false" default="ready" comment="ready, consumed, invalid"/>
+		<column xsi:type="timestamp" name="expires_at" nullable="false" comment="Local Validity Deadline"/>
+		<constraint xsi:type="primary" referenceId="PRIMARY"><column name="session_hash"/></constraint>
+		<constraint xsi:type="unique" referenceId="FISERV_AFFIRM_VCN_QUOTE_UNIQUE"><column name="quote_id"/></constraint>
+		<index referenceId="FISERV_AFFIRM_VCN_SESSION_QUOTE" indexType="btree"><column name="quote_id"/></index>
+	</table>
 </schema>

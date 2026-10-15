@@ -421,7 +421,6 @@
 			</argument>
 		</arguments>
 	</virtualType>
-
 	<virtualType name="FiservChargesCancelRequest" type="Fiserv\Payments\Gateway\Request\CommerceHub\Composite\CancelComposite">
 		<arguments>
 			<argument name="builders" xsi:type="array">
@@ -482,6 +481,7 @@
 			</argument>
 		</arguments>
 	</virtualType>
+
 	<!-- Error Mapping  -->
 	<virtualType name="Fiserv\Payments\Gateway\ErrorMapper\CommerceHub\VirtualConfigReader" type="Magento\Payment\Gateway\ErrorMapper\VirtualConfigReader">
 		<arguments>
@@ -869,7 +869,8 @@
             </argument>
         </arguments>
     </type>
-    <virtualType name="FiservOrdersAuthorizeCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+
+	<virtualType name="FiservOrdersAuthorizeCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
 		<arguments>
 			<argument name="requestBuilder" xsi:type="object">FiservOrdersAuthorizeRequest</argument>
 			<argument name="transferFactory" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\TransferFactory</argument>
@@ -1522,6 +1523,52 @@
 	</type>
 	<type name="Magento\Backend\Block\Dashboard\Grids">
 		<plugin name="fiserv_payments_dashboard_setlayout_plugin" type="Fiserv\Payments\Plugin\Grid\SetLayoutPlugin" sortOrder="10"/>
+	</type>
+
+	<!-- Affirm Virtual Card uses standard card commands, not Orders API. -->
+	<virtualType name="FiservAffirmVirtualCardFacade" type="Magento\Payment\Model\Method\Adapter">
+		<arguments>
+			<argument name="code" xsi:type="const">Fiserv\Payments\Model\Config\AffirmVirtualCard\ConfigProvider::CODE</argument>
+			<argument name="formBlockType" xsi:type="string">Fiserv\Payments\Block\CommerceHub\Form</argument>
+			<argument name="infoBlockType" xsi:type="string">Magento\Payment\Block\ConfigurableInfo</argument>
+			<argument name="valueHandlerPool" xsi:type="object">FiservAffirmVirtualCardValueHandlerPool</argument>
+			<argument name="validatorPool" xsi:type="object">FiservChargesValidatorPool</argument>
+			<argument name="commandPool" xsi:type="object">FiservChargesCommandPool</argument>
+		</arguments>
+	</virtualType>
+	<virtualType name="FiservAffirmVirtualCardValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+		<arguments>
+			<argument name="handlers" xsi:type="array">
+				<item name="default" xsi:type="string">FiservAffirmVirtualCardValueHandler</item>
+				<item name="active" xsi:type="string">FiservAffirmVirtualCardValueHandler</item>
+				<item name="payment_action" xsi:type="string">FiservAffirmVirtualCardValueHandler</item>
+				<!-- Refund and void remain disabled until VCN capability support is confirmed. -->
+			</argument>
+		</arguments>
+	</virtualType>
+	<virtualType name="FiservAffirmVirtualCardValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+		<arguments>
+			<argument name="configInterface" xsi:type="object">Fiserv\Payments\Gateway\Config\AffirmVirtualCard\Config</argument>
+		</arguments>
+	</virtualType>
+	<type name="Fiserv\Payments\Gateway\Config\AffirmVirtualCard\Config">
+		<arguments>
+			<argument name="methodCode" xsi:type="const">Fiserv\Payments\Model\Config\AffirmVirtualCard\ConfigProvider::CODE</argument>
+		</arguments>
+	</type>
+	<type name="Magento\Payment\Gateway\Command\CommandManagerPool">
+		<arguments>
+			<argument name="executors" xsi:type="array">
+				<item name="fiserv_affirm_virutal_card" xsi:type="string">FiservChargesCommandManager</item>
+			</argument>
+		</arguments>
+	</type>
+	<type name="Magento\Checkout\Model\CompositeConfigProvider">
+		<arguments>
+			<argument name="configProviders" xsi:type="array">
+				<item name="fiserv_affirm_virutal_card" xsi:type="object">Fiserv\Payments\Model\Config\AffirmVirtualCard\ConfigProvider</item>
+			</argument>
+		</arguments>
 	</type>
 
 </config>

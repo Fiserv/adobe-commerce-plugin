@@ -66,6 +66,17 @@ class DataAssignObserver extends AbstractDataAssignObserver
 
 		$paymentInfo = $this->readPaymentModelArgument($observer);
 
+		if ($paymentInfo->getMethod() === \Fiserv\Payments\Gateway\Config\AffirmVirtualCard\Config::CODE) {
+			foreach ($this->additionalInformationList as $key) {
+				$paymentInfo->unsAdditionalInformation($key);
+			}
+			$sessionId = $additionalData[self::SESSION_ID_KEY] ?? null;
+			if (is_string($sessionId) && $sessionId !== '' && strlen($sessionId) <= 1024) {
+				$paymentInfo->setAdditionalInformation(self::SESSION_ID_KEY, $sessionId);
+			}
+			return;
+		}
+
 		foreach ($this->additionalInformationList as $additionalInformationKey) {
 			if (isset($additionalData[$additionalInformationKey])) {
 				$paymentInfo->setAdditionalInformation(

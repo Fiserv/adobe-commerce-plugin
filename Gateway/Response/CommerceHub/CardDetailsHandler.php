@@ -51,6 +51,9 @@ class CardDetailsHandler implements HandlerInterface
 
 		$paymentDO = $this->subjectReader->readPayment($handlingSubject);
 		$payment = $paymentDO->getPayment();
+		if ($payment->getMethod() === \Fiserv\Payments\Gateway\Config\AffirmVirtualCard\Config::CODE) {
+			return;
+		}
 		ContextHelper::assertOrderPayment($payment);
 
 		$cardDetails = $chResponse["source"]["card"];

@@ -241,14 +241,14 @@
                         <comment>Set the style for the Apple Pay button.</comment>
                         <source_model>Fiserv\Payments\Model\Source\ApplePay\ButtonStyle</source_model>
                         <config_path>payment/fiserv_applepay/applepay_button_style</config_path>
-                    </field>
+					</field>
 					<field id="applepay_button_type" translate="label comment tooltip" type="select" sortOrder="101" showInDefault="1" showInWebsite="1" showInStore="0">
                         <label>Apple Pay Button Type</label>
                         <comment>Set the type for the Apple Pay button.</comment>
                         <source_model>Fiserv\Payments\Model\Source\ApplePay\ButtonType</source_model>
                         <config_path>payment/fiserv_applepay/applepay_button_type</config_path>
-                    </field>
-                </group>
+					</field>
+				</group>
 				<group id="sdc_custom" translate="label comment tooltip" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="7">
 					<label>Payment Form Customization</label>
 					<comment><![CDATA[<a href="https://developer.fiserv.com/product/CommerceHub/docs/?path=docs/Online-Mobile-Digital/Checkout/Hosted-Fields/Hosted-Fields-Customization.md&branch=main">Payment Form Customization Documentation.</a>]]></comment>
@@ -1404,6 +1404,24 @@
 						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 						<config_path>payment/fiserv_pay_by_link/optional_note</config_path>
 					</field> -->
+				</group>
+				<group id="fiserv_affirm_virutal_card" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="20">
+					<label>Affirm Virtual Card</label>
+					<attribute type="expanded">0</attribute>
+					<frontend_model>Magento\Config\Block\System\Config\Form\Fieldset</frontend_model>
+					<field id="active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Enable Affirm Virtual Card</label>
+						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+						<config_path>payment/fiserv_affirm_virutal_card/payment_active</config_path>
+						<comment>Choose Yes to enable Affirm Virtual Card as a payment method. No to disable. Requires Affirm to be enabled and Commerce Hub Virtual Card eligibility. Uses the existing Affirm Charge Type.</comment>
+						<depends>
+							<field id="payment/fiserv_payments/fiserv_affirm/active">1</field>
+						</depends>
+					</field>
+					<field id="affirmvirtualcard_title" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Payment Method Title</label>
+						<config_path>payment/fiserv_affirm_virutal_card/title</config_path>
+					</field>
 				</group>
 		</group>
 		</section>
