@@ -182,19 +182,16 @@ abstract class TransactionResponseValidator extends AbstractValidator
 		}
 
 		$body = $response[HttpClient::RESPONSE_KEY];
-		$messages = [$body['riskAssessmentResult']['ruleDescription'] ?? null];
-		foreach ($body['processorResponseDetails']['additionalInfo'] ?? [] as $info) {
-			if (($info['name'] ?? null) === 'decline-reason') {
-				$messages[] = $info['value'] ?? null;
-			}
-		}
+		$messages = [$body['processorResponseDetails']['responseMessage'] ?? null];
 		foreach (['errorMessage', 'responseMessage'] as $field) {
 			$messages[] = $this->subjectReader->getValueSafely($response, $field, $this->paths[$field]);
 		}
-		$messages[] = $body['processorResponseDetails']['responseMessage'] ?? null;
 		foreach ($messages as $message) {
 			if (is_string($message)) {
 				$message = trim(strip_tags($message));
+				if (strpos($message, 'Fraud Error:') === 0) {
+					throw new CommandException(__('Fraud Error'));
+				}
 				if ($message !== '') {
 					throw new CommandException(__('%1', $message));
 				}
