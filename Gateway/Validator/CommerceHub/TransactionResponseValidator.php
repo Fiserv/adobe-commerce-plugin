@@ -3,6 +3,7 @@ namespace Fiserv\Payments\Gateway\Validator\CommerceHub;
 
 use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient;
+use Magento\Payment\Gateway\Command\CommandException;
 use Magento\Payment\Gateway\Validator\AbstractValidator;
 use Magento\Payment\Gateway\Validator\ResultInterface;
 use Magento\Payment\Gateway\Validator\ResultInterfaceFactory;
@@ -134,6 +135,7 @@ abstract class TransactionResponseValidator extends AbstractValidator
 			$this->logger->logError(2, "Status Code: " . $chRawResponse[HttpClient::STATUS_CODE_KEY], "Order ID: " . ($orderIncrementId ?? "Not found"));
 			$chRawResponse[HttpClient::RESPONSE_KEY]['countryCode'] = $countryCode;
 			$this->failedTransactionManager->createFailedTransaction($orderIncrementId, $chRawResponse, $this->paths, $this->getPaymentAction(), $surchargeAmount);
+			$this->throwDeclineException($chRawResponse);
 			return $this->createResult(false, $errorMessages, $errorCodes);
 		}
 
@@ -160,12 +162,34 @@ abstract class TransactionResponseValidator extends AbstractValidator
 			$chRawResponse[HttpClient::RESPONSE_KEY]['countryCode'] = $countryCode;
 
 			$this->failedTransactionManager->createFailedTransaction($orderIncrementId, $chRawResponse, $this->paths, $this->getPaymentAction(), $surchargeAmount);
+			$this->throwDeclineException($chRawResponse);
 			return $this->createResult(false, $errorMessages, $errorCodes);
 		}
 
 		$this->logger->logInfo(1, "Transaction success", "Order ID: " . ($orderIncrementId ?? "Not found"));
 		$this->logger->logInfo(1, "Transaction ID: " . ($transactionId ?? "Not found"), "Order ID: " . ($orderIncrementId ?? "Not found"));
 		return $this->createResult(true);
+	}
+
+	/** Display a decline reason without passing it through the static error mapper. */
+	protected function throwDeclineException(array $response): void
+	{
+		$status = (int) ($response[HttpClient::STATUS_CODE_KEY] ?? 0);
+		$state = $this->subjectReader->getValueSafely($response, 'transactionState', $this->paths['transactionState']);
+		if (!in_array($status, [self::HTTP_OK, self::HTTP_CREATED, self::HTTP_UNAUTHORIZED], true)
+			|| ($state !== self::STATE_DECLINED && $status !== self::HTTP_UNAUTHORIZED)) {
+			return;
+		}
+
+		foreach (['errorMessage', 'responseMessage'] as $field) {
+			$message = $this->subjectReader->getValueSafely($response, $field, $this->paths[$field]);
+			if (is_string($message)) {
+				$message = trim(strip_tags($message));
+				if ($message !== '') {
+					throw new CommandException(__('%1', $message));
+				}
+			}
+		}
 	}
 
 	protected function isStatusSuccessful($statusCode)

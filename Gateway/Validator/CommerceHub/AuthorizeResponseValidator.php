@@ -103,6 +103,7 @@ class AuthorizeResponseValidator extends TransactionResponseValidator
 			$this->logger->logError(2, "Status Code: " . $statusCode, "Order ID: " . ($orderIncrementId ?? "Not found"));
 			
 			$this->failedTransactionManager->createFailedTransaction($orderIncrementId, $chRawResponse, $paths, $this->getPaymentAction(), $surchargeAmount);
+			$this->throwDeclineException($chRawResponse);
 			return $this->createResult(false, $errorMessages, $errorCodes);
 		}
 
