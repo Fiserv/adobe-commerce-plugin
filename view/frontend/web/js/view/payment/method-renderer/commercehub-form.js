@@ -15,6 +15,7 @@ define(
 		'Magento_Checkout/js/model/quote',
 		'Magento_Checkout/js/checkout-data',
 		'Magento_Ui/js/model/messageList',
+		'Magento_Checkout/js/action/place-order',
 		'Magento_Vault/js/view/payment/vault-enabler',
 		'Magento_Checkout/js/model/full-screen-loader',
 		'Magento_Checkout/js/model/payment/additional-validators',
@@ -34,6 +35,7 @@ define(
 		quote,
 		checkoutData,
 		globalMessageList,
+		placeOrderAction,
 		VaultEnabler,
 		fullScreenLoader,
 		additionalValidators,
@@ -484,14 +486,18 @@ define(
 			const self = this;
 
 			if (key) {
-					$(document).one("ajaxError", (ev,xhr) => { this.placeOrderFailureHandler(ev,xhr); } );
 					return self._super();
 				}
 
 				return false;
 			},
 
-			placeOrderFailureHandler: function (ev,xhr) {
+			getPlaceOrderDeferredObject: function () {
+				return $.when(placeOrderAction(this.getData(), globalMessageList))
+					.fail(() => { this.placeOrderFailureHandler(); });
+			},
+
+			placeOrderFailureHandler: function () {
 				chAdapter.destroyIframe();
 				this.loadIframe();
 				this.cardBrandChangeHandler(null);
