@@ -176,13 +176,23 @@ abstract class TransactionResponseValidator extends AbstractValidator
 	{
 		$status = (int) ($response[HttpClient::STATUS_CODE_KEY] ?? 0);
 		$state = $this->subjectReader->getValueSafely($response, 'transactionState', $this->paths['transactionState']);
-		if (!in_array($status, [self::HTTP_OK, self::HTTP_CREATED, self::HTTP_UNAUTHORIZED], true)
+		if ($status < 200 || $status >= 500 || in_array($status, [401, 403], true)
 			|| ($state !== self::STATE_DECLINED && $status !== self::HTTP_UNAUTHORIZED)) {
 			return;
 		}
 
+		$body = $response[HttpClient::RESPONSE_KEY];
+		$messages = [$body['riskAssessmentResult']['ruleDescription'] ?? null];
+		foreach ($body['processorResponseDetails']['additionalInfo'] ?? [] as $info) {
+			if (($info['name'] ?? null) === 'decline-reason') {
+				$messages[] = $info['value'] ?? null;
+			}
+		}
 		foreach (['errorMessage', 'responseMessage'] as $field) {
-			$message = $this->subjectReader->getValueSafely($response, $field, $this->paths[$field]);
+			$messages[] = $this->subjectReader->getValueSafely($response, $field, $this->paths[$field]);
+		}
+		$messages[] = $body['processorResponseDetails']['responseMessage'] ?? null;
+		foreach ($messages as $message) {
 			if (is_string($message)) {
 				$message = trim(strip_tags($message));
 				if ($message !== '') {
