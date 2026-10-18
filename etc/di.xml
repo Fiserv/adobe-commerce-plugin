@@ -461,7 +461,6 @@
 			<argument name="handlers" xsi:type="array">
 				<item name="payment_details" xsi:type="string">Fiserv\Payments\Gateway\Response\CommerceHub\PaymentDetailsHandler</item>
 				<!-- <item name="settlement" xsi:type="string">Fiserv\Payments\Gateway\Response\CommerceHub\SettleHandler</item> -->
-				<item name="card_details" xsi:type="string">Fiserv\Payments\Gateway\Response\CommerceHub\CardDetailsHandler</item>
 				<item name="surcharge" xsi:type="string">Fiserv\Payments\Gateway\Response\CommerceHub\SurchargeResponseHandler</item>
 			</argument>
 		</arguments>
