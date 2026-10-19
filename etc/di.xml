@@ -481,6 +481,7 @@
 			</argument>
 		</arguments>
 	</virtualType>
+
 	<!-- Error Mapping  -->
 	<virtualType name="Fiserv\Payments\Gateway\ErrorMapper\CommerceHub\VirtualConfigReader" type="Magento\Payment\Gateway\ErrorMapper\VirtualConfigReader">
 		<arguments>
@@ -868,7 +869,7 @@
             </argument>
         </arguments>
     </type>
-    <virtualType name="FiservOrdersAuthorizeCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+	<virtualType name="FiservOrdersAuthorizeCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
 		<arguments>
 			<argument name="requestBuilder" xsi:type="object">FiservOrdersAuthorizeRequest</argument>
 			<argument name="transferFactory" xsi:type="object">Fiserv\Payments\Gateway\Http\CommerceHub\TransferFactory</argument>
@@ -1523,4 +1524,46 @@
 		<plugin name="fiserv_payments_dashboard_setlayout_plugin" type="Fiserv\Payments\Plugin\Grid\SetLayoutPlugin" sortOrder="10"/>
 	</type>
 
+	<!-- Klarna Facade -->
+	<virtualType name="FiservKlarnaFacade" type="Magento\Payment\Model\Method\Adapter">
+		<arguments>
+			<argument name="code" xsi:type="const">Fiserv\Payments\Model\Config\Klarna\ConfigProvider::CODE</argument>
+			<argument name="formBlockType" xsi:type="string">Fiserv\Payments\Block\CommerceHub\Form</argument>
+			<argument name="infoBlockType" xsi:type="string">Magento\Payment\Block\ConfigurableInfo</argument>
+			<argument name="valueHandlerPool" xsi:type="object">FiservKlarnaValueHandlerPool</argument>
+			<argument name="validatorPool" xsi:type="object">FiservChargesValidatorPool</argument>
+			<argument name="commandPool" xsi:type="object">FiservChargesCommandPool</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservKlarnaValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+		<arguments>
+			<argument name="handlers" xsi:type="array">
+				<item name="default" xsi:type="string">FiservKlarnaValueHandler</item>
+				<item name="can_void" xsi:type="string">Fiserv\Payments\Gateway\Config\CanVoidHandler</item>
+				<item name="can_refund" xsi:type="string">Fiserv\Payments\Gateway\Config\CanRefundHandler</item>
+				<item name="can_cancel" xsi:type="string">Fiserv\Payments\Gateway\Config\CanVoidHandler</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservKlarnaValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+		<arguments>
+			<argument name="configInterface" xsi:type="object">Fiserv\Payments\Gateway\Config\Klarna\Config</argument>
+		</arguments>
+	</virtualType>
+
+	<type name="Fiserv\Payments\Gateway\Config\Klarna\Config">
+		<arguments>
+			<argument name="methodCode" xsi:type="const">Fiserv\Payments\Model\Config\Klarna\ConfigProvider::CODE</argument>
+		</arguments>
+	</type>
+
+	<type name="Magento\Checkout\Model\CompositeConfigProvider">
+		<arguments>
+			<argument name="configProviders" xsi:type="array">
+				<item name="fiserv_klarna" xsi:type="object">Fiserv\Payments\Model\Config\Klarna\ConfigProvider</item>
+			</argument>
+		</arguments>
+	</type>
 </config>
