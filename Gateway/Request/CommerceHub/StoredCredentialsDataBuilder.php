@@ -6,6 +6,9 @@ namespace Fiserv\Payments\Gateway\Request\CommerceHub;
 use Fiserv\Payments\Gateway\Subject\CommerceHub\SubjectReader;
 use Fiserv\Payments\Lib\CommerceHub\Model\StoredCredentials;
 use Fiserv\Payments\Logger\MultiLevelLogger;
+use Magento\Framework\App\Area;
+use Magento\Framework\App\State;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Payment\Gateway\Request\BuilderInterface;
 use Magento\Vault\Model\Ui\VaultConfigProvider;
 use Magento\Vault\Api\Data\PaymentTokenInterface;
@@ -22,16 +25,20 @@ class StoredCredentialsDataBuilder implements BuilderInterface
 	const SEQUENCE_FIRST = 'FIRST';
 	const SEQUENCE_SUBSEQUENT = 'SUBSEQUENT';
 	const INITIATOR_CARD_HOLDER = 'CARD_HOLDER';
+	const INITIATOR_MERCHANT = 'MERCHANT';
 
 	private $subjectReader;
 	private $logger;
+	private $appState;
 
 	public function __construct(
 		SubjectReader $subjectReader,
-		MultiLevelLogger $logger
+		MultiLevelLogger $logger,
+		State $appState
 	) {
 		$this->subjectReader = $subjectReader;
 		$this->logger = $logger;
+		$this->appState = $appState;
 	}
 
 	public function build(array $buildSubject)
@@ -56,7 +63,10 @@ class StoredCredentialsDataBuilder implements BuilderInterface
 			}
 
 			$storedCredentials = new StoredCredentials();
-			$storedCredentials->setInitiator(self::INITIATOR_CARD_HOLDER);
+			// Saved-card payments created in Adobe Admin are merchant-initiated.
+			$storedCredentials->setInitiator(
+				$this->isAdminArea() ? self::INITIATOR_MERCHANT : self::INITIATOR_CARD_HOLDER
+			);
 			$storedCredentials->setSequence(self::SEQUENCE_SUBSEQUENT);
 			$storedCredentials->setScheduled(false);
 			if (!empty($storedAccountReference)) {
@@ -91,6 +101,15 @@ class StoredCredentialsDataBuilder implements BuilderInterface
 		}
 
 		return [];
+	}
+
+	private function isAdminArea(): bool
+	{
+		try {
+			return $this->appState->getAreaCode() === Area::AREA_ADMINHTML;
+		} catch (LocalizedException $exception) {
+			return false;
+		}
 	}
 
 	private function getTokenDetailsArray(PaymentTokenInterface $vaultPaymentToken): array
