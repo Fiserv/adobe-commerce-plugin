@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace Fiserv\Payments\Gateway\Command\PayByLink;
 
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Payment\Gateway\CommandInterface;
 use Magento\Payment\Gateway\Request\BuilderInterface;
 use Magento\Payment\Gateway\Response\HandlerInterface;
@@ -30,6 +31,11 @@ use Fiserv\Payments\Logger\MultiLevelLogger;
  */
 class CreateSessionCommand implements CommandInterface
 {
+    /**
+     * Prefix of the error message shown to the admin when session creation fails.
+     */
+    public const FAILURE_MESSAGE_PREFIX = 'Pay by Link order failed.';
+
     /**
      * @var BuilderInterface
      */
@@ -146,23 +152,30 @@ class CreateSessionCommand implements CommandInterface
         } catch (\Throwable $e) {
             $resolvedError = $this->errorResolver->resolve($e);
 
-            $this->logger->logError(
-                1,
-                "Failed to create Pay by Link session",
+            $this->logger->logError(1,"Failed to create Pay by Link session",
                 json_encode([
                     'timestamp' => gmdate('c'),
                     'order_id' => $order->getIncrementId(),
                     'merchant_id' => (string) $this->chConfig->getMerchantId($order->getStoreId()),
-                    'failure_type' => $resolvedError['failure_type'],
                     'error_code' => $resolvedError['error_code'],
                     'http_status' => $resolvedError['http_status'],
                     'technical_message' => $resolvedError['technical_message'],
                 ], JSON_UNESCAPED_SLASHES)
-            );
 
-            // Do not throw — the order is being placed; record the failure
-            // on the payment so the admin can retry generating the link.
-            $this->paymentLinkHandler->applyErrorState($payment, $resolvedError);
+
+            // Record the failed transaction (failed_transaction row) first, then abort
+            // placement: the OrderPlace plugin turns the exception into a failed_order
+            // row so the order shows on the Declines dashboard instead of as a real order.
+            $this->paymentLinkHandler->applyErrorState($payment, $resolvedError, $e);
+
+            throw new LocalizedException(
+                __(
+                    '%1 %2 (Reference Code: %3)',
+                    self::FAILURE_MESSAGE_PREFIX,
+                    $resolvedError['user_message'],
+                    $resolvedError['error_code']
+                )
+            );
         }
     }
 }

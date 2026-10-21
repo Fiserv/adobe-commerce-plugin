@@ -9,6 +9,9 @@ use Fiserv\Payments\Model\Adapter\CommerceHub\PaymentLinkSessionRequest;
 use Fiserv\Payments\Model\Adapter\CommerceHub\TransactionInquiryRequest;
 use Fiserv\Payments\Gateway\Config\PayByLink\Config as PblConfig;
 use Fiserv\Payments\Gateway\Config\CommerceHub\Config as ChConfig;
+use Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient;
+use Fiserv\Payments\Gateway\Validator\CommerceHub\TransactionResponseValidator;
+use Fiserv\Payments\Model\Service\CommerceHub\FailedTransactionManager;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 use Fiserv\Payments\Model\PayByLink\PaymentLinkErrorResolver;
 use Fiserv\Payments\Lib\CommerceHub\Model\BillingAddress;
@@ -66,6 +69,9 @@ class PaymentLinkHandler
      */
     private $transactionInquiry;
 
+    /** @var FailedTransactionManager */
+    private $failedTransactionManager;
+
     public function __construct(
         OrderRepositoryInterface $orderRepository,
         PaymentLinkSessionRequest $sessionRequest,
@@ -74,7 +80,8 @@ class PaymentLinkHandler
         PaymentLinkErrorResolver $errorResolver,
         ChConfig $chConfig,
         SearchCriteriaBuilder $searchCriteriaBuilder,
-        TransactionInquiryRequest $transactionInquiry
+        TransactionInquiryRequest $transactionInquiry,
+        FailedTransactionManager $failedTransactionManager
     ) {
         $this->orderRepository = $orderRepository;
         $this->sessionRequest = $sessionRequest;
@@ -84,6 +91,7 @@ class PaymentLinkHandler
         $this->chConfig = $chConfig;
         $this->searchCriteriaBuilder = $searchCriteriaBuilder;
         $this->transactionInquiry = $transactionInquiry;
+        $this->failedTransactionManager = $failedTransactionManager;
     }
 
     /**
@@ -161,7 +169,7 @@ class PaymentLinkHandler
             $resolvedError = $this->errorResolver->resolve($e);
 
             if ($payment) {
-                $this->applyErrorState($payment, $resolvedError);
+                $this->applyErrorState($payment, $resolvedError, $e);
             }
             if ($order) {
                 $this->orderRepository->save($order);
@@ -225,9 +233,10 @@ class PaymentLinkHandler
      *
      * @param \Magento\Sales\Model\Order\Payment $payment
      * @param array $resolvedError
+     * @param \Throwable|null $exception Original failure, when recording a session attempt.
      * @return void
      */
-    public function applyErrorState($payment, array $resolvedError)
+    public function applyErrorState($payment, array $resolvedError, ?\Throwable $exception = null)
     {
         $payment->setAdditionalInformation('pbl_error', $resolvedError['user_message']);
         $payment->setAdditionalInformation('pbl_error_guidance', $resolvedError['guidance']);
@@ -236,6 +245,33 @@ class PaymentLinkHandler
         $payment->setAdditionalInformation('pbl_status', 'failed');
 
         $this->clearTempExpiryFields($payment);
+
+        if ($exception !== null) {
+            try {
+                $order = $payment->getOrder();
+                $response = $exception instanceof PaymentLinkSessionException ? $exception->getResponseBody() : [];
+
+                $this->failedTransactionManager->createFailedTransaction(
+                    (string) $order->getIncrementId(),
+                    [HttpClient::RESPONSE_KEY => $response],
+                    TransactionResponseValidator::RESPONSE_PATHS,
+                    'pbl_session_create',
+                    null,
+                    [
+                        'transaction_state' => TransactionResponseValidator::STATE_GATEWAY_ERROR,
+                        'total_amount' => $order->getGrandTotal(),
+                        'currency' => $order->getOrderCurrencyCode(),
+                        'merchant_id' => $this->chConfig->getMerchantId($order->getStoreId()),
+                        'country' => $order->getBillingAddress() ? $order->getBillingAddress()->getCountryId() : null,
+                    ]
+                );
+            } catch (\Throwable $e) {
+                $this->logger->logError(1, 'Unable to record Pay by Link session failure', json_encode([
+                    'order_id' => (string) $payment->getOrder()->getIncrementId(),
+                    'exception_type' => get_class($e),
+                ]));
+            }
+        }
     }
 
     /**
