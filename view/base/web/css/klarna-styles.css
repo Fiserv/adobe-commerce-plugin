@@ -1,0 +1,11 @@
+#klarna-button-container {
+	margin: 15px 0;
+}
+
+.fiserv-klarna-logo {
+	height: 30px;
+	width: auto;
+	max-width: 100%;
+	vertical-align: middle;
+	display: inline-block;
+}

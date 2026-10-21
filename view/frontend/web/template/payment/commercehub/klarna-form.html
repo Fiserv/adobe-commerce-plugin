@@ -1,0 +1,44 @@
+<div class="payment-method" data-bind="css: {'_active': (getCode() == isChecked())}">
+	<div class="payment-method-title field choice">
+		<input type="radio"
+			name="payment[method]"
+			class="radio"
+			data-bind="attr: {'id': getCode()}, value: getCode(), checked: isChecked, click: selectPaymentMethod"/>
+		<label class="label" data-bind="attr: {'for': getCode()}">
+			<img class="fiserv-klarna-logo" data-bind="attr: {src: require.toUrl('Fiserv_Payments/images/klarna_logo.png')}" alt="Klarna"/>
+		</label>
+	</div>
+
+	<div class="payment-method-content">
+		<!-- ko foreach: getRegion('messages') -->
+		<!-- ko template: getTemplate() --><!-- /ko -->
+		<!--/ko-->
+
+		<div class="payment-method-billing-address">
+			<!-- ko foreach: $parent.getRegion(getBillingAddressFormName()) -->
+			<!-- ko template: getTemplate() --><!-- /ko -->
+			<!--/ko-->
+		</div>
+
+		<p role="status" aria-live="polite" data-bind="visible: klarnaLoading, i18n: 'Loading Klarna...'"></p>
+		<p role="status" aria-live="polite" data-bind="visible: klarnaUnavailable, i18n: 'Klarna is unavailable. Please retry or choose another payment method.'"></p>
+		<button type="button"
+			class="action secondary fiserv-klarna-retry"
+			data-bind="click: retryKlarna, visible: klarnaUnavailable, disable: klarnaLoading">
+			<span data-bind="i18n: 'Retry Klarna'"></span>
+		</button>
+
+		<!-- Klarna Button -->
+		<div data-bind="visible: isPlaceOrderActionAllowed, afterRender: initializeKlarna" id="klarna-button-container"></div>
+
+		<div class="checkout-agreements-block">
+			<!-- ko foreach: $parent.getRegion('before-place-order') -->
+			<!-- ko template: getTemplate() --><!-- /ko -->
+			<!--/ko-->
+		</div>
+
+		<div class="privacyPolicy">
+			<span class="privacy-icon"></span><span><!-- ko i18n: 'Payments Powered by Fiserv.'--><!-- /ko --></span>&nbsp; <a target="_blank" href="https://www.fiserv.com/privacy"><!-- ko i18n: 'Privacy Notice'--><!-- /ko --></a>.
+		</div>
+	</div>
+</div>

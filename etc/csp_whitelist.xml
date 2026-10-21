@@ -19,10 +19,13 @@
                 <value id="samsung-pay-sdk-button" type="host">https://resource.stg.samsungpay.com</value>
                 <value id="samsung-pay-sdk-cdn" type="host">https://samsungpay.cdn-samsung.com</value>
                 <value id="paze-sdk" type="host">https://checkout.wallet.cat.earlywarning.io</value>
+                <value id="klarna-sdk" type="host">https://js.klarna.com</value>
+				<value id="klarna-playground-sdk" type="host">https://js.playground.klarna.com</value>
             </values>
         </policy>
         <policy id="connect-src">
             <values>
+				<value id="klarna-sdk" type="host">https://js.klarna.com</value>
 				<value id="ch-sdcv2-lib" type="host">https://commercehub-checkout.fiservapps.com</value>
 				<value id="ch-sdk-cert" type="host">https://commercehub-checkout-cert.fiservapps.com</value>
 				<value id="ch-sdk-cert2" type="host">https://connect-cert.fiservapis.com</value>

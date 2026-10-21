@@ -111,6 +111,7 @@
 			<argument name="executors" xsi:type="array">
 				<item name="fiserv_commercehub" xsi:type="string">FiservChargesCommandManager</item>
 				<item name="fiserv_applepay" xsi:type="string">FiservChargesCommandManager</item>
+				<item name="fiserv_klarna" xsi:type="string">FiservChargesCommandManager</item>
 				<item name="fiserv_samsung_pay" xsi:type="string">FiservChargesCommandManager</item>
 				<item name="fiserv_ach" xsi:type="string">FiservAchCommandManager</item>
 				<item name="fiserv_pay_by_link" xsi:type="string">FiservPayByLinkCommandManager</item>
@@ -1493,6 +1494,7 @@
 		<arguments>
 			<argument name="configProviders" xsi:type="array">
 				<item name="fiserv_googlepay" xsi:type="object">Fiserv\Payments\Model\Config\GooglePay\ConfigProvider</item>
+				<item name="fiserv_klarna" xsi:type="object">Fiserv\Payments\Model\Config\Klarna\ConfigProvider</item>
 			</argument>
 		</arguments>
 	</type>
@@ -1525,4 +1527,38 @@
 		<plugin name="fiserv_payments_dashboard_setlayout_plugin" type="Fiserv\Payments\Plugin\Grid\SetLayoutPlugin" sortOrder="10"/>
 	</type>
 
+	<!-- Klarna payment facade and value handlers; shared Charges infrastructure matches Apple Pay. -->
+	<virtualType name="FiservKlarnaFacade" type="Magento\Payment\Model\Method\Adapter">
+		<arguments>
+			<argument name="code" xsi:type="const">Fiserv\Payments\Model\Config\Klarna\ConfigProvider::CODE</argument>
+			<argument name="formBlockType" xsi:type="string">Fiserv\Payments\Block\CommerceHub\Form</argument>
+			<argument name="infoBlockType" xsi:type="string">Magento\Payment\Block\ConfigurableInfo</argument>
+			<argument name="valueHandlerPool" xsi:type="object">FiservKlarnaValueHandlerPool</argument>
+			<argument name="validatorPool" xsi:type="object">FiservChargesValidatorPool</argument>
+			<argument name="commandPool" xsi:type="object">FiservChargesCommandPool</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservKlarnaValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+		<arguments>
+			<argument name="handlers" xsi:type="array">
+				<item name="default" xsi:type="string">FiservKlarnaValueHandler</item>
+				<item name="can_void" xsi:type="string">Fiserv\Payments\Gateway\Config\CanVoidHandler</item>
+				<item name="can_refund" xsi:type="string">Fiserv\Payments\Gateway\Config\CanRefundHandler</item>
+				<item name="can_cancel" xsi:type="string">Fiserv\Payments\Gateway\Config\CanVoidHandler</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservKlarnaValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+		<arguments>
+			<argument name="configInterface" xsi:type="object">Fiserv\Payments\Gateway\Config\Klarna\Config</argument>
+		</arguments>
+	</virtualType>
+
+	<type name="Fiserv\Payments\Gateway\Config\Klarna\Config">
+		<arguments>
+			<argument name="methodCode" xsi:type="const">Fiserv\Payments\Model\Config\Klarna\ConfigProvider::CODE</argument>
+		</arguments>
+	</type>
 </config>

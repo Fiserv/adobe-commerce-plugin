@@ -55,4 +55,7 @@
  	<event name="sales_order_invoice_save_after">
         <observer name="fiserv_valuelink" instance="Fiserv\Payments\Observer\Valuelink\EnrichValuelinkTransactionsWithInvoiceId" />
     </event>
+	<event name="payment_method_assign_data_fiserv_klarna">
+		<observer name="fiserv_klarna_data_assign" instance="Fiserv\Payments\Observer\CommerceHub\DataAssignObserver" />
+	</event>
 </config>
