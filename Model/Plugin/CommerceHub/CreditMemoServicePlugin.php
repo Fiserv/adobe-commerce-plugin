@@ -6,16 +6,20 @@ use Magento\Sales\Model\Service\CreditmemoService;
 use Fiserv\Payments\Model\Service\CommerceHub\FailedOrderManager;
 use Fiserv\Payments\Model\Service\CommerceHub\FailedTransactionManager;
 use Fiserv\Payments\Gateway\Http\CommerceHub\Client\HttpClient;
+use Fiserv\Payments\Logger\MultiLevelLogger;
 
 class CreditMemoServicePlugin
 {
 	protected $failedOrderManager;
 	protected $failedTransactionManager;
+	protected $logger;
 
 	public function __construct(
 		FailedOrderManager $failedOrderManager,
-		FailedTransactionManager $failedTransactionManager
+		FailedTransactionManager $failedTransactionManager,
+		MultiLevelLogger $logger
 	) {
+		$this->logger = $logger;
 		$this->failedOrderManager = $failedOrderManager;
 		$this->failedTransactionManager = $failedTransactionManager;
 	}
@@ -29,15 +33,19 @@ class CreditMemoServicePlugin
 		catch (\Exception $e)
 		{
 			$order = $creditmemo->getOrder();
+			$this->logger->logError(
+				1,
+				"Credit memo refund failed: " . get_class($e) . ": " . $e->getMessage() . "\n" . $e->getTraceAsString(),
+				"Order ID: " . $order->getIncrementId()
+			);
 			$failedOrder = $this->failedOrderManager->createFailedOrder($order);
 			$this->failedOrderManager->saveFailedOrder($failedOrder, $order->getQuoteId(), $order->getStoreId());
 
 			$payment = $order->getPayment();
 			$data = $payment->getAdditionalInformation('ch_failed_transaction_data');
 
-			$data['response'][HttpClient::RESPONSE_KEY]["amount"] = ($creditmemo['grand_total']) ? $creditmemo['grand_total'] : 0;
-
 			if ($data) {
+				$data['response'][HttpClient::RESPONSE_KEY]["amount"] = ($creditmemo['grand_total']) ? $creditmemo['grand_total'] : 0;
 				$this->failedTransactionManager->createFailedTransaction(
 					$order['increment_id'],
 					$data['response'],

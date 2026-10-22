@@ -42,7 +42,7 @@ class RefundResponseValidator extends TransactionResponseValidator
 			$failedTxnManager
 		);
 		$this->subjectReader = $subjectReader;
-		array_push($this->successStates, self::STATE_CAPTURE);
+		array_push($this->successStates, self::STATE_CAPTURE, self::STATE_REFUNDED);
 	}
 
 	protected function getPaymentAction()

@@ -51,6 +51,7 @@ class RefundComposite extends OrderApiCompositeBase
 		$this->logger->logInfo(1, "Initiating Refund Transaction", "Order ID: $orderIncrementId");
 
 		$req = new RefundRequest();
+		$req->setAmount($result[AmountDataBuilder::AMOUNT_KEY]);
 		$req->setTransactionDetails($txnDetails);
 		$req->setReferenceTransactionDetails($result[ReferenceTransactionDataBuilder::REF_TXN_KEY]);
 		$req->setMerchantDetails($result[MerchantDetailsDataBuilder::MERCHANT_DETAILS_KEY]);

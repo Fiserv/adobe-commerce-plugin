@@ -112,7 +112,10 @@ define(
 			// grand_total already reflects all applied discounts, store credit, rewards, and gift cards,
 			// so it represents the actual amount to be charged to the credit card.
 			let grandTotal = totals ? parseFloat(totals.grand_total) || 0 : 0;
-			const currency = getBaseCurrencyCode(totals);
+			// grand_total is expressed in the quote (presentment) currency, so label it accordingly.
+			const currency = totals?.quote_currency_code
+				|| window.checkoutConfig?.quoteData?.quote_currency_code
+				|| getBaseCurrencyCode(totals);
 
 
 			grandTotal = Math.max(0, Math.round(grandTotal * 100) / 100);

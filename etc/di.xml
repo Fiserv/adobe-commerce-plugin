@@ -1493,7 +1493,76 @@
 		<arguments>
 			<argument name="configProviders" xsi:type="array">
 				<item name="fiserv_googlepay" xsi:type="object">Fiserv\Payments\Model\Config\GooglePay\ConfigProvider</item>
+				<item name="fiserv_afterpay" xsi:type="object">Fiserv\Payments\Model\Config\Afterpay\ConfigProvider</item>
 			</argument>
+		</arguments>
+	</type>
+
+	<!-- Afterpay responses carry no source.card block, so the card/vault/surcharge handlers must not run. -->
+	<virtualType name="FiservAfterpaySaleHandler" type="Magento\Payment\Gateway\Response\HandlerChain">
+		<arguments>
+			<argument name="handlers" xsi:type="array">
+				<item name="payment_details" xsi:type="string">Fiserv\Payments\Gateway\Response\CommerceHub\PaymentDetailsHandler</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservAfterpaySaleCommand" type="FiservChargesSaleCommand">
+		<arguments>
+			<argument name="handler" xsi:type="object">FiservAfterpaySaleHandler</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservAfterpayRefundCommand" type="FiservOrdersRefundCommand">
+		<arguments>
+			<argument name="validator" xsi:type="object">Fiserv\Payments\Gateway\Validator\CommerceHub\RefundResponseValidator</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservAfterpayCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
+		<arguments>
+			<argument name="commands" xsi:type="array">
+				<item name="capture" xsi:type="string">FiservAfterpaySaleCommand</item>
+				<item name="sale" xsi:type="string">FiservAfterpaySaleCommand</item>
+				<item name="refund" xsi:type="string">FiservAfterpayRefundCommand</item>
+				<item name="void" xsi:type="string">FiservOrdersCancelCommand</item>
+				<item name="cancel" xsi:type="string">FiservOrdersCancelCommand</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<!-- Afterpay Facade: reuse the shared Charges surface. -->
+	<virtualType name="FiservAfterpayFacade" type="Magento\Payment\Model\Method\Adapter">
+		<arguments>
+			<argument name="code" xsi:type="const">Fiserv\Payments\Model\Config\Afterpay\ConfigProvider::CODE</argument>
+			<argument name="formBlockType" xsi:type="string">Fiserv\Payments\Block\CommerceHub\Form</argument>
+			<argument name="infoBlockType" xsi:type="string">Magento\Payment\Block\ConfigurableInfo</argument>
+			<argument name="valueHandlerPool" xsi:type="object">FiservAfterpayValueHandlerPool</argument>
+			<argument name="validatorPool" xsi:type="object">FiservChargesValidatorPool</argument>
+			<argument name="commandPool" xsi:type="object">FiservAfterpayCommandPool</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservAfterpayValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+		<arguments>
+			<argument name="handlers" xsi:type="array">
+				<item name="default" xsi:type="string">FiservAfterpayValueHandler</item>
+				<item name="can_void" xsi:type="string">Fiserv\Payments\Gateway\Config\CanVoidHandler</item>
+				<item name="can_refund" xsi:type="string">Fiserv\Payments\Gateway\Config\CanRefundHandler</item>
+				<item name="can_cancel" xsi:type="string">Fiserv\Payments\Gateway\Config\CanVoidHandler</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservAfterpayValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+		<arguments>
+			<argument name="configInterface" xsi:type="object">Fiserv\Payments\Gateway\Config\Afterpay\Config</argument>
+		</arguments>
+	</virtualType>
+
+	<type name="Fiserv\Payments\Gateway\Config\Afterpay\Config">
+		<arguments>
+			<argument name="methodCode" xsi:type="const">Fiserv\Payments\Model\Config\Afterpay\ConfigProvider::CODE</argument>
 		</arguments>
 	</type>
 
