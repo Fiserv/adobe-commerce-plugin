@@ -37,8 +37,7 @@ class SessionContext
 		}
 
 		$data['cashapp_save_payment_method'] = $customerId > 0 &&
-			$this->tokenManagement->getOriginal($customerId) === null &&
-			in_array($data['cashapp_save_payment_method'] ?? false, [true, 1, '1', 'true'], true);
+		$this->tokenManagement->getOriginal($customerId) === null;
 		$data['isTokenization'] = false;
 		$data['amount'] = [
 			'total' => round((float) $quote->getBaseGrandTotal(), 2, PHP_ROUND_HALF_UP),
