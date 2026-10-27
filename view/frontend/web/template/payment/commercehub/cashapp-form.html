@@ -1,0 +1,79 @@
+<div class="payment-method" data-bind="css: {'_active': (getCode() == isChecked())}">
+	<div class="payment-method-title field choice">
+		<input type="radio"
+			name="payment[method]"
+			class="radio"
+			data-bind="attr: {'id': getCode()}, value: getCode(), checked: isChecked, click: selectPaymentMethod, visible: isRadioButtonVisible()"/>
+		<label class="label" data-bind="attr: {'for': getCode()}">
+			<img class="fiserv-cashapp-logo" data-bind="attr: {src: require.toUrl('Fiserv_Payments/images/cash_app_logo.svg')}" alt="Cash App Pay"/>
+		</label>
+	</div>
+
+	<div class="payment-method-content">
+		<!-- ko foreach: getRegion('messages') -->
+		<!-- ko template: getTemplate() --><!-- /ko -->
+		<!--/ko-->
+
+		<div class="payment-method-billing-address">
+			<!-- ko foreach: $parent.getRegion(getBillingAddressFormName()) -->
+			<!-- ko template: getTemplate() --><!-- /ko -->
+			<!--/ko-->
+		</div>
+
+		<!-- ko if: savedTokens.length -->
+		<fieldset class="fieldset">
+			<legend class="legend"><span data-bind="i18n: 'Cash App Pay checkout'"></span></legend>
+			<div class="field choice">
+				<input type="radio" class="radio"
+					data-bind="attr: {id: getCode() + '-express', name: getCode() + '-checkout'}, checked: selectedToken, checkedValue: savedTokens[0].publicHash"/>
+				<label class="label" data-bind="attr: {for: getCode() + '-express'}">
+					<span data-bind="i18n: 'Express checkout - use saved Cash App Pay'"></span>
+				</label>
+			</div>
+			<div class="field choice">
+				<input type="radio" class="radio" value=""
+					data-bind="attr: {id: getCode() + '-one-time', name: getCode() + '-checkout'}, checked: selectedToken"/>
+				<label class="label" data-bind="attr: {for: getCode() + '-one-time'}">
+					<span data-bind="i18n: 'One time checkout'"></span>
+				</label>
+			</div>
+		</fieldset>
+		<!-- /ko -->
+
+		<div class="message notice" role="status" data-bind="visible: savedTokenNotice">
+			<span data-bind="text: savedTokenNotice"></span>
+		</div>
+
+		<!-- ko if: canSave -->
+		<div class="field choice">
+			<input type="checkbox" class="checkbox" data-bind="attr: {id: getCode() + '-save'}, checked: savePaymentMethod"/>
+			<label class="label" data-bind="attr: {for: getCode() + '-save'}">
+				<span data-bind="i18n: 'Save Cash App Pay for future purchases'"></span>
+			</label>
+		</div>
+		<!-- /ko -->
+
+		<!-- Buttons -->
+		<div data-bind="visible: isPlaceOrderActionAllowed() && !selectedToken(), afterRender: initializeCashApp" id="cashapp-button-container"></div>
+
+		<div class="actions-toolbar" data-bind="visible: selectedToken">
+			<div class="primary">
+				<button class="action primary checkout" type="submit"
+					data-bind="click: placeOrder, enable: isPlaceOrderActionAllowed() && isChecked() === getCode(), attr: {title: $t('Place Order')}">
+					<span data-bind="i18n: 'Place Order'"></span>
+				</button>
+			</div>
+		</div>
+
+		<div class="checkout-agreements-block">
+			<!-- ko foreach: $parent.getRegion('before-place-order') -->
+			<!-- ko template: getTemplate() --><!-- /ko -->
+			<!--/ko-->
+		</div>
+
+		<div class="privacyPolicy">
+			<span class="privacy-icon"></span><span><!-- ko i18n: 'Payments Powered by Fiserv.'--><!-- /ko --></span>&nbsp; <a target="_blank" href="https://www.fiserv.com/privacy"><!-- ko i18n: 'Privacy Notice'--><!-- /ko --></a>.
+		</div>
+
+	</div>
+</div>

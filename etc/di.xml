@@ -112,6 +112,7 @@
 				<item name="fiserv_commercehub" xsi:type="string">FiservChargesCommandManager</item>
 				<item name="fiserv_applepay" xsi:type="string">FiservChargesCommandManager</item>
 				<item name="fiserv_samsung_pay" xsi:type="string">FiservChargesCommandManager</item>
+				<item name="fiserv_cashapp" xsi:type="string">FiservCashAppCommandManager</item>
 				<item name="fiserv_ach" xsi:type="string">FiservAchCommandManager</item>
 				<item name="fiserv_pay_by_link" xsi:type="string">FiservPayByLinkCommandManager</item>
 			</argument>
@@ -1147,6 +1148,153 @@
 			<argument name="configInterface" xsi:type="object">Fiserv\Payments\Gateway\Config\Paze\Config</argument>
 		</arguments>
 	</virtualType>
+
+	<!-- ===== Cash App Pay (Charges surface): facade, vault, command pool, request/response overrides ===== -->
+	<virtualType name="FiservCashAppFacade" type="Magento\Payment\Model\Method\Adapter">
+		<arguments>
+			<argument name="code" xsi:type="const">Fiserv\Payments\Model\Config\CashApp\ConfigProvider::CODE</argument>
+			<argument name="formBlockType" xsi:type="string">Fiserv\Payments\Block\CommerceHub\Form</argument>
+			<argument name="infoBlockType" xsi:type="string">Fiserv\Payments\Block\ApplePay\ApplePayInfo</argument>
+			<argument name="valueHandlerPool" xsi:type="object">FiservCashAppValueHandlerPool</argument>
+			<argument name="validatorPool" xsi:type="object">FiservChargesValidatorPool</argument>
+			<argument name="commandPool" xsi:type="object">FiservCashAppCommandPool</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservCashAppValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+		<arguments>
+			<argument name="handlers" xsi:type="array">
+				<item name="default" xsi:type="string">FiservCashAppValueHandler</item>
+				<item name="can_void" xsi:type="string">Fiserv\Payments\Gateway\Config\CanVoidHandler</item>
+				<item name="can_refund" xsi:type="string">Fiserv\Payments\Gateway\Config\CanRefundHandler</item>
+				<item name="can_cancel" xsi:type="string">Fiserv\Payments\Gateway\Config\CanVoidHandler</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservCashAppValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+		<arguments>
+			<argument name="configInterface" xsi:type="object">Fiserv\Payments\Gateway\Config\CashApp\Config</argument>
+		</arguments>
+	</virtualType>
+
+	<!-- Cash App vault (native Magento Vault) -->
+	<virtualType name="FiservCashAppVaultPaymentConfig" type="Magento\Payment\Gateway\Config\Config">
+		<arguments>
+			<argument name="methodCode" xsi:type="const">Fiserv\Payments\Gateway\Config\CashApp\Config::VAULT_CODE</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservCashAppVaultPaymentValueHandler" type="VaultPaymentDefaultValueHandler">
+		<arguments>
+			<argument name="configInterface" xsi:type="object">FiservCashAppVaultPaymentConfig</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservCashAppPaymentValueHandlerPool" type="VaultPaymentValueHandlerPool">
+		<arguments>
+			<argument name="handlers" xsi:type="array">
+				<item name="default" xsi:type="string">FiservCashAppVaultPaymentValueHandler</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservCashAppVaultFacade" type="Magento\Vault\Model\Method\Vault">
+		<arguments>
+			<argument name="config" xsi:type="object">FiservCashAppVaultPaymentConfig</argument>
+			<argument name="valueHandlerPool" xsi:type="object">FiservCashAppPaymentValueHandlerPool</argument>
+			<argument name="vaultProvider" xsi:type="object">FiservCashAppFacade</argument>
+			<argument name="code" xsi:type="const">Fiserv\Payments\Gateway\Config\CashApp\Config::VAULT_CODE</argument>
+		</arguments>
+	</virtualType>
+
+	<!-- Cash App command pool: shared Charges commands except where the wallet differs -->
+	<virtualType name="FiservCashAppCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
+		<arguments>
+			<argument name="commands" xsi:type="array">
+				<item name="authorize" xsi:type="string">FiservCashAppAuthorizeCommand</item>
+				<item name="capture" xsi:type="string">FiservCashAppCaptureCommand</item>
+				<item name="sale" xsi:type="string">FiservCashAppSaleCommand</item>
+				<item name="settle" xsi:type="string">FiservChargesSettleCommand</item>
+				<item name="vault_authorize" xsi:type="string">FiservCashAppVaultAuthorizeCommand</item>
+				<item name="vault_sale" xsi:type="string">FiservCashAppVaultSaleCommand</item>
+				<item name="refund" xsi:type="string">FiservChargesRefundCommand</item>
+				<item name="void" xsi:type="string">FiservChargesCancelCommand</item>
+				<item name="cancel" xsi:type="string">FiservChargesCancelCommand</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservCashAppCommandManager" type="Magento\Payment\Gateway\Command\CommandManager">
+		<arguments>
+			<argument name="commandPool" xsi:type="object">FiservCashAppCommandPool</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservCashAppAuthorizeCommand" type="FiservChargesAuthorizeCommand">
+		<arguments>
+			<argument name="handler" xsi:type="object">FiservCashAppAuthorizeHandler</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservCashAppSaleCommand" type="FiservChargesSaleCommand">
+		<arguments>
+			<argument name="handler" xsi:type="object">FiservCashAppAuthorizeHandler</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservCashAppCaptureCommand" type="FiservChargesCaptureCommand">
+		<arguments>
+			<argument name="commandPool" xsi:type="object">FiservCashAppCommandPool</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservCashAppVaultAuthorizeCommand" type="FiservChargesVaultAuthorizeCommand">
+		<arguments>
+			<argument name="requestBuilder" xsi:type="object">FiservCashAppVaultAuthorizeRequest</argument>
+			<argument name="handler" xsi:type="object">FiservCashAppAuthorizeHandler</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservCashAppVaultSaleCommand" type="FiservChargesVaultSaleCommand">
+		<arguments>
+			<argument name="requestBuilder" xsi:type="object">FiservCashAppVaultSaleRequest</argument>
+			<argument name="handler" xsi:type="object">FiservCashAppAuthorizeHandler</argument>
+		</arguments>
+	</virtualType>
+
+	<!-- Only the `source` builder differs (wallet token source); array arguments merge by key -->
+	<virtualType name="FiservCashAppVaultAuthorizeRequest" type="FiservChargesVaultAuthorizeRequest">
+		<arguments>
+			<argument name="builders" xsi:type="array">
+				<item name="source" xsi:type="string">Fiserv\Payments\Gateway\Request\CashApp\TokenSourceDataBuilder</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservCashAppVaultSaleRequest" type="FiservChargesVaultSaleRequest">
+		<arguments>
+			<argument name="builders" xsi:type="array">
+				<item name="source" xsi:type="string">Fiserv\Payments\Gateway\Request\CashApp\TokenSourceDataBuilder</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<!-- Wallet response chain: no card mapping, no surcharge; Cash App vault token handler -->
+	<virtualType name="FiservCashAppAuthorizeHandler" type="Magento\Payment\Gateway\Response\HandlerChain">
+		<arguments>
+			<argument name="handlers" xsi:type="array">
+				<item name="payment_details" xsi:type="string">Fiserv\Payments\Gateway\Response\CommerceHub\PaymentDetailsHandler</item>
+				<item name="vault_details" xsi:type="string">Fiserv\Payments\Gateway\Response\CashApp\VaultDetailsHandler</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<!-- Retain only the first (immutable) Cash App token per customer -->
+	<type name="Magento\Vault\Api\PaymentTokenRepositoryInterface">
+		<plugin name="fiserv_cashapp_first_token_retention" type="Fiserv\Payments\Plugin\CashApp\PaymentTokenRepositoryPlugin" sortOrder="10"/>
+	</type>
+	<!-- ===== End Cash App Pay ===== -->
 
 	<type name="Magento\Checkout\Model\CompositeConfigProvider">
         <arguments>

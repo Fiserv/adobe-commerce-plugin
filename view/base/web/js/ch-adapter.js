@@ -262,6 +262,21 @@ define([
 			return this.pazeComponent;
 		},
 
+		/**
+		 * Load Cash App Pay SDK component
+		 * @param {Object} options - { data: { button }, hooks: { onApprove, onCancel, onError } }
+		 * @returns {Promise<Object>} Cash App component instance
+		 */
+		async loadCashAppComponent(options) {
+			if (!window.fiserv || !window.fiserv.components || typeof window.fiserv.components.cashApp !== 'function') {
+				throw new Error($t('Fiserv SDK not loaded or window.fiserv.components.cashApp not available'));
+			}
+
+			this.cashAppComponent = await window.fiserv.components.cashApp(options);
+
+			return this.cashAppComponent;
+		},
+
 		submitIframeForm: function (
 			runSuccessCb,
 			runErrorCb,
