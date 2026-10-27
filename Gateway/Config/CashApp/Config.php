@@ -9,7 +9,6 @@ use Magento\Payment\Gateway\Config\Config as GatewayConfig;
 class Config extends GatewayConfig
 {
 	public const CODE = 'fiserv_cashapp';
-	public const VAULT_CODE = 'fiserv_cashapp_vault';
 	public const KEY_ACTIVE = 'active';
 	public const KEY_PAYMENT_ACTION = 'payment_action';
 	public const KEY_BUTTON_THEME = 'cashapp_button_theme';

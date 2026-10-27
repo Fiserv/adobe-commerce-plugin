@@ -43,19 +43,15 @@ class TokenSourceDataBuilder implements BuilderInterface
 		$payment = $this->subjectReader->readPayment($buildSubject)->getPayment();
 		$order = $payment->getOrder();
 		$customerId = (int) $order->getCustomerId();
-		if (!in_array($payment->getMethod(), [Config::CODE, Config::VAULT_CODE], true) || !$customerId || $order->getCustomerIsGuest() ||
+		if ($payment->getMethod() !== Config::CODE || !$customerId || $order->getCustomerIsGuest() ||
 			$this->userContext->getUserType() !== UserContextInterface::USER_TYPE_CUSTOMER ||
 			(int) $this->userContext->getUserId() !== $customerId) {
 			throw new LocalizedException(__('Please sign in to use saved Cash App Pay.'));
 		}
 
-		// The native Vault facade links the token on the payment; fall back to the submitted hash.
-		$extension = $payment->getExtensionAttributes();
-		$linked = $extension ? $extension->getVaultPaymentToken() : null;
-		$publicHash = $linked ? (string) $linked->getPublicHash() : (string) $payment->getAdditionalInformation('public_hash');
 		$token = $this->tokenManagement->getAvailable(
 			$customerId,
-			$publicHash,
+			(string) $payment->getAdditionalInformation('public_hash'),
 			(int) $order->getStoreId()
 		);
 		if ($token === null) {
@@ -75,7 +71,7 @@ class TokenSourceDataBuilder implements BuilderInterface
 			throw new LocalizedException(__('Saved Cash App Pay is unavailable.'));
 		}
 
-		$extension = $extension ?: $this->extensionFactory->create();
+		$extension = $payment->getExtensionAttributes() ?: $this->extensionFactory->create();
 		$extension->setVaultPaymentToken($token);
 		$payment->setExtensionAttributes($extension);
 

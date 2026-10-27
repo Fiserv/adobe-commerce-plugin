@@ -1149,7 +1149,6 @@
 		</arguments>
 	</virtualType>
 
-	<!-- ===== Cash App Pay (Charges surface): facade, vault, command pool, request/response overrides ===== -->
 	<virtualType name="FiservCashAppFacade" type="Magento\Payment\Model\Method\Adapter">
 		<arguments>
 			<argument name="code" xsi:type="const">Fiserv\Payments\Model\Config\CashApp\ConfigProvider::CODE</argument>
@@ -1178,46 +1177,15 @@
 		</arguments>
 	</virtualType>
 
-	<!-- Cash App vault (native Magento Vault) -->
-	<virtualType name="FiservCashAppVaultPaymentConfig" type="Magento\Payment\Gateway\Config\Config">
-		<arguments>
-			<argument name="methodCode" xsi:type="const">Fiserv\Payments\Gateway\Config\CashApp\Config::VAULT_CODE</argument>
-		</arguments>
-	</virtualType>
-
-	<virtualType name="FiservCashAppVaultPaymentValueHandler" type="VaultPaymentDefaultValueHandler">
-		<arguments>
-			<argument name="configInterface" xsi:type="object">FiservCashAppVaultPaymentConfig</argument>
-		</arguments>
-	</virtualType>
-
-	<virtualType name="FiservCashAppPaymentValueHandlerPool" type="VaultPaymentValueHandlerPool">
-		<arguments>
-			<argument name="handlers" xsi:type="array">
-				<item name="default" xsi:type="string">FiservCashAppVaultPaymentValueHandler</item>
-			</argument>
-		</arguments>
-	</virtualType>
-
-	<virtualType name="FiservCashAppVaultFacade" type="Magento\Vault\Model\Method\Vault">
-		<arguments>
-			<argument name="config" xsi:type="object">FiservCashAppVaultPaymentConfig</argument>
-			<argument name="valueHandlerPool" xsi:type="object">FiservCashAppPaymentValueHandlerPool</argument>
-			<argument name="vaultProvider" xsi:type="object">FiservCashAppFacade</argument>
-			<argument name="code" xsi:type="const">Fiserv\Payments\Gateway\Config\CashApp\Config::VAULT_CODE</argument>
-		</arguments>
-	</virtualType>
-
-	<!-- Cash App command pool: shared Charges commands except where the wallet differs -->
 	<virtualType name="FiservCashAppCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
 		<arguments>
 			<argument name="commands" xsi:type="array">
 				<item name="authorize" xsi:type="string">FiservCashAppAuthorizeCommand</item>
 				<item name="capture" xsi:type="string">FiservCashAppCaptureCommand</item>
 				<item name="sale" xsi:type="string">FiservCashAppSaleCommand</item>
-				<item name="settle" xsi:type="string">FiservChargesSettleCommand</item>
-				<item name="vault_authorize" xsi:type="string">FiservCashAppVaultAuthorizeCommand</item>
-				<item name="vault_sale" xsi:type="string">FiservCashAppVaultSaleCommand</item>
+				<item name="settle" xsi:type="string">FiservCashAppSettleCommand</item>
+				<item name="vault_authorize" xsi:type="string">FiservCashAppAuthorizeCommand</item>
+				<item name="vault_sale" xsi:type="string">FiservCashAppSaleCommand</item>
 				<item name="refund" xsi:type="string">FiservChargesRefundCommand</item>
 				<item name="void" xsi:type="string">FiservChargesCancelCommand</item>
 				<item name="cancel" xsi:type="string">FiservChargesCancelCommand</item>
@@ -1231,52 +1199,77 @@
 		</arguments>
 	</virtualType>
 
+	<virtualType name="FiservCashAppAuthorizeRequest" type="FiservChargesAuthorizeRequest">
+		<arguments>
+			<argument name="tokenBuilder" xsi:type="object">FiservCashAppTokenAuthorizeRequest</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservCashAppSaleRequest" type="FiservChargesSaleRequest">
+		<arguments>
+			<argument name="tokenBuilder" xsi:type="object">FiservCashAppTokenSaleRequest</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservCashAppTokenAuthorizeRequest" type="Fiserv\Payments\Gateway\Request\CommerceHub\Composite\TokenAuthComposite">
+		<arguments>
+			<argument name="endpoint" xsi:type="string">v1/payments/authorizations</argument>
+			<argument name="builders" xsi:type="array">
+				<item name="amount" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder</item>
+				<item name="source" xsi:type="string">Fiserv\Payments\Gateway\Request\CashApp\TokenSourceDataBuilder</item>
+				<item name="auth_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AuthDetailsDataBuilder</item>
+				<item name="txn_interaction" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\VaultTransactionInteractionDataBuilder</item>
+				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
+				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
+				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservCashAppTokenSaleRequest" type="Fiserv\Payments\Gateway\Request\CommerceHub\Composite\TokenSaleComposite">
+		<arguments>
+			<argument name="endpoint" xsi:type="string">v1/payments/captures</argument>
+			<argument name="builders" xsi:type="array">
+				<item name="amount" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder</item>
+				<item name="source" xsi:type="string">Fiserv\Payments\Gateway\Request\CashApp\TokenSourceDataBuilder</item>
+				<item name="sale_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\SaleDetailsDataBuilder</item>
+				<item name="txn_interaction" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\VaultTransactionInteractionDataBuilder</item>
+				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
+				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
+				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
 	<virtualType name="FiservCashAppAuthorizeCommand" type="FiservChargesAuthorizeCommand">
 		<arguments>
+			<argument name="requestBuilder" xsi:type="object">FiservCashAppAuthorizeRequest</argument>
 			<argument name="handler" xsi:type="object">FiservCashAppAuthorizeHandler</argument>
 		</arguments>
 	</virtualType>
 
 	<virtualType name="FiservCashAppSaleCommand" type="FiservChargesSaleCommand">
 		<arguments>
+			<argument name="requestBuilder" xsi:type="object">FiservCashAppSaleRequest</argument>
 			<argument name="handler" xsi:type="object">FiservCashAppAuthorizeHandler</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservCashAppSettleRequest" type="FiservChargesSettleRequest">
+		<arguments>
+			<argument name="endpoint" xsi:type="string">v1/payments/captures</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservCashAppSettleCommand" type="FiservChargesSettleCommand">
+		<arguments>
+			<argument name="requestBuilder" xsi:type="object">FiservCashAppSettleRequest</argument>
 		</arguments>
 	</virtualType>
 
 	<virtualType name="FiservCashAppCaptureCommand" type="FiservChargesCaptureCommand">
 		<arguments>
 			<argument name="commandPool" xsi:type="object">FiservCashAppCommandPool</argument>
-		</arguments>
-	</virtualType>
-
-	<virtualType name="FiservCashAppVaultAuthorizeCommand" type="FiservChargesVaultAuthorizeCommand">
-		<arguments>
-			<argument name="requestBuilder" xsi:type="object">FiservCashAppVaultAuthorizeRequest</argument>
-			<argument name="handler" xsi:type="object">FiservCashAppAuthorizeHandler</argument>
-		</arguments>
-	</virtualType>
-
-	<virtualType name="FiservCashAppVaultSaleCommand" type="FiservChargesVaultSaleCommand">
-		<arguments>
-			<argument name="requestBuilder" xsi:type="object">FiservCashAppVaultSaleRequest</argument>
-			<argument name="handler" xsi:type="object">FiservCashAppAuthorizeHandler</argument>
-		</arguments>
-	</virtualType>
-
-	<!-- Only the `source` builder differs (wallet token source); array arguments merge by key -->
-	<virtualType name="FiservCashAppVaultAuthorizeRequest" type="FiservChargesVaultAuthorizeRequest">
-		<arguments>
-			<argument name="builders" xsi:type="array">
-				<item name="source" xsi:type="string">Fiserv\Payments\Gateway\Request\CashApp\TokenSourceDataBuilder</item>
-			</argument>
-		</arguments>
-	</virtualType>
-
-	<virtualType name="FiservCashAppVaultSaleRequest" type="FiservChargesVaultSaleRequest">
-		<arguments>
-			<argument name="builders" xsi:type="array">
-				<item name="source" xsi:type="string">Fiserv\Payments\Gateway\Request\CashApp\TokenSourceDataBuilder</item>
-			</argument>
 		</arguments>
 	</virtualType>
 

@@ -28,7 +28,6 @@ define([
         defaults: {
             template: 'Fiserv_Payments/payment/commercehub/cashapp-form',
             code: 'fiserv_cashapp',
-            vaultCode: 'fiserv_cashapp_vault',
             additionalData: {},
             paymentPayload: {
                 sessionId: null,
@@ -44,7 +43,6 @@ define([
             loading: false,
             reloadPending: false,
             totalsSubscription: null,
-            paymentMethodsWatcherAttached: false,
             savedTokens: [],
             savedTokenNotice: '',
             canSave: false
@@ -75,6 +73,14 @@ define([
 
             this.observeBillingAddress();
 
+            this.isChecked.subscribe((method) => {
+                if (method === this.getCode()) {
+                    this.loadCashAppForm();
+                } else {
+                    this.destroyCashApp();
+                }
+            });
+
             return this;
         },
 
@@ -85,7 +91,6 @@ define([
             if (this.getCode() === this.isChecked()) {
                 await this.loadCashAppForm();
             }
-            this.watchPaymentMethods();
         },
 
         observeBillingAddress: function () {
@@ -354,31 +359,17 @@ define([
             fullScreenLoader.stopLoader();
         },
 
-        watchPaymentMethods: function () {
-            if (this.paymentMethodsWatcherAttached) {
-                return;
-            }
-
-            this.paymentMethodsWatcherAttached = true;
-            $('[name="payment[method]"]').on('click', (event) => {
-                if (event.currentTarget.id === this.getCode()) {
-                    this.loadCashAppForm();
-                } else {
-                    this.destroyCashApp();
-                }
-            });
-        },
-
         /**
-         * Saved token: vault method with public_hash. Otherwise the Cash App session.
+         * Saved token: public_hash only (server hands off to the token composites). Otherwise the Cash App session.
          * @returns {Object}
          */
         getData: function () {
             if (this.selectedToken()) {
                 return {
-                    method: this.vaultCode,
+                    method: this.getCode(),
                     additional_data: {
-                        public_hash: this.selectedToken()
+                        public_hash: this.selectedToken(),
+                        payment_session: ''
                     }
                 };
             }
