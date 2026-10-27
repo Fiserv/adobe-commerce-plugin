@@ -26,16 +26,19 @@ class TokenAuthComposite extends ChCompositeBase
 
 	private $logger;
 	private $chConfig;
+	private $endpoint;
 
 	public function __construct(
 		MultiLevelLogger $logger, 
 		TMapFactory $tmapFactory, 
 		Config $chConfig,
-		array $builders = [])
+		array $builders = [],
+		string $endpoint = self::ENDPOINT)
 	{
 		parent::__construct($tmapFactory, $builders);
 		$this->logger = $logger;
 		$this->chConfig = $chConfig;
+		$this->endpoint = $endpoint;
 	}
 
 	public function build(array $buildSubject)
@@ -73,7 +76,7 @@ class TokenAuthComposite extends ChCompositeBase
 
 		return [ 
 			self::REQUEST_KEY => $req,
-			self::ENDPOINT_KEY => self::ENDPOINT,
+			self::ENDPOINT_KEY => $this->endpoint,
 			self::ORDER_INCREMENT_ID_KEY => $orderIncrementId
 		];
 	}

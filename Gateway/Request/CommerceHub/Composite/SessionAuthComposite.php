@@ -18,6 +18,8 @@ use Fiserv\Payments\Gateway\Request\CommerceHub\StoredCredentialsDataBuilder;
 use Magento\Framework\ObjectManager\TMapFactory;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 use Fiserv\Payments\Gateway\Config\CommerceHub\Config;
+use Magento\Payment\Gateway\Helper\SubjectReader;
+use Magento\Payment\Gateway\Request\BuilderInterface;
 
 /**
  * Class SessionAuthComposite
@@ -37,20 +39,31 @@ class SessionAuthComposite extends ChCompositeBase
 	/** @var Config */
 	private $chConfig;
 
+	/** @var BuilderInterface|null Optional builder used instead when a saved token (public_hash) is submitted */
+	private $tokenBuilder;
+
 	public function __construct(
 		MultiLevelLogger $logger,
 		TMapFactory $tmapFactory,
 		Config $chConfig,
-		array $builders = []
+		array $builders = [],
+		?BuilderInterface $tokenBuilder = null
 	) {
 		parent::__construct($tmapFactory, $builders);
 		$this->logger = $logger;
 		$this->chConfig = $chConfig;
+		$this->tokenBuilder = $tokenBuilder;
 	}
 
 	/** @inheritdoc */
 	public function build(array $buildSubject)
 	{
+		if ($this->tokenBuilder
+			&& SubjectReader::readPayment($buildSubject)->getPayment()->getAdditionalInformation('public_hash')
+		) {
+			return $this->tokenBuilder->build($buildSubject);
+		}
+
 		$this->logger->logInfo(1, "Initiating Auth Transaction");
 		$result = parent::build($buildSubject);
 

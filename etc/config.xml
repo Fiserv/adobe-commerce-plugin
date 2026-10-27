@@ -252,11 +252,6 @@
 				<title>Stored Accounts (Fiserv)</title>
 				<active>1</active>
 			</fiserv_commercehub_vault>
-			<fiserv_cashapp_vault>
-				<model>FiservCashAppVaultFacade</model>
-				<title>Cash App Pay (Saved)</title>
-				<active>1</active>
-			</fiserv_cashapp_vault>
 			<fiserv_paypal>
 				<active>1</active>
 				<payment_active>0</payment_active>
