@@ -14,6 +14,8 @@ use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Webapi\Exception;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 use Magento\Customer\Model\Session as CustomerSession;
+use Fiserv\Payments\Gateway\Config\CashApp\Config as CashAppConfig;
+use Fiserv\Payments\Model\CashApp\SessionContext;
 
 /**
  * Creates a CommerceHub payment session via the v1/sessions/create API.
@@ -31,6 +33,7 @@ class CreateSession extends Action implements HttpPostActionInterface
 
     /** @var CustomerSession */
     private $customerSession;
+    private $cashAppSessionContext;
 
     /**
      * @param Context $context
@@ -42,12 +45,14 @@ class CreateSession extends Action implements HttpPostActionInterface
         Context $context,
         CredentialsRequest $credentialsRequest,
         MultiLevelLogger $logger,
-        ?CustomerSession $customerSession = null
+        CustomerSession $customerSession,
+        SessionContext $cashAppSessionContext
     ) {
         parent::__construct($context);
         $this->credentialsRequest = $credentialsRequest;
         $this->logger = $logger;
         $this->customerSession = $customerSession;
+        $this->cashAppSessionContext = $cashAppSessionContext;
     }
 
     /**
@@ -60,6 +65,10 @@ class CreateSession extends Action implements HttpPostActionInterface
         try {
             $data = $this->getRequest()->getContent();
             $sessionData = json_decode($data, true) ?? [];
+            $cashAppContext = null;
+            if (($sessionData['paymentCode'] ?? '') === CashAppConfig::CODE) {
+                [$sessionData, $cashAppContext] = $this->cashAppSessionContext->prepare($sessionData);
+            }
 
             // Add customer id if logged in
             if ($this->customerSession !== null && $this->customerSession->isLoggedIn()) {
@@ -68,6 +77,9 @@ class CreateSession extends Action implements HttpPostActionInterface
 
             // Intent determination (tokenization vs. primary transaction Authorize/Capture)
             $credentials = $this->credentialsRequest->requestCredentials($sessionData);
+            if ($cashAppContext !== null) {
+                $this->cashAppSessionContext->remember($credentials, $cashAppContext);
+            }
 
             $response->setData([
                 'ch_credentials' => $credentials,
