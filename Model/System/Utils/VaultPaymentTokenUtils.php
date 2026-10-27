@@ -26,7 +26,7 @@ class VaultPaymentTokenUtils extends AbstractDb
 		}
 		$select = $this->getConnection()->select()->from($this->getMainTable())
 			->where('customer_id = ?', $customerId)
-			->where('payment_method_code = ?', 'fiserv_cashapp')
+			->where('payment_method_code = ?', \Fiserv\Payments\Gateway\Config\CashApp\Config::CODE)
 			->order('entity_id ASC')->limit(1);
 		if ($forUpdate) {
 			$select->forUpdate(true);

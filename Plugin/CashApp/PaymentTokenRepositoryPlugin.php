@@ -1,6 +1,7 @@
 <?php
 namespace Fiserv\Payments\Plugin\CashApp;
 
+use Fiserv\Payments\Gateway\Config\CashApp\Config;
 use Fiserv\Payments\Model\System\Utils\VaultPaymentTokenUtils;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Vault\Api\Data\PaymentTokenInterface;
@@ -22,8 +23,8 @@ class PaymentTokenRepositoryPlugin
 		PaymentTokenInterface $token
 	) {
 		$persisted = $token->getEntityId() ? $subject->getById($token->getEntityId()) : null;
-		$isStoredCashApp = $persisted && $persisted->getPaymentMethodCode() === 'fiserv_cashapp';
-		if (!$isStoredCashApp && $token->getPaymentMethodCode() !== 'fiserv_cashapp') {
+		$isStoredCashApp = $persisted && $persisted->getPaymentMethodCode() === Config::CODE;
+		if (!$isStoredCashApp && $token->getPaymentMethodCode() !== Config::CODE) {
 			return $proceed($token);
 		}
 		$customerId = (int) ($isStoredCashApp ? $persisted->getCustomerId() : $token->getCustomerId());
@@ -71,7 +72,7 @@ class PaymentTokenRepositoryPlugin
 		PaymentTokenInterface $token
 	) {
 		$stored = $subject->getById($token->getEntityId());
-		if ($stored->getPaymentMethodCode() === 'fiserv_cashapp') {
+		if ($stored->getPaymentMethodCode() === Config::CODE) {
 			throw new LocalizedException(__('The saved Cash App Pay method cannot be removed or replaced.'));
 		}
 		return $proceed($token);

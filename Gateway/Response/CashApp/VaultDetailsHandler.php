@@ -22,7 +22,7 @@ class VaultDetailsHandler implements HandlerInterface
 	private $subjectReader;
 	private $config;
 	private $tokenManagement;
-	private $checkoutSession;
+	private $sessionContext;
 	private $tokenFactory;
 	private $extensionFactory;
 	private $encryptor;
@@ -33,7 +33,7 @@ class VaultDetailsHandler implements HandlerInterface
 		SubjectReader $subjectReader,
 		Config $config,
 		TokenManagement $tokenManagement,
-		SessionContext $checkoutSession,
+		SessionContext $sessionContext,
 		PaymentTokenFactoryInterface $tokenFactory,
 		OrderPaymentExtensionInterfaceFactory $extensionFactory,
 		EncryptorInterface $encryptor,
@@ -43,7 +43,7 @@ class VaultDetailsHandler implements HandlerInterface
 		$this->subjectReader = $subjectReader;
 		$this->config = $config;
 		$this->tokenManagement = $tokenManagement;
-		$this->checkoutSession = $checkoutSession;
+		$this->sessionContext = $sessionContext;
 		$this->tokenFactory = $tokenFactory;
 		$this->extensionFactory = $extensionFactory;
 		$this->encryptor = $encryptor;
@@ -84,7 +84,7 @@ class VaultDetailsHandler implements HandlerInterface
 		if (!is_string($sessionId) || $sessionId === '') {
 			return null;
 		}
-		$context = $this->checkoutSession->get($sessionId);
+		$context = $this->sessionContext->get($sessionId);
 		if (!is_array($context) || empty($context['save']) ||
 			($context['customer_id'] ?? null) !== $customerId ||
 			($context['quote_id'] ?? null) !== (int) $order->getQuoteId() ||

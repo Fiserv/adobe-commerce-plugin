@@ -69,7 +69,6 @@ define([
             this.selectedToken(this.savedTokens.length ? this.savedTokens[0].publicHash : '');
 
             this.selectedToken.subscribe(() => this.restartCashApp());
-            this.savePaymentMethod.subscribe(() => this.restartCashApp());
 
             this.observeBillingAddress();
 
@@ -151,8 +150,7 @@ define([
                 chAdapter.initialize(config);
                 const creds = await chSession({
                     paymentCode: this.getCode(),
-                    form_key: $.mage.cookies.get('form_key'),
-                    cashapp_save_payment_method: Boolean(this.canSave && this.savePaymentMethod())
+                    form_key: $.mage.cookies.get('form_key')
                 });
                 const credentials = creds && creds[chAdapter.credentialsKey];
 
