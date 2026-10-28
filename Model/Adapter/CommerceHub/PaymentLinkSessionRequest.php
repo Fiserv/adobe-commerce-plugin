@@ -249,11 +249,7 @@ class PaymentLinkSessionRequest
             'raw_response' => is_string($body) ? substr($body, 0, 2000) : '',
         ];
 
-        $this->logger->logError(
-            1,
-            "Pay by Link session creation failed",
-            json_encode($failureLogContext, JSON_UNESCAPED_SLASHES)
-        );
+        $this->logger->logError(1,"Pay by Link session creation failed",json_encode($failureLogContext, JSON_PRETTY_PRINT));
 
         throw new PaymentLinkSessionException(
             "Pay by Link session creation failed. HTTP code: {$statusCode}. Error: {$errorMessage}",
