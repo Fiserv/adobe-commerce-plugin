@@ -12,6 +12,7 @@ use Magento\Payment\Gateway\Response\HandlerInterface;
 use Magento\Sales\Model\Order;
 use Fiserv\Payments\Model\Adapter\CommerceHub\PaymentLinkSessionRequest;
 use Fiserv\Payments\Model\PayByLink\PaymentLinkHandler;
+use Fiserv\Payments\Model\PayByLink\PaymentLinkPlacementException;
 use Fiserv\Payments\Model\PayByLink\PaymentLinkErrorResolver;
 use Fiserv\Payments\Gateway\Config\CommerceHub\Config as ChConfig;
 use Fiserv\Payments\Logger\MultiLevelLogger;
@@ -30,6 +31,10 @@ use Fiserv\Payments\Logger\MultiLevelLogger;
  */
 class CreateSessionCommand implements CommandInterface
 {
+
+    //error message shown to the admin when session creation fails.
+    public const FAILURE_MESSAGE_PREFIX = 'Pay by Link order failed.';
+
     /**
      * @var BuilderInterface
      */
@@ -146,9 +151,7 @@ class CreateSessionCommand implements CommandInterface
         } catch (\Throwable $e) {
             $resolvedError = $this->errorResolver->resolve($e);
 
-            $this->logger->logError(
-                1,
-                "Failed to create Pay by Link session",
+            $this->logger->logError(1,"Failed to create Pay by Link session",
                 json_encode([
                     'timestamp' => gmdate('c'),
                     'order_id' => $order->getIncrementId(),
@@ -160,9 +163,17 @@ class CreateSessionCommand implements CommandInterface
                 ], JSON_UNESCAPED_SLASHES)
             );
 
-            // Do not throw — the order is being placed; record the failure
-            // on the payment so the admin can retry generating the link.
+            // Abort placement so no real order is created; the message below is shown as an error banner.
             $this->paymentLinkHandler->applyErrorState($payment, $resolvedError);
+
+            throw new PaymentLinkPlacementException(
+                __(
+                    '%1 %2 (Reference Code: %3)',
+                    self::FAILURE_MESSAGE_PREFIX,
+                    $resolvedError['user_message'],
+                    $resolvedError['error_code']
+                )
+            );
         }
     }
 }
