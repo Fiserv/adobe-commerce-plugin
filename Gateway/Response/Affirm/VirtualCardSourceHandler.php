@@ -68,7 +68,5 @@ class VirtualCardSourceHandler implements HandlerInterface
 			$payment->setAdditionalInformation(self::KEY_CARD_LAST4, $card['last4']);
 			$payment->setCcLast4($card['last4']);
 		}
-
-		$this->logger->logDebug(3,"Affirm Virtual Card source stored: " . $source['sourceType'], "Order ID: $orderIncrementId");
 	}
 }
