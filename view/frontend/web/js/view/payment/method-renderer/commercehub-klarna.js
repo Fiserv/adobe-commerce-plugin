@@ -413,16 +413,6 @@ define([
                 this.isPlaceOrderActionAllowed() && additionalValidators.validate();
 		},
 
-		retryKlarna() {
-			if (this._orderLocked || this._destroyed) {
-				return;
-			}
-
-			this.invalidateKlarna();
-			this.updatePlaceOrderAllowed(Boolean(quote.billingAddress()));
-			this.loadKlarnaForm();
-		},
-
 		failKlarna(message) {
 			this.invalidateKlarna();
 			this.klarnaUnavailable(true);

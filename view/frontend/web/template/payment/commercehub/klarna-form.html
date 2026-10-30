@@ -21,12 +21,7 @@
 		</div>
 
 		<p role="status" aria-live="polite" data-bind="visible: klarnaLoading, i18n: 'Loading Klarna...'"></p>
-		<p role="status" aria-live="polite" data-bind="visible: klarnaUnavailable, i18n: 'Klarna is unavailable. Please retry or choose another payment method.'"></p>
-		<button type="button"
-			class="action secondary fiserv-klarna-retry"
-			data-bind="click: retryKlarna, visible: klarnaUnavailable, disable: klarnaLoading">
-			<span data-bind="i18n: 'Retry Klarna'"></span>
-		</button>
+		<p role="status" aria-live="polite" data-bind="visible: klarnaUnavailable, i18n: 'Klarna is unavailable. Please choose another payment method.'"></p>
 
 		<!-- Klarna Button -->
 		<div data-bind="visible: isPlaceOrderActionAllowed, afterRender: initializeKlarna" id="klarna-button-container"></div>
