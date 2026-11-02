@@ -19,6 +19,8 @@
                 <value id="samsung-pay-sdk-button" type="host">https://resource.stg.samsungpay.com</value>
                 <value id="samsung-pay-sdk-cdn" type="host">https://samsungpay.cdn-samsung.com</value>
                 <value id="paze-sdk" type="host">https://checkout.wallet.cat.earlywarning.io</value>
+                <value id="cashapp-sdk-sandbox" type="host">https://sandbox.kit.cash.app</value>
+                <value id="cashapp-sdk-prod" type="host">https://kit.cash.app</value>
             </values>
         </policy>
         <policy id="connect-src">
