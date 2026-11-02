@@ -97,7 +97,8 @@ define([
 
             quote.billingAddress.subscribe((address) => {
                 this.isPlaceOrderActionAllowed(address !== null);
-                if (address && this.getCode() === this.isChecked()) {
+                // The session does not depend on the address; only load if no button is mounted yet.
+                if (address && this.getCode() === this.isChecked() && !this.cashAppComponent) {
                     this.loadCashAppForm();
                 }
             });
@@ -120,21 +121,31 @@ define([
                     Number(this.initializedAmount) > 0 &&
                     totals.grand_total != this.initializedAmount
                 ) {
-                    this.loadCashAppForm();
+                    this.loadCashAppForm(true);
                 }
             });
         },
 
-        loadCashAppForm: async function () {
+        /**
+         * @param {boolean} queue Re-run once the in-flight load ends (token or amount changed). Duplicate
+         *   triggers (method selected, afterRender, billing address) must not queue, or a second session is made.
+         */
+        loadCashAppForm: async function (queue = false) {
             if (this.selectedToken() || !this.isPlaceOrderActionAllowed()) {
                 return;
             }
 
-            if (this.loading) {
-                this.reloadPending = true;
+            // A button for the current amount is already mounted.
+            if (this.cashAppComponent && Number(this.initializedAmount) === Number(quote.totals()['grand_total'])) {
                 return;
             }
 
+            if (this.loading) {
+                this.reloadPending = queue;
+                return;
+            }
+
+            let failed = false;
             const config = this.getPaymentConfig();
             const generation = ++this.loadGeneration;
             const isStale = () => generation !== this.loadGeneration ||
@@ -182,6 +193,7 @@ define([
                 this.initializedAmount = quote.totals()['grand_total'];
                 this.observeTotals();
             } catch (error) {
+                failed = true;
                 if (generation === this.loadGeneration && !this.selectedToken()) {
                     this.showError(error);
                 }
@@ -190,7 +202,10 @@ define([
                 fullScreenLoader.stopLoader();
                 if (this.reloadPending) {
                     this.reloadPending = false;
-                    setTimeout(() => this.loadCashAppForm(), 0);
+                    // Do not auto-retry a failed load; that only repeats the failing session call.
+                    if (!failed) {
+                        setTimeout(() => this.loadCashAppForm(), 0);
+                    }
                 }
             }
         },
@@ -338,7 +353,7 @@ define([
         restartCashApp: function () {
             this.destroyCashApp();
             if (this.getCode() === this.isChecked()) {
-                this.loadCashAppForm();
+                this.loadCashAppForm(true);
             }
         },
 
