@@ -43,6 +43,7 @@
                 <value id="paze-sdk" type="host">https://checkout.wallet.cat.earlywarning.io</value>
                 <value id="cashapp-sdk-sandbox" type="host">https://sandbox.kit.cash.app</value>
                 <value id="cashapp-sdk-prod" type="host">https://kit.cash.app</value>
+                <value id="cashapp-analytics" type="host">https://api.lab.amplitude.com</value>
             </values>
         </policy>
         <policy id="frame-src">
@@ -75,6 +76,12 @@
                 <value id="paze-sdk" type="host">https://checkout.wallet.cat.earlywarning.io</value>
                 <value id="cashapp-sdk-sandbox" type="host">https://sandbox.kit.cash.app</value>
                 <value id="cashapp-sdk-prod" type="host">https://kit.cash.app</value>
+                <value id="cashapp-cdn" type="host">https://cash-f.squarecdn.com</value>
+            </values>
+        </policy>
+        <policy id="font-src">
+            <values>
+                <value id="cashapp-cdn" type="host">https://cash-f.squarecdn.com</value>
             </values>
         </policy>
         <policy id="form-action">

@@ -135,6 +135,11 @@ define([
                 return;
             }
 
+            // Selecting the method re-emits the billing address; remounting mid-render breaks pay.js.
+            if (this.cashAppComponent && quote.totals()?.grand_total == this.initializedAmount) {
+                return;
+            }
+
             const config = this.getPaymentConfig();
             const generation = ++this.loadGeneration;
             const isStale = () => generation !== this.loadGeneration ||
@@ -222,7 +227,11 @@ define([
             const buttonElement = document.createElement('fiserv-cashapp-button');
             const onSuccess = () => this.onCashAppApprove(generation);
             const onCancel = () => this.onCashAppCancel();
-            const onError = (event) => this.showError(event?.detail?.error || event?.detail || event);
+            const onError = (event) => {
+                if (generation === this.loadGeneration) {
+                    this.showError(event?.detail?.error || event?.detail || event);
+                }
+            };
 
             buttonElement.id = 'cashapp-button';
             buttonElement.setAttribute('theme', buttonConfig.theme || 'DARK');
