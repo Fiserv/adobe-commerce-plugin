@@ -195,69 +195,35 @@ define([
             }
         },
 
+        /**
+         * Cash App is web-component only (<fiserv-cashapp-button>). The context already
+         * created by chAdapter.initSdk() is handed to the element, as Klarna does; wrapping
+         * it in a second <fiserv-context> would initialize the session twice.
+         */
         mountCashAppComponent: async function (config, credentials, generation) {
             const buttonConfig = config.buttonConfig || {};
-            const hasComponent = window.fiserv && window.fiserv.components &&
-                typeof window.fiserv.components.cashApp === 'function';
-
-            if (hasComponent) {
-                const component = await chAdapter.loadCashAppComponent({
-                    data: {
-                        button: {
-                            parentElementId: CONTAINER_ID,
-                            theme: buttonConfig.theme || 'DARK',
-                            shape: buttonConfig.shape || 'SEMIROUND',
-                            size: buttonConfig.size || 'MEDIUM',
-                            width: buttonConfig.width || 'STATIC'
-                        }
-                    },
-                    hooks: {
-                        onApprove: () => this.onCashAppApprove(generation),
-                        onCancel: () => this.onCashAppCancel(),
-                        onError: (error) => this.showError(error)
-                    }
-                });
-
-                this.cashAppInitialized = Boolean(component);
-
-                return component;
-            }
-
-            if (window.customElements && window.customElements.get('fiserv-context') &&
-                window.customElements.get('fiserv-cashapp-button')) {
-                const handle = await this.mountCashAppElements(buttonConfig, credentials, generation);
-
-                this.cashAppInitialized = Boolean(handle);
-
-                return handle;
-            }
-
-            throw new Error($t('Fiserv SDK is not loaded. Please check your network and configuration.'));
-        },
-
-        /**
-         * Custom-element fallback when the SDK does not expose components.cashApp.
-         */
-        mountCashAppElements: async function (buttonConfig, credentials, generation) {
             const container = document.getElementById(CONTAINER_ID);
+
+            if (!window.customElements || !window.customElements.get('fiserv-cashapp-button')) {
+                throw new Error($t('Cash App is not supported by the loaded payment SDK.'));
+            }
 
             if (!container) {
                 throw new Error($t('Cash App button container was not found.'));
             }
 
-            const sdkData = credentials[chAdapter.sdkDataKey];
+            const context = window.fiserv && typeof window.fiserv.context === 'function' ?
+                window.fiserv.context() : null;
 
-            if (!sdkData) {
-                throw new Error($t('The Cash App session did not return valid SDK initialization data.'));
+            if (!context) {
+                throw new Error($t('Cash App checkout context is unavailable.'));
             }
 
-            const contextElement = document.createElement('fiserv-context');
             const buttonElement = document.createElement('fiserv-cashapp-button');
             const onSuccess = () => this.onCashAppApprove(generation);
             const onCancel = () => this.onCashAppCancel();
-            const onError = (event) => this.showError(event && event.detail || event);
+            const onError = (event) => this.showError(event?.detail?.error || event?.detail || event);
 
-            contextElement.setAttribute('sdk-data', sdkData);
             buttonElement.id = 'cashapp-button';
             buttonElement.setAttribute('theme', buttonConfig.theme || 'DARK');
             buttonElement.setAttribute('shape', buttonConfig.shape || 'SEMIROUND');
@@ -266,21 +232,22 @@ define([
             buttonElement.addEventListener('fiserv-cashapp-success', onSuccess);
             buttonElement.addEventListener('fiserv-cashapp-cancel', onCancel);
             buttonElement.addEventListener('fiserv-cashapp-error', onError);
-            contextElement.addEventListener('fiserv-context-init-error', onError);
-            contextElement.append(buttonElement);
-            container.append(contextElement);
 
-            if (typeof contextElement.waitForContext === 'function') {
-                await contextElement.waitForContext();
+            if (typeof buttonElement.provideContext === 'function') {
+                buttonElement.provideContext(context);
+            } else {
+                buttonElement.context = context;
             }
+
+            container.replaceChildren(buttonElement);
+            this.cashAppInitialized = true;
 
             return {
                 destroy: () => {
                     buttonElement.removeEventListener('fiserv-cashapp-success', onSuccess);
                     buttonElement.removeEventListener('fiserv-cashapp-cancel', onCancel);
                     buttonElement.removeEventListener('fiserv-cashapp-error', onError);
-                    contextElement.removeEventListener('fiserv-context-init-error', onError);
-                    contextElement.remove();
+                    buttonElement.remove();
                 }
             };
         },
