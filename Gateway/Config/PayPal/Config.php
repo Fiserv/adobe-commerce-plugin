@@ -24,6 +24,9 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	const KEY_MERCHANT_INTEGRATOR = 'merchant_integrator';
 	const KEY_VAULT_ACTIVE = 'paypal_enable_vaulting';
 	const KEY_FASTLANE_ACTIVE = 'ch_paypal_fastlane';
+	const KEY_PAYLATER_ACTIVE = 'ch_paypal_paylater';
+	const PAYLATER_BUTTON_COLOR_KEY = 'paypal_paylater_button_color';
+	const PAYLATER_BUTTON_SHAPE_KEY = 'paypal_paylater_button_shape';
 	const KEY_STANDALONE_SPA = 'standalone_spa';
 	const KEY_PAYMENT_ACTION = 'payment_action';
 
@@ -87,6 +90,21 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     public function isFastlaneActive($storeId = null)
     {
 	    return (bool)$this->getValue(self::KEY_FASTLANE_ACTIVE, $storeId);
+    }
+
+    public function isPayLaterActive($storeId = null)
+    {
+        return (bool)$this->getValue(self::KEY_PAYLATER_ACTIVE, $storeId);
+    }
+
+    public function getPayLaterButtonColor($storeId = null)
+    {
+        return $this->getValue(self::PAYLATER_BUTTON_COLOR_KEY, $storeId);
+    }
+
+    public function getPayLaterButtonShape($storeId = null)
+    {
+        return $this->getValue(self::PAYLATER_BUTTON_SHAPE_KEY, $storeId);
     }
 
     public function getPaymentAction($storeId = null)

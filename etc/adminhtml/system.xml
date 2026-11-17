@@ -1221,6 +1221,12 @@
 						<source_model>Fiserv\Payments\Model\Source\CommerceHub\TransactionType</source_model>
 						<config_path>payment/fiserv_paypal/payment_action</config_path>
 					</field>
+					<field id="paypal_enable_paylater" translate="label comment tooltip" type="select" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Enable PayPal Pay Later</label>
+						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+						<config_path>payment/fiserv_paypal/ch_paypal_paylater</config_path>
+						<comment>Shows a Pay Later button next to the PayPal button. Only enable if your Commerce Hub merchant ID is boarded for PayPal Pay Later. Uses the Charge Type above and requires PayPal to be enabled.</comment>
+					</field>
 
 					<!-- PayPal Button Style Fields -->
 					<field id="paypal_button_color" translate="label comment tooltip" type="select" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="0">
@@ -1240,6 +1246,18 @@
 						<comment>Set the label for the PayPal button (e.g., paypal, checkout, pay, buynow).</comment>
 						<source_model>Fiserv\Payments\Model\Source\PayPal\ButtonLabel</source_model>
 						<config_path>payment/fiserv_paypal/paypal_button_label</config_path>
+					</field>
+					<field id="paypal_paylater_button_color" translate="label comment tooltip" type="select" sortOrder="103" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Pay Later Button Color</label>
+						<comment>Set the color for the Pay Later button (e.g., gold, blue, silver, black).</comment>
+						<source_model>Fiserv\Payments\Model\Source\PayPal\ButtonColor</source_model>
+						<config_path>payment/fiserv_paypal/paypal_paylater_button_color</config_path>
+					</field>
+					<field id="paypal_paylater_button_shape" translate="label comment tooltip" type="select" sortOrder="104" showInDefault="1" showInWebsite="1" showInStore="0">
+						<label>Pay Later Button Shape</label>
+						<comment>Set the shape for the Pay Later button (e.g., rect, pill).</comment>
+						<source_model>Fiserv\Payments\Model\Source\PayPal\ButtonShape</source_model>
+						<config_path>payment/fiserv_paypal/paypal_paylater_button_shape</config_path>
 					</field>
 				</group>
                 <group id="fiserv_venmo" translate="label" showInDefault="1" showInWebsite="1" showInStore="1" sortOrder="9">

@@ -85,6 +85,13 @@ class ConfigProvider implements ConfigProviderInterface
 			],
 		];
 
+		// Pay Later renders as its own button next to PayPal; it takes no label and is never vaulted.
+		$payLaterButtonConfig = [
+			'color' => $this->paypalConfig->getPayLaterButtonColor($storeId) ?: 'gold',
+			'shape' => $this->paypalConfig->getPayLaterButtonShape($storeId) ?: 'rect',
+			'parentElementId' => 'paypal-paylater-button-container'
+		];
+
 		$regionsByCountry = [];
 
 		foreach ($this->regionCollection->getItems() as $region) {
@@ -107,6 +114,7 @@ class ConfigProvider implements ConfigProviderInterface
 
 		$config = [
 			'buttonConfig' => $buttonConfig,
+			'payLaterButtonConfig' => $payLaterButtonConfig,
 			'vaultConfig' => $vaultConfig,
 			self::FASTLANE_CODE => $this->paypalConfig->isFastlaneActive($storeId),
 			self::IS_ONEPAGE_CHECKOUT_KEY => $this->checkoutHelper->canOnepageCheckout(),

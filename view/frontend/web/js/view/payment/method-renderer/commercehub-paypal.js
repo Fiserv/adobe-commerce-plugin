@@ -29,6 +29,9 @@ define([
         defaults: {
             template: 'Fiserv_Payments/payment/commercehub/paypal-form',
             code: 'fiserv_paypal',
+            payLaterCode: 'fiserv_paypal_paylater',
+            // Which button the shopper approved with: 'paypal' | 'paylater'. Decides the method code the order is placed under.
+            selectedFunding: 'paypal',
             active: false,
             sortOrder: 20,
             paymentPayload: {
@@ -121,15 +124,17 @@ define([
          */
         async renderPayPalButtons(buttonsConfig) {
             try {
-                const containerId ='#paypal-button-container';
-                const container = document.querySelector(containerId);
-                if(container){
-                    while (container.children.length > 0) {
-                        container.removeChild(container.lastChild);
+                ['#paypal-button-container', '#paypal-paylater-button-container'].forEach(function (containerId) {
+                    const container = document.querySelector(containerId);
+                    if (container) {
+                        while (container.children.length > 0) {
+                            container.removeChild(container.lastChild);
+                        }
                     }
-                }
+                });
 
                 const config = (window.checkoutConfig && window.checkoutConfig.payment) ? window.checkoutConfig.payment[this.getCode()] : {};
+                const payLaterButtonConfig = (config && config.payLaterButtonConfig) || {};
                 const buttons = {
                     paypal: {
                         parentElementId: buttonsConfig.data && buttonsConfig.data.buttons && buttonsConfig.data.buttons.paypal.parentElementId || 'paypal-button-container',
@@ -143,45 +148,89 @@ define([
                     return;
                 }
 
-                return await this.paypalComponent.buttons({
-                    data: {
-                        enableVaulting: buttonsConfig.data && buttonsConfig.data.vaulting !== undefined ? buttonsConfig.data.vaulting : false,
-                        customerConfirmation: buttonsConfig.data && typeof buttonsConfig.data.customerConfirmation === 'string' ? buttonsConfig.data.customerConfirmation : 'REVIEW_AND_PAY',
-                        buttons: buttons
-                    },
-                    hooks: {
-                        onApprove: async (data, actions) => {
-                            console.log('on Approve called', data);
-                            var email = '';
-                            try {
-                                if (window.checkoutConfig && window.checkoutConfig.isCustomerLoggedIn && window.checkoutConfig.customerData && window.checkoutConfig.customerData.email) {
-                                    email = window.checkoutConfig.customerData.email;
-                                } else if (quote && quote.guestEmail) {
-                                    email = quote.guestEmail;
-                                }
-                                if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                                    email = '';
-                                }
-                            } catch (error) {
-                                email = '';
-                            }
-                            this.additionalData.paypal_order_id = data.orderId;
-                            this.additionalData.email = email;
-                            // Use inherited placeOrder method to trigger Magento's default flow
-                            this.placeOrder('parent');
-                        },
-                        onCancel: () => {
-                            console.log('on cancel called');
-                        },
-                        onError: error => {
-                            console.error('Error during PayPal checkout');
-                        }
-                    }
+                const buttonsData = {
+                    enableVaulting: buttonsConfig.data && buttonsConfig.data.vaulting !== undefined ? buttonsConfig.data.vaulting : false,
+                    customerConfirmation: buttonsConfig.data && typeof buttonsConfig.data.customerConfirmation === 'string' ? buttonsConfig.data.customerConfirmation : 'REVIEW_AND_PAY',
+                    buttons: buttons
+                };
+
+                const paypalResult = await this.paypalComponent.buttons({
+                    data: buttonsData,
+                    hooks: this.getButtonHooks('paypal')
                 });
+
+                // Pay Later is its own buttons() call so approval can be told apart from PayPal; the SDK does not
+                // report the funding source. It is never vaulted, and renders nothing when PayPal deems it ineligible.
+                if (this.isPayLaterActive()) {
+                    await this.paypalComponent.buttons({
+                        data: {
+                            enableVaulting: false,
+                            customerConfirmation: buttonsData.customerConfirmation,
+                            buttons: {
+                                paylater: {
+                                    parentElementId: payLaterButtonConfig.parentElementId || 'paypal-paylater-button-container',
+                                    color: payLaterButtonConfig.color || 'gold',
+                                    shape: payLaterButtonConfig.shape || 'rect'
+                                }
+                            }
+                        },
+                        hooks: this.getButtonHooks('paylater')
+                    });
+                }
+
+                return paypalResult;
 
             } catch (error) {
                 console.error('[PayPal] Error rendering PayPal buttons:', error);
             }
+        },
+
+        /**
+         * Hooks for one button; records which button was approved so the order is placed under the matching method.
+         * @param {String} funding - 'paypal' or 'paylater'
+         * @returns {Object}
+         */
+        getButtonHooks: function (funding) {
+            return {
+                onApprove: async (data, actions) => {
+                    console.log('on Approve called', data);
+                    var email = '';
+                    try {
+                        if (window.checkoutConfig && window.checkoutConfig.isCustomerLoggedIn && window.checkoutConfig.customerData && window.checkoutConfig.customerData.email) {
+                            email = window.checkoutConfig.customerData.email;
+                        } else if (quote && quote.guestEmail) {
+                            email = quote.guestEmail;
+                        }
+                        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                            email = '';
+                        }
+                    } catch (error) {
+                        email = '';
+                    }
+                    this.selectedFunding = funding;
+                    this.additionalData.paypal_order_id = data.orderId;
+                    this.additionalData.email = email;
+                    // Use inherited placeOrder method to trigger Magento's default flow
+                    this.placeOrder('parent');
+                },
+                onCancel: () => {
+                    console.log('on cancel called');
+                },
+                onError: error => {
+                    console.error('Error during PayPal checkout');
+                }
+            };
+        },
+
+        /**
+         * Pay Later has no renderer of its own: it is a second button of this method, enabled in admin.
+         * @returns {Boolean}
+         */
+        isPayLaterActive: function () {
+            var config = window.checkoutConfig && window.checkoutConfig.payment ?
+                window.checkoutConfig.payment[this.payLaterCode] :
+                undefined;
+            return !!(config && config.isActive);
         },
 
         observeTotals: function ()
@@ -202,7 +251,7 @@ define([
 
         getData: function () {
             var data = {
-                method: this.getCode(),
+                method: this.selectedFunding === 'paylater' && this.isPayLaterActive() ? this.payLaterCode : this.getCode(),
                 additional_data: this.additionalData || {}
             };
             if (this.paymentPayload && this.paymentPayload.sessionId) {
@@ -291,6 +340,7 @@ define([
                 } else {
                     // Clear PayPal button container if another payment method is selected
                     $('#paypal-button-container').empty();
+                    $('#paypal-paylater-button-container').empty();
                 }
             });
         },

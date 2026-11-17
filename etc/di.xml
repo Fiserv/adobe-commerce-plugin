@@ -223,6 +223,8 @@
 				<item name="PAYPALWALLET" xsi:type="string">orderapi</item>
 				<item name="VENMO" xsi:type="string">orderapi</item>
 				<item name="VENMOWALLET" xsi:type="string">orderapi</item>
+				<item name="PAYLATER" xsi:type="string">orderapi</item>
+				<item name="PAYPALPAYLATER" xsi:type="string">orderapi</item>
 			</argument>
 			<argument name="defaultPoolKey" xsi:type="string">commercehub</argument>
 		</arguments>
@@ -753,6 +755,48 @@
 			<argument name="commandPool" xsi:type="object">FiservOrdersCommandPool</argument>
 		</arguments>
 	</virtualType>
+
+	<!-- PayPal Pay Later: sub-feature of PayPal (Orders surface). Shares PayPal's Orders pools and parent config
+		 (payment action, partial flags); only active/title come from the Pay Later method. Placed by the PayPal renderer
+		 when the Pay Later button is used. -->
+	<virtualType name="FiservPayPalPayLaterFacade" type="Magento\Payment\Model\Method\Adapter">
+		<arguments>
+			<argument name="code" xsi:type="const">Fiserv\Payments\Model\Config\PayPal\PayLater\ConfigProvider::CODE</argument>
+			<argument name="formBlockType" xsi:type="string">Fiserv\Payments\Block\CommerceHub\Form</argument>
+			<argument name="infoBlockType" xsi:type="string">Fiserv\Payments\Block\PayPal\PayPalInfo</argument>
+			<argument name="valueHandlerPool" xsi:type="object">FiservPayPalPayLaterValueHandlerPool</argument>
+			<argument name="validatorPool" xsi:type="object">FiservOrdersValidatorPool</argument>
+			<argument name="commandPool" xsi:type="object">FiservOrdersCommandPool</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservPayPalPayLaterValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+		<arguments>
+			<argument name="handlers" xsi:type="array">
+				<item name="default" xsi:type="string">FiservOrdersValueHandler</item>
+				<item name="active" xsi:type="string">Fiserv\Payments\Gateway\Config\PayPal\PayLater\ActiveHandler</item>
+				<item name="title" xsi:type="string">FiservPayPalPayLaterOwnConfigValueHandler</item>
+				<item name="can_void" xsi:type="string">Fiserv\Payments\Gateway\Config\CanVoidHandler</item>
+				<item name="can_refund" xsi:type="string">Fiserv\Payments\Gateway\Config\CanRefundHandler</item>
+				<item name="can_cancel" xsi:type="string">Fiserv\Payments\Gateway\Config\CanVoidHandler</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<!-- Reads payment/fiserv_paypal_paylater/*; the default handler reads payment/fiserv_paypal/* -->
+	<virtualType name="FiservPayPalPayLaterOwnConfigValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+		<arguments>
+			<argument name="configInterface" xsi:type="object">Fiserv\Payments\Gateway\Config\PayPal\PayLater\Config</argument>
+		</arguments>
+	</virtualType>
+
+	<type name="Magento\Payment\Gateway\Command\CommandManagerPool">
+		<arguments>
+			<argument name="executors" xsi:type="array">
+				<item name="fiserv_paypal_paylater" xsi:type="string">FiservOrdersCommandManager</item>
+			</argument>
+		</arguments>
+	</type>
 
 	<virtualType name="FiservOrdersPaymentValueHandlerPool" type="VaultPaymentValueHandlerPool">
 		<arguments>
