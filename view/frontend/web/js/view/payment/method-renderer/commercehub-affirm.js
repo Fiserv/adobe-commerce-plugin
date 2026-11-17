@@ -29,6 +29,7 @@ define([
 		defaults: {
 			template: 'Fiserv_Payments/payment/commercehub/affirm-form',
 			code: 'fiserv_affirm',
+			virtualCardCode: 'fiserv_affirm_virtual_card',
 			additionalData: {},
 			paymentPayload: {
 				sessionId: undefined,
@@ -347,9 +348,21 @@ define([
 			}
 		},
 
+		/**
+		 * Affirm Virtual Card has no renderer of its own: the shopper uses the Affirm button, and the
+		 * order is placed under the Virtual Card method when it is enabled for the store.
+		 */
+		getPlaceOrderMethodCode() {
+			const config = globalThis.checkoutConfig && globalThis.checkoutConfig.payment ?
+				globalThis.checkoutConfig.payment[this.virtualCardCode] :
+				undefined;
+
+			return config && config.isActive ? this.virtualCardCode : this.getCode();
+		},
+
 		getData() {
 			const data = {
-				method: this.getCode(),
+				method: this.getPlaceOrderMethodCode(),
 				additional_data: this.additionalData || {},
 			};
 

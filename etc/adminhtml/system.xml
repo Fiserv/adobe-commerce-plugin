@@ -1287,6 +1287,12 @@
 							<source_model>Fiserv\Payments\Model\Source\CommerceHub\TransactionType</source_model>
 							<config_path>payment/fiserv_affirm/payment_action</config_path>
 						</field>
+						<field id="affirm_enable_virtual_card" translate="label comment" type="select" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="0">
+							<label>Enable Affirm Virtual Card</label>
+							<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+							<config_path>payment/fiserv_affirm/ch_affirm_virtual_card</config_path>
+							<comment>Only enable if your Commerce Hub merchant ID is boarded for Affirm Virtual Card. Uses the Affirm button and Charge Type above.</comment>
+						</field>
 						<field id="affirm_button_color" translate="label" type="select" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="0">
 							<label>Affirm Button Color</label>
 							<config_path>payment/fiserv_affirm/affirm_button_color</config_path>

@@ -9,6 +9,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	const KEY_TITLE = 'title';
 	const KEY_PAYMENT_ACTION = 'payment_action';
 	const AFFIRM_BUTTON_STYLE_KEY = 'affirm_button_color';
+	const KEY_VIRTUAL_CARD_ACTIVE = 'ch_affirm_virtual_card';
 
 
 	/**
@@ -47,7 +48,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	}
 
 	/**
-	 * Get Apple Pay payment action
+	 * Get Affirm payment action
 	 *
 	 * @param int|null $storeId
 	 * @return string
@@ -60,6 +61,17 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 	public function getAffirmButtonStyle($storeId = null)
 	{
 		return $this->getValue(self::AFFIRM_BUTTON_STYLE_KEY, $storeId);
+	}
+
+	/**
+	 * Is Affirm Virtual Card enabled
+	 *
+	 * @param int|null $storeId
+	 * @return bool
+	 */
+	public function isVirtualCardActive($storeId = null): bool
+	{
+		return (bool) $this->getValue(self::KEY_VIRTUAL_CARD_ACTIVE, $storeId);
 	}
 
 }
