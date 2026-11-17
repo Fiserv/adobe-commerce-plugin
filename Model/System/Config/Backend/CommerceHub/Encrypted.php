@@ -66,9 +66,9 @@ class Encrypted extends \Magento\Config\Model\Config\Backend\Encrypted
 	}
 
 	private function validateMerchantId($value) {
-		if (strlen($value) != 15) {
+		if (!preg_match('/^[A-Za-z0-9]{1,15}$/', $value)) {
 			$this->_dataSaveAllowed = false;
-			throw new \Magento\Framework\Exception\LocalizedException(__("Error. CommerceHub Merchant ID must be 15 digits. Your settings have not been saved."));
+			throw new \Magento\Framework\Exception\LocalizedException(__("Error. CommerceHub Merchant ID must be 1 to 15 letters or digits. Your settings have not been saved."));
 		}
 	}
 
