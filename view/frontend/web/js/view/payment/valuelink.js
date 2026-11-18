@@ -113,8 +113,7 @@ define([
 					return;
 				}
 
-				// sessionId must be refreshed 
-				sessionId = await this.captureCardFormAsync();
+				// The same sessionId is valid for balance-inquiry and charges, so no re-capture needed
 				setGiftCardAction(sessionId, balance);
 
 				sdcv2.destroyIframe(this.formKey);

@@ -224,12 +224,9 @@ define([
 					this.showErrorMessage(this.emptyMessage);
 					return;
 				}
-			
-				// need to recapture card form here
-				this.captureCardForm((newSessionId) => { 
-					this.cardCaptureSuccess(newSessionId);
-					this.setValuelinkCardAction(newSessionId, balance);
-				});
+
+				// The same sessionId is valid for balance-inquiry and charges, so no re-capture needed
+				this.setValuelinkCardAction(sessionId, balance);
 			},
 
 			setValuelinkCardAction: function (sessionId, balance)
