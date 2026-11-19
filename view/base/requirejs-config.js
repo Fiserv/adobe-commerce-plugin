@@ -15,7 +15,7 @@ var config = {
 	},
 	
     paths : {
-		SDCv2Library : 'https://commercehub-checkout-qa.fiservapps.com/sdk/5.0.1/checkout',
+		SDCv2Library : 'https://cdn-nonprod.fiservapps.com/sdk-secure/5.0.1/checkout.js',
 		commercehubQaClient : 'https://qa.api.fiservapps.com/ch/sdk/v1/commercehub-client-sdk',
 		commercehubCertClient : 'https://cert.api.fiservapps.com/ch/sdk/v1/commercehub-client-sdk',
 		commercehubProdClient : 'https://prod.api.fiservapps.com/ch/sdk/v1/commercehub-client-sdk',
