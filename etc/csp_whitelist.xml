@@ -11,6 +11,11 @@
                 <value id="ch-cert-lib-base" type="host">https://cert.api.fiservapps.com</value>
                 <value id="ch-prod-base" type="host">https://prod.api.fiservapps.com</value>
                 <value id="ch-cert-base" type="host">https://cert.api.fiservapps.com</value>
+                <value id="ch-qa-cdn" type="host">https://cdn-nonprod.fiservapps.com</value>
+                <value id="ch-qa-checkout" type="host">https://commercehub-checkout-qa.fiservapps.com</value>
+                <value id="ch-qa-lib-base" type="host">https://qa.api.fiservapps.com</value>
+                <value id="ch-qa-apis-lib-base" type="host">https://qa.api.fiservapis.com</value>
+                <value id="ch-qa-connect" type="host">https://connect-qa.fiservapis.com</value>
 				<value id="apple-pay-sdk" type="host">https://applepay.cdn-apple.com</value>
                 <value id="affirm-sdk" type="host">https://cdn1.sandbox.affirm.com</value>
                 <value id="affirm-sdk-2" type="host">https://cdn1-sandbox.affirm.com</value>
@@ -31,6 +36,11 @@
                 <value id="ch-cert-lib-base" type="host">https://cert.api.fiservapps.com</value>
                 <value id="ch-prod-base" type="host">https://prod.api.fiservapps.com</value>
                 <value id="ch-cert-base" type="host">https://cert.api.fiservapps.com</value>
+                <value id="ch-qa-cdn" type="host">https://cdn-nonprod.fiservapps.com</value>
+                <value id="ch-qa-checkout" type="host">https://commercehub-checkout-qa.fiservapps.com</value>
+                <value id="ch-qa-lib-base" type="host">https://qa.api.fiservapps.com</value>
+                <value id="ch-qa-apis-lib-base" type="host">https://qa.api.fiservapis.com</value>
+                <value id="ch-qa-connect" type="host">https://connect-qa.fiservapis.com</value>
 				<value id="apple-pay-sdk" type="host">https://applepay.cdn-apple.com</value>
                 <value id="affirm-sdk" type="host">https://cdn1.sandbox.affirm.com</value>
                 <value id="affirm-sdk-2" type="host">https://cdn1-sandbox.affirm.com</value>
@@ -51,6 +61,11 @@
                 <value id="ch-cert-lib-base" type="host">https://cert.api.fiservapps.com</value>
                 <value id="ch-prod-base" type="host">https://prod.api.fiservapps.com</value>
                 <value id="ch-cert-base" type="host">https://cert.api.fiservapps.com</value>
+                <value id="ch-qa-cdn" type="host">https://cdn-nonprod.fiservapps.com</value>
+                <value id="ch-qa-checkout" type="host">https://commercehub-checkout-qa.fiservapps.com</value>
+                <value id="ch-qa-lib-base" type="host">https://qa.api.fiservapps.com</value>
+                <value id="ch-qa-apis-lib-base" type="host">https://qa.api.fiservapis.com</value>
+                <value id="ch-qa-connect" type="host">https://connect-qa.fiservapis.com</value>
 				<value id="apple-pay-sdk" type="host">https://applepay.cdn-apple.com</value>
                 <value id="affirm-sdk" type="host">https://cdn1.sandbox.affirm.com</value>
                 <value id="affirm-sdk-2" type="host">https://cdn1-sandbox.affirm.com</value>
@@ -79,6 +94,11 @@
                 <value id="ch-cert-lib-base" type="host">https://cert.api.fiservapps.com</value>
                 <value id="ch-prod-base" type="host">https://prod.api.fiservapps.com</value>
                 <value id="ch-cert-base" type="host">https://cert.api.fiservapps.com</value>
+                <value id="ch-qa-cdn" type="host">https://cdn-nonprod.fiservapps.com</value>
+                <value id="ch-qa-checkout" type="host">https://commercehub-checkout-qa.fiservapps.com</value>
+                <value id="ch-qa-lib-base" type="host">https://qa.api.fiservapps.com</value>
+                <value id="ch-qa-apis-lib-base" type="host">https://qa.api.fiservapis.com</value>
+                <value id="ch-qa-connect" type="host">https://connect-qa.fiservapis.com</value>
 				<value id="apple-pay-sdk" type="host">https://applepay.cdn-apple.com</value>
                 <value id="affirm-sdk" type="host">https://cdn1.sandbox.affirm.com</value>
                 <value id="affirm-sdk-2" type="host">https://cdn1-sandbox.affirm.com</value>
