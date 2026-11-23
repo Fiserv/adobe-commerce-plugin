@@ -11,6 +11,8 @@
     height: 6vh;
 }
 
-#paypal-button-container [data-funding-source="paylater"] {
+#paypal-paylater-button-container {
     margin-top: 10px;
+    display: flex;
+    justify-content: center;
 }
