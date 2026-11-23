@@ -1225,7 +1225,6 @@
 						<label>Enable PayPal Pay Later</label>
 						<source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
 						<config_path>payment/fiserv_paypal/ch_paypal_paylater</config_path>
-						<comment>Shows a Pay Later button next to the PayPal button. Only enable if your Commerce Hub merchant ID is boarded for PayPal Pay Later. Uses the Charge Type above and requires PayPal to be enabled.</comment>
 					</field>
 
 					<!-- PayPal Button Style Fields -->
