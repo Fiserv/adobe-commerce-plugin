@@ -99,7 +99,6 @@ class ChHttpAdapter
 			$data = json_decode($payload, true);
 			if(array_key_exists("transactionDetails", $data) && curl_errno($curl) === 28) {
 				$this->logger->logCritical(1, "Timeout detected. Attempting recovery...");
-				curl_close($curl);
 				// Step 1: Idempotency attempt
 				$this->logger->logCritical(1, "Initiating idempotency attempt for Client-Request-Id " . $this->nonce);
 				$this->timestamp = $this->getTimestamp();
@@ -108,7 +107,6 @@ class ChHttpAdapter
 
 				if(curl_error($curl)) {
 					$this->logger->logCritical(1, "Idempotency attempt failure. Continuing recovery process...");
-					curl_close($curl);
 					return $this->handleTimeout(json_decode($payload, true), $endpoint);
 				}
 				$this->logger->logInfo(1, "Idempotency attempt success. Returning from recovery process...");
@@ -116,7 +114,6 @@ class ChHttpAdapter
 		}
 		$statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 		$headerLength = curl_getinfo($curl, CURLINFO_HEADER_SIZE);
-		curl_close($curl);
 		return new ChHttpResponse($statusCode, $curlResponse, $headerLength);
 	}
 
@@ -160,10 +157,8 @@ class ChHttpAdapter
 			}
 
 			$this->logger->logInfo(1, "Transaction inquiry success. Returning from recovery process...");
-			curl_close($inquiryCurl);
 			return new ChHttpResponse($inquiryStatusCode, substr($inquiryResponseFull, 0, $inquiryHeaderLength) . json_encode($inquiryBody), $inquiryHeaderLength);
 		}
-		curl_close($inquiryCurl);
 		$this->logger->logCritical(1, "Transaction inquiry failure. Continuing recovery process...");
 
 		// Step 3: Critical Recovery (Deal with transaction specific response flows if issue with inquiry occurred)
@@ -195,7 +190,6 @@ class ChHttpAdapter
 				$this->logger->logInfo(1, "Transaction ID: " . $cancelTransactionId);
 				$this->logger->logInfo(1, "Recovery process finished");
 			}
-			curl_close($cancelCurl);
 		} else {
 			// Do nothing  :(
 			$this->logger->logEmergency(1, "Non-Auth transaction detected. Further recovery attempts not possible. Failed to recover from transaction timeout. referenceMerchantTransactionId: " . $transactionID);
