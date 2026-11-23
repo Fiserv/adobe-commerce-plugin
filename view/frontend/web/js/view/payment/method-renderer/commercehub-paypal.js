@@ -159,8 +159,7 @@ define([
                     hooks: this.getButtonHooks('paypal')
                 });
 
-                // Pay Later is its own buttons() call so approval can be told apart from PayPal; the SDK does not
-                // report the funding source. It is never vaulted, and renders nothing when PayPal deems it ineligible.
+                // Pay Later is its own buttons() call so approval can be told apart from regular PayPal
                 if (this.isPayLaterActive()) {
                     await this.paypalComponent.buttons({
                         data: {
