@@ -76,7 +76,7 @@ class SettleDetailsDataBuilder extends OrderApiTransactionDetailsDataBuilder
 		$finalInvoice = $grandTotal- $invoiceTotalToDate - $currentInvoiceTotal <= 0.00001;
 		$splitShipment->setFinalShipment($finalInvoice);
 		$splitShipment->setTotalCount($totalInvoices);
-		$deets['splitShipment'] = $splitShipment;
+		$deets->setSplitShipment($splitShipment);
 		$res[self::TXN_DETAILS_KEY] = $deets;
 
 		return $res;
