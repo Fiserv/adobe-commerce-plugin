@@ -24,6 +24,8 @@
                 <value id="samsung-pay-sdk-button" type="host">https://resource.stg.samsungpay.com</value>
                 <value id="samsung-pay-sdk-cdn" type="host">https://samsungpay.cdn-samsung.com</value>
                 <value id="paze-sdk" type="host">https://checkout.wallet.cat.earlywarning.io</value>
+                <value id="afterpay-sandbox" type="host">https://portal.sandbox.afterpay.com</value>
+                <value id="afterpay-production" type="host">https://portal.afterpay.com</value>
             </values>
         </policy>
         <policy id="connect-src">
@@ -49,6 +51,8 @@
                 <value id="samsung-pay-sdk-button" type="host">https://resource.stg.samsungpay.com</value>
                 <value id="samsung-pay-sdk-cdn" type="host">https://samsungpay.cdn-samsung.com</value>
                 <value id="paze-sdk" type="host">https://checkout.wallet.cat.earlywarning.io</value>
+                <value id="afterpay-sandbox" type="host">https://portal.sandbox.afterpay.com</value>
+                <value id="afterpay-production" type="host">https://portal.afterpay.com</value>
             </values>
         </policy>
         <policy id="frame-src">
@@ -74,6 +78,8 @@
                 <value id="samsung-pay-sdk-button" type="host">https://resource.stg.samsungpay.com</value>
                 <value id="samsung-pay-sdk-cdn" type="host">https://samsungpay.cdn-samsung.com</value>
 				<value id="paze-sdk" type="host">https://checkout.wallet.cat.earlywarning.io</value>
+                <value id="afterpay-sandbox" type="host">https://portal.sandbox.afterpay.com</value>
+                <value id="afterpay-production" type="host">https://portal.afterpay.com</value>
             </values>
         </policy>
         <policy id="img-src">

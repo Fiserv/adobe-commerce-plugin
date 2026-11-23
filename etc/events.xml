@@ -1,61 +1,67 @@
 <?xml version="1.0"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
-	<event name="payment_method_assign_data_fiserv_commercehub">
-		<observer name="fiserv_commercehub_data_assign" instance="Fiserv\Payments\Observer\CommerceHub\DataAssignObserver" />
-	</event>
-	<event name="payment_method_assign_data_fiserv_paypal_fastlane">
-		<observer name="fiserv_paypal_fastlane_data_assign" instance="Fiserv\Payments\Observer\PayPal\Fastlane\DataAssignObserver" />
-	</event>
-	<event name="payment_method_assign_data_fiserv_paypal">
-		<observer name="fiserv_paypal_data_assign" instance="Fiserv\Payments\Observer\PayPal\DataAssignObserver" />
-	</event>
-	<event name="payment_method_assign_data_fiserv_paypal_paylater">
-		<observer name="fiserv_paypal_paylater_data_assign" instance="Fiserv\Payments\Observer\PayPal\DataAssignObserver" />
-	</event>
+    <event name="payment_method_assign_data_fiserv_commercehub">
+        <observer name="fiserv_commercehub_data_assign" instance="Fiserv\Payments\Observer\CommerceHub\DataAssignObserver" />
+    </event>
+    <event name="payment_method_assign_data_fiserv_paypal_fastlane">
+        <observer name="fiserv_paypal_fastlane_data_assign" instance="Fiserv\Payments\Observer\PayPal\Fastlane\DataAssignObserver" />
+    </event>
+    <event name="payment_method_assign_data_fiserv_paypal">
+        <observer name="fiserv_paypal_data_assign" instance="Fiserv\Payments\Observer\PayPal\DataAssignObserver" />
+    </event>
+    <event name="payment_method_assign_data_fiserv_paypal_paylater">
+        <observer name="fiserv_paypal_paylater_data_assign" instance="Fiserv\Payments\Observer\PayPal\DataAssignObserver" />
+    </event>
     <event name="payment_method_assign_data_fiserv_venmo">
         <observer name="fiserv_venmo_data_assign" instance="Fiserv\Payments\Observer\PayPal\DataAssignObserver" />
     </event>
     <event name="payment_method_assign_data_fiserv_applepay">
         <observer name="fiserv_applepay_data_assign" instance="Fiserv\Payments\Observer\CommerceHub\DataAssignObserver" />
     </event>
-	<event name="payment_method_assign_data_fiserv_affirm">
-		<observer name="fiserv_affirm_data_assign" instance="Fiserv\Payments\Observer\PayPal\DataAssignObserver" />
-	</event>
-	<event name="controller_action_predispatch">
-        <observer name="fiserv_process_pending_inquiries" instance="Fiserv\Payments\Observer\CommerceHub\ProcessPendingInquiriesObserver"/>
+    <event name="payment_method_assign_data_fiserv_affirm">
+        <observer name="fiserv_affirm_data_assign" instance="Fiserv\Payments\Observer\PayPal\DataAssignObserver" />
     </event>
-	<event name="payment_method_assign_data_fiserv_samsung_pay">
-		<observer name="fiserv_samsung_pay_data_assign" instance="Fiserv\Payments\Observer\CommerceHub\DataAssignObserver" />
-	</event>
-	<event name="payment_method_assign_data_fiserv_ach">
-		<observer name="fiserv_ach_data_assign" instance="Fiserv\Payments\Observer\CommerceHub\DataAssignObserver" />
-	</event>
-	<event name="payment_method_assign_data_fiserv_paze">
+    <event name="payment_method_assign_data_fiserv_affirm_virtual_card">
+        <observer name="fiserv_affirm_virtual_card_data_assign" instance="Fiserv\Payments\Observer\PayPal\DataAssignObserver" />
+    </event>
+    <event name="payment_method_assign_data_fiserv_afterpay">
+        <observer name="fiserv_afterpay_data_assign" instance="Fiserv\Payments\Observer\CommerceHub\DataAssignObserver" />
+    </event>
+    <event name="controller_action_predispatch">
+        <observer name="fiserv_process_pending_inquiries" instance="Fiserv\Payments\Observer\CommerceHub\ProcessPendingInquiriesObserver" />
+    </event>
+    <event name="payment_method_assign_data_fiserv_samsung_pay">
+        <observer name="fiserv_samsung_pay_data_assign" instance="Fiserv\Payments\Observer\CommerceHub\DataAssignObserver" />
+    </event>
+    <event name="payment_method_assign_data_fiserv_ach">
+        <observer name="fiserv_ach_data_assign" instance="Fiserv\Payments\Observer\CommerceHub\DataAssignObserver" />
+    </event>
+    <event name="payment_method_assign_data_fiserv_paze">
         <observer name="fiserv_paze_data_assign" instance="Fiserv\Payments\Observer\CommerceHub\DataAssignObserver" />
     </event>
-	<event name="payment_method_assign_data_fiserv_googlepay">
-		<observer name="fiserv_googlepay_data_assign" instance="Fiserv\Payments\Observer\CommerceHub\DataAssignObserver" />
-	</event>
-	<event name="payment_method_assign_data_fiserv_pay_by_link">
-		<observer name="fiserv_pbl_data_assign" instance="Fiserv\Payments\Observer\PayByLink\DataAssignObserver" />
-	</event>
-	<event name="adminhtml_sales_order_create_process_data">
+    <event name="payment_method_assign_data_fiserv_googlepay">
+        <observer name="fiserv_googlepay_data_assign" instance="Fiserv\Payments\Observer\CommerceHub\DataAssignObserver" />
+    </event>
+    <event name="payment_method_assign_data_fiserv_pay_by_link">
+        <observer name="fiserv_pbl_data_assign" instance="Fiserv\Payments\Observer\PayByLink\DataAssignObserver" />
+    </event>
+    <event name="adminhtml_sales_order_create_process_data">
         <observer name="fiserv_valuelink" instance="Fiserv\Payments\Observer\Valuelink\ProcessOrderCreationData" />
-	</event>
-	<event name="sales_model_service_quote_submit_before">
+    </event>
+    <event name="sales_model_service_quote_submit_before">
         <observer name="fiserv_valuelink" instance="Fiserv\Payments\Observer\Valuelink\ProcessOrderPlace" />
-	</event>
-	<event name="checkout_submit_all_after">
-		<observer name="fiserv_valuelink_sale_invoice" instance="Fiserv\Payments\Observer\Valuelink\ValuelinkOnlySaleCreateInvoice" />
-		<observer name="fiserv_valuelink_order_enrich" instance="Fiserv\Payments\Observer\Valuelink\EnrichValuelinkTransactionsWithOrderId" />
-	</event>
-	<event name="sales_order_payment_cancel">
+    </event>
+    <event name="checkout_submit_all_after">
+        <observer name="fiserv_valuelink_sale_invoice" instance="Fiserv\Payments\Observer\Valuelink\ValuelinkOnlySaleCreateInvoice" />
+        <observer name="fiserv_valuelink_order_enrich" instance="Fiserv\Payments\Observer\Valuelink\EnrichValuelinkTransactionsWithOrderId" />
+    </event>
+    <event name="sales_order_payment_cancel">
         <observer name="fiserv_valuelink" instance="Fiserv\Payments\Observer\Valuelink\CancelValuelinkTransactions" />
-	</event>
-	<event name="sales_order_payment_void">
+    </event>
+    <event name="sales_order_payment_void">
         <observer name="fiserv_valuelink" instance="Fiserv\Payments\Observer\Valuelink\CancelValuelinkTransactions" />
-	</event>
- 	<event name="sales_order_invoice_save_after">
+    </event>
+    <event name="sales_order_invoice_save_after">
         <observer name="fiserv_valuelink" instance="Fiserv\Payments\Observer\Valuelink\EnrichValuelinkTransactionsWithInvoiceId" />
     </event>
 </config>
