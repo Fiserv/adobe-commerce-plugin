@@ -61,7 +61,7 @@ class ChHttpAdapter
 	public function __construct(
 		Config $config,
 		MultiLevelLogger $logger,
-		PayPalConfig $paypalConfig = null
+		?PayPalConfig $paypalConfig = null
 	) {
 		$this->chConfig = $config;
 		$this->logger = $logger;

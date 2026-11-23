@@ -62,9 +62,9 @@ class GetCredentials extends Action implements HttpPostActionInterface
         Context $context,
         CredentialsRequest $chAdapter,
         MultiLevelLogger $logger,
-        CustomerSession $customerSession = null,
-        ProviderCustomerIdFactory $providerCustomerIdFactory = null,
-        PayPalConfig $paypalConfig = null
+        ?CustomerSession $customerSession = null,
+        ?ProviderCustomerIdFactory $providerCustomerIdFactory = null,
+        ?PayPalConfig $paypalConfig = null
     ) {
         parent::__construct($context);
         $this->chAdapter = $chAdapter;
