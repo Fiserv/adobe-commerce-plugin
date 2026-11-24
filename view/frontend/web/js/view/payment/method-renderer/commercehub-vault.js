@@ -6,7 +6,6 @@ define([
 	'Magento_Ui/js/model/messageList',
 	'Magento_Checkout/js/model/full-screen-loader',
 	'Fiserv_Payments/js/ch-adapter',
-	'Fiserv_Payments/js/action/create-commercehub-enriched-session',
 	'Fiserv_Payments/js/action/verify-account',
 	'mage/translate'
 ], function(
@@ -17,7 +16,6 @@ define([
 	globalMessageList,
 	fullScreenLoader,
 	chAdapter,
-	chSession,
 	verifyAccount,
 	$t
 ){
@@ -30,9 +28,7 @@ define([
 			additionalData: {},
 			paymentPayload: { sessionId: null },
 			paymentMethodName: '[name="payment[method]"]',
-			securityIframeInitialized: false,
-            paymentSessionData: undefined,
-            contextId: undefined
+			securityIframeInitialized: false
 		},
 
 		initialize: function () {
@@ -159,7 +155,7 @@ define([
 			this.beginIframeFlow();
 			chAdapter.destroyIframe();
 
-            await this.initChSdk(this.paymentToken);
+			await this.initChSdk();
 
 			chAdapter.instantiateIframe(
 				() => { this.iframeLoadSuccess(); },
@@ -294,23 +290,23 @@ define([
 			this.updatePlaceOrderState(false);
 		},
 
-		submitSecurityCode: async function (credentials) {
+		submitSecurityCode: async function () {
 			return new Promise((resolve, reject) => {
 				this.beginIframeFlow();
 				chAdapter.submitIframeForm(
-					() => { this.iframeRunSuccess(); resolve(); },
+					(sessionId) => { this.iframeRunSuccess(sessionId); resolve(); },
 					(error) => { this.iframeRunFailure(error); reject(error); }
 				);
 			});
 		},
 
-		iframeRunSuccess: function() {
-			if (!this.paymentSessionData || !this.paymentSessionData['sessionId']) {
+		iframeRunSuccess: function(sessionId) {
+			if (!sessionId) {
 				this.iframeRunFailure($t("Payment session data not found."));
 				return;
 			}
 
-			this.setPaymentPayload(this.paymentSessionData['sessionId']);
+			this.setPaymentPayload(sessionId);
 			this.endIframeFlow();
 		},
 
@@ -329,10 +325,8 @@ define([
 			}
 
 			if (this.shouldRequireVaultCvv()) {
-				await this.setCredentials(this.paymentToken);
-
 				try {
-					await this.submitSecurityCode(this.paymentSessionData);
+					await this.submitSecurityCode();
 				} catch (error) {
 					return;
 				}
@@ -391,7 +385,6 @@ define([
 		threeDSecureFail: function(error) {
 			this.placeOrderFail(error);
 			this.paymentToken = undefined;
-			this.paymentSessionData = undefined;
 		},
 
 		placeOrderFail: function (errorResponse) {
@@ -410,27 +403,20 @@ define([
 			return window.checkoutConfig.payment[this.getCode()]["threeDSecure"] === '1'
 		},
 
-		setCredentials: async function(paymentToken) {
-			const credsResponse = await chSession({
-				"paymentToken" : paymentToken,
-				"threeDSecure" : this.is3DSecureEnabled(),
-				paymentCode: this.commercehubCode
+		/** Fetch legacy /credentials (payments-vas/v1/security/credentials) session for CVV capture. */
+		setCredentials: function () {
+			return new Promise((resolve, reject) => {
+				chAdapter.getVaultCredentials(
+					window.checkoutConfig.payment.fiserv_payments['storeUrl'],
+					(creds) => resolve(creds),
+					(err) => reject(new Error(err))
+				);
 			});
-
-			this.paymentSessionData = credsResponse["ch_credentials"];
 		},
-			
 
-		initChSdk: async function(paymentToken) {
-			await this.setCredentials(paymentToken);
-			if (!this.paymentSessionData) throw new Error($t('Failed to create payment session.'));
-
-            this.contextId = crypto.randomUUID();
-			await chAdapter.initSdk(
-                window.checkoutConfig.payment[this.getCode()], 
-                this.paymentSessionData, 
-                this.contextId
-            );
+		initChSdk: async function () {
+			const creds = await this.setCredentials();
+			await chAdapter.initSdk(window.checkoutConfig.payment[this.getCode()], creds);
 		},
 
 		run3DSecure: async function() {

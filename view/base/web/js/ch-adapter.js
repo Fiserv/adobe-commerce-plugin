@@ -21,6 +21,11 @@ define([
 	return {
 		credentialsErrorMsg: "Oops! Something went wrong...",
 		credentialsUrl: "fiserv/commercehub/createsession",
+		// Legacy /credentials endpoint (payments-vas/v1/security/credentials), same one used by
+		// the Valuelink gift card lane. Used for vaulted-card CVV checkouts: CommerceHub rejects
+		// source.sessionId when paired with sourceType PaymentToken via the newer /sessions/create
+		// (session-intent) flow, but accepts it when the session comes from this legacy endpoint.
+		vaultCredentialsUrl: "fiserv/commercehub/getcredentials",
 		clientScriptId: "commercehub",
 		configApiKeyKey: "apiKey",
 		configMerchantIdKey: "merchantId",
@@ -91,13 +96,13 @@ define([
 			await window.fiserv.init(initPayload);
 		},
 
-		getChCredentials: function (storeUrl, successCb, errorCb) {
+		getChCredentials: function (storeUrl, successCb, errorCb, url) {
 			let validateCb = this.validateCredentialsResponse.bind(this);
 			let parseResponseCb = this.parseChCredentialsResponse.bind(this);
 			let errorMsg = this.credentialsErrorMsg;
 
 			$.ajax({
-				url: storeUrl + this.credentialsUrl,
+				url: storeUrl + (url || this.credentialsUrl),
 				cache: false,
 				dataType: 'json',
 				type: "POST",
@@ -114,6 +119,11 @@ define([
 					console.log(err);
 				}
 			});
+		},
+
+		/** Vaulted-card CVV flow: fetch credentials from the legacy /credentials endpoint. */
+		getVaultCredentials: function (storeUrl, successCb, errorCb) {
+			this.getChCredentials(storeUrl, successCb, errorCb, this.vaultCredentialsUrl);
 		},
 
 		validateCredentialsResponse: function (response) {
@@ -265,7 +275,10 @@ define([
 
 			this.sdcv2Form.submit(submitConfig)
 				.then((next) => {
-					runSuccessCb();
+					// Return the sessionId actually bound at init time (this.credentials),
+					// never a separately/later-fetched one, so callers can't send a mismatched
+					// sessionId that the CVV was never captured under.
+					runSuccessCb(this.credentials && this.credentials[this.sessionIdKey]);
 				})
 				.catch((data) => {
 					console.log(data);
