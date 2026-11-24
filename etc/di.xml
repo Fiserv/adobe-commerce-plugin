@@ -111,7 +111,7 @@
 			<argument name="executors" xsi:type="array">
 				<item name="fiserv_commercehub" xsi:type="string">FiservChargesCommandManager</item>
 				<item name="fiserv_applepay" xsi:type="string">FiservChargesCommandManager</item>
-				<item name="fiserv_klarna" xsi:type="string">FiservChargesCommandManager</item>
+				<item name="fiserv_klarna" xsi:type="string">FiservKlarnaCommandManager</item>
 				<item name="fiserv_samsung_pay" xsi:type="string">FiservChargesCommandManager</item>
 				<item name="fiserv_ach" xsi:type="string">FiservAchCommandManager</item>
 				<item name="fiserv_pay_by_link" xsi:type="string">FiservPayByLinkCommandManager</item>
@@ -1535,7 +1535,7 @@
 			<argument name="infoBlockType" xsi:type="string">Magento\Payment\Block\ConfigurableInfo</argument>
 			<argument name="valueHandlerPool" xsi:type="object">FiservKlarnaValueHandlerPool</argument>
 			<argument name="validatorPool" xsi:type="object">FiservChargesValidatorPool</argument>
-			<argument name="commandPool" xsi:type="object">FiservChargesCommandPool</argument>
+			<argument name="commandPool" xsi:type="object">FiservKlarnaCommandPool</argument>
 		</arguments>
 	</virtualType>
 
@@ -1556,6 +1556,176 @@
 		</arguments>
 	</virtualType>
 
+	<!-- Klarna vault method: saved-token orders carry this code and run the vault_* commands (TokenAuth/TokenSale composites), mirroring fiserv_commercehub_vault -->
+	<virtualType name="FiservKlarnaVaultPaymentConfig" type="Magento\Payment\Gateway\Config\Config">
+		<arguments>
+			<argument name="methodCode" xsi:type="const">Fiserv\Payments\Model\Config\Klarna\ConfigProvider::VAULT_CODE</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservKlarnaVaultPaymentValueHandler" type="VaultPaymentDefaultValueHandler">
+		<arguments>
+			<argument name="configInterface" xsi:type="object">FiservKlarnaVaultPaymentConfig</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservKlarnaVaultPaymentValueHandlerPool" type="VaultPaymentValueHandlerPool">
+		<arguments>
+			<argument name="handlers" xsi:type="array">
+				<item name="default" xsi:type="string">FiservKlarnaVaultPaymentValueHandler</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservKlarnaVaultFacade" type="Magento\Vault\Model\Method\Vault">
+		<arguments>
+			<argument name="config" xsi:type="object">FiservKlarnaVaultPaymentConfig</argument>
+			<argument name="valueHandlerPool" xsi:type="object">FiservKlarnaVaultPaymentValueHandlerPool</argument>
+			<argument name="vaultProvider" xsi:type="object">FiservKlarnaFacade</argument>
+			<argument name="code" xsi:type="const">Fiserv\Payments\Model\Config\Klarna\ConfigProvider::VAULT_CODE</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservKlarnaCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
+		<arguments>
+			<argument name="commands" xsi:type="array">
+				<item name="authorize" xsi:type="string">FiservKlarnaAuthorizeCommand</item>
+				<item name="capture" xsi:type="string">FiservKlarnaCaptureCommand</item>
+				<item name="sale" xsi:type="string">FiservKlarnaSaleCommand</item>
+				<item name="vault_authorize" xsi:type="string">FiservKlarnaVaultAuthorizeCommand</item>
+				<item name="vault_sale" xsi:type="string">FiservKlarnaVaultSaleCommand</item>
+				<item name="settle" xsi:type="string">FiservKlarnaSettleCommand</item>
+				<item name="refund" xsi:type="string">FiservKlarnaRefundCommand</item>
+				<item name="void" xsi:type="string">FiservKlarnaCancelCommand</item>
+				<item name="cancel" xsi:type="string">FiservKlarnaCancelCommand</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<!-- Secondary transactions stay on the v1/payments surface that created the authorization/capture -->
+	<virtualType name="FiservKlarnaRefundRequest" type="FiservChargesRefundRequest">
+		<arguments>
+			<argument name="endpoint" xsi:type="string">v1/payments/refunds</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservKlarnaRefundCommand" type="FiservChargesRefundCommand">
+		<arguments>
+			<argument name="requestBuilder" xsi:type="object">FiservKlarnaRefundRequest</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservKlarnaCancelRequest" type="FiservChargesCancelRequest">
+		<arguments>
+			<argument name="endpoint" xsi:type="string">v1/payments/cancels</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservKlarnaCancelCommand" type="FiservChargesCancelCommand">
+		<arguments>
+			<argument name="requestBuilder" xsi:type="object">FiservKlarnaCancelRequest</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservKlarnaCommandManager" type="Magento\Payment\Gateway\Command\CommandManager">
+		<arguments>
+			<argument name="commandPool" xsi:type="object">FiservKlarnaCommandPool</argument>
+		</arguments>
+	</virtualType>
+
+	<!-- Session path only. Saved-token orders use the vault_* commands below, so no tokenBuilder hand-off. -->
+	<virtualType name="FiservKlarnaAuthorizeRequest" type="FiservChargesAuthorizeRequest"/>
+
+	<virtualType name="FiservKlarnaSaleRequest" type="FiservChargesSaleRequest"/>
+
+	<virtualType name="FiservKlarnaTokenAuthorizeRequest" type="Fiserv\Payments\Gateway\Request\CommerceHub\Composite\TokenAuthComposite">
+		<arguments>
+			<argument name="endpoint" xsi:type="string">v1/payments/authorizations</argument>
+			<argument name="builders" xsi:type="array">
+				<item name="amount" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder</item>
+				<item name="source" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\TokenSourceDataBuilder</item>
+				<item name="auth_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AuthDetailsDataBuilder</item>
+				<item name="txn_interaction" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\VaultTransactionInteractionDataBuilder</item>
+				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
+				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
+				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservKlarnaTokenSaleRequest" type="Fiserv\Payments\Gateway\Request\CommerceHub\Composite\TokenSaleComposite">
+		<arguments>
+			<argument name="endpoint" xsi:type="string">v1/payments/captures</argument>
+			<argument name="builders" xsi:type="array">
+				<item name="amount" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder</item>
+				<item name="source" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\TokenSourceDataBuilder</item>
+				<item name="sale_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\SaleDetailsDataBuilder</item>
+				<item name="txn_interaction" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\VaultTransactionInteractionDataBuilder</item>
+				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
+				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
+				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservKlarnaAuthorizeCommand" type="FiservChargesAuthorizeCommand">
+		<arguments>
+			<argument name="requestBuilder" xsi:type="object">FiservKlarnaAuthorizeRequest</argument>
+			<argument name="handler" xsi:type="object">FiservKlarnaAuthorizeHandler</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservKlarnaSaleCommand" type="FiservChargesSaleCommand">
+		<arguments>
+			<argument name="requestBuilder" xsi:type="object">FiservKlarnaSaleRequest</argument>
+			<argument name="handler" xsi:type="object">FiservKlarnaAuthorizeHandler</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservKlarnaVaultAuthorizeCommand" type="FiservKlarnaAuthorizeCommand">
+		<arguments>
+			<argument name="requestBuilder" xsi:type="object">FiservKlarnaTokenAuthorizeRequest</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservKlarnaVaultSaleCommand" type="FiservKlarnaSaleCommand">
+		<arguments>
+			<argument name="requestBuilder" xsi:type="object">FiservKlarnaTokenSaleRequest</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservKlarnaSettleRequest" type="FiservChargesSettleRequest">
+		<arguments>
+			<argument name="endpoint" xsi:type="string">v1/payments/captures</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservKlarnaSettleCommand" type="FiservChargesSettleCommand">
+		<arguments>
+			<argument name="requestBuilder" xsi:type="object">FiservKlarnaSettleRequest</argument>
+		</arguments>
+	</virtualType>
+
+	<virtualType name="FiservKlarnaCaptureCommand" type="FiservChargesCaptureCommand">
+		<arguments>
+			<argument name="commandPool" xsi:type="object">FiservKlarnaCommandPool</argument>
+		</arguments>
+	</virtualType>
+
+	<!-- Wallet response chain: no card mapping, no surcharge; Klarna vault token handler -->
+	<virtualType name="FiservKlarnaAuthorizeHandler" type="Magento\Payment\Gateway\Response\HandlerChain">
+		<arguments>
+			<argument name="handlers" xsi:type="array">
+				<item name="payment_details" xsi:type="string">Fiserv\Payments\Gateway\Response\CommerceHub\PaymentDetailsHandler</item>
+				<item name="vault_details" xsi:type="string">Fiserv\Payments\Gateway\Response\Klarna\VaultDetailsHandler</item>
+			</argument>
+		</arguments>
+	</virtualType>
+
+	<!-- Retain only the first (immutable) Klarna token per customer -->
+	<type name="Magento\Vault\Api\PaymentTokenRepositoryInterface">
+		<plugin name="fiserv_klarna_first_token_retention" type="Fiserv\Payments\Plugin\Klarna\PaymentTokenRepositoryPlugin" sortOrder="10"/>
+	</type>
 	<type name="Fiserv\Payments\Gateway\Config\Klarna\Config">
 		<arguments>
 			<argument name="methodCode" xsi:type="const">Fiserv\Payments\Model\Config\Klarna\ConfigProvider::CODE</argument>

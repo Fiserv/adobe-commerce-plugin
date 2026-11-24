@@ -1,0 +1,79 @@
+<?php
+namespace Fiserv\Payments\Plugin\Klarna;
+
+use Fiserv\Payments\Model\System\Utils\VaultPaymentTokenUtils;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Vault\Api\Data\PaymentTokenInterface;
+use Magento\Vault\Api\PaymentTokenRepositoryInterface;
+
+class PaymentTokenRepositoryPlugin
+{
+	private $vaultPaymentTokenUtils;
+
+	public function __construct(VaultPaymentTokenUtils $vaultPaymentTokenUtils)
+	{
+		$this->vaultPaymentTokenUtils = $vaultPaymentTokenUtils;
+	}
+
+	/** Keep native Vault persistence/linking, but serialize first saves for the same customer. */
+	public function aroundSave(
+		PaymentTokenRepositoryInterface $subject,
+		callable $proceed,
+		PaymentTokenInterface $token
+	) {
+		$persisted = $token->getEntityId() ? $subject->getById($token->getEntityId()) : null;
+		$isStoredKlarna = $persisted && $persisted->getPaymentMethodCode() === 'fiserv_klarna';
+		if (!$isStoredKlarna && $token->getPaymentMethodCode() !== 'fiserv_klarna') {
+			return $proceed($token);
+		}
+		$customerId = $isStoredKlarna ? $persisted->getCustomerId() : $token->getCustomerId();
+		if (!$customerId) {
+			throw new LocalizedException(__('Sign in before saving Klarna.'));
+		}
+		$connection = $this->vaultPaymentTokenUtils->getConnection();
+		$connection->beginTransaction();
+		try {
+			// Lock an existing row even when this customer's first Vault token does not exist yet.
+			$customer = $connection->fetchOne($connection->select()
+				->from($this->vaultPaymentTokenUtils->getTable('customer_entity'), ['entity_id'])
+				->where('entity_id = ?', $customerId)->forUpdate(true));
+			if (!$customer) {
+				throw new LocalizedException(__('The Klarna customer no longer exists.'));
+			}
+			$existing = $this->vaultPaymentTokenUtils->getFirstKlarnaToken($customerId, true);
+			if ($existing) {
+				// Mutate the original object: native management uses its ID to link the order payment.
+				foreach ([
+					'EntityId' => 'entity_id', 'CustomerId' => 'customer_id',
+					'PublicHash' => 'public_hash', 'PaymentMethodCode' => 'payment_method_code',
+					'Type' => 'type', 'GatewayToken' => 'gateway_token', 'TokenDetails' => 'details',
+					'CreatedAt' => 'created_at', 'ExpiresAt' => 'expires_at',
+					'IsActive' => 'is_active', 'IsVisible' => 'is_visible',
+				] as $setter => $column) {
+					$token->{'set' . $setter}($existing[$column]);
+				}
+				$result = $token;
+			} else {
+				$result = $proceed($token);
+			}
+			$connection->commit();
+			return $result;
+		} catch (\Throwable $exception) {
+			$connection->rollBack();
+			throw $exception;
+		}
+	}
+
+	/** The first wallet record is retained; normal card deletion is unchanged. */
+	public function aroundDelete(
+		PaymentTokenRepositoryInterface $subject,
+		callable $proceed,
+		PaymentTokenInterface $token
+	) {
+		$stored = $subject->getById($token->getEntityId());
+		if ($stored->getPaymentMethodCode() === 'fiserv_klarna') {
+			throw new LocalizedException(__('The saved Klarna method cannot be removed or replaced.'));
+		}
+		return $proceed($token);
+	}
+}

@@ -495,10 +495,17 @@
 				<can_capture>1</can_capture>
 				<can_refund>0</can_refund>
 				<can_void>0</can_void>
+				<can_authorize_vault>1</can_authorize_vault>
+				<can_capture_vault>1</can_capture_vault>
 				<klarna_button_color>default</klarna_button_color>
 				<klarna_button_shape>default</klarna_button_shape>
 				<klarna_logo_alignment>default</klarna_logo_alignment>
 			</fiserv_klarna>
+			<fiserv_klarna_vault>
+				<model>FiservKlarnaVaultFacade</model>
+				<title>Stored Klarna (Fiserv)</title>
+				<active>1</active>
+			</fiserv_klarna_vault>
 		</payment>
 	</default>
 </config>

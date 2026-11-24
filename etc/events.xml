@@ -56,6 +56,14 @@
         <observer name="fiserv_valuelink" instance="Fiserv\Payments\Observer\Valuelink\EnrichValuelinkTransactionsWithInvoiceId" />
     </event>
 	<event name="payment_method_assign_data_fiserv_klarna">
-		<observer name="fiserv_klarna_data_assign" instance="Fiserv\Payments\Observer\CommerceHub\DataAssignObserver" />
+		<observer name="fiserv_klarna_data_assign" instance="Fiserv\Payments\Observer\Klarna\DataAssignObserver" />
+	</event>
+
+	<event name="payment_method_assign_data_fiserv_klarna_vault">
+		<observer name="fiserv_klarna_vault_data_assign" instance="Fiserv\Payments\Observer\Klarna\DataAssignObserver" />
+	</event>
+
+	<event name="payment_method_assign_data_vault">
+		<observer name="fiserv_klarna_vault_data_assign_generic" instance="Fiserv\Payments\Observer\Klarna\DataAssignObserver" />
 	</event>
 </config>

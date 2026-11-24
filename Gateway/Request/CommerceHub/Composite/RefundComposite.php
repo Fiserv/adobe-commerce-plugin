@@ -27,16 +27,18 @@ class RefundComposite extends ChCompositeBase
 	 * @var MultiLevelLogger
 	 */
 	private $logger;
+	private $endpoint;
 
 	/**
 	 * @param MultiLevelLogger $logger
 	 * @param TMapFactory $tmapFactory
 	 * @param array $builders
 	 */
-	public function __construct(MultiLevelLogger $logger, TMapFactory $tmapFactory, array $builders = [])
+	public function __construct(MultiLevelLogger $logger, TMapFactory $tmapFactory, array $builders = [], string $endpoint = self::ENDPOINT)
 	{
 		parent::__construct($tmapFactory, $builders);
 		$this->logger = $logger;
+		$this->endpoint = $endpoint;
 	}
 	
 	/**
@@ -59,7 +61,7 @@ class RefundComposite extends ChCompositeBase
 
 		return [ 
 			self::REQUEST_KEY => $req,
-			self::ENDPOINT_KEY => self::ENDPOINT,
+			self::ENDPOINT_KEY => $this->endpoint,
 			self::ORDER_INCREMENT_ID_KEY => $orderIncrementId
 		];
 	}

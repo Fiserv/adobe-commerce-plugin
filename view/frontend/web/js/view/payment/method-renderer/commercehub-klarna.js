@@ -29,6 +29,8 @@ define([
 ) {
 	'use strict';
 
+	const VAULT_CODE = 'fiserv_klarna_vault';
+
 	return Component.extend({
 		defaults: {
 			template: 'Fiserv_Payments/payment/commercehub/klarna-form',
@@ -38,6 +40,7 @@ define([
 		initialize() {
 			this._super();
 			this.initializeKlarnaState();
+			this.initializeSavedTokens();
 			this.updatePlaceOrderAllowed(Boolean(quote.billingAddress()));
 			this._subscriptions.push(quote.paymentMethod.subscribe(() => {
 				this.invalidateKlarna();
@@ -78,6 +81,22 @@ define([
 			this._submissionData = undefined;
 			this._readyTimer = undefined;
 			this._contextKey = this.getCheckoutContextKey();
+		},
+
+		initializeSavedTokens() {
+			const config = this.getPaymentConfig() || {};
+
+			this.savedTokens = Array.isArray(config.savedTokens) ? config.savedTokens : [];
+			this.savedTokenNotice = config.savedTokenNotice || '';
+			this.canSave = Boolean(config.canSave) && this.savedTokens.length === 0;
+			this.selectedToken = ko.observable(this.savedTokens.length > 0 ? this.savedTokens[0].publicHash : '');
+			this.savePaymentMethod = ko.observable(false);
+
+			// Saved token and SDK session are exclusive: switching flows always drops the mounted button.
+			this._subscriptions.push(this.selectedToken.subscribe(() => {
+				this.invalidateKlarna();
+				this.loadKlarnaForm();
+			}));
 		},
 
 		// Called by the standard checkout template's afterRender binding.
@@ -161,7 +180,7 @@ define([
 		canLoadKlarna() {
 			const amount = Number(quote.totals()?.grand_total);
 
-			return !this._destroyed && this._rendered && this.isKlarnaSelected() &&
+			return !this._destroyed && this._rendered && this.isKlarnaSelected() && !this.selectedToken() &&
                 !this._orderLocked && Boolean(quote.billingAddress()) && Number.isFinite(amount) && amount > 0;
 		},
 
@@ -359,7 +378,11 @@ define([
 				return;
 			}
 
-			this.additionalData = { payment_session: sessionId, payment_type: 'klarna' };
+			this.additionalData = {
+				payment_session: sessionId,
+				payment_type: 'klarna',
+				is_active_payment_token_enabler: Boolean(this.canSave && this.savePaymentMethod()),
+			};
 			this._submissionData = { ...this.additionalData };
 			this._orderLocked = true;
 			this._orderRequestStarted = false;
@@ -399,8 +422,12 @@ define([
 			this.updatePlaceOrderAllowed(Boolean(quote.billingAddress()));
 		},
 
-		// Only an accepted SDK approval may enter Magento's inherited order flow.
+		// Only an accepted SDK approval (or a saved token) may enter Magento's inherited order flow.
 		validate() {
+			if (this.selectedToken()) {
+				return !this._destroyed && this.isKlarnaSelected() && Boolean(quote.billingAddress());
+			}
+
 			return this._orderLocked && !this._orderRequestStarted && Boolean(this._submissionData) &&
                 this.validateCheckoutDetails();
 		},
@@ -451,7 +478,20 @@ define([
 			this._reloadPending = false;
 		},
 
+		/**
+		 * Saved token: submitted as the vault method with public_hash only, so the vault_* commands
+		 * (TokenAuth/TokenSale composites) run. Otherwise the Klarna session.
+		 */
 		getData() {
+			if (this.selectedToken()) {
+				return {
+					method: VAULT_CODE,
+					additional_data: {
+						public_hash: this.selectedToken(),
+					},
+				};
+			}
+
 			const data = this._submissionData || this.additionalData;
 
 			return {
@@ -459,6 +499,7 @@ define([
 				additional_data: {
 					payment_session: data.payment_session || undefined,
 					payment_type: 'klarna',
+					is_active_payment_token_enabler: Boolean(data.is_active_payment_token_enabler),
 				},
 			};
 		},

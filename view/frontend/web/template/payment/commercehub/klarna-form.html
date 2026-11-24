@@ -20,11 +20,53 @@
 			<!--/ko-->
 		</div>
 
+		<!-- ko if: savedTokens.length -->
+		<fieldset class="fieldset">
+			<legend class="legend"><span data-bind="i18n: 'Klarna checkout'"></span></legend>
+			<div class="field choice">
+				<input type="radio" class="radio"
+					data-bind="attr: {id: getCode() + '-express', name: getCode() + '-checkout'}, checked: selectedToken, checkedValue: savedTokens[0].publicHash"/>
+				<label class="label" data-bind="attr: {for: getCode() + '-express'}">
+					<span data-bind="i18n: 'Express checkout - use saved Klarna'"></span>
+				</label>
+			</div>
+			<div class="field choice">
+				<input type="radio" class="radio" value=""
+					data-bind="attr: {id: getCode() + '-one-time', name: getCode() + '-checkout'}, checked: selectedToken"/>
+				<label class="label" data-bind="attr: {for: getCode() + '-one-time'}">
+					<span data-bind="i18n: 'One time checkout'"></span>
+				</label>
+			</div>
+		</fieldset>
+		<!-- /ko -->
+
+		<div class="message notice" role="status" data-bind="visible: savedTokenNotice">
+			<span data-bind="text: savedTokenNotice"></span>
+		</div>
+
+		<!-- ko if: canSave -->
+		<div class="field choice">
+			<input type="checkbox" class="checkbox" data-bind="attr: {id: getCode() + '-save'}, checked: savePaymentMethod"/>
+			<label class="label" data-bind="attr: {for: getCode() + '-save'}">
+				<span data-bind="i18n: 'By selecting this option, you agree to save your Klarna payment method for faster checkout on future purchases'"></span>
+			</label>
+		</div>
+		<!-- /ko -->
+
 		<p role="status" aria-live="polite" data-bind="visible: klarnaLoading, i18n: 'Loading Klarna...'"></p>
 		<p role="status" aria-live="polite" data-bind="visible: klarnaUnavailable, i18n: 'Klarna is unavailable. Please choose another payment method.'"></p>
 
 		<!-- Klarna Button -->
-		<div data-bind="visible: isPlaceOrderActionAllowed, afterRender: initializeKlarna" id="klarna-button-container"></div>
+		<div data-bind="visible: isPlaceOrderActionAllowed() && !selectedToken(), afterRender: initializeKlarna" id="klarna-button-container"></div>
+
+		<div class="actions-toolbar" data-bind="visible: selectedToken">
+			<div class="primary">
+				<button class="action primary checkout" type="submit"
+					data-bind="click: placeOrder, enable: isPlaceOrderActionAllowed() && isChecked() === getCode(), attr: {title: $t('Place Order')}">
+					<span data-bind="i18n: 'Place Order'"></span>
+				</button>
+			</div>
+		</div>
 
 		<div class="checkout-agreements-block">
 			<!-- ko foreach: $parent.getRegion('before-place-order') -->

@@ -11,6 +11,7 @@ namespace Fiserv\Payments\Gateway\Config\Klarna;
 class Config extends \Magento\Payment\Gateway\Config\Config
 {
 	const CODE = 'fiserv_klarna';
+	const VAULT_CODE = 'fiserv_klarna_vault';
 
 	const KEY_ACTIVE = 'payment_active';
 	const KEY_TITLE = 'title';
