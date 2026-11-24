@@ -11,7 +11,7 @@ class Version
 	 */
 	const MAJOR = 1;
 	const MINOR = 5;
-	const TINY = 2;
+	const TINY = 3;
 
 	public function  __construct()
 	{
