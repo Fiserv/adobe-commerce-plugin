@@ -14,4 +14,5 @@ abstract class ChCompositeBase extends BuilderComposite
 {	
 	const REQUEST_KEY = "request";
 	const ENDPOINT_KEY = "endpoint";
+	const ORDER_INCREMENT_ID_KEY = "orderIncrementId";
 }

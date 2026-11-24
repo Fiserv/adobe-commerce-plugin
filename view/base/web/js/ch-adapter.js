@@ -18,7 +18,7 @@ define([
 	//		c. Symmetric Encryption Algorithm generated during initial credentials request
 	return {
 		credentialsErrorMsg: "Oops! Something went wrong...",
-		credentialsUrl: "fiserv/commercehub/getcredentials",
+		credentialsUrl: "fiserv/commercehub/createsession",
 		clientScriptId: "commercehub",
 		configApiKeyKey: "apiKey",
 		configMerchantIdKey: "merchantId",
@@ -34,6 +34,7 @@ define([
 		encryptionAlgoKey: "symmetricEncryptionAlgorithm",
 		prodEnv: "PROD",
 		certEnv: "CERT",
+		sdkDataKey: "sdkData",
 		config: {},
 		iframeReadyCallback: undefined,
 		iframeValidCallback: undefined,
@@ -78,7 +79,8 @@ define([
 				publicKey: creds[this.publicTokenKey],
 				keyId: creds[this.keyIdKey],
 				terminalId: config[this.configTerminalIdKey],
-				sessionId: creds[this.sessionIdKey]
+				sessionId: creds[this.sessionIdKey],
+				sdkData: creds[this.sdkDataKey]
 			};
 
 			if (contextId) {
@@ -99,11 +101,14 @@ define([
 				dataType: 'json',
 				type: "POST",
 				success: function(response) {
-					if (!validateCb(response)) errorCb(errorMsg);
+					if (!validateCb(response)) {
+						errorCb(errorMsg);
+						return;
+					}
 					successCb(parseResponseCb(response));
 				},
 				error: function(err) {
-					errorCb(errorMsg)
+					errorCb(errorMsg);
 					console.log(err);
 				}
 			});
@@ -144,10 +149,6 @@ define([
 			return await window.fiserv.components.address(addressOptions);
 		},
 
-		/**
-		 * Instantiates CommerceHub iframe
-		 * from provide script element
-		 */
 		/**
 		 * Instantiates CommerceHub iframe
 		 * from provide script element
@@ -278,7 +279,8 @@ define([
 				"publicKey" : data[this.publicTokenKey],
 				"keyId" : data[this.keyIdKey],
 				"merchantId" : this.config[this.configMerchantIdKey],
-				"terminalId" : this.config[this.configTerminalIdKey]
+				"terminalId" : this.config[this.configTerminalIdKey],
+				"sdkData" : data[this.sdkDataKey],
 			};
 
 			return payload;

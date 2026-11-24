@@ -221,7 +221,7 @@
 				<item name="amount" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder</item>
 				<item name="source" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\TokenSourceDataBuilder</item>
 				<item name="auth_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AuthDetailsDataBuilder</item>
-				<item name="txn_interaction" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\TransactionInteractionDataBuilder</item>
+				<item name="txn_interaction" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\VaultTransactionInteractionDataBuilder</item>
 				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
 				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
 				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
@@ -251,7 +251,7 @@
 				<item name="amount" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder</item>
 				<item name="source" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\TokenSourceDataBuilder</item>
 				<item name="auth_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\SaleDetailsDataBuilder</item>
-				<item name="txn_interaction" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\TransactionInteractionDataBuilder</item>
+				<item name="txn_interaction" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\VaultTransactionInteractionDataBuilder</item>
 				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
 				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
 				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
@@ -543,7 +543,7 @@
 				<item name="amount" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder</item>
 				<item name="source" xsi:type="string">Fiserv\Payments\Gateway\Request\OrdersApi\Fastlane\TokenSourceDataBuilder</item>
 				<item name="auth_details" xsi:type="string">Fiserv\Payments\Gateway\Request\OrdersApi\Fastlane\AuthDetailsDataBuilder</item>
-				<item name="txn_interaction" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\TransactionInteractionDataBuilder</item>
+				<item name="txn_interaction" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\VaultTransactionInteractionDataBuilder</item>
 				<item name="provider_credentials" xsi:type="string">Fiserv\Payments\Gateway\Request\OrdersApi\Fastlane\ProviderCredentialsDataBuilder</item>
 				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
 				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
@@ -558,7 +558,7 @@
 				<item name="amount" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder</item>
 				<item name="source" xsi:type="string">Fiserv\Payments\Gateway\Request\OrdersApi\Fastlane\TokenSourceDataBuilder</item>
 				<item name="auth_details" xsi:type="string">Fiserv\Payments\Gateway\Request\OrdersApi\Fastlane\SaleDetailsDataBuilder</item>
-				<item name="txn_interaction" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\TransactionInteractionDataBuilder</item>
+				<item name="txn_interaction" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\VaultTransactionInteractionDataBuilder</item>
 				<item name="provider_credentials" xsi:type="string">Fiserv\Payments\Gateway\Request\OrdersApi\Fastlane\ProviderCredentialsDataBuilder</item>
 				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
 				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
@@ -784,8 +784,9 @@
 		<arguments>
 			<argument name="builders" xsi:type="array">
 				<item name="amount" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder</item>
-				<item name="source" xsi:type="string">Fiserv\Payments\Gateway\Request\OrdersApi\ReferenceOrderIdDataBuilder</item>
+				<item name="source" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\SessionSourceDataBuilder</item>
 				<item name="auth_details" xsi:type="string">Fiserv\Payments\Gateway\Request\OrdersApi\AuthDetailsDataBuilder</item>
+				<item name="transaction_interaction" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\TransactionInteractionDataBuilder</item>
 				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
 				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
 				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
@@ -797,8 +798,9 @@
 		<arguments>
 			<argument name="builders" xsi:type="array">
 				<item name="amount" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder</item>
-				<item name="source" xsi:type="string">Fiserv\Payments\Gateway\Request\OrdersApi\ReferenceOrderIdDataBuilder</item>
+				<item name="source" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\SessionSourceDataBuilder</item>
 				<item name="sale_details" xsi:type="string">Fiserv\Payments\Gateway\Request\OrdersApi\SaleDetailsDataBuilder</item>
+				<item name="transaction_interaction" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\TransactionInteractionDataBuilder</item>
 				<item name="merchant_details" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder</item>
 				<item name="billing_address" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder</item>
 				<item name="customer" xsi:type="string">Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder</item>
@@ -924,20 +926,13 @@
 		</arguments>
 	</virtualType>
 
-	<virtualType name="PayPalCredentialsRequest" type="Fiserv\Payments\Model\Adapter\CommerceHub\CredentialsRequest">
+        <type name="Fiserv\Payments\Controller\CommerceHub\CreateSession">
 		<arguments>
-			<argument name="httpAdapter" xsi:type="object">PayPalChHttpAdapter</argument>
-		</arguments>
-	</virtualType>
-
-	<type name="Fiserv\Payments\Controller\CommerceHub\GetCredentials">
-		<arguments>
-			<argument name="customerSession" xsi:type="object">Magento\Customer\Model\Session</argument>
 			<argument name="credentialsRequest" xsi:type="object">Fiserv\Payments\Model\Adapter\CommerceHub\CredentialsRequest</argument>
+			<argument name="customerSession" xsi:type="object">Magento\Customer\Model\Session</argument>
 			<argument name="logger" xsi:type="object">Fiserv\Payments\Logger\MultiLevelLogger</argument>
 			<argument name="paypalConfig" xsi:type="object">Fiserv\Payments\Gateway\Config\PayPal\Config</argument>
 			<argument name="providerCustomerIdFactory" xsi:type="object">Fiserv\Payments\Model\PayPal\ProviderCustomerIdFactory</argument>
-			<argument name="paypalCredentialsRequest" xsi:type="object">PayPalCredentialsRequest</argument>
 		</arguments>
 	</type>
 

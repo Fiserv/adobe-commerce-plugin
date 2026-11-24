@@ -186,24 +186,18 @@ define([
 
 			try {
 				$('#affirm-button-container').empty();
-				const creds = await chSession({ merchantName: config.storeName });
+				const creds = await chSession({ merchantName: config.storeName, paymentCode: this.getCode() });
 
 				if (!creds || !creds.ch_credentials) {
 					throw new Error('No credentials returned from backend');
 				}
 
+				const affirmIntent = creds.session_intent || 'AUTHORIZE';
+
 				this.paymentPayload.sessionId = creds.ch_credentials.sessionId;
 				await chAdapter.initSdk(config, creds.ch_credentials);
 
 				const buttonStyle = config.affirmButtonColor || config.affirmButtonStyle || 'default';
-				const backendAction = config.paymentAction || config.affirmPaymentAction || config.payment_action || '';
-				const actionLower = backendAction.toString().toLowerCase();
-
-				let affirmIntent = 'AUTHORIZE';
-
-				if (actionLower.includes('capture') || actionLower.includes('sale')) {
-					affirmIntent = 'CAPTURE';
-				}
 
 				const affirmPayload = {
 					data: {

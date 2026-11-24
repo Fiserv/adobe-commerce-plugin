@@ -411,7 +411,8 @@ define([
 		setCredentials: async function(paymentToken) {
 			const credsResponse = await chSession({
 				"paymentToken" : paymentToken,
-				"threeDSecure" : this.is3DSecureEnabled() 
+				"threeDSecure" : this.is3DSecureEnabled(),
+				paymentCode: this.commercehubCode
 			});
 
 			this.paymentSessionData = credsResponse["ch_credentials"];

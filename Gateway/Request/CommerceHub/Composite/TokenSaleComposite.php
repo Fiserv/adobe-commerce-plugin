@@ -56,17 +56,14 @@ class TokenSaleComposite extends ChCompositeBase
 	{
 
 		$result = parent::build($buildSubject);
-		$orderIncrementId = $result[TransactionDetailsDataBuilder::TXN_DETAILS_KEY]['merchant_order_id'] ?? null;
-		if ($orderIncrementId !== null) {
-			$this->logger->logInfo(1, "Initiating Token Sale Transaction", "Order ID:" . $orderIncrementId);
-		} else {
-			$this->logger->logInfo(1, "Initiating Token Sale Transaction");
-		}
+		$txnDetails = $result[TransactionDetailsDataBuilder::TXN_DETAILS_KEY];
+		$orderIncrementId = $txnDetails->getMerchantOrderId() ?? "";
+		$this->logger->logInfo(1, "Initiating Token Sale Transaction", "Order ID: $orderIncrementId");
 
 		$req = new ChargesRequest();
 		$req->setAmount($result[AmountDataBuilder::AMOUNT_KEY]);
 		$req->setSource($result[TokenSourceDataBuilder::TOKEN_SOURCE_KEY]);
-		$req->setTransactionDetails($result[TransactionDetailsDataBuilder::TXN_DETAILS_KEY]);
+		$req->setTransactionDetails($txnDetails);
 		$req->setTransactionInteraction($result[TransactionInteractionDataBuilder::TXN_INTERACTION_KEY]);
 		$req->setMerchantDetails($result[MerchantDetailsDataBuilder::MERCHANT_DETAILS_KEY]);
 		$req->setBillingAddress($result[BillingAddressDataBuilder::BILLING_ADDRESS_KEY]);
@@ -80,7 +77,8 @@ class TokenSaleComposite extends ChCompositeBase
 
 		return [
 			self::REQUEST_KEY => $req,
-			self::ENDPOINT_KEY => self::ENDPOINT
+			self::ENDPOINT_KEY => self::ENDPOINT,
+			self::ORDER_INCREMENT_ID_KEY => $orderIncrementId
 		];
 	}
 }

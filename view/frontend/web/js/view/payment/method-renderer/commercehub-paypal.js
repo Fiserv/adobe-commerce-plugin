@@ -85,21 +85,19 @@ define([
                 chAdapter.initialize(config);
                 var credsResponse, creds;
 
-                credsResponse = await commercehubSession({});
+                credsResponse = await commercehubSession({ paymentCode: this.getCode() });
                 creds = credsResponse && credsResponse[chAdapter.credentialsKey];
                 if (!creds) {
                     throw new Error('No credentials returned from PayPal session');
                 }
 
+                const sessionIntent = (credsResponse.session_intent || 'AUTHORIZE').toLowerCase();
+
                 self.paymentPayload.sessionId = creds[chAdapter.sessionIdKey];
                 await chAdapter.initSdk(config, creds);
-                var intent = 'authorize';
-                if (config.payment_action.toLowerCase() === 'authorize_capture') {
-                    intent = 'capture';
-                }
                 const shippingAddress = this.getMapShippingAddress(this.getShippingAddress());
                 const paypalComponentConfig = {
-                    intent: intent,
+                    intent: sessionIntent,
                     shippingAddress: shippingAddress,
                 };
                 const paypalComponent = await chAdapter.loadPayPalComponent(paypalComponentConfig);

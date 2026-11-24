@@ -72,7 +72,7 @@ define(
              * Make the actual HTTP request
              */
             makeRequest: async function(params) {
-                let serviceUrl = 'fiserv/commercehub/getcredentials';
+                let serviceUrl = 'fiserv/commercehub/createsession';
                 let requestParams = params ? Object.assign({}, params) : {};
                 let storeUrl = requestParams.storeUrl || '';
                 delete requestParams.storeUrl;

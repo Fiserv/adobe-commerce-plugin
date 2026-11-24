@@ -6,7 +6,6 @@
 namespace Fiserv\Payments\Gateway\Request\CommerceHub\Composite;
 
 use Fiserv\Payments\Gateway\Request\CommerceHub\Composite\ChCompositeBase;
-use Fiserv\Payments\Lib\CommerceHub\Model\ChargesRequest;
 use Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\SessionSourceDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\ThreeDSecureDataBuilder;
@@ -21,26 +20,25 @@ use Fiserv\Payments\Gateway\Config\CommerceHub\Config;
 
 /**
  * Class SessionSaleComposite
+ *
+ * NOTE: The v1/sessions/completions endpoint is not yet present in the
+ * published OpenAPI YAML (as of v1.26.0802), so no auto-generated model
+ * class exists for its request body.  An array is used here as an interim
+ * measure until Fiserv publishes the schema and a class can be generated.
  */
 class SessionSaleComposite extends ChCompositeBase
-{	
-	const ENDPOINT = "payments/v1/charges";
+{
+	const ENDPOINT = "v1/sessions/completions";
 
-	/**
-	 * @var MultiLevelLogger
-	 */
+	/** @var MultiLevelLogger */
 	private $logger;
 
+	/** @var Config */
 	private $chConfig;
-	
-	/**
-	 * @param MultiLevelLogger $logger
-	 * @param TMapFactory $tmapFactory
-	 * @param array $builders
-	 */
+
 	public function __construct(
-		MultiLevelLogger $logger, 
-		TMapFactory $tmapFactory, 
+		MultiLevelLogger $logger,
+		TMapFactory $tmapFactory,
 		Config $chConfig,
 		array $builders = []
 	) {
@@ -48,34 +46,37 @@ class SessionSaleComposite extends ChCompositeBase
 		$this->logger = $logger;
 		$this->chConfig = $chConfig;
 	}
-	
-	/**
-	 * @inheritdoc
-	 */
+
+	/** @inheritdoc */
 	public function build(array $buildSubject)
 	{
 		$this->logger->logInfo(1, "Initiating Sale Transaction");
-		
+
 		$result = parent::build($buildSubject);
 
-		$req = new ChargesRequest();
-		$req->setAmount($result[AmountDataBuilder::AMOUNT_KEY]);
-		$req->setSource($result[SessionSourceDataBuilder::SESSION_SOURCE_KEY]);
-		$req->setTransactionDetails($result[TransactionDetailsDataBuilder::TXN_DETAILS_KEY]);
-		$req->setTransactionInteraction($result[TransactionInteractionDataBuilder::TXN_INTERACTION_KEY]);
-		$req->setMerchantDetails($result[MerchantDetailsDataBuilder::MERCHANT_DETAILS_KEY]);
-		$req->setBillingAddress($result[BillingAddressDataBuilder::BILLING_ADDRESS_KEY]);
-		$req->setCustomer($result[CustomerDataBuilder::CUSTOMER_KEY]);
+		$txnDetails = $result[TransactionDetailsDataBuilder::TXN_DETAILS_KEY];
+		$orderIncrementId = $txnDetails->getMerchantOrderId() ?? "";
 
-                // 3D Secure can be enabled but not run (e.g. admin panel order creation)
+		$payload = [
+			'session' => ['sessionId' => $result[SessionSourceDataBuilder::SESSION_SOURCE_KEY]->getSessionId()],
+			'amount' => $result[AmountDataBuilder::AMOUNT_KEY],
+			'transactionDetails' => $txnDetails,
+			'transactionInteraction' => $result[TransactionInteractionDataBuilder::TXN_INTERACTION_KEY],
+			'merchantDetails' => $result[MerchantDetailsDataBuilder::MERCHANT_DETAILS_KEY],
+			'billingAddress' => $result[BillingAddressDataBuilder::BILLING_ADDRESS_KEY],
+			'customer' => $result[CustomerDataBuilder::CUSTOMER_KEY],
+		];
+
+		// 3D Secure can be enabled but not run (e.g. admin panel order creation)
 		if ($this->chConfig->isThreeDSEnabled() && isset($result[ThreeDSecureDataBuilder::KEY_3DS_DATA]))
 		{
-			$req->setAdditionalData3Ds($result[ThreeDSecureDataBuilder::KEY_3DS_DATA]);
+			$payload['additionalData3DS'] = $result[ThreeDSecureDataBuilder::KEY_3DS_DATA];
 		}
 
-		return [ 
-			self::REQUEST_KEY => $req,
-			self::ENDPOINT_KEY => self::ENDPOINT
+		return [
+			self::REQUEST_KEY => $payload,
+			self::ENDPOINT_KEY => self::ENDPOINT,
+			self::ORDER_INCREMENT_ID_KEY => $orderIncrementId,
 		];
 	}
 }

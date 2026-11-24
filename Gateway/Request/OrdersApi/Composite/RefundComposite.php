@@ -46,20 +46,18 @@ class RefundComposite extends OrderApiCompositeBase
 	{
 		
 		$result = parent::build($buildSubject);
-		$orderIncrementId = $result[OrderApiTransactionDetailsDataBuilder::TXN_DETAILS_KEY]['merchant_order_id'] ?? null;
-		if ($orderIncrementId !== null) {
-			$this->logger->logInfo(1, "Initiating Refund Transaction", "Order ID:" . $orderIncrementId);
-		} else {
-			$this->logger->logInfo(1, "Initiating Refund Transaction");
-		}
+		$txnDetails = $result[OrderApiTransactionDetailsDataBuilder::TXN_DETAILS_KEY];
+		$orderIncrementId = $txnDetails->getMerchantOrderId() ?? "";
+		$this->logger->logInfo(1, "Initiating Refund Transaction", "Order ID: $orderIncrementId");
 
 		$req = new RefundRequest();
-		$req->setTransactionDetails($result[OrderApiTransactionDetailsDataBuilder::TXN_DETAILS_KEY]);
+		$req->setTransactionDetails($txnDetails);
 		$req->setReferenceTransactionDetails($result[ReferenceTransactionDataBuilder::REF_TXN_KEY]);
 		$req->setMerchantDetails($result[MerchantDetailsDataBuilder::MERCHANT_DETAILS_KEY]);
 		return [ 
 			self::REQUEST_KEY => $req,
-			self::ENDPOINT_KEY => self::ENDPOINT
+			self::ENDPOINT_KEY => self::ENDPOINT,
+			self::ORDER_INCREMENT_ID_KEY => $orderIncrementId
 		];
 	}
 }

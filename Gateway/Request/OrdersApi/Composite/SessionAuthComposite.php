@@ -6,57 +6,64 @@
 namespace Fiserv\Payments\Gateway\Request\OrdersApi\Composite;
 
 use Fiserv\Payments\Gateway\Request\OrdersApi\Composite\OrderApiCompositeBase;
-use Fiserv\Payments\Lib\CommerceHub\Model\ChargesRequest;
 use Fiserv\Payments\Gateway\Request\OrdersApi\OrderApiTransactionDetailsDataBuilder;
-use Fiserv\Payments\Gateway\Request\OrdersApi\ReferenceOrderIdDataBuilder;
+use Fiserv\Payments\Gateway\Request\CommerceHub\SessionSourceDataBuilder;
+use Fiserv\Payments\Gateway\Request\CommerceHub\AmountDataBuilder;
 use Fiserv\Payments\Gateway\Request\CommerceHub\MerchantDetailsDataBuilder;
-use Fiserv\Payments\Observer\PayPal\DataAssignObserver;
+use Fiserv\Payments\Gateway\Request\CommerceHub\BillingAddressDataBuilder;
+use Fiserv\Payments\Gateway\Request\CommerceHub\CustomerDataBuilder;
+use Fiserv\Payments\Gateway\Request\CommerceHub\TransactionInteractionDataBuilder;
 use Magento\Framework\ObjectManager\TMapFactory;
 use Fiserv\Payments\Logger\MultiLevelLogger;
 
 /**
  * Class SessionAuthComposite
+ *
+ * NOTE: The v1/sessions/completions endpoint is not yet present in the
+ * published OpenAPI YAML (as of v1.26.0802), so no auto-generated model
+ * class exists for its request body.  An array is used here as an interim
+ * measure until Fiserv publishes the schema and a class can be generated.
  */
 class SessionAuthComposite extends OrderApiCompositeBase
 {
-	const ENDPOINT = "checkouts/v1/orders";
+	const ENDPOINT = "v1/sessions/completions";
 
-	/**
-	 * @var MultiLevelLogger
-	 */
+	/** @var MultiLevelLogger */
 	private $logger;
 
-	/**
-	 * @param MultiLevelLogger $logger
-	 * @param TMapFactory $tmapFactory
-	 * @param array $builders
-	 */
 	public function __construct(
-		MultiLevelLogger $logger, 
+		MultiLevelLogger $logger,
 		TMapFactory $tmapFactory,
 		array $builders = []
 	) {
 		parent::__construct($tmapFactory, $builders);
 		$this->logger = $logger;
 	}
-	
-	/**
-	 * @inheritdoc
-	 */
+
+	/** @inheritdoc */
 	public function build(array $buildSubject)
 	{
 		$this->logger->logInfo(1, "Initiating AUTH Transaction");
-		
+
 		$result = parent::build($buildSubject);
 
-		$req = new ChargesRequest();
-		$req->setTransactionDetails($result[OrderApiTransactionDetailsDataBuilder::TXN_DETAILS_KEY]);
-		$req->setReferenceTransactionDetails(["referenceOrderId" => $result[ReferenceOrderIdDataBuilder::REF_ORDER_KEY]]);
-		$req->setMerchantDetails($result[MerchantDetailsDataBuilder::MERCHANT_DETAILS_KEY]);
+		$txnDetails = $result[OrderApiTransactionDetailsDataBuilder::TXN_DETAILS_KEY];
+		$orderIncrementId = $txnDetails->getMerchantOrderId() ?? "";
 
-		return [ 
-			self::REQUEST_KEY => $req,
-			self::ENDPOINT_KEY => self::ENDPOINT
+		$payload = [
+			'session'              => ['sessionId' => $result[SessionSourceDataBuilder::SESSION_SOURCE_KEY]->getSessionId()],
+			'amount'               => $result[AmountDataBuilder::AMOUNT_KEY],
+			'transactionDetails'   => $txnDetails,
+			'transactionInteraction' => $result[TransactionInteractionDataBuilder::TXN_INTERACTION_KEY],
+			'merchantDetails'      => $result[MerchantDetailsDataBuilder::MERCHANT_DETAILS_KEY],
+			'billingAddress'       => $result[BillingAddressDataBuilder::BILLING_ADDRESS_KEY],
+			'customer'             => $result[CustomerDataBuilder::CUSTOMER_KEY],
+		];
+
+		return [
+			self::REQUEST_KEY            => $payload,
+			self::ENDPOINT_KEY           => self::ENDPOINT,
+			self::ORDER_INCREMENT_ID_KEY => $orderIncrementId,
 		];
 	}
 }

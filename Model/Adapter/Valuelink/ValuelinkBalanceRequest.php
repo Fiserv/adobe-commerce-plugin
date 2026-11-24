@@ -33,6 +33,7 @@ class ValuelinkBalanceRequest
 	const KEY_PAYMENT_RECEIPT = 'paymentReceipt';
 	const KEY_PROCESSOR_RESPONSE_DETAILS = 'processorResponseDetails';
 	const KEY_BALANCES = 'balances';
+	const KEY_APPROVAL_STATUS = 'approvalStatus';
 
 	/**
 	 * @var Config
