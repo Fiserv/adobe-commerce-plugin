@@ -27,6 +27,12 @@ class EnrichValuelinkTransactionsWithOrderId implements ObserverInterface
     public function execute(\Magento\Framework\Event\Observer $observer)
 	{
 		$order = $observer->getEvent()->getOrder();
+
+		// check to prevent our plugin with interacting with Multishipping orders
+		if (!$order) {
+			return $this;
+		}
+
 		$orderId = $order->getId();
 		$incrementId = $order->getIncrementId();
 

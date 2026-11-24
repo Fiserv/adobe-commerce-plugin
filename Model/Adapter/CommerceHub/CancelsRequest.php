@@ -60,7 +60,7 @@ class CancelsRequest
 		ChHttpAdapter $httpAdapter,
 		StoreManagerInterface $storeManager,
 		MultiLevelLogger $logger,
-		PayPalConfig $payPalConfig = null
+		?PayPalConfig $payPalConfig = null
 	) {
 		$this->chConfig = $config;
 		$this->httpAdapter = $httpAdapter;
