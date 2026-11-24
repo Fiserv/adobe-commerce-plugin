@@ -48,6 +48,12 @@ class ValuelinkOnlySaleCreateInvoice implements ObserverInterface
     public function execute(\Magento\Framework\Event\Observer $observer)
 	{
 		$order = $observer->getEvent()->getOrder();
+
+		// check to prevent our plugin with interacting with Multishipping orders
+		if (!$order) {
+			return $this;
+		}
+
 		$incrementId = $order->getIncrementId();
 		$valuelinkTxns = $this->orderHelper->getValuelinkTransactionsByOrderIncrementId($incrementId);
 		$valuelinkTxns = $this->orderHelper->filterCanceledValuelinkTransactions($valuelinkTxns);

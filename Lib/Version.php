@@ -13,6 +13,7 @@ class Version
 	const MINOR = 6;
 	const TINY = 0;
 
+
 	public function  __construct()
 	{
 	}
