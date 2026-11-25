@@ -1,0 +1,353 @@
+define([
+    'jquery',
+    'Magento_Payment/js/view/payment/cc-form',
+    'Magento_Ui/js/model/messageList',
+    'Magento_Checkout/js/model/full-screen-loader',
+    'Fiserv_Payments/js/ch-adapter',
+    'Fiserv_Payments/js/action/create-commercehub-enriched-session',
+    'Magento_Checkout/js/model/quote',
+    'ko',
+    'mage/translate'
+], function (
+    $,
+    Component,
+    globalMessageList,
+    fullScreenLoader,
+    chAdapter,
+    chSession,
+    quote,
+    ko,
+    $t
+) {
+    'use strict';
+
+    const CONTAINER_ID = 'cashapp-button-container';
+    const VAULT_CODE = 'fiserv_cashapp_vault';
+
+    return Component.extend({
+        defaults: {
+            template: 'Fiserv_Payments/payment/commercehub/cashapp-form',
+            code: 'fiserv_cashapp',
+            paymentPayload: {
+                sessionId: null
+            },
+            isPlaceOrderActionAllowed: ko.observable(false),
+            initializedAmount: 0.00,
+            cashAppComponent: null,
+            loadGeneration: 0,
+            loading: false,
+            reloadPending: false,
+            totalsSubscription: null,
+            savedTokens: [],
+            savedTokenNotice: '',
+            canSave: false
+        },
+
+        initObservable: function () {
+            this._super().observe([
+                'active',
+                'selectedToken',
+                'savePaymentMethod'
+            ]);
+
+            return this;
+        },
+
+        initialize: function () {
+            this._super();
+
+            const config = this.getPaymentConfig();
+
+            this.savedTokens = Array.isArray(config.savedTokens) ? config.savedTokens : [];
+            this.savedTokenNotice = config.savedTokenNotice || '';
+            this.canSave = Boolean(config.canSave) && this.savedTokens.length === 0;
+            this.selectedToken(this.savedTokens.length ? this.savedTokens[0].publicHash : '');
+
+            this.selectedToken.subscribe(() => this.restartCashApp());
+
+            this.observeBillingAddress();
+
+            this.isChecked.subscribe((method) => {
+                if (method === this.getCode()) {
+                    this.loadCashAppForm();
+                } else {
+                    this.destroyCashApp();
+                }
+            });
+
+            return this;
+        },
+
+        /**
+         * afterRender target of the template.
+         */
+        initializeCashApp: async function () {
+            if (this.getCode() === this.isChecked()) {
+                await this.loadCashAppForm();
+            }
+        },
+
+        observeBillingAddress: function () {
+            this.isPlaceOrderActionAllowed(Boolean(quote.billingAddress()));
+
+            quote.billingAddress.subscribe((address) => {
+                this.isPlaceOrderActionAllowed(address !== null);
+                if (address && this.getCode() === this.isChecked()) {
+                    this.loadCashAppForm();
+                }
+            });
+        },
+
+        observeTotals: function () {
+            if (this.totalsSubscription) {
+                return;
+            }
+
+            this.totalsSubscription = quote.totals.subscribe((totals) => {
+                if (!totals || typeof totals.grand_total === 'undefined') {
+                    return;
+                }
+
+                // A Cash App session is bound to the amount it was created for.
+                if (
+                    this.getCode() === this.isChecked() &&
+                    !this.selectedToken() &&
+                    Number(this.initializedAmount) > 0 &&
+                    totals.grand_total != this.initializedAmount
+                ) {
+                    this.loadCashAppForm();
+                }
+            });
+        },
+
+        loadCashAppForm: async function () {
+            if (this.selectedToken() || !this.isPlaceOrderActionAllowed()) {
+                return;
+            }
+
+            if (this.loading) {
+                this.reloadPending = true;
+                return;
+            }
+
+            // Selecting the method re-emits the billing address; remounting mid-render breaks pay.js.
+            if (this.cashAppComponent && quote.totals()?.grand_total == this.initializedAmount) {
+                return;
+            }
+
+            const config = this.getPaymentConfig();
+            const generation = ++this.loadGeneration;
+            const isStale = () => generation !== this.loadGeneration ||
+                this.selectedToken() ||
+                this.getCode() !== this.isChecked();
+
+            this.loading = true;
+            try {
+                fullScreenLoader.startLoader();
+                this.destroyCashApp(false);
+                $('#' + CONTAINER_ID).empty();
+
+                chAdapter.initialize(config);
+                const creds = await chSession({ paymentCode: this.getCode() });
+                const credentials = creds && creds[chAdapter.credentialsKey];
+
+                if (isStale()) {
+                    return;
+                }
+
+                if (!credentials) {
+                    throw new Error($t('No credentials returned for the Cash App session.'));
+                }
+
+                this.paymentPayload.sessionId = credentials[chAdapter.sessionIdKey];
+
+                await chAdapter.initSdk(config, credentials);
+
+                if (isStale()) {
+                    return;
+                }
+
+                const component = await this.mountCashAppComponent(config, credentials, generation);
+
+                if (isStale()) {
+                    this.destroyHandle(component);
+                    return;
+                }
+
+                this.cashAppComponent = component;
+                this.initializedAmount = quote.totals()['grand_total'];
+                this.observeTotals();
+            } catch (error) {
+                if (generation === this.loadGeneration && !this.selectedToken()) {
+                    this.showError(error);
+                }
+            } finally {
+                this.loading = false;
+                fullScreenLoader.stopLoader();
+                if (this.reloadPending) {
+                    this.reloadPending = false;
+                    setTimeout(() => this.loadCashAppForm(), 0);
+                }
+            }
+        },
+
+        /**
+         * Cash App is web-component only (<fiserv-cashapp-button>). The context already
+         * created by chAdapter.initSdk() is handed to the element, as Klarna does; wrapping
+         * it in a second <fiserv-context> would initialize the session twice.
+         */
+        mountCashAppComponent: async function (config, credentials, generation) {
+            const buttonConfig = config.buttonConfig || {};
+            const container = document.getElementById(CONTAINER_ID);
+
+            if (!window.customElements || !window.customElements.get('fiserv-cashapp-button')) {
+                throw new Error($t('Cash App is not supported by the loaded payment SDK.'));
+            }
+
+            if (!container) {
+                throw new Error($t('Cash App button container was not found.'));
+            }
+
+            const context = window.fiserv && typeof window.fiserv.context === 'function' ?
+                window.fiserv.context() : null;
+
+            if (!context) {
+                throw new Error($t('Cash App checkout context is unavailable.'));
+            }
+
+            const buttonElement = document.createElement('fiserv-cashapp-button');
+            const onSuccess = () => this.onCashAppApprove(generation);
+            const onCancel = () => this.onCashAppCancel();
+            const onError = (event) => {
+                if (generation === this.loadGeneration) {
+                    this.showError(event?.detail?.error || event?.detail || event);
+                }
+            };
+
+            buttonElement.id = 'cashapp-button';
+            // Defaults are resolved server-side in Gateway\Config\CashApp\Config.
+            buttonElement.setAttribute('theme', buttonConfig.theme);
+            buttonElement.setAttribute('shape', buttonConfig.shape);
+            buttonElement.setAttribute('size', buttonConfig.size);
+            buttonElement.setAttribute('width', buttonConfig.width);
+            buttonElement.addEventListener('fiserv-cashapp-success', onSuccess);
+            buttonElement.addEventListener('fiserv-cashapp-cancel', onCancel);
+            buttonElement.addEventListener('fiserv-cashapp-error', onError);
+
+            if (typeof buttonElement.provideContext === 'function') {
+                buttonElement.provideContext(context);
+            } else {
+                buttonElement.context = context;
+            }
+
+            container.replaceChildren(buttonElement);
+
+            return {
+                destroy: () => {
+                    buttonElement.removeEventListener('fiserv-cashapp-success', onSuccess);
+                    buttonElement.removeEventListener('fiserv-cashapp-cancel', onCancel);
+                    buttonElement.removeEventListener('fiserv-cashapp-error', onError);
+                    buttonElement.remove();
+                }
+            };
+        },
+
+        onCashAppApprove: function (generation) {
+            if (
+                generation !== this.loadGeneration ||
+                this.selectedToken() ||
+                this.getCode() !== this.isChecked() ||
+                !this.isPlaceOrderActionAllowed()
+            ) {
+                return;
+            }
+
+            this.placeOrder('parent');
+        },
+
+        onCashAppCancel: function () {
+            globalMessageList.addNoticeMessage({
+                message: $t('Cash App checkout was cancelled. Please try again.')
+            });
+        },
+
+        destroyHandle: function (handle) {
+            if (handle && typeof handle.destroy === 'function') {
+                handle.destroy();
+            }
+        },
+
+        destroyCashApp: function (invalidate = true) {
+            if (invalidate) {
+                this.loadGeneration++;
+            }
+            this.destroyHandle(this.cashAppComponent);
+            this.cashAppComponent = null;
+            this.initializedAmount = 0.00;
+            this.paymentPayload.sessionId = null;
+            $('#' + CONTAINER_ID).empty();
+        },
+
+        restartCashApp: function () {
+            this.destroyCashApp();
+            if (this.getCode() === this.isChecked()) {
+                this.loadCashAppForm();
+            }
+        },
+
+        getPaymentConfig: function () {
+            return window.checkoutConfig?.payment?.[this.getCode()] || {};
+        },
+
+        showError: function (error) {
+            const message = error?.message || error?.errorCode || error?.description ||
+                (typeof error === 'string' ? error : '') || $t('Unable to initialize Cash App Pay.');
+
+            console.error('[Cash App]', error);
+            globalMessageList.addErrorMessage({
+                message: message
+            });
+            fullScreenLoader.stopLoader();
+        },
+
+        /**
+         * Saved token: submitted as the vault method with public_hash only, so the vault_* commands
+         * (TokenAuth/TokenSale composites) run. Otherwise the Cash App session.
+         * @returns {Object}
+         */
+        getData: function () {
+            if (this.selectedToken()) {
+                return {
+                    method: VAULT_CODE,
+                    additional_data: {
+                        public_hash: this.selectedToken()
+                    }
+                };
+            }
+
+            return {
+                method: this.getCode(),
+                additional_data: {
+                    payment_session: this.paymentPayload.sessionId,
+                    is_active_payment_token_enabler: Boolean(this.canSave && this.savePaymentMethod())
+                }
+            };
+        },
+
+        getCode: function () {
+            return this.code;
+        },
+
+        isBillingAddressRequired: function () {
+            return true;
+        },
+
+        isActive: function () {
+            const active = this.getCode() === this.isChecked();
+
+            this.active(active);
+
+            return active;
+        }
+    });
+});

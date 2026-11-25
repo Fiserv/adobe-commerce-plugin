@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
-<csp_whitelist xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Csp:etc/csp_whitelist.xsd">
+<csp_whitelist
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Csp:etc/csp_whitelist.xsd">
     <policies>
         <policy id="script-src">
             <values>
@@ -19,6 +21,8 @@
                 <value id="samsung-pay-sdk-button" type="host">https://resource.stg.samsungpay.com</value>
                 <value id="samsung-pay-sdk-cdn" type="host">https://samsungpay.cdn-samsung.com</value>
                 <value id="paze-sdk" type="host">https://checkout.wallet.cat.earlywarning.io</value>
+				<value id="cashapp-sdk-sandbox" type="host">https://sandbox.kit.cash.app</value>
+				<value id="cashapp-sdk-prod" type="host">https://kit.cash.app</value>
                 <value id="afterpay-sandbox" type="host">https://portal.sandbox.afterpay.com</value>
                 <value id="afterpay-production" type="host">https://portal.afterpay.com</value>
             </values>
@@ -41,6 +45,11 @@
                 <value id="samsung-pay-sdk-button" type="host">https://resource.stg.samsungpay.com</value>
                 <value id="samsung-pay-sdk-cdn" type="host">https://samsungpay.cdn-samsung.com</value>
                 <value id="paze-sdk" type="host">https://checkout.wallet.cat.earlywarning.io</value>
+				<value id="cashapp-sdk-sandbox" type="host">https://sandbox.kit.cash.app</value>
+				<value id="cashapp-sdk-prod" type="host">https://kit.cash.app</value>
+				<value id="cashapp-analytics" type="host">https://api.lab.amplitude.com</value>
+				<value id="cashapp-api-sandbox" type="host">https://sandbox.api.cash.app</value>
+				<value id="cashapp-api-prod" type="host">https://api.cash.app</value>
                 <value id="afterpay-sandbox" type="host">https://portal.sandbox.afterpay.com</value>
                 <value id="afterpay-production" type="host">https://portal.afterpay.com</value>
             </values>
@@ -63,6 +72,8 @@
                 <value id="samsung-pay-sdk-button" type="host">https://resource.stg.samsungpay.com</value>
                 <value id="samsung-pay-sdk-cdn" type="host">https://samsungpay.cdn-samsung.com</value>
 				<value id="paze-sdk" type="host">https://checkout.wallet.cat.earlywarning.io</value>
+				<value id="cashapp-sdk-sandbox" type="host">https://sandbox.kit.cash.app</value>
+				<value id="cashapp-sdk-prod" type="host">https://kit.cash.app</value>
                 <value id="afterpay-sandbox" type="host">https://portal.sandbox.afterpay.com</value>
                 <value id="afterpay-production" type="host">https://portal.afterpay.com</value>
             </values>
@@ -73,6 +84,23 @@
                 <value id="samsung-pay-img-stg" type="host">https://resource.stg.samsungpay.com</value>
                 <value id="samsung-pay-img-cdn" type="host">https://samsungpay.cdn-samsung.com</value>
                 <value id="paze-sdk" type="host">https://checkout.wallet.cat.earlywarning.io</value>
+				<value id="cashapp-sdk-sandbox" type="host">https://sandbox.kit.cash.app</value>
+				<value id="cashapp-sdk-prod" type="host">https://kit.cash.app</value>
+				<value id="cashapp-cdn" type="host">https://cash-f.squarecdn.com</value>
+				<value id="cashapp-qr-sandbox" type="host">https://sandbox.api.cash.app</value>
+				<value id="cashapp-qr-prod" type="host">https://api.cash.app</value>
+			</values>
+		</policy>
+		<policy id="font-src">
+			<values>
+				<value id="cashapp-cdn" type="host">https://cash-f.squarecdn.com</value>
+			</values>
+		</policy>
+		<policy id="style-src">
+			<values>
+				<value id="cashapp-sdk-sandbox" type="host">https://sandbox.kit.cash.app</value>
+				<value id="cashapp-sdk-prod" type="host">https://kit.cash.app</value>
+				<value id="cashapp-cdn" type="host">https://cash-f.squarecdn.com</value>
             </values>
         </policy>
         <policy id="form-action">
@@ -93,6 +121,8 @@
                 <value id="samsung-pay-sdk-button" type="host">https://resource.stg.samsungpay.com</value>
                 <value id="samsung-pay-sdk-cdn" type="host">https://samsungpay.cdn-samsung.com</value>
                 <value id="paze-sdk" type="host">https://checkout.wallet.cat.earlywarning.io</value>
+				<value id="cashapp-sdk-sandbox" type="host">https://sandbox.kit.cash.app</value>
+				<value id="cashapp-sdk-prod" type="host">https://kit.cash.app</value>
             </values>
         </policy>
     </policies>

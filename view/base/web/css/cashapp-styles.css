@@ -1,0 +1,11 @@
+.fiserv-cashapp-logo {
+	height: 26px;
+	display: inline-block;
+	vertical-align: middle;
+}
+
+#cashapp-button-container {
+	margin: 15px 0;
+	width: 100%;
+	min-height: 48px;
+}
