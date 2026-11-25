@@ -24,16 +24,6 @@ class GetCredentials extends Action implements HttpPostActionInterface
 	/** @var MultiLevelLogger */
 	private $logger;
 
-	public function __construct(
-		Context $context,
-		ValuelinkCredentialsRequest $chAdapter,
-		MultiLevelLogger $logger
-	) {
-		parent::__construct($context);
-		$this->chAdapter = $chAdapter;
-		$this->logger = $logger;
-	}
-
     /**
      * @var CustomerSession
      */
@@ -98,4 +88,3 @@ class GetCredentials extends Action implements HttpPostActionInterface
 		return $response;
 	}
 }
-
