@@ -105,11 +105,7 @@ class VaultDetailsHandler implements HandlerInterface
 			'type' => 'cashapp',
 			'label' => 'Cash App Pay',
 			'tokenSource' => $candidate['tokenSource'],
-			'tokenIdentity' => $this->encryptor->getHash($candidate['tokenData']),
-			'websiteId' => $order->getStore()->getWebsiteId(),
-			'merchantId' => $this->config->getMerchantId($storeId),
-			'terminalId' => $this->config->getTerminalId($storeId),
-			'environment' => $this->config->getApiEnvironment($storeId),
+			'tokenIdentity' => $this->encryptor->getHash($candidate['tokenData'])
 		]));
 		$token->setGatewayToken($encrypted);
 		$token->setExpiresAt(null);

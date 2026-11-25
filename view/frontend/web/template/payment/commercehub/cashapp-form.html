@@ -20,12 +20,12 @@
 			<!--/ko-->
 		</div>
 
-		<!-- ko if: savedTokens.length -->
+		<!-- ko if: savedTokenHash -->
 		<fieldset class="fieldset">
 			<legend class="legend"><span data-bind="i18n: 'Cash App Pay checkout'"></span></legend>
 			<div class="field choice">
 				<input type="radio" class="radio"
-					data-bind="attr: {id: getCode() + '-express', name: getCode() + '-checkout'}, checked: selectedToken, checkedValue: savedTokens[0].publicHash"/>
+					data-bind="attr: {id: getCode() + '-express', name: getCode() + '-checkout'}, checked: selectedToken, checkedValue: savedTokenHash"/>
 				<label class="label" data-bind="attr: {for: getCode() + '-express'}">
 					<span data-bind="i18n: 'Express checkout - use saved Cash App Pay'"></span>
 				</label>

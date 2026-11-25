@@ -41,28 +41,14 @@ class ConfigProvider implements ConfigProviderInterface
 		$storeId = $this->storeManager->getStore()->getId();
 		$customerId = $this->customerSession->isLoggedIn() ? $this->customerSession->getCustomerId() : 0;
 		$original = $this->tokenManagement->getOriginal($customerId);
-		$saved = [];
-		$notice = '';
-		if ($original && $this->cashAppConfig->isActive($storeId)) {
-			// Card-oriented visible-token queries exclude NULL expiry; Cash App has no gateway expiry.
-			$token = $this->tokenManagement->getAvailable($customerId, $original['public_hash'], $storeId);
-			$expired = $this->tokenManagement->isExpired($original['expires_at']);
-			$notice = __('Your saved Cash App Pay method is unavailable. Use one-time checkout; your original saved method will not be replaced.')->render();
-			if ($expired) {
-				$notice = __('Your saved Cash App Pay method has expired. Use one-time checkout; your original saved method will not be replaced.')->render();
-			}
-			if ($token !== null) {
-				$saved[] = ['publicHash' => $token->getPublicHash(), 'label' => __('Cash App Pay')->render()];
-				$notice = '';
-			}
-		}
+		$available = $original && $original['is_active'] && $original['is_visible'];
 
 		return [
 			'payment' => [
 				self::CODE => [
 					'canSave' => $customerId > 0 && $original === null,
-					'savedTokens' => $saved,
-					'savedTokenNotice' => $notice,
+					'hasSavedToken' => $original !== null,
+					'savedTokenHash' => $available ? $original['public_hash'] : '',
 					'isActive' => $this->cashAppConfig->isActive($storeId),
 					'apiKey' => $this->commerceHubConfig->getApiKey($storeId),
 					'merchantId' => $this->commerceHubConfig->getMerchantId($storeId),

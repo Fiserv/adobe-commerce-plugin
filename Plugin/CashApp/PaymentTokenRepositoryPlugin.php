@@ -28,18 +28,15 @@ class PaymentTokenRepositoryPlugin
 		}
 		$customerId = $isStoredCashApp ? $persisted->getCustomerId() : $token->getCustomerId();
 		if (!$customerId) {
-			throw new LocalizedException(__('Sign in before saving Cash App Pay.'));
+			return $proceed($token);
 		}
 		$connection = $this->vaultPaymentTokenUtils->getConnection();
 		$connection->beginTransaction();
 		try {
 			// Lock an existing row even when this customer's first Vault token does not exist yet.
-			$customer = $connection->fetchOne($connection->select()
+			$connection->fetchOne($connection->select()
 				->from($this->vaultPaymentTokenUtils->getTable('customer_entity'), ['entity_id'])
 				->where('entity_id = ?', $customerId)->forUpdate(true));
-			if (!$customer) {
-				throw new LocalizedException(__('The Cash App Pay customer no longer exists.'));
-			}
 			$existing = $this->vaultPaymentTokenUtils->getFirstCashAppToken($customerId, true);
 			if ($existing) {
 				// Mutate the original object: native management uses its ID to link the order payment.

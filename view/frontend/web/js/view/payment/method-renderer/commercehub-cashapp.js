@@ -38,7 +38,7 @@ define([
             loading: false,
             reloadPending: false,
             totalsSubscription: null,
-            savedTokens: [],
+            savedTokenHash: '',
             savedTokenNotice: '',
             canSave: false
         },
@@ -58,10 +58,12 @@ define([
 
             const config = this.getPaymentConfig();
 
-            this.savedTokens = Array.isArray(config.savedTokens) ? config.savedTokens : [];
-            this.savedTokenNotice = config.savedTokenNotice || '';
-            this.canSave = Boolean(config.canSave) && this.savedTokens.length === 0;
-            this.selectedToken(this.savedTokens.length ? this.savedTokens[0].publicHash : '');
+            this.savedTokenHash = config.savedTokenHash || '';
+            this.savedTokenNotice = config.hasSavedToken && !this.savedTokenHash
+                ? $t('Your saved Cash App Pay method is unavailable. Use one-time checkout; your original saved method will not be replaced.')
+                : '';
+            this.canSave = Boolean(config.canSave);
+            this.selectedToken(this.savedTokenHash);
 
             this.selectedToken.subscribe(() => this.restartCashApp());
 
