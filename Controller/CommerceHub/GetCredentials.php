@@ -24,48 +24,16 @@ class GetCredentials extends Action implements HttpPostActionInterface
 	/** @var MultiLevelLogger */
 	private $logger;
 
-    /**
-     * @var CustomerSession
-     */
-    private $customerSession;
+	public function __construct(
+		Context $context,
+		ValuelinkCredentialsRequest $chAdapter,
+		MultiLevelLogger $logger
+	) {
+		parent::__construct($context);
+		$this->chAdapter = $chAdapter;
+		$this->logger = $logger;
+	}
 
-    /**
-     * @var ProviderCustomerIdFactory
-     */
-    private $providerCustomerIdFactory;
-
-    /**
-     * @var PayPalConfig
-     */
-    private $paypalConfig;
-
-    /**
-    * @param Context $context
-    * @param CredentialsRequest $chAdapter
-    * @param MultiLevelLogger $logger
-    * @param CustomerSession $customerSession
-    * @param ProviderCustomerIdFactory $providerCustomerIdFactory
-    * @param PayPalConfig $paypalConfig
-    */
-    public function __construct(
-        Context $context,
-        CredentialsRequest $chAdapter,
-        MultiLevelLogger $logger,
-        ?CustomerSession $customerSession = null,
-        ?ProviderCustomerIdFactory $providerCustomerIdFactory = null,
-        ?PayPalConfig $paypalConfig = null
-    ) {
-        parent::__construct($context);
-        $this->chAdapter = $chAdapter;
-        $this->logger = $logger;
-        $this->customerSession = $customerSession;
-        $this->providerCustomerIdFactory = $providerCustomerIdFactory;
-        $this->paypalConfig = $paypalConfig;
-    }
-
-    /**
-     * @inheritdoc
-     */
 	public function execute()
 	{
 		$response = $this->resultFactory->create(ResultFactory::TYPE_JSON);
